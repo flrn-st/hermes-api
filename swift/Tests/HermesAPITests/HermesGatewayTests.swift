@@ -195,3 +195,40 @@ private func sentCall(_ frame: Data) throws -> (String, Int) {
     #expect(result["choice"] as? String == "once")
     await client.disconnect()
 }
+
+private actor SequenceTransport: GatewayTransport {
+    private var sockets: [TestSocket]
+
+    init(_ sockets: [TestSocket]) { self.sockets = sockets }
+
+    func connect(url: URL, headers: [String: String], subprotocols: [String]) async throws -> any GatewayConnection {
+        guard !sockets.isEmpty else { throw HermesGatewayError.transport("No test sockets remain") }
+        return sockets.removeFirst()
+    }
+}
+
+@Test func reconnectReplaysGapBeforeLiveEvents() async throws {
+    let firstSocket = TestSocket()
+    let secondSocket = TestSocket()
+    let transport = SequenceTransport([firstSocket, secondSocket])
+    let client = HermesGateway(configuration: .init(
+        baseURL: URL(string: "https://example.test")!, auth: TestAuth(),
+        transport: transport, requestTimeout: .seconds(1), reconnectDelay: { _ in .zero }
+    ))
+    try await client.connect()
+    var events = client.events.makeAsyncIterator()
+    await firstSocket.inject(#"{"jsonrpc":"2.0","method":"event","params":{"type":"message.start","session_id":"s","seq":1,"payload":{}}}"#)
+    #expect(await events.next()?.seq == 1)
+    var sent = secondSocket.sent.makeAsyncIterator()
+    await firstSocket.close()
+    let replayFrame = try #require(await sent.next())
+    let (method, replayID) = try sentCall(replayFrame)
+    #expect(method == "session.events.since")
+    await secondSocket.inject(#"{"jsonrpc":"2.0","method":"event","params":{"type":"message.start","session_id":"s","seq":3,"payload":{}}}"#)
+    await secondSocket.inject(#"{"jsonrpc":"2.0","id":\#(replayID),"result":{"events":[{"type":"message.start","session_id":"s","seq":2,"payload":{}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}}"#)
+    let replayed = try #require(await events.next())
+    let live = try #require(await events.next())
+    #expect(replayed.seq == 2 && replayed.replayed)
+    #expect(live.seq == 3 && !live.replayed)
+    await client.disconnect()
+}

@@ -29,13 +29,16 @@ private struct RPCError: Codable {
 public actor HermesGateway: GatewayCalling {
     public nonisolated let events: AsyncStream<GatewayEvent>
     public nonisolated let connectionStates: AsyncStream<GatewayConnectionState>
+    public nonisolated let replayErrors: AsyncStream<HermesGatewayError>
 
     private let configuration: HermesGatewayConfiguration
     private let eventContinuation: AsyncStream<GatewayEvent>.Continuation
     private let stateContinuation: AsyncStream<GatewayConnectionState>.Continuation
+    private let replayErrorContinuation: AsyncStream<HermesGatewayError>.Continuation
     private var activeSocket: (any GatewayConnection)?
     private var readTask: Task<Void, Never>?
     private var pingTask: Task<Void, Never>?
+    private var reconnectTask: Task<Void, Never>?
     private var pending: [Int: AsyncThrowingStream<JSONValue, Error>.Continuation] = [:]
     private var serverTasks: [String: Task<Void, Never>] = [:]
     private var serverRequestHandler: (@Sendable (ServerRequest) async throws -> ServerRequestResult)?
@@ -45,6 +48,8 @@ public actor HermesGateway: GatewayCalling {
     private var connecting = false
     private var lastSequence: [String: Int] = [:]
     private var replayEpoch: String?
+    private var hasConnected = false
+    private var replayHold: [String: [[String: JSONValue]]] = [:]
 
     public init(configuration: HermesGatewayConfiguration) {
         self.configuration = configuration
@@ -58,9 +63,12 @@ public actor HermesGateway: GatewayCalling {
         self.eventContinuation = eventContinuation
         self.connectionStates = states
         self.stateContinuation = stateContinuation
+        let (errors, errorContinuation) = AsyncStream.makeStream(of: HermesGatewayError.self)
+        self.replayErrors = errors
+        self.replayErrorContinuation = errorContinuation
     }
 
-    /// Generated namespaces are available through `methods` until direct accessors are added.
+    /// Generated typed method namespaces.
     public nonisolated var methods: GatewayMethodCatalog { GatewayMethodCatalog(caller: self) }
 
     public func setServerRequestHandler(
@@ -76,7 +84,7 @@ public actor HermesGateway: GatewayCalling {
         connecting = true
         generation += 1
         let current = generation
-        stateContinuation.yield(.connecting)
+        if !hasConnected { stateContinuation.yield(.connecting) }
         defer { connecting = false }
         do {
             let credential = try await configuration.auth.credential(
@@ -93,6 +101,9 @@ public actor HermesGateway: GatewayCalling {
                 throw HermesGatewayError.cancelled
             }
             activeSocket = socket
+            if hasConnected {
+                replayHold = Dictionary(uniqueKeysWithValues: lastSequence.keys.map { ($0, []) })
+            }
             readTask = Task { await self.readLoop(socket, generation: current) }
             let capabilities = ClientCapabilitiesParams(serverRequests: true)
             let _: ClientCapabilitiesResult = try await call(
@@ -101,6 +112,13 @@ public actor HermesGateway: GatewayCalling {
             guard current == generation && activeSocket != nil else {
                 throw HermesGatewayError.transport("Connection ended during handshake")
             }
+            if hasConnected {
+                await replaySessions(socket: socket, generation: current)
+            }
+            guard current == generation && activeSocket != nil else {
+                throw HermesGatewayError.transport("Connection ended during replay")
+            }
+            hasConnected = true
             stateContinuation.yield(.connected)
             pingTask = Task { await self.pingLoop(socket, generation: current) }
         } catch {
@@ -112,6 +130,8 @@ public actor HermesGateway: GatewayCalling {
     public func disconnect() async {
         closing = true
         generation += 1
+        reconnectTask?.cancel()
+        reconnectTask = nil
         await closeConnection(reason: nil)
     }
 
@@ -206,7 +226,7 @@ public actor HermesGateway: GatewayCalling {
             }
         } catch {
             if current == generation && !closing {
-                await closeConnection(reason: error.localizedDescription)
+                await lostConnection(reason: error.localizedDescription)
             }
         }
     }
@@ -253,6 +273,10 @@ public actor HermesGateway: GatewayCalling {
         }
         let sessionID = params["session_id"]?.stringValue
         let seq = params["seq"]?.integerValue
+        if !replayed, let sessionID, seq != nil, replayHold[sessionID] != nil {
+            replayHold[sessionID, default: []].append(params)
+            return
+        }
         if let sessionID, let seq {
             if seq <= (lastSequence[sessionID] ?? 0) { return }
         }
@@ -293,7 +317,9 @@ public actor HermesGateway: GatewayCalling {
                     do {
                         try await socket.send(JSONEncoder().encode(OutgoingResult(id: id, result: payload)))
                     } catch {
-                        await self.closeConnection(reason: error.localizedDescription)
+                        if current == self.generation {
+                            await self.lostConnection(reason: error.localizedDescription)
+                        }
                     }
                 } catch is CancellationError {
                     // The server withdrew the request; it no longer expects an answer.
@@ -304,7 +330,9 @@ public actor HermesGateway: GatewayCalling {
                                 id: id, code: -32603, message: error.localizedDescription, socket: socket
                             )
                         } catch {
-                            await self.closeConnection(reason: error.localizedDescription)
+                            if current == self.generation {
+                                await self.lostConnection(reason: error.localizedDescription)
+                            }
                         }
                     }
                 }
@@ -343,7 +371,7 @@ public actor HermesGateway: GatewayCalling {
                 return
             } catch {
                 if current == generation && !closing {
-                    await closeConnection(reason: error.localizedDescription)
+                    await lostConnection(reason: error.localizedDescription)
                 }
                 return
             }
@@ -363,8 +391,79 @@ public actor HermesGateway: GatewayCalling {
             continuation.finish(throwing: HermesGatewayError.transport(reason ?? "Gateway disconnected"))
         }
         pending.removeAll()
+        replayHold.removeAll()
         if let socket { await socket.close() }
         stateContinuation.yield(.disconnected(reason))
+    }
+
+    private func lostConnection(reason: String) async {
+        generation += 1
+        await closeConnection(reason: reason)
+        guard !closing, reconnectTask == nil else { return }
+        reconnectTask = Task { await self.reconnectLoop() }
+    }
+
+    private func reconnectLoop() async {
+        var attempt = 0
+        while !Task.isCancelled && !closing {
+            attempt += 1
+            stateContinuation.yield(.reconnecting(attempt: attempt))
+            do {
+                try await Task.sleep(for: configuration.reconnectDelay(attempt))
+                try Task.checkCancellation()
+                try await connect()
+                reconnectTask = nil
+                return
+            } catch is CancellationError {
+                break
+            } catch {
+                // The next attempt obtains a fresh ticket.
+            }
+        }
+        reconnectTask = nil
+    }
+
+    private func replaySessions(socket: any GatewayConnection, generation current: Int) async {
+        let watermarks = lastSequence
+        defer {
+            let remaining = replayHold.sorted(by: { $0.key < $1.key })
+            replayHold.removeAll()
+            for (_, held) in remaining {
+                for event in held { try? handleEvent(.object(event), replayed: false) }
+            }
+        }
+        for (sessionID, lastSeen) in watermarks.sorted(by: { $0.key < $1.key }) {
+            guard current == generation else { return }
+            do {
+                let result: SessionEventsSinceResult = try await call(
+                    "session.events.since",
+                    params: SessionEventsSinceParams(sessionId: sessionID, lastSeen: .value(lastSeen)),
+                    as: SessionEventsSinceResult.self
+                )
+                if let epoch = replayEpoch, epoch != result.epoch {
+                    lastSequence.removeAll()
+                    replayEpoch = result.epoch
+                } else if result.truncated {
+                    replayErrorContinuation.yield(.replayTruncated(sessionID))
+                } else {
+                    for event in result.events {
+                        try handleEvent(.object(event), replayed: true)
+                    }
+                }
+                for request in result.openRequests {
+                    try await handleServerRequest(
+                        id: request.id, method: request.method, params: .object(request.params),
+                        socket: socket, generation: current
+                    )
+                }
+            } catch {
+                // Preserve the last watermark; a later reconnect retries the gap.
+            }
+            let held = replayHold.removeValue(forKey: sessionID) ?? []
+            for event in held {
+                try? handleEvent(.object(event), replayed: false)
+            }
+        }
     }
 }
 

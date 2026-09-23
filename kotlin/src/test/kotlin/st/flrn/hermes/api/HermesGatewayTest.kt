@@ -2,7 +2,8 @@ package st.flrn.hermes.api
 
 import java.net.URI
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
@@ -69,6 +70,39 @@ class HermesGatewayTest {
         fake.inbound.send("""{"jsonrpc":"2.0","id":${frame["id"]},"error":{"code":4015,"message":"missing session"}}""")
         val failure = assertFailsWith<HermesGatewayException.RPC> { request.await().getOrThrow() }
         assertEquals(4015, failure.code)
+        client.disconnect()
+    }
+
+    @Test
+    fun reconnectReplaysGapBeforeLiveEvents() = runTest {
+        val firstSocket = FakeSocket()
+        val secondSocket = FakeSocket()
+        val sockets = mutableListOf(firstSocket, secondSocket)
+        val transport = object : GatewayTransport {
+            override suspend fun connect(uri: URI, headers: Map<String, String>, protocols: List<String>): GatewayConnection =
+                sockets.removeAt(0)
+        }
+        val client = HermesGateway(HermesGatewayConfiguration(
+            URI("http://localhost:3000"), LocalTokenAuth("secret"), transport,
+            requestTimeoutMillis = 3_000, reconnectDelayMillis = { 0 },
+        ), scope = backgroundScope)
+        val received = backgroundScope.async { client.events.take(3).toList() }
+        val opening = async { client.connect() }
+        val capability = firstSocket.sent()
+        firstSocket.inbound.send("""{"jsonrpc":"2.0","id":${capability["id"]},"result":{"server_requests":[]}}""")
+        opening.await()
+        firstSocket.inbound.send("""{"jsonrpc":"2.0","method":"event","params":{"type":"message.start","session_id":"s","seq":1,"payload":{}}}""")
+        firstSocket.inbound.close()
+        val newCapability = secondSocket.sent()
+        assertEquals("client.capabilities", newCapability["method"]?.jsonPrimitive?.content)
+        secondSocket.inbound.send("""{"jsonrpc":"2.0","id":${newCapability["id"]},"result":{"server_requests":[]}}""")
+        val replay = secondSocket.sent()
+        assertEquals("session.events.since", replay["method"]?.jsonPrimitive?.content)
+        secondSocket.inbound.send("""{"jsonrpc":"2.0","method":"event","params":{"type":"message.start","session_id":"s","seq":3,"payload":{}}}""")
+        secondSocket.inbound.send("""{"jsonrpc":"2.0","id":${replay["id"]},"result":{"events":[{"type":"message.start","session_id":"s","seq":2,"payload":{}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}}""")
+        val events = withTimeout(3_000) { received.await() }
+        assertEquals(listOf(1L, 2L, 3L), events.map { it.seq })
+        assertEquals(listOf(false, true, false), events.map { it.replayed })
         client.disconnect()
     }
 

@@ -39,18 +39,24 @@ public struct HermesGatewayConfiguration: Sendable {
     public let transport: any GatewayTransport
     public let httpTransport: any HTTPTransport
     public let requestTimeout: Duration
+    public let reconnectDelay: @Sendable (Int) -> Duration
 
     public init(
         baseURL: URL,
         auth: any HermesAuth,
         transport: any GatewayTransport = URLSessionGatewayTransport(),
         httpTransport: any HTTPTransport = URLSessionHTTPTransport(),
-        requestTimeout: Duration = .seconds(30)
+        requestTimeout: Duration = .seconds(30),
+        reconnectDelay: @escaping @Sendable (Int) -> Duration = { attempt in
+            let cap = min(30_000, 250 * (1 << min(attempt - 1, 7)))
+            return .milliseconds(Int.random(in: 0...cap))
+        }
     ) {
         self.baseURL = baseURL
         self.auth = auth
         self.transport = transport
         self.httpTransport = httpTransport
         self.requestTimeout = requestTimeout
+        self.reconnectDelay = reconnectDelay
     }
 }

@@ -10,3 +10,14 @@ operations:
       properties:
         active: {type: string}
         current: {type: string}
+  - method: POST
+    path: /api/profiles/active
+    x-source: hermes_cli/web_routers/profiles.py:782
+    x-handler-hash: 9afc499eabf3458d4ca3f1d9a9ba3d086bf7121e6a9357109346d6755ae569bf
+    response:
+      type: object
+      additionalProperties: false
+      required: [ok, active]
+      properties:
+        ok: {type: boolean}
+        active: {type: string}

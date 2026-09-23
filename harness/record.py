@@ -115,8 +115,12 @@ async def record(scenario: Path, output: Path, openapi: Path) -> None:
         schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
         query = urlencode(call.get("query", {}))
         url = base + path + ("?" + query if query else "")
-        request = Request(url, method=method,
-                          headers={"X-Hermes-Session-Token": token})
+        headers = {"X-Hermes-Session-Token": token}
+        data = None
+        if "body" in call:
+            data = json.dumps(_resolve(call["body"], captured)).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        request = Request(url, method=method, headers=headers, data=data)
         status, body = await asyncio.to_thread(_fetch_rest, request)
         _validate_rest_response(body, schema)
         entries.append({"kind": "rest", "name": f"{method} {path}",

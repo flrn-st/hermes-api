@@ -32,11 +32,34 @@ private struct RESTCountTransport: HTTPTransport {
     }
 }
 
+private struct RESTProfileUpdateTransport: HTTPTransport {
+    func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        #expect(request.url?.path == "/api/profiles/active")
+        #expect(request.httpMethod == "POST")
+        #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+        let body = try JSONDecoder().decode(ProfilesSetActiveRequest.self, from: request.httpBody ?? Data())
+        #expect(body.name == "default")
+        guard let url = request.url,
+              let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil,
+                                             headerFields: nil) else {
+            throw HermesRESTError.transport("Invalid test response")
+        }
+        return (Data(#"{"ok":true,"active":"default"}"#.utf8), response)
+    }
+}
+
 @Test func generatedRESTQueryIsEncoded() async throws {
     let rest = HermesREST(configuration: .init(
         baseURL: URL(string: "https://dashboard.example")!, transport: RESTCountTransport()))
     let result = try await rest.sessions.emptyCount(profile: "qa & mobile")
     #expect(result.count == 2)
+}
+
+@Test func generatedRESTProfileUpdateSendsJSONBody() async throws {
+    let rest = HermesREST(configuration: .init(
+        baseURL: URL(string: "https://dashboard.example")!, transport: RESTProfileUpdateTransport()))
+    let result = try await rest.profiles.setActive(body: .init(name: "default"))
+    #expect(result.ok && result.active == "default")
 }
 
 @Test func generatedRESTAuthCallDecodesReviewedResponse() async throws {

@@ -41,6 +41,8 @@ class Operation:
     type_name: str
     properties: tuple[Property, ...]
     query_params: tuple[QueryParam, ...]
+    request_type_name: str | None
+    request_properties: tuple[Property, ...]
 
 
 def _typed_operations(document: dict) -> list[Operation]:
@@ -50,8 +52,6 @@ def _typed_operations(document: dict) -> list[Operation]:
         for method, item in sorted(methods.items()):
             if "x-handler-hash" not in item:
                 continue
-            if item.get("requestBody"):
-                raise ValueError(f"REST generator does not yet support request bodies: {method} {path}")
             query_params: list[QueryParam] = []
             for parameter in item.get("parameters", []):
                 if parameter.get("in") != "query":
@@ -78,10 +78,16 @@ def _typed_operations(document: dict) -> list[Operation]:
                 raise ValueError(f"Unsupported REST path: {path}")
             namespace = camel(parts[1])
             name = camel("_".join(parts[2:]))
-            type_name = pascal("_".join(parts[1:])) + "Response"
             symbol = f"{namespace}.{name}"
             if symbol in names:
-                raise ValueError(f"REST method collision: {symbol}")
+                prefix = {"post": "set", "put": "update", "patch": "patch", "delete": "delete"}.get(method)
+                if prefix is None:
+                    raise ValueError(f"REST method collision: {symbol}")
+                name = prefix + name[:1].upper() + name[1:]
+                symbol = f"{namespace}.{name}"
+                if symbol in names:
+                    raise ValueError(f"REST method collision: {symbol}")
+            type_name = pascal(f"{parts[1]}_{name}") + "Response"
             names.add(symbol)
             required = set(response.get("required", []))
             props: list[Property] = []
@@ -99,27 +105,53 @@ def _typed_operations(document: dict) -> list[Operation]:
                 props.append(Property(wire, camel(wire), swift, kotlin, wire in required))
             if not props or required - set(response["properties"]):
                 raise ValueError(f"Invalid reviewed REST response: {method} {path}")
+            request_type_name: str | None = None
+            request_props: list[Property] = []
+            if body := item.get("requestBody"):
+                request_schema = body.get("content", {}).get("application/json", {}).get("schema", {})
+                ref = request_schema.get("$ref", "")
+                if not body.get("required") or not ref.startswith("#/components/schemas/"):
+                    raise ValueError(f"REST request body must reference a named schema: {method} {path}")
+                request_type_name = pascal(f"{parts[1]}_{name}") + "Request"
+                ref_name = ref.rsplit("/", 1)[-1]
+                request_schema = document["components"]["schemas"][ref_name]
+                if request_schema.get("type") != "object" or not request_schema.get("properties"):
+                    raise ValueError(f"REST request must be an object: {method} {path}")
+                request_required = set(request_schema.get("required", []))
+                for wire, field in request_schema["properties"].items():
+                    types = {"string": ("String", "String"), "integer": ("Int", "Long"),
+                             "number": ("Double", "Double"), "boolean": ("Bool", "Boolean")}
+                    if field.get("type") not in types or set(field) - {"type", "title", "description", "default"}:
+                        raise ValueError(f"Unsupported REST request field: {method} {path} {wire}")
+                    swift, kotlin = types[field["type"]]
+                    request_props.append(Property(wire, camel(wire), swift, kotlin, wire in request_required))
+                if request_required - set(request_schema["properties"]):
+                    raise ValueError(f"Invalid REST request required keys: {method} {path}")
             result.append(Operation(method.upper(), path, namespace, name, type_name,
-                                    tuple(props), tuple(query_params)))
+                                    tuple(props), tuple(query_params), request_type_name,
+                                    tuple(request_props)))
     return result
 
 
-def _swift_model(op: Operation) -> str:
-    fields = "\n".join(f"    public let {p.name}: {p.swift_type}{'' if p.required else '?'}" for p in op.properties)
-    args = ", ".join(f"{p.name}: {p.swift_type}{'' if p.required else '?'}{' = nil' if not p.required else ''}" for p in op.properties)
-    assigns = "\n".join(f"        self.{p.name} = {p.name}" for p in op.properties)
-    keys = "\n".join(f'        case {p.name} = {json.dumps(p.wire)}' for p in op.properties)
+def _swift_model(op: Operation, *, request: bool = False) -> str:
+    properties = op.request_properties if request else op.properties
+    type_name = op.request_type_name if request else op.type_name
+    source = "OpenAPI request" if request else "reviewed REST response"
+    fields = "\n".join(f"    public let {p.name}: {p.swift_type}{'' if p.required else '?'}" for p in properties)
+    args = ", ".join(f"{p.name}: {p.swift_type}{'' if p.required else '?'}{' = nil' if not p.required else ''}" for p in properties)
+    assigns = "\n".join(f"        self.{p.name} = {p.name}" for p in properties)
+    keys = "\n".join(f'        case {p.name} = {json.dumps(p.wire)}' for p in properties)
     decode = "\n".join(
         f"        {p.name} = try container.{('decode' if p.required else 'decodeIfPresent')}({p.swift_type}.self, forKey: .{p.name})"
-        for p in op.properties
+        for p in properties
     )
     encode = "\n".join(
         f"        try container.{('encode' if p.required else 'encodeIfPresent')}({p.name}, forKey: .{p.name})"
-        for p in op.properties
+        for p in properties
     )
-    allowed = ", ".join(json.dumps(p.wire) for p in op.properties)
-    return f'''/// Generated from the reviewed REST response for {op.method} {op.path}.
-public struct {op.type_name}: Codable, Sendable, Hashable {{
+    allowed = ", ".join(json.dumps(p.wire) for p in properties)
+    return f'''/// Generated from the {source} for {op.method} {op.path}.
+public struct {type_name}: Codable, Sendable, Hashable {{
 {fields}
 
     public init({args}) {{
@@ -134,7 +166,7 @@ public struct {op.type_name}: Codable, Sendable, Hashable {{
         let raw = try decoder.container(keyedBy: DynamicCodingKey.self)
         let allowed: Set<String> = [{allowed}]
         guard raw.allKeys.allSatisfy({{ allowed.contains($0.stringValue) }}) else {{
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected REST response field"))
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected REST {"request" if request else "response"} field"))
         }}
         let container = try decoder.container(keyedBy: CodingKeys.self)
 {decode}
@@ -147,14 +179,17 @@ public struct {op.type_name}: Codable, Sendable, Hashable {{
 }}'''
 
 
-def _kotlin_model(op: Operation) -> str:
+def _kotlin_model(op: Operation, *, request: bool = False) -> str:
+    properties = op.request_properties if request else op.properties
+    type_name = op.request_type_name if request else op.type_name
+    source = "OpenAPI request" if request else "reviewed REST response"
     fields = "\n".join(
         f'    @SerialName({json.dumps(p.wire)})\n    public val {p.name}: {p.kotlin_type}{"" if p.required else "?"}{"" if p.required else " = null"},'
-        for p in op.properties
+        for p in properties
     )
-    return f'''/** Generated from the reviewed REST response for {op.method} {op.path}. */
+    return f'''/** Generated from the {source} for {op.method} {op.path}. */
 @Serializable
-public data class {op.type_name}(\n{fields}\n)'''
+public data class {type_name}(\n{fields}\n)'''
 
 
 def _swift_methods(ops: list[Operation]) -> str:
@@ -172,9 +207,11 @@ def _swift_methods(ops: list[Operation]) -> str:
                       "    private let caller: any RESTCalling",
                       "    init(caller: any RESTCalling) { self.caller = caller }"])
         for op in entries:
-            args = ", ".join(f"{p.name}: {p.swift_type}{'' if p.required else '?'}"
-                             f"{'' if p.required else ' = nil'}" for p in op.query_params)
-            lines.append(f"    public func {op.name}({args}) async throws -> {op.type_name} {{")
+            args = [f"{p.name}: {p.swift_type}{'' if p.required else '?'}"
+                    f"{'' if p.required else ' = nil'}" for p in op.query_params]
+            if op.request_type_name:
+                args.insert(0, f"body: {op.request_type_name}")
+            lines.append(f"    public func {op.name}({', '.join(args)}) async throws -> {op.type_name} {{")
             lines.append("        var query: [String: String] = [:]" if op.query_params else
                          "        let query: [String: String] = [:]")
             for p in op.query_params:
@@ -184,7 +221,8 @@ def _swift_methods(ops: list[Operation]) -> str:
                 else:
                     lines.append(f'        if let {p.name} {{ query["{p.wire}"] = {value} }}')
             lines.append(f'        return try await caller.request("{op.method}", path: "{op.path}", '
-                         f'as: {op.type_name}.self, query: query)')
+                         f'as: {op.type_name}.self, query: query, '
+                         f'body: {"JSONEncoder().encode(body)" if op.request_type_name else "nil"})')
             lines.append("    }")
         lines.append("}")
     lines.extend(["", "public extension HermesREST {"])
@@ -200,7 +238,8 @@ def _kotlin_methods(ops: list[Operation]) -> str:
         groups.setdefault(op.namespace, []).append(op)
     lines = ["// Generated by tools/gen_rest_api.py. Do not edit.",
              "package st.flrn.hermes.api.generated.rest", "",
-             "import kotlinx.serialization.serializer", "import st.flrn.hermes.api.runtime.RESTCaller", "",
+             "import kotlinx.serialization.serializer", "import kotlinx.serialization.json.Json",
+             "import st.flrn.hermes.api.runtime.RESTCaller", "",
              "public class RESTMethodCatalog(private val caller: RESTCaller) {"]
     for namespace in sorted(groups):
         lines.append(f"    public val {namespace}: {pascal(namespace)}RESTMethods = {pascal(namespace)}RESTMethods(caller)")
@@ -208,9 +247,11 @@ def _kotlin_methods(ops: list[Operation]) -> str:
     for namespace, entries in sorted(groups.items()):
         lines.extend(["", f"public class {pascal(namespace)}RESTMethods(private val caller: RESTCaller) {{"])
         for op in entries:
-            args = ", ".join(f"{p.name}: {p.kotlin_type}{'' if p.required else '?'}"
-                             f"{'' if p.required else ' = null'}" for p in op.query_params)
-            lines.append(f"    public suspend fun {op.name}({args}): {op.type_name} {{")
+            args = [f"{p.name}: {p.kotlin_type}{'' if p.required else '?'}"
+                    f"{'' if p.required else ' = null'}" for p in op.query_params]
+            if op.request_type_name:
+                args.insert(0, f"body: {op.request_type_name}")
+            lines.append(f"    public suspend fun {op.name}({', '.join(args)}): {op.type_name} {{")
             if op.query_params:
                 lines.append("        val query = buildMap<String, String> {")
                 for p in op.query_params:
@@ -222,7 +263,8 @@ def _kotlin_methods(ops: list[Operation]) -> str:
             else:
                 lines.append("        val query = emptyMap<String, String>()")
             lines.append(f'        return caller.request("{op.method}", "{op.path}", '
-                         f'serializer<{op.type_name}>(), query)')
+                         f'serializer<{op.type_name}>(), query, '
+                         f'{"Json.encodeToString(body)" if op.request_type_name else "null"})')
             lines.append("    }")
         lines.append("}")
     return "\n".join(lines) + "\n"
@@ -233,12 +275,17 @@ def generate(ref: str, *, check: bool = False) -> int:
     document = json.loads((ROOT / "spec/out" / ref / "openapi.json").read_text(encoding="utf-8"))
     ops = _typed_operations(document)
     outputs = {
-        SWIFT_OUT / "RESTModels.swift": "// Generated by tools/gen_rest_api.py. Do not edit.\nimport Foundation\n\n" + "\n\n".join(map(_swift_model, ops)) + "\n",
+        SWIFT_OUT / "RESTModels.swift": "// Generated by tools/gen_rest_api.py. Do not edit.\nimport Foundation\n\n" + "\n\n".join(
+            model for op in ops for model in ([_swift_model(op, request=True)] if op.request_type_name else []) + [_swift_model(op)]
+        ) + "\n",
         SWIFT_OUT / "RESTMethods.swift": _swift_methods(ops),
-        KOTLIN_OUT / "RESTModels.kt": "// Generated by tools/gen_rest_api.py. Do not edit.\npackage st.flrn.hermes.api.generated.rest\n\nimport kotlinx.serialization.SerialName\nimport kotlinx.serialization.Serializable\n\n" + "\n\n".join(map(_kotlin_model, ops)) + "\n",
+        KOTLIN_OUT / "RESTModels.kt": "// Generated by tools/gen_rest_api.py. Do not edit.\npackage st.flrn.hermes.api.generated.rest\n\nimport kotlinx.serialization.SerialName\nimport kotlinx.serialization.Serializable\n\n" + "\n\n".join(
+            model for op in ops for model in ([_kotlin_model(op, request=True)] if op.request_type_name else []) + [_kotlin_model(op)]
+        ) + "\n",
         KOTLIN_OUT / "RESTMethods.kt": _kotlin_methods(ops),
         ROOT / "spec/out" / ref / "generated-rest-symbols.json": json.dumps([
-            {"method": op.method, "path": op.path, "public_name": f"{op.namespace}.{op.name}", "response": op.type_name}
+            {"method": op.method, "path": op.path, "public_name": f"{op.namespace}.{op.name}",
+             "request": op.request_type_name, "response": op.type_name}
             for op in ops
         ], indent=2, sort_keys=True) + "\n",
     }

@@ -1,5 +1,5 @@
 {
-  "complete": 10,
+  "complete": 11,
   "entries": [
     {
       "complete": false,
@@ -3061,8 +3061,8 @@
     },
     {
       "complete": false,
-      "decode": true,
-      "fixture": true,
+      "decode": false,
+      "fixture": false,
       "generated": true,
       "kind": "event",
       "live_kotlin": false,
@@ -6230,16 +6230,16 @@
       "typed": true
     },
     {
-      "complete": false,
-      "decode": false,
-      "fixture": false,
-      "fresh": false,
-      "generated": false,
+      "complete": true,
+      "decode": true,
+      "fixture": true,
+      "fresh": true,
+      "generated": true,
       "kind": "rest",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "POST /api/profiles/active",
-      "typed": false
+      "typed": true
     },
     {
       "complete": false,
@@ -7314,8 +7314,8 @@
   "summary": {
     "event": {
       "complete": 2,
-      "decode": 9,
-      "fixture": 9,
+      "decode": 8,
+      "fixture": 8,
       "generated": 69,
       "live_both": 4,
       "total": 69,
@@ -7331,13 +7331,13 @@
       "typed": 159
     },
     "rest": {
-      "complete": 2,
-      "decode": 2,
-      "fixture": 2,
-      "generated": 4,
-      "live_both": 2,
+      "complete": 3,
+      "decode": 3,
+      "fixture": 3,
+      "generated": 5,
+      "live_both": 3,
       "total": 334,
-      "typed": 5
+      "typed": 6
     },
     "server_request": {
       "complete": 0,

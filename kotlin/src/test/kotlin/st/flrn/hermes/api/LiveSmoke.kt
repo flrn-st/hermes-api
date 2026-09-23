@@ -14,6 +14,7 @@ import st.flrn.hermes.api.generated.gateway.MessageCompletePayloadText
 import st.flrn.hermes.api.generated.gateway.SessionCreateParams
 import st.flrn.hermes.api.generated.gateway.SessionListParams
 import st.flrn.hermes.api.generated.gateway.SessionCloseParams
+import st.flrn.hermes.api.generated.rest.ProfilesSetActiveRequest
 import st.flrn.hermes.api.runtime.HermesGateway
 import st.flrn.hermes.api.runtime.HermesGatewayConfiguration
 import st.flrn.hermes.api.runtime.HermesAuth
@@ -90,6 +91,8 @@ suspend fun main() {
                 check(profile.active == "default" && profile.current == "default") {
                     "Unexpected active profile"
                 }
+                val selected = rest.methods.profiles.setActive(ProfilesSetActiveRequest("default"))
+                check(selected.ok && selected.active == "default") { "Could not select default profile" }
                 check(rest.methods.sessions.emptyCount(profile = "default").count >= 0) {
                     "Invalid empty session count"
                 }

@@ -14,11 +14,11 @@ public struct AuthRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
     public func me() async throws -> AuthMeResponse {
         let query: [String: String] = [:]
-        return try await caller.request("GET", path: "/api/auth/me", as: AuthMeResponse.self, query: query)
+        return try await caller.request("GET", path: "/api/auth/me", as: AuthMeResponse.self, query: query, body: nil)
     }
     public func wsTicket() async throws -> AuthWsTicketResponse {
         let query: [String: String] = [:]
-        return try await caller.request("POST", path: "/api/auth/ws-ticket", as: AuthWsTicketResponse.self, query: query)
+        return try await caller.request("POST", path: "/api/auth/ws-ticket", as: AuthWsTicketResponse.self, query: query, body: nil)
     }
 }
 
@@ -27,7 +27,11 @@ public struct ProfilesRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
     public func active() async throws -> ProfilesActiveResponse {
         let query: [String: String] = [:]
-        return try await caller.request("GET", path: "/api/profiles/active", as: ProfilesActiveResponse.self, query: query)
+        return try await caller.request("GET", path: "/api/profiles/active", as: ProfilesActiveResponse.self, query: query, body: nil)
+    }
+    public func setActive(body: ProfilesSetActiveRequest) async throws -> ProfilesSetActiveResponse {
+        let query: [String: String] = [:]
+        return try await caller.request("POST", path: "/api/profiles/active", as: ProfilesSetActiveResponse.self, query: query, body: JSONEncoder().encode(body))
     }
 }
 
@@ -37,7 +41,7 @@ public struct SessionsRESTMethods: Sendable {
     public func emptyCount(profile: String? = nil) async throws -> SessionsEmptyCountResponse {
         var query: [String: String] = [:]
         if let profile { query["profile"] = profile }
-        return try await caller.request("GET", path: "/api/sessions/empty/count", as: SessionsEmptyCountResponse.self, query: query)
+        return try await caller.request("GET", path: "/api/sessions/empty/count", as: SessionsEmptyCountResponse.self, query: query, body: nil)
     }
 }
 

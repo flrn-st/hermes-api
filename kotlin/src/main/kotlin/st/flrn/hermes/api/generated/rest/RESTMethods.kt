@@ -2,6 +2,7 @@
 package st.flrn.hermes.api.generated.rest
 
 import kotlinx.serialization.serializer
+import kotlinx.serialization.json.Json
 import st.flrn.hermes.api.runtime.RESTCaller
 
 public class RESTMethodCatalog(private val caller: RESTCaller) {
@@ -13,18 +14,22 @@ public class RESTMethodCatalog(private val caller: RESTCaller) {
 public class AuthRESTMethods(private val caller: RESTCaller) {
     public suspend fun me(): AuthMeResponse {
         val query = emptyMap<String, String>()
-        return caller.request("GET", "/api/auth/me", serializer<AuthMeResponse>(), query)
+        return caller.request("GET", "/api/auth/me", serializer<AuthMeResponse>(), query, null)
     }
     public suspend fun wsTicket(): AuthWsTicketResponse {
         val query = emptyMap<String, String>()
-        return caller.request("POST", "/api/auth/ws-ticket", serializer<AuthWsTicketResponse>(), query)
+        return caller.request("POST", "/api/auth/ws-ticket", serializer<AuthWsTicketResponse>(), query, null)
     }
 }
 
 public class ProfilesRESTMethods(private val caller: RESTCaller) {
     public suspend fun active(): ProfilesActiveResponse {
         val query = emptyMap<String, String>()
-        return caller.request("GET", "/api/profiles/active", serializer<ProfilesActiveResponse>(), query)
+        return caller.request("GET", "/api/profiles/active", serializer<ProfilesActiveResponse>(), query, null)
+    }
+    public suspend fun setActive(body: ProfilesSetActiveRequest): ProfilesSetActiveResponse {
+        val query = emptyMap<String, String>()
+        return caller.request("POST", "/api/profiles/active", serializer<ProfilesSetActiveResponse>(), query, Json.encodeToString(body))
     }
 }
 
@@ -33,6 +38,6 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
         val query = buildMap<String, String> {
             profile?.let { put("profile", it.toString()) }
         }
-        return caller.request("GET", "/api/sessions/empty/count", serializer<SessionsEmptyCountResponse>(), query)
+        return caller.request("GET", "/api/sessions/empty/count", serializer<SessionsEmptyCountResponse>(), query, null)
     }
 }

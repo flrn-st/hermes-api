@@ -25,6 +25,10 @@ calls:
 rest_calls:
   - method: GET
     path: /api/profiles/active
+  - method: POST
+    path: /api/profiles/active
+    body:
+      name: default
   - method: GET
     path: /api/sessions/empty/count
     query:

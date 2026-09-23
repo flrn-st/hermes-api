@@ -60,8 +60,8 @@ An isolated import of this release produced 293 OpenAPI paths and 334 operations
 All 333 JSON success response schemas were empty objects; the remaining
 operation is a `HEAD` response without a body. The extraction recorded
 per-operation source locations and SHA-256 hashes; two authentication responses,
-the active-profile response, and the empty-session count are currently overlaid. The remaining operations
-are deliberately untyped.
+the active-profile read and update responses, and the empty-session count are
+currently overlaid. The remaining operations are deliberately untyped.
 
 `hermes_cli.web_server` imports and mounts its ordinary routers, then calls
 `_mount_plugin_api_routes()` during module import (`web_server.py:995`).
@@ -93,10 +93,11 @@ the streamed `message.complete` response, then lists and closes the session
 through both clients. The recorder validates each frame against the tagged
 Pydantic catalog before writing the fixture. It does not yet cover tool calls,
 approvals, clarify, or subagent flows.
-It also calls the reviewed `GET /api/profiles/active` and
-`GET /api/sessions/empty/count` routes and validates each JSON response against
-its overlay. Both mobile clients decode the results and exercise the generated
-query parameter during the live scenario.
+It also calls the reviewed `GET /api/profiles/active`,
+`POST /api/profiles/active`, and `GET /api/sessions/empty/count` routes and
+validates each JSON response against its overlay. Both mobile clients decode
+the results and exercise generated JSON body and query parameters during the
+live scenario.
 
 A separate strict WebSocket probe verifies both client adapters transmit the
 public `hermes-gateway-v1` and private ticket subprotocols, with no ticket in
@@ -117,6 +118,20 @@ The recorder validates the original frame with the tagged Pydantic contract.
 The coverage gate accepts intentionally free-form method inputs when the
 tagged contract models them as JSON values; `prompt.submit.text` is one such
 field. It requires method results and event payloads to have complete types.
+
+## Current iOS REST compatibility
+
+A scan of static `/api/*` paths in `hermes-ios` main at `aa0a14d` found 60
+paths in `HermesHTTPClient*.swift`; 57 exist in the tagged OpenAPI document.
+Three app calls have no route at `v2026.9.21`:
+
+- `GET /api/dashboard/runtime`
+- `GET /api/actions/gateway-restart/status`
+- `POST /api/dashboard/restart`
+
+These calls need a tagged-server replacement or an explicit app compatibility
+path before the generated client can replace them. Dynamic path expressions
+were excluded from this static comparison.
 
 ## Remaining validation
 

@@ -45,6 +45,8 @@ struct HermesAPICLI {
                 guard profile.active == "default", profile.current == "default" else {
                     throw CLIError.invalidRESTProfile
                 }
+                let selected = try await rest.profiles.setActive(body: .init(name: "default"))
+                guard selected.ok, selected.active == "default" else { throw CLIError.invalidRESTProfile }
                 let count = try await rest.sessions.emptyCount(profile: "default")
                 guard count.count >= 0 else { throw CLIError.invalidRESTCount }
             }

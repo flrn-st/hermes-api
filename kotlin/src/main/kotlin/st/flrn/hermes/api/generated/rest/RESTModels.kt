@@ -39,6 +39,22 @@ public data class ProfilesActiveResponse(
     public val current: String,
 )
 
+/** Generated from the OpenAPI request for POST /api/profiles/active. */
+@Serializable
+public data class ProfilesSetActiveRequest(
+    @SerialName("name")
+    public val name: String,
+)
+
+/** Generated from the reviewed REST response for POST /api/profiles/active. */
+@Serializable
+public data class ProfilesSetActiveResponse(
+    @SerialName("active")
+    public val active: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
 /** Generated from the reviewed REST response for GET /api/sessions/empty/count. */
 @Serializable
 public data class SessionsEmptyCountResponse(

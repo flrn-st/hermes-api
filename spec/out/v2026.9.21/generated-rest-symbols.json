@@ -3,24 +3,35 @@
     "method": "GET",
     "path": "/api/auth/me",
     "public_name": "auth.me",
+    "request": null,
     "response": "AuthMeResponse"
   },
   {
     "method": "POST",
     "path": "/api/auth/ws-ticket",
     "public_name": "auth.wsTicket",
+    "request": null,
     "response": "AuthWsTicketResponse"
   },
   {
     "method": "GET",
     "path": "/api/profiles/active",
     "public_name": "profiles.active",
+    "request": null,
     "response": "ProfilesActiveResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/profiles/active",
+    "public_name": "profiles.setActive",
+    "request": "ProfilesSetActiveRequest",
+    "response": "ProfilesSetActiveResponse"
   },
   {
     "method": "GET",
     "path": "/api/sessions/empty/count",
     "public_name": "sessions.emptyCount",
+    "request": null,
     "response": "SessionsEmptyCountResponse"
   }
 ]

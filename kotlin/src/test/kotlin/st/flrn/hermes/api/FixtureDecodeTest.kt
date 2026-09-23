@@ -20,6 +20,7 @@ import st.flrn.hermes.api.generated.gateway.SessionListResult
 import st.flrn.hermes.api.generated.gateway.SessionCloseResult
 import st.flrn.hermes.api.generated.rest.SessionsEmptyCountResponse
 import st.flrn.hermes.api.generated.rest.ProfilesActiveResponse
+import st.flrn.hermes.api.generated.rest.ProfilesSetActiveResponse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -59,6 +60,12 @@ class FixtureDecodeTest {
                         assertEquals("default", result.active)
                         assertEquals("default", result.current)
                         assertEquals(body, json.encodeToJsonElement(ProfilesActiveResponse.serializer(), result))
+                    }
+                    "POST /api/profiles/active" -> {
+                        val result = json.decodeFromJsonElement(ProfilesSetActiveResponse.serializer(), body)
+                        assertTrue(result.ok)
+                        assertEquals("default", result.active)
+                        assertEquals(body, json.encodeToJsonElement(ProfilesSetActiveResponse.serializer(), result))
                     }
                     else -> error("Unexpected REST fixture: $name")
                 }
@@ -128,6 +135,7 @@ class FixtureDecodeTest {
         assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "message.delta",
             "GET /api/sessions/empty/count",
             "GET /api/profiles/active",
+            "POST /api/profiles/active",
             "message.complete", "session.create", "session.list", "session.close")))
     }
 }

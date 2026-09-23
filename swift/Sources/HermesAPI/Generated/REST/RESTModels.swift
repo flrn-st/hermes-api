@@ -120,6 +120,67 @@ public struct ProfilesActiveResponse: Codable, Sendable, Hashable {
     }
 }
 
+/// Generated from the OpenAPI request for POST /api/profiles/active.
+public struct ProfilesSetActiveRequest: Codable, Sendable, Hashable {
+    public let name: String
+
+    public init(name: String) {
+        self.name = name
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name = "name"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let allowed: Set<String> = ["name"]
+        guard raw.allKeys.allSatisfy({ allowed.contains($0.stringValue) }) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected REST request field"))
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+    }
+}
+
+/// Generated from the reviewed REST response for POST /api/profiles/active.
+public struct ProfilesSetActiveResponse: Codable, Sendable, Hashable {
+    public let active: String
+    public let ok: Bool
+
+    public init(active: String, ok: Bool) {
+        self.active = active
+        self.ok = ok
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case active = "active"
+        case ok = "ok"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let allowed: Set<String> = ["active", "ok"]
+        guard raw.allKeys.allSatisfy({ allowed.contains($0.stringValue) }) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected REST response field"))
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        active = try container.decode(String.self, forKey: .active)
+        ok = try container.decode(Bool.self, forKey: .ok)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(active, forKey: .active)
+        try container.encode(ok, forKey: .ok)
+    }
+}
+
 /// Generated from the reviewed REST response for GET /api/sessions/empty/count.
 public struct SessionsEmptyCountResponse: Codable, Sendable, Hashable {
     public let count: Int

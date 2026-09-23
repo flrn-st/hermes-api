@@ -49,6 +49,11 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
                                                 from: JSONEncoder().encode(frame["body"]))
                 #expect(result.active == "default" && result.current == "default")
                 #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
+            case "POST /api/profiles/active":
+                let result = try decoder.decode(ProfilesSetActiveResponse.self,
+                                                from: JSONEncoder().encode(frame["body"]))
+                #expect(result.ok && result.active == "default")
+                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
             default:
                 Issue.record("Unexpected REST fixture: \(record.name)")
             }
@@ -109,5 +114,6 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
     #expect(Set(["gateway.ready", "ping", "prompt.submit", "message.delta", "message.complete",
                  "GET /api/sessions/empty/count",
                  "GET /api/profiles/active",
+                 "POST /api/profiles/active",
                  "session.create", "session.list", "session.close"]).isSubset(of: seen))
 }

@@ -1,0 +1,27 @@
+operations:
+  - method: GET
+    path: /api/auth/me
+    x-source: hermes_cli/dashboard_auth/routes.py:449
+    x-handler-hash: 882db0a77e20ab724d3d1245f2ae839615801ec1754b812a328f03346ad80eae
+    response:
+      type: object
+      additionalProperties: false
+      required: [user_id, email, display_name, org_id, provider, expires_at]
+      properties:
+        user_id: {type: string}
+        email: {type: string}
+        display_name: {type: string}
+        org_id: {type: string}
+        provider: {type: string}
+        expires_at: {type: integer}
+  - method: POST
+    path: /api/auth/ws-ticket
+    x-source: hermes_cli/dashboard_auth/routes.py:458
+    x-handler-hash: ca9ea418c9194f0473fc3466b0b93cebb456e3f7822e66a86b7834ab50010d56
+    response:
+      type: object
+      additionalProperties: false
+      required: [ticket, ttl_seconds]
+      properties:
+        ticket: {type: string}
+        ttl_seconds: {type: integer}

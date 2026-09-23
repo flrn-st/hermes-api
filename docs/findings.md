@@ -56,6 +56,12 @@ needs reviewed response schema overlays before it can drive a trustworthy
 typed REST client. Overlays should add only missing contract detail and cite
 the tag's handler source and hash.
 
+An isolated import of this release produced 293 OpenAPI paths and 334 operations.
+All 333 JSON success response schemas were empty objects; the remaining
+operation is a `HEAD` response without a body. The extraction recorded
+per-operation source locations and SHA-256 hashes; two authentication responses
+are currently overlaid. The remaining operations are deliberately untyped.
+
 `hermes_cli.web_server` imports and mounts its ordinary routers, then calls
 `_mount_plugin_api_routes()` during module import (`web_server.py:995`).
 `app.openapi()` therefore includes whichever plugin routers pass that call's

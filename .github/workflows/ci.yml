@@ -45,6 +45,11 @@ jobs:
           git diff --exit-code -- spec/out/v2026.9.21/schema-audit.json
       - name: Check committed generated sources
         run: make check-gen REF=v2026.9.21
+      - name: Check reviewed REST overlays
+        run: |
+          make rest REF=v2026.9.21
+          make check-rest REF=v2026.9.21
+          git diff --exit-code -- spec/out/v2026.9.21/openapi.raw.json spec/out/v2026.9.21/openapi.json spec/out/v2026.9.21/rest-hashes.json spec/out/v2026.9.21/rest-meta.json
 
   swift:
     runs-on: macos-15

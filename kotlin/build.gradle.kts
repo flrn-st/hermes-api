@@ -13,6 +13,10 @@ repositories {
 
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    api("io.ktor:ktor-client-core:3.6.0")
+    implementation("io.ktor:ktor-client-cio:3.6.0")
+    implementation("io.ktor:ktor-client-websockets:3.6.0")
     testImplementation(kotlin("test"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.13.4")

@@ -1,0 +1,14 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "public_name": "auth.me",
+    "response": "AuthMeResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/ws-ticket",
+    "public_name": "auth.wsTicket",
+    "response": "AuthWsTicketResponse"
+  }
+]

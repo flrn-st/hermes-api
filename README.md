@@ -1,6 +1,6 @@
 # HermesAPI
 
-Generated Swift and Kotlin clients for published [Hermes Agent](https://github.com/NousResearch/hermes-agent) releases. This repository is under construction: the gateway models, method namespaces, notifications, and server requests are generated and compile on both platforms. Both gateway runtimes now support authenticated connections, typed calls, server requests, and reconnect replay. The REST runtime and full live coverage are still being built, so this is not yet an app-ready client.
+Generated Swift and Kotlin clients for published [Hermes Agent](https://github.com/NousResearch/hermes-agent) releases. This repository is under construction: the gateway models, method namespaces, notifications, and server requests are generated and compile on both platforms. Both gateway runtimes now support authenticated connections, typed calls, server requests, and reconnect replay. REST has a tested runtime and two reviewed authentication operations. Full REST and live coverage are still being built, so this is not yet an app-ready client.
 
 The source contract for the gateway is Hermes' committed OpenRPC document. The dashboard REST contract uses FastAPI's `app.openapi()` document from the tagged server, supplemented with reviewed overlays where response schemas are missing. The current tag has 334 REST operations; its upstream success response schemas are empty. Generated code is committed and verified against the exact upstream tag. Development branches are outside the current tracking policy.
 

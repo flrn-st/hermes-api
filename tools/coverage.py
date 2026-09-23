@@ -46,9 +46,11 @@ def _gateway_entries(contract: dict, symbols: dict) -> list[dict]:
     ):
         generated = {item["wire"] for item in symbols[symbol_key]}
         for item in contract[section]:
-            schemas = [param["schema"] for param in item.get("params", [])]
-            if "result" in item:
-                schemas.append(item["result"]["schema"])
+            # Tagged methods may deliberately accept free-form JSON input (for
+            # example prompt.submit.text). Strict typed credit requires a
+            # closed result, while generation still covers every param type.
+            schemas = ([item["result"]["schema"]] if "result" in item else
+                       [param["schema"] for param in item.get("params", [])])
             result.append({
                 "kind": kind, "name": item["name"],
                 "typed": all(_strict(schema, components) for schema in schemas),

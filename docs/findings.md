@@ -113,6 +113,10 @@ null for optional results, so its strict fixture check compares object fields
 after removing nulls and separately checks typed decode and model roundtrip.
 The recorder validates the original frame with the tagged Pydantic contract.
 
+The coverage gate accepts intentionally free-form method inputs when the
+tagged contract models them as JSON values; `prompt.submit.text` is one such
+field. It requires method results and event payloads to have complete types.
+
 ## Remaining validation
 
 - Verify the exact `hermes web` flags and health endpoint in a running

@@ -4672,7 +4672,45 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "available": {
+                      "type": "boolean"
+                    },
+                    "mode": {
+                      "type": "string"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "voice": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "mode",
+                    "available",
+                    "reason",
+                    "model",
+                    "voice"
+                  ],
+                  "type": "object"
+                }
               }
             },
             "description": "Successful Response"
@@ -4688,7 +4726,9 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Get Voice Live Status"
+        "summary": "Get Voice Live Status",
+        "x-handler-hash": "035ef29e3550c9b1f06995f1155c5c681258c0c63e56a289ec76fb312dd048c7",
+        "x-source": "hermes_cli/web_routers/audio.py:167"
       }
     },
     "/api/auth/me": {

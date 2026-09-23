@@ -24,6 +24,8 @@ calls:
       session_id: ${session_id}
 rest_calls:
   - method: GET
+    path: /api/audio/voice-live/status
+  - method: GET
     path: /api/profiles/active
   - method: POST
     path: /api/profiles/active

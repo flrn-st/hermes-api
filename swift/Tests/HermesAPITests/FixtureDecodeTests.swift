@@ -39,6 +39,11 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
         if record.kind == "rest" {
             #expect(frame["status"] == .integer(200))
             switch record.name {
+            case "GET /api/audio/voice-live/status":
+                let result = try decoder.decode(AudioVoiceLiveStatusResponse.self,
+                                                from: JSONEncoder().encode(frame["body"]))
+                #expect(result.ok && result.mode == "chained")
+                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
             case "GET /api/sessions/empty/count":
                 let result = try decoder.decode(SessionsEmptyCountResponse.self,
                                                 from: JSONEncoder().encode(frame["body"]))
@@ -112,6 +117,7 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
         }
     }
     #expect(Set(["gateway.ready", "ping", "prompt.submit", "message.delta", "message.complete",
+                 "GET /api/audio/voice-live/status",
                  "GET /api/sessions/empty/count",
                  "GET /api/profiles/active",
                  "POST /api/profiles/active",

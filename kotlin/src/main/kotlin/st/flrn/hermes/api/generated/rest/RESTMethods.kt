@@ -6,9 +6,19 @@ import kotlinx.serialization.json.Json
 import st.flrn.hermes.api.runtime.RESTCaller
 
 public class RESTMethodCatalog(private val caller: RESTCaller) {
+    public val audio: AudioRESTMethods = AudioRESTMethods(caller)
     public val auth: AuthRESTMethods = AuthRESTMethods(caller)
     public val profiles: ProfilesRESTMethods = ProfilesRESTMethods(caller)
     public val sessions: SessionsRESTMethods = SessionsRESTMethods(caller)
+}
+
+public class AudioRESTMethods(private val caller: RESTCaller) {
+    public suspend fun voiceLiveStatus(profile: String? = null): AudioVoiceLiveStatusResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it.toString()) }
+        }
+        return caller.request("GET", "/api/audio/voice-live/status", serializer<AudioVoiceLiveStatusResponse>(), query, null)
+    }
 }
 
 public class AuthRESTMethods(private val caller: RESTCaller) {

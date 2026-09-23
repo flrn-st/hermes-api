@@ -87,6 +87,10 @@ suspend fun main() {
             try {
                 val rest = HermesREST(HermesRESTConfiguration(URI(url),
                     headers = { mapOf("X-Hermes-Session-Token" to token) }, transport = restTransport))
+                val voice = rest.methods.audio.voiceLiveStatus(profile = "default")
+                check(voice.ok && voice.mode == "chained" && voice.model.isNotEmpty() && voice.voice.isNotEmpty()) {
+                    "Unexpected voice status"
+                }
                 val profile = rest.methods.profiles.active()
                 check(profile.active == "default" && profile.current == "default") {
                     "Unexpected active profile"

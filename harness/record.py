@@ -35,7 +35,16 @@ def _validate_rest_response(body: object, schema: dict) -> None:
         raise ValueError("REST response fields differ from the reviewed schema")
     kinds = {"string": str, "integer": int, "number": (int, float), "boolean": bool}
     for name, value in body.items():
-        kind = fields[name].get("type")
+        field = fields[name]
+        if "anyOf" in field:
+            variants = field["anyOf"]
+            non_null = [item for item in variants if item.get("type") != "null"]
+            if len(variants) != 2 or len(non_null) != 1:
+                raise ValueError(f"Unsupported REST fixture union: {name}")
+            if value is None:
+                continue
+            field = non_null[0]
+        kind = field.get("type")
         if kind not in kinds or not isinstance(value, kinds[kind]) or (kind != "boolean" and isinstance(value, bool)):
             raise TypeError(f"REST response field {name} violates the reviewed schema")
 

@@ -62,6 +62,19 @@ private struct RESTProfileUpdateTransport: HTTPTransport {
     #expect(result.ok && result.active == "default")
 }
 
+@Test func requiredNullableRESTFieldPreservesNullAndRequiresKey() throws {
+    let body = Data(#"{"ok":true,"mode":"chained","available":false,"reason":null,"model":"gpt-live-1","voice":"marin"}"#.utf8)
+    let decoded = try JSONDecoder().decode(AudioVoiceLiveStatusResponse.self, from: body)
+    #expect(decoded.reason == nil)
+    let encoded = try JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(decoded))
+    let original = try JSONDecoder().decode(JSONValue.self, from: body)
+    #expect(encoded == original)
+    let missing = Data(#"{"ok":true,"mode":"chained","available":false,"model":"gpt-live-1","voice":"marin"}"#.utf8)
+    #expect(throws: DecodingError.self) {
+        try JSONDecoder().decode(AudioVoiceLiveStatusResponse.self, from: missing)
+    }
+}
+
 @Test func generatedRESTAuthCallDecodesReviewedResponse() async throws {
     let rest = HermesREST(configuration: .init(
         baseURL: URL(string: "https://dashboard.example")!, headers: { ["Authorization": "Bearer test"] },

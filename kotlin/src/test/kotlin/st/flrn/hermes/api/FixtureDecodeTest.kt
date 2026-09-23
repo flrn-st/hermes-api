@@ -19,6 +19,7 @@ import st.flrn.hermes.api.generated.gateway.SessionCreateResult
 import st.flrn.hermes.api.generated.gateway.SessionListResult
 import st.flrn.hermes.api.generated.gateway.SessionCloseResult
 import st.flrn.hermes.api.generated.rest.SessionsEmptyCountResponse
+import st.flrn.hermes.api.generated.rest.AudioVoiceLiveStatusResponse
 import st.flrn.hermes.api.generated.rest.ProfilesActiveResponse
 import st.flrn.hermes.api.generated.rest.ProfilesSetActiveResponse
 import kotlin.test.Test
@@ -50,6 +51,11 @@ class FixtureDecodeTest {
                 assertEquals(200, frame.getValue("status").jsonPrimitive.content.toInt())
                 val body = frame.getValue("body")
                 when (name) {
+                    "GET /api/audio/voice-live/status" -> {
+                        val result = json.decodeFromJsonElement(AudioVoiceLiveStatusResponse.serializer(), body)
+                        assertTrue(result.ok && result.mode == "chained")
+                        assertEquals(body, json.encodeToJsonElement(AudioVoiceLiveStatusResponse.serializer(), result))
+                    }
                     "GET /api/sessions/empty/count" -> {
                         val result = json.decodeFromJsonElement(SessionsEmptyCountResponse.serializer(), body)
                         assertTrue(result.count >= 0)
@@ -133,6 +139,7 @@ class FixtureDecodeTest {
             }
         }
         assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "message.delta",
+            "GET /api/audio/voice-live/status",
             "GET /api/sessions/empty/count",
             "GET /api/profiles/active",
             "POST /api/profiles/active",

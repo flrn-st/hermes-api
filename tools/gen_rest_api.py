@@ -21,6 +21,7 @@ class Property:
     swift_type: str
     kotlin_type: str
     required: bool
+    nullable: bool = False
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,14 @@ def _typed_operations(document: dict) -> list[Operation]:
             required = set(response.get("required", []))
             props: list[Property] = []
             for wire, schema in response["properties"].items():
+                nullable = False
+                if "anyOf" in schema:
+                    variants = schema["anyOf"]
+                    non_null = [variant for variant in variants if variant.get("type") != "null"]
+                    if len(variants) != 2 or len(non_null) != 1 or set(schema) != {"anyOf"}:
+                        raise ValueError(f"Unsupported REST union {type_name}.{wire}: {schema}")
+                    schema = non_null[0]
+                    nullable = True
                 kind = schema.get("type")
                 types = {
                     "string": ("String", "String"),
@@ -102,7 +111,7 @@ def _typed_operations(document: dict) -> list[Operation]:
                 if kind not in types or len(schema) != 1:
                     raise ValueError(f"Unsupported REST field {type_name}.{wire}: {schema}")
                 swift, kotlin = types[kind]
-                props.append(Property(wire, camel(wire), swift, kotlin, wire in required))
+                props.append(Property(wire, camel(wire), swift, kotlin, wire in required, nullable))
             if not props or required - set(response["properties"]):
                 raise ValueError(f"Invalid reviewed REST response: {method} {path}")
             request_type_name: str | None = None
@@ -137,12 +146,15 @@ def _swift_model(op: Operation, *, request: bool = False) -> str:
     properties = op.request_properties if request else op.properties
     type_name = op.request_type_name if request else op.type_name
     source = "OpenAPI request" if request else "reviewed REST response"
-    fields = "\n".join(f"    public let {p.name}: {p.swift_type}{'' if p.required else '?'}" for p in properties)
-    args = ", ".join(f"{p.name}: {p.swift_type}{'' if p.required else '?'}{' = nil' if not p.required else ''}" for p in properties)
+    fields = "\n".join(f"    public let {p.name}: {p.swift_type}{'?' if p.nullable or not p.required else ''}" for p in properties)
+    args = ", ".join(f"{p.name}: {p.swift_type}{'?' if p.nullable or not p.required else ''}{' = nil' if not p.required else ''}" for p in properties)
     assigns = "\n".join(f"        self.{p.name} = {p.name}" for p in properties)
     keys = "\n".join(f'        case {p.name} = {json.dumps(p.wire)}' for p in properties)
     decode = "\n".join(
-        f"        {p.name} = try container.{('decode' if p.required else 'decodeIfPresent')}({p.swift_type}.self, forKey: .{p.name})"
+        (f"        guard container.contains(.{p.name}) else {{\n"
+         f"            throw DecodingError.keyNotFound(CodingKeys.{p.name}, .init(codingPath: decoder.codingPath, debugDescription: \"Missing required REST field\"))\n"
+         "        }\n" if p.required and p.nullable else "") +
+        f"        {p.name} = try container.{('decodeIfPresent' if p.nullable or not p.required else 'decode')}({p.swift_type}.self, forKey: .{p.name})"
         for p in properties
     )
     encode = "\n".join(
@@ -184,7 +196,7 @@ def _kotlin_model(op: Operation, *, request: bool = False) -> str:
     type_name = op.request_type_name if request else op.type_name
     source = "OpenAPI request" if request else "reviewed REST response"
     fields = "\n".join(
-        f'    @SerialName({json.dumps(p.wire)})\n    public val {p.name}: {p.kotlin_type}{"" if p.required else "?"}{"" if p.required else " = null"},'
+        f'    @SerialName({json.dumps(p.wire)})\n    public val {p.name}: {p.kotlin_type}{"?" if p.nullable or not p.required else ""}{"" if p.required else " = null"},'
         for p in properties
     )
     return f'''/** Generated from the {source} for {op.method} {op.path}. */

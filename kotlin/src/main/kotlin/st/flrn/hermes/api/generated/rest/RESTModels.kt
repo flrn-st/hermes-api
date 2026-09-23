@@ -4,6 +4,23 @@ package st.flrn.hermes.api.generated.rest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** Generated from the reviewed REST response for GET /api/audio/voice-live/status. */
+@Serializable
+public data class AudioVoiceLiveStatusResponse(
+    @SerialName("available")
+    public val available: Boolean,
+    @SerialName("mode")
+    public val mode: String,
+    @SerialName("model")
+    public val model: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("reason")
+    public val reason: String?,
+    @SerialName("voice")
+    public val voice: String,
+)
+
 /** Generated from the reviewed REST response for GET /api/auth/me. */
 @Serializable
 public data class AuthMeResponse(

@@ -2,6 +2,7 @@ package st.flrn.hermes.api
 
 import java.net.URI
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import st.flrn.hermes.api.runtime.HermesREST
 import st.flrn.hermes.api.runtime.HermesRESTConfiguration
 import st.flrn.hermes.api.runtime.HermesRESTException
@@ -75,5 +76,19 @@ class HermesRESTTest {
         }
         val rest = HermesREST(HermesRESTConfiguration(URI("https://dashboard.example"), transport = transport))
         assertEquals("default", rest.methods.profiles.setActive(ProfilesSetActiveRequest("default")).active)
+    }
+
+    @Test
+    fun requiredNullableRESTFieldPreservesNullAndRequiresKey() {
+        val json = Json
+        val body = """{"ok":true,"mode":"chained","available":false,"reason":null,"model":"gpt-live-1","voice":"marin"}"""
+        val decoded = json.decodeFromString(st.flrn.hermes.api.generated.rest.AudioVoiceLiveStatusResponse.serializer(), body)
+        assertEquals(null, decoded.reason)
+        assertEquals(json.parseToJsonElement(body),
+            json.encodeToJsonElement(st.flrn.hermes.api.generated.rest.AudioVoiceLiveStatusResponse.serializer(), decoded))
+        val missing = """{"ok":true,"mode":"chained","available":false,"model":"gpt-live-1","voice":"marin"}"""
+        assertFailsWith<kotlinx.serialization.MissingFieldException> {
+            json.decodeFromString(st.flrn.hermes.api.generated.rest.AudioVoiceLiveStatusResponse.serializer(), missing)
+        }
     }
 }

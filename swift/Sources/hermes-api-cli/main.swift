@@ -41,6 +41,10 @@ struct HermesAPICLI {
                 guard let token = environment["HERMES_LIVE_TOKEN"] else { throw CLIError.usage }
                 let rest = HermesREST(configuration: .init(
                     baseURL: url, headers: { ["X-Hermes-Session-Token": token] }))
+                let voice = try await rest.audio.voiceLiveStatus(profile: "default")
+                guard voice.ok, voice.mode == "chained", !voice.model.isEmpty, !voice.voice.isEmpty else {
+                    throw CLIError.invalidRESTVoice
+                }
                 let profile = try await rest.profiles.active()
                 guard profile.active == "default", profile.current == "default" else {
                     throw CLIError.invalidRESTProfile
@@ -110,4 +114,5 @@ private enum CLIError: Error {
     case turnTimedOut
     case invalidRESTCount
     case invalidRESTProfile
+    case invalidRESTVoice
 }

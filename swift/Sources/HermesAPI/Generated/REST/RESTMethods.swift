@@ -4,9 +4,20 @@ import Foundation
 public struct RESTMethodCatalog: Sendable {
     private let caller: any RESTCalling
     public init(caller: any RESTCalling) { self.caller = caller }
+    public var audio: AudioRESTMethods { AudioRESTMethods(caller: caller) }
     public var auth: AuthRESTMethods { AuthRESTMethods(caller: caller) }
     public var profiles: ProfilesRESTMethods { ProfilesRESTMethods(caller: caller) }
     public var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: caller) }
+}
+
+public struct AudioRESTMethods: Sendable {
+    private let caller: any RESTCalling
+    init(caller: any RESTCalling) { self.caller = caller }
+    public func voiceLiveStatus(profile: String? = nil) async throws -> AudioVoiceLiveStatusResponse {
+        var query: [String: String] = [:]
+        if let profile { query["profile"] = profile }
+        return try await caller.request("GET", path: "/api/audio/voice-live/status", as: AudioVoiceLiveStatusResponse.self, query: query, body: nil)
+    }
 }
 
 public struct AuthRESTMethods: Sendable {
@@ -46,6 +57,7 @@ public struct SessionsRESTMethods: Sendable {
 }
 
 public extension HermesREST {
+    var audio: AudioRESTMethods { AudioRESTMethods(caller: self) }
     var auth: AuthRESTMethods { AuthRESTMethods(caller: self) }
     var profiles: ProfilesRESTMethods { ProfilesRESTMethods(caller: self) }
     var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: self) }

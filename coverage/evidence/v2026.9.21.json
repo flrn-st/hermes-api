@@ -10,10 +10,11 @@
     "reasoning.available",
     "session.info",
     "session.title",
+    "sessions.changed",
     "thinking.delta"
   ],
   "fixture": "fixtures/v2026.9.21/liveness.jsonl",
-  "fixture_sha256": "32ea417b61956e6ac9de95359b234fb21758ee5b3e97be44305ba145a191e23a",
+  "fixture_sha256": "5a7319bc868d72c26ee78047b063ea25b86e7c692170250f7f5d8653145c64ed",
   "live_events": [
     "gateway.ready",
     "message.start",
@@ -31,6 +32,7 @@
     "session.close"
   ],
   "live_rest": [
+    "GET /api/audio/voice-live/status",
     "GET /api/profiles/active",
     "POST /api/profiles/active",
     "GET /api/sessions/empty/count"
@@ -47,6 +49,7 @@
   ],
   "ref": "v2026.9.21",
   "rest": [
+    "GET /api/audio/voice-live/status",
     "GET /api/profiles/active",
     "GET /api/sessions/empty/count",
     "POST /api/profiles/active"

@@ -1,0 +1,23 @@
+[project]
+name = "hermes-api-tooling"
+version = "0.1.0"
+description = "HermesAPI contract extraction and code generation"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "jinja2>=3.1.6,<4",
+    "pyyaml>=6.0.2,<7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4,<9",
+    "ruff>=0.13,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tools/tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100

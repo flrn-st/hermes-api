@@ -1,0 +1,5 @@
+# Stable, published Hermes release tags only. Development branches are intentionally excluded.
+upstream: NousResearch/hermes-agent
+minimum_contract_tag: v2026.9.14
+releases:
+  - v2026.9.21

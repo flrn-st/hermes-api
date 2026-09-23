@@ -1,0 +1,60 @@
+name: Publish HermesAPI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'spec/current-release.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: macos-15
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Validate generated contracts
+        run: |
+          make check-gen
+          make check-rest
+          uv run --locked pytest
+          uv run --locked ruff check tools harness
+          swift test
+          (cd kotlin && ./gradlew check)
+          make live
+      - name: Enforce complete tagged coverage
+        run: |
+          make coverage
+          uv run --locked python -m tools.coverage --ref "$(cat spec/current-release.txt)" --gate
+      - name: Publish Maven and SwiftPM release
+        run: |
+          release=$(uv run --locked python -m tools.release_version)
+          if git rev-parse "refs/tags/$release" >/dev/null 2>&1; then
+            existing=$(git rev-parse "refs/tags/$release^{commit}")
+            if [ "$existing" != "$GITHUB_SHA" ]; then
+              echo "Release tag $release points to another commit" >&2
+              exit 1
+            fi
+          else
+            (cd kotlin && ./gradlew publishHermesAPIPublicationToGitHubPackagesRepository)
+            git tag "$release"
+            git push origin "$release"
+          fi
+          if ! gh release view "$release" >/dev/null 2>&1; then
+            gh release create "$release" --title "HermesAPI $release" --notes-file "coverage/$(cat spec/current-release.txt).md"
+          fi

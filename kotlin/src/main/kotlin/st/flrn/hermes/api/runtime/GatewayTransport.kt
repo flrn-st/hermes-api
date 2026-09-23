@@ -2,14 +2,14 @@ package st.flrn.hermes.api.runtime
 
 import java.io.IOException
 import java.net.URI
+import java.util.concurrent.TimeUnit
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.headers
 import io.ktor.http.takeFrom
 import io.ktor.websocket.close
 import io.ktor.websocket.Frame
@@ -31,28 +31,29 @@ public interface GatewayHTTPTransport {
 }
 
 /** Inject a configured client to control cookies, TLS trust and tunneled endpoints. */
-public class KtorGatewayTransport(public val client: HttpClient = defaultClient()) : GatewayTransport, GatewayHTTPTransport {
+public class KtorGatewayTransport(public val client: HttpClient = defaultClient()) : GatewayTransport, GatewayHTTPTransport, AutoCloseable {
     override suspend fun connect(uri: URI, headers: Map<String, String>, protocols: List<String>): GatewayConnection {
         val session = client.webSocketSession {
             url { takeFrom(uri.toString()) }
-            headers {
-                headers.forEach { (name, value) -> append(name, value) }
-                if (protocols.isNotEmpty()) append("Sec-WebSocket-Protocol", protocols.joinToString(", "))
-            }
+            headers.forEach { (name, value) -> this.headers.append(name, value) }
+            if (protocols.isNotEmpty()) this.headers.append("Sec-WebSocket-Protocol", protocols.joinToString(", "))
         }
         return KtorConnection(session)
     }
 
     override suspend fun post(uri: URI, headers: Map<String, String>): Pair<Int, String> {
         val response = client.post(uri.toString()) {
-            headers { headers.forEach { (name, value) -> append(name, value) } }
+            headers.forEach { (name, value) -> this.headers.append(name, value) }
         }
         return response.status.value to response.bodyAsText()
     }
 
+    override fun close(): Unit = client.close()
+
     public companion object {
-        public fun defaultClient(): HttpClient = HttpClient(CIO) {
-            install(WebSockets) { pingIntervalMillis = 25_000 }
+        public fun defaultClient(): HttpClient = HttpClient(OkHttp) {
+            install(WebSockets)
+            engine { config { pingInterval(25, TimeUnit.SECONDS) } }
         }
     }
 }

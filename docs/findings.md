@@ -86,6 +86,16 @@ advertised server-request capability, and completed the typed `ping` call.
 `make live` now repeats this smoke test in CI. It does not yet exercise the
 stub LLM, session actions, replay, or the Docker image.
 
+A separate strict WebSocket probe verifies both client adapters transmit the
+public `hermes-gateway-v1` and private ticket subprotocols, with no ticket in
+the URL. This found a Kotlin transport bug: an `io.ktor.http.headers` import
+created and discarded a standalone headers object. App authentication headers
+on the ticket POST were also lost. The transport now appends headers to the
+actual Ktor request, uses the planned OkHttp engine by default, and a local
+HTTP test checks the authenticated POST. The caller closes an owned transport
+after disconnecting to release OkHttp resources.
+`make live-ticket` runs both adapters against the probe in CI.
+
 ## Remaining validation
 
 - Verify the exact `hermes web` flags and health endpoint in a running

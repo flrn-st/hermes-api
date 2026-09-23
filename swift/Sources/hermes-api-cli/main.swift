@@ -6,11 +6,19 @@ struct HermesAPICLI {
     static func main() async throws {
         let args = Array(CommandLine.arguments.dropFirst())
         guard args.count == 3, args[0] == "smoke", args[1] == "--url",
-              let url = URL(string: args[2]),
-              let token = ProcessInfo.processInfo.environment["HERMES_LIVE_TOKEN"], !token.isEmpty else {
+              let url = URL(string: args[2]) else {
             throw CLIError.usage
         }
-        let gateway = HermesGateway(configuration: .init(baseURL: url, auth: LocalTokenAuth(token: token)))
+        let environment = ProcessInfo.processInfo.environment
+        let auth: any HermesAuth
+        if let ticket = environment["HERMES_LIVE_TICKET"], !ticket.isEmpty {
+            auth = StaticTicketAuth(ticket: ticket)
+        } else if let token = environment["HERMES_LIVE_TOKEN"], !token.isEmpty {
+            auth = LocalTokenAuth(token: token)
+        } else {
+            throw CLIError.usage
+        }
+        let gateway = HermesGateway(configuration: .init(baseURL: url, auth: auth))
         do {
             try await gateway.connect()
             let result = try await gateway.ping(PingParams())
@@ -22,6 +30,14 @@ struct HermesAPICLI {
             await gateway.disconnect()
             throw error
         }
+    }
+}
+
+private struct StaticTicketAuth: HermesAuth {
+    let ticket: String
+
+    func credential(baseURL: URL, http: any HTTPTransport) async throws -> GatewayCredential {
+        .ticket(ticket, headers: [:])
     }
 }
 

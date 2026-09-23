@@ -1,6 +1,6 @@
 REF ?= $(shell cat spec/current-release.txt)
 
-.PHONY: gen check-gen rest check-rest live record coverage test
+.PHONY: gen check-gen rest check-rest live live-ticket record coverage test
 
 gen:
 	uv run --locked python -m tools.fetch_spec --ref $(REF)
@@ -31,10 +31,13 @@ record:
 
 test:
 	uv run --locked pytest
-	uv run --locked ruff check tools
+	uv run --locked ruff check tools harness
 	swift build
 	swift test
 	cd kotlin && ./gradlew check
 
 coverage:
 	uv run --locked python -m tools.coverage --ref $(REF)
+
+live-ticket:
+	uv run --locked python -m harness.ticket_probe --ref $(REF)

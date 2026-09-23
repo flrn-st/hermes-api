@@ -98,3 +98,5 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Run both clients against tagged Hermes
         run: make live
+      - name: Verify ticket subprotocols in both clients
+        run: make live-ticket

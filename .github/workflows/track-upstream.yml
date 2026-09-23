@@ -25,7 +25,7 @@ jobs:
   update:
     needs: detect
     if: needs.detect.outputs.ref != ''
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     env:
       REF: ${{ needs.detect.outputs.ref }}
       GH_TOKEN: ${{ github.token }}
@@ -70,13 +70,16 @@ jobs:
           else
             echo 'REST overlays have stale handler hashes or changed routes. Review the tagged handlers and update the overlays.' >> "reports/$REF/generation.md"
           fi
+          if ! make record REF="$REF" > "reports/$REF/live-record.log" 2>&1; then
+            echo 'Live recording or a client suite needs review; see live-record.log.' >> "reports/$REF/generation.md"
+          fi
           uv run --locked python -m tools.contract_diff --from-ref "$previous" --to-ref "$REF" --output "reports/$REF/openrpc.md"
           uv run --locked python -m tools.coverage --ref "$REF"
       - name: Compare REST contracts with oasdiff
         if: steps.existing.outputs.skip != 'true'
         run: |
-          curl -fsSL -o /tmp/oasdiff.tar.gz https://github.com/oasdiff/oasdiff/releases/download/v1.32.1/oasdiff_1.32.1_linux_amd64.tar.gz
-          echo '7c8939fc49b75ee11fec66a5b83b37a2fca6aee109fed85013b1ba2ac2a1ee7f  /tmp/oasdiff.tar.gz' | sha256sum --check
+          curl -fsSL -o /tmp/oasdiff.tar.gz https://github.com/oasdiff/oasdiff/releases/download/v1.32.1/oasdiff_1.32.1_darwin_all.tar.gz
+          echo 'e4d74b7e2dfb9d4819e7fc720c905ec86547e4637ac270a2b0187c0f1fb7187e  /tmp/oasdiff.tar.gz' | shasum -a 256 --check
           mkdir -p /tmp/oasdiff
           tar -xzf /tmp/oasdiff.tar.gz -C /tmp/oasdiff
           /tmp/oasdiff/oasdiff breaking -f markdown "spec/out/$PREVIOUS_REF/openapi.raw.json" "spec/out/$REF/openapi.raw.json" > "reports/$REF/rest-breaking.md"

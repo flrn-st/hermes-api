@@ -11,15 +11,20 @@
     "session.info",
     "session.title",
     "sessions.changed",
-    "thinking.delta"
+    "thinking.delta",
+    "tool.complete",
+    "tool.generating",
+    "tool.start"
   ],
   "fixture": "fixtures/v2026.9.21/liveness.jsonl",
-  "fixture_sha256": "5a7319bc868d72c26ee78047b063ea25b86e7c692170250f7f5d8653145c64ed",
+  "fixture_sha256": "41ca708eb31ff41e31763078ed569f73a0b6bf24b90a573a41dec73d8095c8e4",
   "live_events": [
     "gateway.ready",
     "message.start",
     "message.delta",
-    "message.complete"
+    "message.complete",
+    "tool.start",
+    "tool.complete"
   ],
   "live_kotlin": true,
   "live_methods": [
@@ -36,6 +41,9 @@
     "GET /api/profiles/active",
     "POST /api/profiles/active",
     "GET /api/sessions/empty/count"
+  ],
+  "live_server_requests": [
+    "clarify"
   ],
   "live_swift": true,
   "methods": [
@@ -54,5 +62,8 @@
     "GET /api/sessions/empty/count",
     "POST /api/profiles/active"
   ],
-  "scenario": "liveness"
+  "scenario": "liveness",
+  "server_requests": [
+    "clarify"
+  ]
 }

@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 import yaml
-from tui_gateway.contracts import EVENTS, METHODS
+from tui_gateway.contracts import EVENTS, METHODS, SERVER_REQUESTS
 from websockets.asyncio.client import connect
 
 
@@ -63,6 +63,7 @@ async def record(scenario: Path, output: Path, openapi: Path) -> None:
     entries: list[dict] = []
     captured: dict[str, object] = {}
     seen_events: list[str] = []
+    seen_requests: list[str] = []
     seen_frames: dict[str, dict] = {}
     async with connect(f"{url}/api/ws?token={token}", origin=os.environ["HERMES_LIVE_URL"]) as socket:
         async def receive(expected_id: int | None = None) -> dict:
@@ -78,9 +79,26 @@ async def record(scenario: Path, output: Path, openapi: Path) -> None:
                         raise RuntimeError("Hermes emitted an error event")
                     seen_events.append(name)
                     seen_frames[name] = frame
-                    entries.append({"kind": "event", "name": name, "frame": frame})
+                    recorded_frame = json.loads(json.dumps(frame))
+                    redacted_fields: list[str] = []
+                    if name == "session.info" and "system_prompt" in recorded_frame["params"]["payload"]:
+                        recorded_frame["params"]["payload"]["system_prompt"] = "<redacted>"
+                        redacted_fields.append("params.payload.system_prompt")
+                    entries.append({"kind": "event", "name": name, "frame": recorded_frame,
+                                    **({"redacted_fields": redacted_fields} if redacted_fields else {})})
                     if expected_id is None:
                         return frame
+                    continue
+                if isinstance(frame.get("id"), str) and frame.get("method") in SERVER_REQUESTS:
+                    name = frame["method"]
+                    contract = SERVER_REQUESTS[name]
+                    contract.params.model_validate(frame.get("params", {}))
+                    answer = _resolve(definition.get("server_requests", {})[name], captured)
+                    contract.result.model_validate(answer)
+                    await socket.send(json.dumps({"jsonrpc": "2.0", "id": frame["id"], "result": answer}))
+                    seen_requests.append(name)
+                    entries.append({"kind": "server_request", "name": name, "frame": frame,
+                                    "answer": answer})
                     continue
                 if expected_id is None or frame.get("id") != expected_id:
                     raise ValueError(f"Unexpected response id: {frame.get('id')}")
@@ -92,6 +110,7 @@ async def record(scenario: Path, output: Path, openapi: Path) -> None:
                  *definition["calls"]]
         for identifier, call in enumerate(calls, 1):
             seen_events.clear()
+            seen_requests.clear()
             seen_frames.clear()
             method = call["method"]
             contract = METHODS[method]
@@ -114,6 +133,9 @@ async def record(scenario: Path, output: Path, openapi: Path) -> None:
                     actual = seen_frames[wait_for]["params"]["payload"].get("text")
                     if actual != expected_text:
                         raise ValueError(f"Unexpected {wait_for} text: {actual!r}")
+            expected_request = call.get("wait_for_server_request")
+            if expected_request and expected_request not in seen_requests:
+                raise ValueError(f"Expected server request {expected_request} was not received")
     document = json.loads(openapi.read_text(encoding="utf-8"))
     base = os.environ["HERMES_LIVE_URL"]
     for call in definition.get("rest_calls", []):

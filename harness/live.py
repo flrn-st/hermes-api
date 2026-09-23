@@ -116,11 +116,15 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                         "fixture": str(fixture.relative_to(ROOT)),
                         "fixture_sha256": hashlib.sha256(fixture.read_bytes()).hexdigest(),
                         "methods": sorted({entry["name"] for entry in recorded if entry["kind"] == "response"}),
+                        "server_requests": sorted({entry["name"] for entry in recorded
+                                                   if entry["kind"] == "server_request"}),
                         "events": sorted({entry["name"] for entry in recorded if entry["kind"] == "event"}),
                         "rest": sorted({entry["name"] for entry in recorded if entry["kind"] == "rest"}),
                         "live_methods": ["client.capabilities", "ping", "gateway.capabilities",
                                          "session.create", "prompt.submit", "session.list", "session.close"],
-                        "live_events": ["gateway.ready", "message.start", "message.delta", "message.complete"],
+                        "live_events": ["gateway.ready", "message.start", "message.delta", "message.complete",
+                                        "tool.start", "tool.complete"],
+                        "live_server_requests": ["clarify"],
                         "live_rest": ["GET /api/audio/voice-live/status",
                                       "GET /api/profiles/active", "POST /api/profiles/active",
                                       "GET /api/sessions/empty/count"],
@@ -135,7 +139,9 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                         json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
                     )
             except Exception:
-                print(log_path.read_text(errors="replace")[-4000:].replace(token, "<redacted>"))
+                diagnostic = log_path.read_text(errors="replace").splitlines()[-20:]
+                print("\n".join(line.replace(token, "<redacted>") if "system_prompt" not in line
+                                else "<redacted server frame>" for line in diagnostic)[-4000:])
                 raise
             finally:
                 server.terminate()

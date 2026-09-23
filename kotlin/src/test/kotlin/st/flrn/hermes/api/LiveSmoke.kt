@@ -14,6 +14,9 @@ import st.flrn.hermes.api.generated.gateway.MessageCompletePayloadText
 import st.flrn.hermes.api.generated.gateway.SessionCreateParams
 import st.flrn.hermes.api.generated.gateway.SessionListParams
 import st.flrn.hermes.api.generated.gateway.SessionCloseParams
+import st.flrn.hermes.api.generated.gateway.ClarifyResult
+import st.flrn.hermes.api.generated.gateway.ServerRequest
+import st.flrn.hermes.api.generated.gateway.ServerRequestResult
 import st.flrn.hermes.api.generated.rest.ProfilesSetActiveRequest
 import st.flrn.hermes.api.runtime.HermesGateway
 import st.flrn.hermes.api.runtime.HermesGatewayConfiguration
@@ -41,6 +44,15 @@ suspend fun main() {
     }
     val transport = KtorGatewayTransport()
     val gateway = HermesGateway(HermesGatewayConfiguration(URI(url), auth, transport))
+    gateway.setServerRequestHandler { request ->
+        val clarify = request as? ServerRequest.Clarify ?: error("Unexpected server request")
+        val questions = (clarify.params.questions as? Patch.Value)?.value
+            ?: error("Missing clarification questions")
+        check(questions.size == 1 && questions[0].question == "Which release channel?") {
+            "Unexpected clarification question"
+        }
+        ServerRequestResult.Clarify(ClarifyResult(answers = mapOf(questions[0].qid to "Stable")))
+    }
     try {
         gateway.connect()
         check(gateway.methods.ping(PingParams()).pong) { "Gateway ping returned false" }
@@ -77,6 +89,44 @@ suspend fun main() {
                 val reply = payload.payload.text as? MessageCompletePayloadText.StringValue
                 check(reply?.value == "HermesAPI fixture reply.") { "Unexpected gateway reply" }
                 check(sawStart && streamed.toString() == reply.value) { "Streamed gateway text differs" }
+            }
+            coroutineScope {
+                var sawToolStart = false
+                var sawToolComplete = false
+                val streamed = StringBuilder()
+                val completion = async(start = CoroutineStart.UNDISPATCHED) {
+                    withTimeout(30_000) {
+                        gateway.events.first { event ->
+                            if (event.sessionId != session.sessionId) return@first false
+                            when (val payload = event.payload) {
+                                is GatewayEventPayload.ToolStart -> {
+                                    check(payload.payload.name == "clarify") { "Unexpected tool started" }
+                                    sawToolStart = true
+                                }
+                                is GatewayEventPayload.ToolComplete -> {
+                                    check(payload.payload.name == "clarify") { "Unexpected tool completed" }
+                                    sawToolComplete = true
+                                }
+                                is GatewayEventPayload.MessageDelta -> streamed.append(payload.payload.text)
+                                else -> Unit
+                            }
+                            event.type in setOf("message.complete", "error")
+                        }
+                    }
+                }
+                val submitted = gateway.methods.prompt.submit(PromptSubmitParams(
+                    sessionId = session.sessionId,
+                    text = JsonPrimitive("Ask which release channel to use for HermesAPI."),
+                ))
+                check(submitted.status != null) { "Gateway rejected the clarification prompt" }
+                val event = completion.await()
+                val payload = event.payload as? GatewayEventPayload.MessageComplete
+                    ?: error("Gateway clarification turn failed: ${event.type}")
+                val reply = payload.payload.text as? MessageCompletePayloadText.StringValue
+                check(reply?.value == "HermesAPI stable release selected.") { "Unexpected clarification reply" }
+                check(sawToolStart && sawToolComplete && streamed.toString().trim() == reply.value) {
+                    "Clarification tool flow was incomplete"
+                }
             }
             gateway.methods.session.list(SessionListParams())
             check(gateway.methods.session.close(SessionCloseParams(session.sessionId)).closed) {

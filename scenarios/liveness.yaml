@@ -17,11 +17,22 @@ calls:
       text: Reply with a short greeting.
     wait_for_event: message.complete
     expect_event_text: HermesAPI fixture reply.
+  - method: prompt.submit
+    params:
+      session_id: ${session_id}
+      text: Ask which release channel to use for HermesAPI.
+    wait_for_server_request: clarify
+    wait_for_event: message.complete
+    expect_event_text: HermesAPI stable release selected.
   - method: session.list
     params: {}
   - method: session.close
     params:
       session_id: ${session_id}
+server_requests:
+  clarify:
+    answers:
+      q0: Stable
 rest_calls:
   - method: GET
     path: /api/audio/voice-live/status

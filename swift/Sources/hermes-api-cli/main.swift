@@ -19,6 +19,15 @@ struct HermesAPICLI {
             throw CLIError.usage
         }
         let gateway = HermesGateway(configuration: .init(baseURL: url, auth: auth))
+        await gateway.setServerRequestHandler { request in
+            guard case .clarify(let params) = request,
+                  case .value(let questions) = params.questions,
+                  questions.count == 1,
+                  questions[0].question == "Which release channel?" else {
+                throw CLIError.unexpectedServerRequest
+            }
+            return .clarify(ClarifyResult(answers: [questions[0].qid: "Stable"]))
+        }
         do {
             try await gateway.connect()
             let result = try await gateway.ping(PingParams())
@@ -33,8 +42,17 @@ struct HermesAPICLI {
                     text: .string("Reply with a short greeting.")))
                 guard submission.status != nil else { throw CLIError.turnFailed }
                 let reply = try await waitForFixtureReply(
-                    events: gateway.events, sessionID: session.sessionId)
+                    events: gateway.events, sessionID: session.sessionId,
+                    expected: "HermesAPI fixture reply.", expectTool: false)
                 guard reply == "HermesAPI fixture reply." else { throw CLIError.turnFailed }
+                let clarification = try await gateway.prompt.submit(.init(
+                    sessionId: session.sessionId,
+                    text: .string("Ask which release channel to use for HermesAPI.")))
+                guard clarification.status != nil else { throw CLIError.turnFailed }
+                let clarifiedReply = try await waitForFixtureReply(
+                    events: gateway.events, sessionID: session.sessionId,
+                    expected: "HermesAPI stable release selected.", expectTool: true)
+                guard clarifiedReply == "HermesAPI stable release selected." else { throw CLIError.turnFailed }
                 _ = try await gateway.session.list(.init())
                 let closed = try await gateway.session.close(.init(sessionId: session.sessionId))
                 guard closed.closed else { throw CLIError.sessionCloseFailed }
@@ -63,21 +81,29 @@ struct HermesAPICLI {
     }
 
     private static func waitForFixtureReply(
-        events: AsyncStream<GatewayEvent>, sessionID: String
+        events: AsyncStream<GatewayEvent>, sessionID: String, expected: String, expectTool: Bool
     ) async throws -> String {
         try await withThrowingTaskGroup(of: String.self) { group in
             group.addTask {
                 var sawStart = false
+                var sawToolStart = false
+                var sawToolComplete = false
                 var streamed = ""
                 for await event in events where event.sessionID == sessionID {
                     switch event.payload {
                     case .messageStart:
                         sawStart = true
+                    case .toolStart(let payload) where payload.name == "clarify":
+                        sawToolStart = true
+                    case .toolComplete(let payload) where payload.name == "clarify":
+                        sawToolComplete = true
                     case .messageDelta(let payload):
                         streamed += payload.text
                     case .messageComplete(let payload):
                         if case .string(let text)? = payload.text,
-                           sawStart, streamed == text { return text }
+                           sawStart, text == expected,
+                           streamed.trimmingCharacters(in: .whitespacesAndNewlines) == text,
+                           (!expectTool || (sawToolStart && sawToolComplete)) { return text }
                         throw CLIError.turnFailed
                     case .error:
                         throw CLIError.turnFailed
@@ -115,4 +141,5 @@ private enum CLIError: Error {
     case invalidRESTCount
     case invalidRESTProfile
     case invalidRESTVoice
+    case unexpectedServerRequest
 }

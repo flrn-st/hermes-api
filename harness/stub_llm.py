@@ -8,6 +8,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MODEL = "hermes-api-fixture"
 REPLY = "HermesAPI fixture reply."
+CLARIFY_PROMPT = "Ask which release channel to use for HermesAPI."
+CLARIFY_REPLY = "HermesAPI stable release selected."
 
 
 class StubLLM:
@@ -42,11 +44,38 @@ class StubLLM:
                 owner.requests.append({"model": request.get("model"), "stream": request.get("stream")})
                 model = request.get("model", MODEL)
                 usage = {"prompt_tokens": 10, "completion_tokens": 4, "total_tokens": 14}
+                messages = request.get("messages", [])
+                clarify_turn = CLARIFY_PROMPT in json.dumps(messages)
+                answered_clarify = any(message.get("role") == "tool" and
+                                       "Stable" in str(message.get("content")) for message in messages)
+                if clarify_turn and not answered_clarify:
+                    arguments = json.dumps({"questions": [{"question": "Which release channel?",
+                                                            "choices": ["Stable", "Beta"]}]})
+                    choice = {"index": 0, "delta": {"role": "assistant", "content": None,
+                              "tool_calls": [{"index": 0, "id": "call_hermes_api_clarify",
+                                              "type": "function", "function": {"name": "clarify",
+                                                                          "arguments": arguments}}]},
+                              "finish_reason": "tool_calls"}
+                    if request.get("stream"):
+                        chunk = {"id": "hermes-api-stub", "object": "chat.completion.chunk",
+                                 "created": 1, "model": model, "choices": [choice]}
+                        self._answer("text/event-stream", ("data: " + json.dumps(chunk) + "\n\n"
+                                                           + "data: [DONE]\n\n").encode())
+                    else:
+                        message = {"role": "assistant", "content": None,
+                                   "tool_calls": choice["delta"]["tool_calls"]}
+                        self._answer("application/json", json.dumps({
+                            "id": "hermes-api-stub", "object": "chat.completion", "created": 1,
+                            "model": model, "choices": [{"index": 0, "message": message,
+                                                        "finish_reason": "tool_calls"}], "usage": usage,
+                        }).encode())
+                    return
+                reply = CLARIFY_REPLY if clarify_turn else REPLY
                 if request.get("stream"):
                     chunks = [
                         {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,
                          "model": model, "choices": [{"index": 0,
-                                                     "delta": {"role": "assistant", "content": REPLY},
+                                                     "delta": {"role": "assistant", "content": reply},
                                                      "finish_reason": None}]},
                         {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,
                          "model": model, "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
@@ -59,7 +88,7 @@ class StubLLM:
                     self._answer("application/json", json.dumps({
                         "id": "hermes-api-stub", "object": "chat.completion", "created": 1,
                         "model": model,
-                        "choices": [{"index": 0, "message": {"role": "assistant", "content": REPLY},
+                        "choices": [{"index": 0, "message": {"role": "assistant", "content": reply},
                                      "finish_reason": "stop"}],
                         "usage": usage,
                     }).encode())

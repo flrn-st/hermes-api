@@ -10,6 +10,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import st.flrn.hermes.api.generated.gateway.ClientCapabilitiesResult
+import st.flrn.hermes.api.generated.gateway.ClarifyRequestParams
+import st.flrn.hermes.api.generated.gateway.ClarifyResult
 import st.flrn.hermes.api.generated.gateway.GatewayCapabilitiesResult
 import st.flrn.hermes.api.generated.gateway.GatewayEventPayload
 import st.flrn.hermes.api.generated.gateway.GatewayReadyPayload
@@ -18,6 +20,7 @@ import st.flrn.hermes.api.generated.gateway.PromptSubmitResult
 import st.flrn.hermes.api.generated.gateway.SessionCreateResult
 import st.flrn.hermes.api.generated.gateway.SessionListResult
 import st.flrn.hermes.api.generated.gateway.SessionCloseResult
+import st.flrn.hermes.api.runtime.Patch
 import st.flrn.hermes.api.generated.rest.SessionsEmptyCountResponse
 import st.flrn.hermes.api.generated.rest.AudioVoiceLiveStatusResponse
 import st.flrn.hermes.api.generated.rest.ProfilesActiveResponse
@@ -47,6 +50,18 @@ class FixtureDecodeTest {
             val name = record.getValue("name").jsonPrimitive.content
             seen += name
             val frame = record.getValue("frame").jsonObject
+            if (record.getValue("kind").jsonPrimitive.content == "server_request") {
+                assertEquals("clarify", name)
+                val request = json.decodeFromJsonElement(ClarifyRequestParams.serializer(), frame.getValue("params"))
+                val questions = (request.questions as? Patch.Value)?.value
+                    ?: error("Missing recorded clarification")
+                assertEquals("Which release channel?", questions.single().question)
+                val answerBody = record.getValue("answer")
+                val answer = json.decodeFromJsonElement(ClarifyResult.serializer(), answerBody)
+                assertEquals("Stable", answer.answers?.get("q0"))
+                assertEquals(answerBody, json.encodeToJsonElement(ClarifyResult.serializer(), answer))
+                continue
+            }
             if (record.getValue("kind").jsonPrimitive.content == "rest") {
                 assertEquals(200, frame.getValue("status").jsonPrimitive.content.toInt())
                 val body = frame.getValue("body")
@@ -90,11 +105,15 @@ class FixtureDecodeTest {
                 if (payload is GatewayEventPayload.MessageComplete) {
                     val reply = assertIs<st.flrn.hermes.api.generated.gateway.MessageCompletePayloadText.StringValue>(
                         payload.payload.text)
-                    assertEquals("HermesAPI fixture reply.", reply.value)
+                    assertTrue(reply.value in setOf("HermesAPI fixture reply.",
+                        "HermesAPI stable release selected."))
                 }
                 if (payload is GatewayEventPayload.MessageDelta) {
-                    assertEquals("HermesAPI fixture reply.", payload.payload.text)
+                    assertTrue(payload.payload.text.trim() in setOf("HermesAPI fixture reply.",
+                        "HermesAPI stable release selected."))
                 }
+                if (payload is GatewayEventPayload.ToolStart) assertEquals("clarify", payload.payload.name)
+                if (payload is GatewayEventPayload.ToolComplete) assertEquals("clarify", payload.payload.name)
                 continue
             }
             when (name) {
@@ -138,7 +157,8 @@ class FixtureDecodeTest {
                 else -> error("Unexpected fixture: $name")
             }
         }
-        assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "message.delta",
+        assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "clarify",
+            "tool.start", "tool.complete", "message.delta",
             "GET /api/audio/voice-live/status",
             "GET /api/sessions/empty/count",
             "GET /api/profiles/active",

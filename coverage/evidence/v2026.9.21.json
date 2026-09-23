@@ -1,0 +1,19 @@
+{
+  "commit": "d337b736aa1e8ebecfab043842d13e4a2d2f48a3",
+  "decode_kotlin": true,
+  "decode_swift": true,
+  "events": [
+    "gateway.ready"
+  ],
+  "fixture": "fixtures/v2026.9.21/liveness.jsonl",
+  "fixture_sha256": "79cf8688ee2d9e3710168c8cfa354efd3cd69c79465e5bf034231e912167b942",
+  "live_kotlin": true,
+  "live_swift": true,
+  "methods": [
+    "client.capabilities",
+    "ping",
+    "gateway.capabilities"
+  ],
+  "ref": "v2026.9.21",
+  "scenario": "liveness"
+}

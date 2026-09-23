@@ -1,0 +1,6 @@
+name: liveness
+calls:
+  - method: ping
+    params: {}
+  - method: gateway.capabilities
+    params: {}

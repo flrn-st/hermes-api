@@ -15,6 +15,7 @@ struct HermesAPICLI {
             try await gateway.connect()
             let result = try await gateway.ping(PingParams())
             guard result.pong else { throw CLIError.pingFailed }
+            _ = try await gateway.gateway.capabilities(PingParams())
             FileHandle.standardOutput.write(Data("Hermes \(HermesAPI.hermesRelease) gateway ping passed\n".utf8))
             await gateway.disconnect()
         } catch {

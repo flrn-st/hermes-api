@@ -14,6 +14,7 @@ suspend fun main() {
     try {
         gateway.connect()
         check(gateway.methods.ping(PingParams()).pong) { "Gateway ping returned false" }
+        gateway.methods.gateway.capabilities(PingParams())
         System.out.write("Hermes ${HermesAPI.hermesRelease} gateway ping passed\n".toByteArray())
     } finally {
         gateway.disconnect()

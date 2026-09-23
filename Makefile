@@ -1,6 +1,6 @@
 REF ?= $(shell cat spec/current-release.txt)
 
-.PHONY: gen check-gen rest check-rest live coverage test
+.PHONY: gen check-gen rest check-rest live record coverage test
 
 gen:
 	uv run --locked python -m tools.fetch_spec --ref $(REF)
@@ -25,6 +25,9 @@ check-gen:
 
 live:
 	uv run --locked python -m harness.live --ref $(REF)
+
+record:
+	uv run --locked python -m harness.live --ref $(REF) --record
 
 test:
 	uv run --locked pytest

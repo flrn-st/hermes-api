@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import secrets
 import socket
@@ -40,7 +42,7 @@ def _await_status(url: str, token: str, server: subprocess.Popen[bytes]) -> None
     raise TimeoutError("Hermes status route did not become ready")
 
 
-def run(ref: str, source_repo: Path | None = None) -> None:
+def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> None:
     ref = require_release_tag(ref)
     extract(ref, source_repo)
     repo = source_repo or ROOT / "spec" / ".upstream-rest" / ref
@@ -61,6 +63,10 @@ def run(ref: str, source_repo: Path | None = None) -> None:
             homebrew_java = Path("/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home")
             if homebrew_java.is_dir():
                 env["JAVA_HOME"] = str(homebrew_java)
+        if "DEVELOPER_DIR" not in env:
+            xcode = Path("/Applications/Xcode-26.5.0.app/Contents/Developer")
+            if xcode.is_dir():
+                env["DEVELOPER_DIR"] = str(xcode)
         log_path = Path(home) / "server.log"
         with log_path.open("wb") as log:
             server = subprocess.Popen(
@@ -70,6 +76,13 @@ def run(ref: str, source_repo: Path | None = None) -> None:
             )
             try:
                 _await_status(url, token, server)
+                if record:
+                    subprocess.run(
+                        [str(python), str(ROOT / "harness/record.py"),
+                         "--scenario", str(ROOT / "scenarios/liveness.yaml"),
+                         "--output", str(ROOT / "fixtures" / ref / "liveness.jsonl")],
+                        cwd=repo, env=env, check=True,
+                    )
                 subprocess.run(
                     ["swift", "run", "--quiet", "hermes-api-cli", "smoke", "--url", url],
                     cwd=ROOT, env=env, check=True,
@@ -78,6 +91,30 @@ def run(ref: str, source_repo: Path | None = None) -> None:
                     [str(ROOT / "kotlin" / "gradlew"), "smoke", "--quiet"],
                     cwd=ROOT / "kotlin", env=env, check=True,
                 )
+                if record:
+                    subprocess.run(["swift", "test", "--quiet"], cwd=ROOT, env=env, check=True)
+                    subprocess.run([str(ROOT / "kotlin" / "gradlew"), "check", "--quiet"],
+                                   cwd=ROOT / "kotlin", env=env, check=True)
+                    fixture = ROOT / "fixtures" / ref / "liveness.jsonl"
+                    meta = json.loads((ROOT / "spec/out" / ref / "meta.json").read_text())
+                    evidence = {
+                        "ref": ref,
+                        "commit": meta["commit"],
+                        "scenario": "liveness",
+                        "fixture": str(fixture.relative_to(ROOT)),
+                        "fixture_sha256": hashlib.sha256(fixture.read_bytes()).hexdigest(),
+                        "methods": ["client.capabilities", "ping", "gateway.capabilities"],
+                        "events": ["gateway.ready"],
+                        "decode_swift": True,
+                        "decode_kotlin": True,
+                        "live_swift": True,
+                        "live_kotlin": True,
+                    }
+                    evidence_dir = ROOT / "coverage/evidence"
+                    evidence_dir.mkdir(parents=True, exist_ok=True)
+                    (evidence_dir / f"{ref}.json").write_text(
+                        json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                    )
             except Exception:
                 print(log_path.read_text(errors="replace")[-4000:].replace(token, "<redacted>"))
                 raise
@@ -94,8 +131,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ref", required=True)
     parser.add_argument("--source-repo", type=Path)
+    parser.add_argument("--record", action="store_true")
     args = parser.parse_args()
-    run(args.ref, args.source_repo)
+    run(args.ref, args.source_repo, record=args.record)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 {
-  "complete": 0,
+  "complete": 3,
   "entries": [
     {
       "complete": false,
@@ -222,13 +222,13 @@
       "typed": true
     },
     {
-      "complete": false,
-      "decode": false,
-      "fixture": false,
+      "complete": true,
+      "decode": true,
+      "fixture": true,
       "generated": true,
       "kind": "gateway_method",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "client.capabilities",
       "typed": true
     },
@@ -475,13 +475,13 @@
       "typed": true
     },
     {
-      "complete": false,
-      "decode": false,
-      "fixture": false,
+      "complete": true,
+      "decode": true,
+      "fixture": true,
       "generated": true,
       "kind": "gateway_method",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "gateway.capabilities",
       "typed": true
     },
@@ -1190,13 +1190,13 @@
       "typed": true
     },
     {
-      "complete": false,
-      "decode": false,
-      "fixture": false,
+      "complete": true,
+      "decode": true,
+      "fixture": true,
       "generated": true,
       "kind": "gateway_method",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "ping",
       "typed": true
     },
@@ -2676,12 +2676,12 @@
     },
     {
       "complete": false,
-      "decode": false,
-      "fixture": false,
+      "decode": true,
+      "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "gateway.ready",
       "typed": false
     },
@@ -7314,19 +7314,19 @@
   "summary": {
     "event": {
       "complete": 0,
-      "decode": 0,
-      "fixture": 0,
+      "decode": 1,
+      "fixture": 1,
       "generated": 69,
-      "live_both": 0,
+      "live_both": 1,
       "total": 69,
       "typed": 48
     },
     "gateway_method": {
-      "complete": 0,
-      "decode": 0,
-      "fixture": 0,
+      "complete": 3,
+      "decode": 3,
+      "fixture": 3,
       "generated": 219,
-      "live_both": 0,
+      "live_both": 3,
       "total": 219,
       "typed": 160
     },

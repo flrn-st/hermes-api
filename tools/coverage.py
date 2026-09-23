@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -76,6 +77,31 @@ def _rest_entries(document: dict, generated_symbols: list[dict], hashes: dict) -
     return result
 
 
+def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> None:
+    path = root / "coverage/evidence" / f"{ref}.json"
+    if not path.exists():
+        return
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    if evidence["ref"] != ref or evidence["commit"] != commit:
+        raise ValueError("Coverage evidence does not match the pinned release")
+    fixture = root / "fixtures" / ref / "liveness.jsonl"
+    if evidence["fixture"] != str(fixture.relative_to(root)):
+        raise ValueError("Coverage fixture path does not match the tagged scenario")
+    if evidence["fixture_sha256"] != hashlib.sha256(fixture.read_bytes()).hexdigest():
+        raise ValueError("Coverage fixture changed after evidence was recorded")
+    recorded = {json.loads(line)["name"] for line in fixture.read_text(encoding="utf-8").splitlines()}
+    declared = set(evidence["methods"]) | set(evidence["events"])
+    if recorded != declared:
+        raise ValueError("Coverage evidence does not match recorded frame names")
+    for entry in entries:
+        if ((entry["kind"] == "gateway_method" and entry["name"] in evidence["methods"]) or
+                (entry["kind"] == "event" and entry["name"] in evidence["events"])):
+            entry["fixture"] = True
+            entry["decode"] = evidence["decode_swift"] and evidence["decode_kotlin"]
+            entry["live_swift"] = evidence["live_swift"]
+            entry["live_kotlin"] = evidence["live_kotlin"]
+
+
 def report(ref: str, root: Path = ROOT) -> dict:
     ref = require_release_tag(ref)
     source = root / "spec/out" / ref
@@ -87,6 +113,8 @@ def report(ref: str, root: Path = ROOT) -> dict:
     rest_symbols = json.loads(generated_path.read_text()) if generated_path.exists() else []
     hashes = json.loads((source / "rest-hashes.json").read_text())
     entries = _gateway_entries(contract, symbols) + _rest_entries(document, rest_symbols, hashes)
+    meta = json.loads((source / "meta.json").read_text())
+    _apply_evidence(entries, ref, root, meta["commit"])
     for entry in entries:
         checks = ("typed", "generated", "fixture", "decode", "live_swift", "live_kotlin")
         entry["complete"] = all(entry[name] for name in checks) and (entry.get("fresh", True))
@@ -114,7 +142,7 @@ def write_report(ref: str, root: Path = ROOT) -> dict:
     for kind, counts in data["summary"].items():
         lines.append(f"| {kind} | {counts['complete']} | {counts['typed']} | {counts['generated']} | "
                      f"{counts['fixture']} | {counts['decode']} | {counts['live_both']} | {counts['total']} |")
-    lines.extend(["", "This report counts no fixture, decode, or live scenario evidence until the tag-pinned recorder and both client suites produce it. The live ping smoke test is a connection check, not full operation coverage.", ""])
+    lines.extend(["", "Fixture and live credit requires a recorded tag-pinned scenario, both clients passing live calls, and both fixture decode suites passing. The remaining operations require new scenarios and reviewed REST schemas.", ""])
     (output / f"{ref}.md").write_text("\n".join(lines))
     return data
 

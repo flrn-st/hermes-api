@@ -6,6 +6,7 @@ import st.flrn.hermes.api.runtime.RESTCaller
 
 public class RESTMethodCatalog(private val caller: RESTCaller) {
     public val auth: AuthRESTMethods = AuthRESTMethods(caller)
+    public val profiles: ProfilesRESTMethods = ProfilesRESTMethods(caller)
     public val sessions: SessionsRESTMethods = SessionsRESTMethods(caller)
 }
 
@@ -17,6 +18,13 @@ public class AuthRESTMethods(private val caller: RESTCaller) {
     public suspend fun wsTicket(): AuthWsTicketResponse {
         val query = emptyMap<String, String>()
         return caller.request("POST", "/api/auth/ws-ticket", serializer<AuthWsTicketResponse>(), query)
+    }
+}
+
+public class ProfilesRESTMethods(private val caller: RESTCaller) {
+    public suspend fun active(): ProfilesActiveResponse {
+        val query = emptyMap<String, String>()
+        return caller.request("GET", "/api/profiles/active", serializer<ProfilesActiveResponse>(), query)
     }
 }
 

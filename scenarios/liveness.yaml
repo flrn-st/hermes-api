@@ -24,6 +24,8 @@ calls:
       session_id: ${session_id}
 rest_calls:
   - method: GET
+    path: /api/profiles/active
+  - method: GET
     path: /api/sessions/empty/count
     query:
       profile: default

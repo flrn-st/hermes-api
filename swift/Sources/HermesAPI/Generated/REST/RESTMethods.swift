@@ -5,6 +5,7 @@ public struct RESTMethodCatalog: Sendable {
     private let caller: any RESTCalling
     public init(caller: any RESTCalling) { self.caller = caller }
     public var auth: AuthRESTMethods { AuthRESTMethods(caller: caller) }
+    public var profiles: ProfilesRESTMethods { ProfilesRESTMethods(caller: caller) }
     public var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: caller) }
 }
 
@@ -21,6 +22,15 @@ public struct AuthRESTMethods: Sendable {
     }
 }
 
+public struct ProfilesRESTMethods: Sendable {
+    private let caller: any RESTCalling
+    init(caller: any RESTCalling) { self.caller = caller }
+    public func active() async throws -> ProfilesActiveResponse {
+        let query: [String: String] = [:]
+        return try await caller.request("GET", path: "/api/profiles/active", as: ProfilesActiveResponse.self, query: query)
+    }
+}
+
 public struct SessionsRESTMethods: Sendable {
     private let caller: any RESTCalling
     init(caller: any RESTCalling) { self.caller = caller }
@@ -33,5 +43,6 @@ public struct SessionsRESTMethods: Sendable {
 
 public extension HermesREST {
     var auth: AuthRESTMethods { AuthRESTMethods(caller: self) }
+    var profiles: ProfilesRESTMethods { ProfilesRESTMethods(caller: self) }
     var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: self) }
 }

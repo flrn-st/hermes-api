@@ -1,0 +1,12 @@
+operations:
+  - method: GET
+    path: /api/profiles/active
+    x-source: hermes_cli/web_routers/profiles.py:763
+    x-handler-hash: a0383d556910fe70939eacf7062d609e4b142a11f5b44bf1d82ce308d8abcbaf
+    response:
+      type: object
+      additionalProperties: false
+      required: [active, current]
+      properties:
+        active: {type: string}
+        current: {type: string}

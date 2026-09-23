@@ -87,6 +87,39 @@ public struct AuthWsTicketResponse: Codable, Sendable, Hashable {
     }
 }
 
+/// Generated from the reviewed REST response for GET /api/profiles/active.
+public struct ProfilesActiveResponse: Codable, Sendable, Hashable {
+    public let active: String
+    public let current: String
+
+    public init(active: String, current: String) {
+        self.active = active
+        self.current = current
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case active = "active"
+        case current = "current"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let allowed: Set<String> = ["active", "current"]
+        guard raw.allKeys.allSatisfy({ allowed.contains($0.stringValue) }) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected REST response field"))
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        active = try container.decode(String.self, forKey: .active)
+        current = try container.decode(String.self, forKey: .current)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(active, forKey: .active)
+        try container.encode(current, forKey: .current)
+    }
+}
+
 /// Generated from the reviewed REST response for GET /api/sessions/empty/count.
 public struct SessionsEmptyCountResponse: Codable, Sendable, Hashable {
     public let count: Int

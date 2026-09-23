@@ -86,6 +86,10 @@ suspend fun main() {
             try {
                 val rest = HermesREST(HermesRESTConfiguration(URI(url),
                     headers = { mapOf("X-Hermes-Session-Token" to token) }, transport = restTransport))
+                val profile = rest.methods.profiles.active()
+                check(profile.active == "default" && profile.current == "default") {
+                    "Unexpected active profile"
+                }
                 check(rest.methods.sessions.emptyCount(profile = "default").count >= 0) {
                     "Invalid empty session count"
                 }

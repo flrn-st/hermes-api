@@ -30,6 +30,15 @@ public data class AuthWsTicketResponse(
     public val ttlSeconds: Long,
 )
 
+/** Generated from the reviewed REST response for GET /api/profiles/active. */
+@Serializable
+public data class ProfilesActiveResponse(
+    @SerialName("active")
+    public val active: String,
+    @SerialName("current")
+    public val current: String,
+)
+
 /** Generated from the reviewed REST response for GET /api/sessions/empty/count. */
 @Serializable
 public data class SessionsEmptyCountResponse(

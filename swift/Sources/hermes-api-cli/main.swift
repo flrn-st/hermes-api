@@ -41,6 +41,10 @@ struct HermesAPICLI {
                 guard let token = environment["HERMES_LIVE_TOKEN"] else { throw CLIError.usage }
                 let rest = HermesREST(configuration: .init(
                     baseURL: url, headers: { ["X-Hermes-Session-Token": token] }))
+                let profile = try await rest.profiles.active()
+                guard profile.active == "default", profile.current == "default" else {
+                    throw CLIError.invalidRESTProfile
+                }
                 let count = try await rest.sessions.emptyCount(profile: "default")
                 guard count.count >= 0 else { throw CLIError.invalidRESTCount }
             }
@@ -103,4 +107,5 @@ private enum CLIError: Error {
     case turnFailed
     case turnTimedOut
     case invalidRESTCount
+    case invalidRESTProfile
 }

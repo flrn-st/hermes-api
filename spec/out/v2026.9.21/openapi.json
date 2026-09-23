@@ -15077,13 +15077,30 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "active": {
+                      "type": "string"
+                    },
+                    "current": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "active",
+                    "current"
+                  ],
+                  "type": "object"
+                }
               }
             },
             "description": "Successful Response"
           }
         },
-        "summary": "Get Active Profile Endpoint"
+        "summary": "Get Active Profile Endpoint",
+        "x-handler-hash": "a0383d556910fe70939eacf7062d609e4b142a11f5b44bf1d82ce308d8abcbaf",
+        "x-source": "hermes_cli/web_routers/profiles.py:763"
       },
       "post": {
         "description": "Set the sticky active profile (mirrors ``hermes profile use``); does not retarget the\nrunning dashboard, only subsequent CLI commands and gateways.",

@@ -13,6 +13,12 @@
   },
   {
     "method": "GET",
+    "path": "/api/profiles/active",
+    "public_name": "profiles.active",
+    "response": "ProfilesActiveResponse"
+  },
+  {
+    "method": "GET",
     "path": "/api/sessions/empty/count",
     "public_name": "sessions.emptyCount",
     "response": "SessionsEmptyCountResponse"

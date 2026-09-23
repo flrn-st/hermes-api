@@ -1,5 +1,5 @@
 {
-  "complete": 9,
+  "complete": 10,
   "entries": [
     {
       "complete": false,
@@ -6218,16 +6218,16 @@
       "typed": false
     },
     {
-      "complete": false,
-      "decode": false,
-      "fixture": false,
-      "fresh": false,
-      "generated": false,
+      "complete": true,
+      "decode": true,
+      "fixture": true,
+      "fresh": true,
+      "generated": true,
       "kind": "rest",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "GET /api/profiles/active",
-      "typed": false
+      "typed": true
     },
     {
       "complete": false,
@@ -7331,13 +7331,13 @@
       "typed": 159
     },
     "rest": {
-      "complete": 1,
-      "decode": 1,
-      "fixture": 1,
-      "generated": 3,
-      "live_both": 1,
+      "complete": 2,
+      "decode": 2,
+      "fixture": 2,
+      "generated": 4,
+      "live_both": 2,
       "total": 334,
-      "typed": 4
+      "typed": 5
     },
     "server_request": {
       "complete": 0,

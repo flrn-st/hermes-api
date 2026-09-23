@@ -17,9 +17,10 @@ def test_tagged_rest_symbols_are_generated() -> None:
     assert [(op.namespace, op.name, op.type_name) for op in operations] == [
         ("auth", "me", "AuthMeResponse"),
         ("auth", "wsTicket", "AuthWsTicketResponse"),
+        ("profiles", "active", "ProfilesActiveResponse"),
         ("sessions", "emptyCount", "SessionsEmptyCountResponse"),
     ]
-    assert [(p.wire, p.name, p.swift_type, p.kotlin_type) for p in operations[2].query_params] == [
+    assert [(p.wire, p.name, p.swift_type, p.kotlin_type) for p in operations[3].query_params] == [
         ("profile", "profile", "String", "String"),
     ]
     current = (ROOT / "spec/current-release.txt").read_text().strip()

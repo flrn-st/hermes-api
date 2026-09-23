@@ -14,7 +14,7 @@
     "thinking.delta"
   ],
   "fixture": "fixtures/v2026.9.21/liveness.jsonl",
-  "fixture_sha256": "4cdcd838bd647a238ad21d31844bcc3bebfe9889d342b16278b7b9c7ee46597f",
+  "fixture_sha256": "00defdd4484c20aa1a0b204bd02d96f678facfc37f3d185b243457196d228ecb",
   "live_events": [
     "gateway.ready",
     "message.start",
@@ -32,6 +32,7 @@
     "session.close"
   ],
   "live_rest": [
+    "GET /api/profiles/active",
     "GET /api/sessions/empty/count"
   ],
   "live_swift": true,
@@ -46,6 +47,7 @@
   ],
   "ref": "v2026.9.21",
   "rest": [
+    "GET /api/profiles/active",
     "GET /api/sessions/empty/count"
   ],
   "scenario": "liveness"

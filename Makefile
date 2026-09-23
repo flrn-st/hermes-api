@@ -1,6 +1,6 @@
 REF ?= v2026.9.21
 
-.PHONY: gen check-gen rest check-rest test
+.PHONY: gen check-gen rest check-rest live test
 
 gen:
 	uv run --locked python -m tools.fetch_spec --ref $(REF)
@@ -22,6 +22,9 @@ check-gen:
 	uv run --locked python -m tools.gen_gateway_models --ref $(REF) --check
 	uv run --locked python -m tools.gen_gateway_api --ref $(REF) --check
 	uv run --locked python -m tools.gen_rest_api --ref $(REF) --check
+
+live:
+	uv run --locked python -m harness.live --ref $(REF)
 
 test:
 	uv run --locked pytest

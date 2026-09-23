@@ -80,6 +80,12 @@ The container uses `/opt/data` as `HERMES_HOME`, with the Hermes checkout at
 mount an isolated data volume, and invoke the documented `hermes web` CLI.
 This has not yet been exercised: the local Docker daemon is unavailable.
 
+A local tagged `uvicorn` process with a temporary `HERMES_HOME` did start.
+Both the Swift URLSession and Kotlin Ktor clients connected to `/api/ws`,
+advertised server-request capability, and completed the typed `ping` call.
+`make live` now repeats this smoke test in CI. It does not yet exercise the
+stub LLM, session actions, replay, or the Docker image.
+
 ## Remaining validation
 
 - Verify the exact `hermes web` flags and health endpoint in a running

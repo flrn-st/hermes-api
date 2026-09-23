@@ -34,3 +34,10 @@ java {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.register<JavaExec>("smoke") {
+    group = "verification"
+    description = "Exercise the Kotlin gateway against a live tagged Hermes server"
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass = "st.flrn.hermes.api.LiveSmokeKt"
+}

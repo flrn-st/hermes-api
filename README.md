@@ -17,6 +17,8 @@ drive both language generators.
 isolated home, records the raw OpenAPI document and each handler's source hash,
 then applies reviewed response overlays. `make check-rest REF=v2026.9.21`
 checks the committed merged document and refuses stale overlay hashes.
+`make live REF=v2026.9.21` starts the tagged server with an isolated home and
+runs the Swift and Kotlin gateway smoke clients against it.
 
 See [the implementation plan](HermesAPI-Implementation-Plan.md) and [release findings](docs/findings.md).
 

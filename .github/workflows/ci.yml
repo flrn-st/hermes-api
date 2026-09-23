@@ -38,7 +38,14 @@ jobs:
       - name: Test generator tooling
         run: uv run --locked pytest
       - name: Lint generator tooling
-        run: uv run --locked ruff check tools
+        run: uv run --locked ruff check tools harness
+      - name: Lint workflows
+        run: |
+          curl -fsSL -o /tmp/actionlint.tar.gz https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  /tmp/actionlint.tar.gz' | sha256sum --check
+          mkdir -p /tmp/actionlint
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp/actionlint
+          /tmp/actionlint/actionlint .github/workflows/*.yml
       - name: Audit pinned release schema
         run: |
           uv run --locked python -m tools.schema_audit --ref "$(cat spec/current-release.txt)"

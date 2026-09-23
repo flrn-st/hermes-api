@@ -1,0 +1,72 @@
+/** Generated from the Hermes gateway contract. Do not edit. */
+{% if model.custom %}
+@Serializable(with = {{ model.name }}.Serializer::class)
+{% else %}
+@Serializable
+{% endif %}
+{% if model.fields or model.open %}
+public data class {{ model.name }}(
+{% for field in model.fields %}
+{% if not model.custom %}
+    @SerialName({{ field.wire_literal }})
+{% endif %}
+    public val {{ field.kotlin_name }}: {{ field.kotlin_type }}{% if field.kotlin_init_default %} = {{ field.kotlin_init_default }}{% endif %},
+{% endfor %}
+{% if model.open %}
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+{% endif %}
+)
+{% else %}
+public class {{ model.name }}
+{% endif %}
+{% if model.custom %}
+{
+    public object Serializer : KSerializer<{{ model.name }}> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): {{ model.name }} {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("{{ model.name }} requires JSON")
+{% if model.fields %}
+            val json = jsonDecoder.json
+{% endif %}
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("{{ model.name }} requires an object")
+            return {{ model.name }}(
+{% for field in model.fields %}
+                {{ field.kotlin_name }} = {{ field.decode_expression }},
+{% endfor %}
+{% if model.open %}
+{% if model.fields %}
+                additionalProperties = input.filterKeys { it !in setOf({% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %}) },
+{% else %}
+                additionalProperties = input,
+{% endif %}
+{% endif %}
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: {{ model.name }}) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("{{ model.name }} requires JSON")
+{% if model.fields %}
+            val json = jsonEncoder.json
+{% endif %}
+            val output = mutableMapOf<String, JsonElement>()
+{% if model.open %}
+{% if model.fields %}
+            val known = setOf({% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %})
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+{% endif %}
+            output.putAll(value.additionalProperties)
+{% endif %}
+{% for field in model.fields %}
+{{ field.encode_statement | indent(12, true) }}
+{% endfor %}
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+{% endif %}

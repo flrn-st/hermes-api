@@ -47,6 +47,15 @@ the stub server before recording fixtures.
 
 ## Offline REST extraction and plugins
 
+The tagged repository does not commit a dashboard OpenAPI or Swagger file.
+`hermes_cli.web_server` constructs a FastAPI app (`web_server.py:307`), so
+`app.openapi()` is the correct base document for REST extraction. The tagged
+dashboard routers do not declare `response_model=` values. The generated
+OpenAPI document is therefore useful for route and request discovery but
+needs reviewed response schema overlays before it can drive a trustworthy
+typed REST client. Overlays should add only missing contract detail and cite
+the tag's handler source and hash.
+
 `hermes_cli.web_server` imports and mounts its ordinary routers, then calls
 `_mount_plugin_api_routes()` during module import (`web_server.py:995`).
 `app.openapi()` therefore includes whichever plugin routers pass that call's

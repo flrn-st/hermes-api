@@ -1,0 +1,51 @@
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = {{ union.name }}.Serializer::class)
+public sealed interface {{ union.name }} {
+{% for variant in union.variants %}
+    public data class {{ variant.kotlin_name }}(public val value: {{ variant.kotlin_type }}) : {{ union.name }}
+{% endfor %}
+
+    public object Serializer : KSerializer<{{ union.name }}> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): {{ union.name }} {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("{{ union.name }} requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+{% if union.discriminator %}
+            val objectValue = input as? JsonObject
+                ?: throw SerializationException("{{ union.name }} requires an object")
+            val tag = (objectValue[{{ union.discriminator_literal }}] as? JsonPrimitive)?.content
+                ?: throw SerializationException("Missing {{ union.discriminator }} discriminator")
+            return when (tag) {
+{% for mapping in union.mapping %}
+                {{ mapping.wire_literal }} -> {{ mapping.kotlin_name }}(json.decodeFromJsonElement<{{ mapping.kotlin_type }}>(input))
+{% endfor %}
+                else -> throw SerializationException("Unknown {{ union.discriminator }} discriminator: $tag")
+            }
+{% else %}
+{% for variant in union.variants %}
+            try {
+                return {{ variant.kotlin_name }}(json.decodeFromJsonElement<{{ variant.kotlin_type }}>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+{% endfor %}
+            throw SerializationException("No {{ union.name }} variant matched")
+{% endif %}
+        }
+
+        override fun serialize(encoder: Encoder, value: {{ union.name }}) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("{{ union.name }} requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+{% for variant in union.variants %}
+                is {{ variant.kotlin_name }} -> json.encodeToJsonElement(value.value)
+{% endfor %}
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}

@@ -1,0 +1,37 @@
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = {{ enum.name }}.Serializer::class)
+public sealed interface {{ enum.name }} {
+{% for case in enum.cases %}
+    public data object {{ case.kotlin_name }} : {{ enum.name }}
+{% endfor %}
+{% if not enum.constant %}
+    public data class Unknown(public val raw: String) : {{ enum.name }}
+{% endif %}
+
+    public object Serializer : KSerializer<{{ enum.name }}> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("{{ enum.name }}", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): {{ enum.name }} = when (val raw = decoder.decodeString()) {
+{% for case in enum.cases %}
+            {{ case.wire_literal }} -> {{ case.kotlin_name }}
+{% endfor %}
+{% if enum.constant %}
+            else -> throw SerializationException("Unexpected const value: $raw")
+{% else %}
+            else -> Unknown(raw)
+{% endif %}
+        }
+
+        override fun serialize(encoder: Encoder, value: {{ enum.name }}) {
+            val raw = when (value) {
+{% for case in enum.cases %}
+                {{ case.kotlin_name }} -> {{ case.wire_literal }}
+{% endfor %}
+{% if not enum.constant %}
+                is Unknown -> value.raw
+{% endif %}
+            }
+            encoder.encodeString(raw)
+        }
+    }
+}

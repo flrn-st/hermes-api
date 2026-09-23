@@ -1,0 +1,39 @@
+/// Generated from the Hermes gateway contract. Do not edit.
+public enum {{ union.name }}: Codable, Sendable, Hashable {
+{% for variant in union.variants %}
+    case {{ variant.swift_name }}({{ variant.swift_type }})
+{% endfor %}
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+{% if union.discriminator %}
+        let object = try container.decode([String: JSONValue].self)
+        guard case .string(let tag) = object[{{ union.discriminator_literal }}] else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Missing discriminator {{ union.discriminator }}")
+        }
+        switch tag {
+{% for mapping in union.mapping %}
+        case {{ mapping.wire_literal }}: self = .{{ mapping.swift_name }}(try container.decode({{ mapping.swift_type }}.self))
+{% endfor %}
+        default: throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown discriminator: \(tag)")
+        }
+{% else %}
+{% for variant in union.variants %}
+        if let value = try? container.decode({{ variant.swift_type }}.self) {
+            self = .{{ variant.swift_name }}(value)
+            return
+        }
+{% endfor %}
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+{% endif %}
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+{% for variant in union.variants %}
+        case .{{ variant.swift_name }}(let value): try container.encode(value)
+{% endfor %}
+        }
+    }
+}

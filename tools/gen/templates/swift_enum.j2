@@ -1,0 +1,35 @@
+/// Generated from the Hermes gateway contract. Do not edit.
+public enum {{ enum.name }}: Codable, Sendable, Hashable {
+{% for case in enum.cases %}
+    case {{ case.swift_name }}
+{% endfor %}
+{% if not enum.constant %}
+    case unknown(String)
+{% endif %}
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+{% for case in enum.cases %}
+        case {{ case.wire_literal }}: self = .{{ case.swift_name }}
+{% endfor %}
+{% if enum.constant %}
+        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
+{% else %}
+        default: self = .unknown(raw)
+{% endif %}
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+{% for case in enum.cases %}
+        case .{{ case.swift_name }}: try container.encode({{ case.wire_literal }})
+{% endfor %}
+{% if not enum.constant %}
+        case .unknown(let raw): try container.encode(raw)
+{% endif %}
+        }
+    }
+}

@@ -43,6 +43,8 @@ jobs:
         run: |
           uv run --locked python -m tools.schema_audit --ref v2026.9.21
           git diff --exit-code -- spec/out/v2026.9.21/schema-audit.json
+      - name: Check committed generated sources
+        run: make check-gen REF=v2026.9.21
 
   swift:
     runs-on: macos-15

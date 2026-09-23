@@ -1,0 +1,89 @@
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct {{ model.name }}: Codable, Sendable, Hashable {
+{% for field in model.fields %}
+    public var {{ field.swift_name }}: {{ field.swift_type }}
+{% endfor %}
+{% if model.open %}
+    public var additionalProperties: [String: JSONValue]
+{% endif %}
+
+    public init({% for field in model.fields %}{{ field.swift_name }}: {{ field.swift_type }}{% if field.swift_init_default %} = {{ field.swift_init_default }}{% endif %}{% if not loop.last or model.open %}, {% endif %}{% endfor %}{% if model.open %}additionalProperties: [String: JSONValue] = [:]{% endif %}) {
+{% for field in model.fields %}
+        self.{{ field.swift_name }} = {{ field.swift_name }}
+{% endfor %}
+{% if model.open %}
+        self.additionalProperties = additionalProperties
+{% endif %}
+    }
+{% if model.fields or model.open %}
+
+{% if model.fields %}
+    private enum CodingKeys: String, CodingKey {
+{% for field in model.fields %}
+        case {{ field.swift_name }} = {{ field.wire_literal }}
+{% endfor %}
+    }
+{% endif %}
+
+    public init(from decoder: Decoder) throws {
+{% if model.fields %}
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+{% endif %}
+{% for field in model.fields %}
+{% if field.patch %}
+        if !container.contains(.{{ field.swift_name }}) {
+            {{ field.swift_name }} = .absent
+        } else if try container.decodeNil(forKey: .{{ field.swift_name }}) {
+            {{ field.swift_name }} = .null
+        } else {
+            {{ field.swift_name }} = .value(try container.decode({{ field.base_swift }}.self, forKey: .{{ field.swift_name }}))
+        }
+{% elif field.required and field.nullable %}
+        {{ field.swift_name }} = try container.decode(Optional<{{ field.base_swift }}>.self, forKey: .{{ field.swift_name }})
+{% elif field.required %}
+        {{ field.swift_name }} = try container.decode({{ field.base_swift }}.self, forKey: .{{ field.swift_name }})
+{% else %}
+        {{ field.swift_name }} = try container.decodeIfPresent({{ field.base_swift }}.self, forKey: .{{ field.swift_name }})
+{% endif %}
+{% endfor %}
+{% if model.open %}
+        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = [{% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %}]
+        var extra: [String: JSONValue] = [:]
+        for key in dynamic.allKeys where !known.contains(key.stringValue) {
+            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
+        }
+        additionalProperties = extra
+{% endif %}
+    }
+
+    public func encode(to encoder: Encoder) throws {
+{% if model.fields %}
+        var container = encoder.container(keyedBy: CodingKeys.self)
+{% endif %}
+{% for field in model.fields %}
+{% if field.patch %}
+        switch {{ field.swift_name }} {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .{{ field.swift_name }})
+        case .value(let value): try container.encode(value, forKey: .{{ field.swift_name }})
+        }
+{% elif field.required %}
+        try container.encode({{ field.swift_name }}, forKey: .{{ field.swift_name }})
+{% else %}
+        try container.encodeIfPresent({{ field.swift_name }}, forKey: .{{ field.swift_name }})
+{% endif %}
+{% endfor %}
+{% if model.open %}
+        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = [{% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %}]
+        for (key, value) in additionalProperties {
+            guard !known.contains(key) else {
+                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
+            }
+            try dynamic.encode(value, forKey: DynamicCodingKey(key))
+        }
+{% endif %}
+    }
+{% endif %}
+}

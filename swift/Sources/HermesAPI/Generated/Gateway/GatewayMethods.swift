@@ -66,6 +66,7 @@ public struct GatewayMethodCatalog: Sendable {
     public var verification: VerificationMethods { VerificationMethods(caller: caller) }
     public var voice: VoiceMethods { VoiceMethods(caller: caller) }
     public var wake: WakeMethods { WakeMethods(caller: caller) }
+
     public func ping(_ params: PingParams) async throws -> PingResult {
         try await caller.call("ping", params: params, as: PingResult.self)
     }
@@ -1088,5 +1089,72 @@ public struct WakeMethods: Sendable {
     }
     public func stop(_ params: WakeStopParams) async throws -> WakeStopResult {
         try await caller.call("wake.stop", params: params, as: WakeStopResult.self)
+    }
+}
+
+public extension HermesGateway {
+    nonisolated var agents: AgentsMethods { AgentsMethods(caller: self) }
+    nonisolated var approval: ApprovalMethods { ApprovalMethods(caller: self) }
+    nonisolated var billing: BillingMethods { BillingMethods(caller: self) }
+    nonisolated var botRelay: BotRelayMethods { BotRelayMethods(caller: self) }
+    nonisolated var browser: BrowserMethods { BrowserMethods(caller: self) }
+    nonisolated var clarify: ClarifyMethods { ClarifyMethods(caller: self) }
+    nonisolated var cli: CliMethods { CliMethods(caller: self) }
+    nonisolated var client: ClientMethods { ClientMethods(caller: self) }
+    nonisolated var clipboard: ClipboardMethods { ClipboardMethods(caller: self) }
+    nonisolated var command: CommandMethods { CommandMethods(caller: self) }
+    nonisolated var commands: CommandsMethods { CommandsMethods(caller: self) }
+    nonisolated var complete: CompleteMethods { CompleteMethods(caller: self) }
+    nonisolated var config: ConfigMethods { ConfigMethods(caller: self) }
+    nonisolated var connection: ConnectionMethods { ConnectionMethods(caller: self) }
+    nonisolated var connectors: ConnectorsMethods { ConnectorsMethods(caller: self) }
+    nonisolated var cron: CronMethods { CronMethods(caller: self) }
+    nonisolated var delegation: DelegationMethods { DelegationMethods(caller: self) }
+    nonisolated var diagnostics: DiagnosticsMethods { DiagnosticsMethods(caller: self) }
+    nonisolated var file: FileMethods { FileMethods(caller: self) }
+    nonisolated var freeTier: FreeTierMethods { FreeTierMethods(caller: self) }
+    nonisolated var gateway: GatewayMethods { GatewayMethods(caller: self) }
+    nonisolated var groups: GroupsMethods { GroupsMethods(caller: self) }
+    nonisolated var handoff: HandoffMethods { HandoffMethods(caller: self) }
+    nonisolated var image: ImageMethods { ImageMethods(caller: self) }
+    nonisolated var input: InputMethods { InputMethods(caller: self) }
+    nonisolated var insights: InsightsMethods { InsightsMethods(caller: self) }
+    nonisolated var learning: LearningMethods { LearningMethods(caller: self) }
+    nonisolated var llm: LlmMethods { LlmMethods(caller: self) }
+    nonisolated var mcp: McpMethods { McpMethods(caller: self) }
+    nonisolated var message: MessageMethods { MessageMethods(caller: self) }
+    nonisolated var model: ModelMethods { ModelMethods(caller: self) }
+    nonisolated var paste: PasteMethods { PasteMethods(caller: self) }
+    nonisolated var pdf: PdfMethods { PdfMethods(caller: self) }
+    nonisolated var pet: PetMethods { PetMethods(caller: self) }
+    nonisolated var plugins: PluginsMethods { PluginsMethods(caller: self) }
+    nonisolated var preview: PreviewMethods { PreviewMethods(caller: self) }
+    nonisolated var process: ProcessMethods { ProcessMethods(caller: self) }
+    nonisolated var profiles: ProfilesMethods { ProfilesMethods(caller: self) }
+    nonisolated var project: ProjectMethods { ProjectMethods(caller: self) }
+    nonisolated var projects: ProjectsMethods { ProjectsMethods(caller: self) }
+    nonisolated var prompt: PromptMethods { PromptMethods(caller: self) }
+    nonisolated var reload: ReloadMethods { ReloadMethods(caller: self) }
+    nonisolated var request: RequestMethods { RequestMethods(caller: self) }
+    nonisolated var rollback: RollbackMethods { RollbackMethods(caller: self) }
+    nonisolated var session: SessionMethods { SessionMethods(caller: self) }
+    nonisolated var setup: SetupMethods { SetupMethods(caller: self) }
+    nonisolated var shell: ShellMethods { ShellMethods(caller: self) }
+    nonisolated var skills: SkillsMethods { SkillsMethods(caller: self) }
+    nonisolated var slash: SlashMethods { SlashMethods(caller: self) }
+    nonisolated var spawnTree: SpawnTreeMethods { SpawnTreeMethods(caller: self) }
+    nonisolated var subagent: SubagentMethods { SubagentMethods(caller: self) }
+    nonisolated var subscription: SubscriptionMethods { SubscriptionMethods(caller: self) }
+    nonisolated var system: SystemMethods { SystemMethods(caller: self) }
+    nonisolated var terminal: TerminalMethods { TerminalMethods(caller: self) }
+    nonisolated var tools: ToolsMethods { ToolsMethods(caller: self) }
+    nonisolated var toolsets: ToolsetsMethods { ToolsetsMethods(caller: self) }
+    nonisolated var usage: UsageMethods { UsageMethods(caller: self) }
+    nonisolated var vault: VaultMethods { VaultMethods(caller: self) }
+    nonisolated var verification: VerificationMethods { VerificationMethods(caller: self) }
+    nonisolated var voice: VoiceMethods { VoiceMethods(caller: self) }
+    nonisolated var wake: WakeMethods { WakeMethods(caller: self) }
+    nonisolated func ping(_ params: PingParams) async throws -> PingResult {
+        try await call("ping", params: params, as: PingResult.self)
     }
 }

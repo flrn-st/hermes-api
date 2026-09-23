@@ -285,6 +285,24 @@ public enum ServerRequestResult: Sendable, Hashable {
     case vaultUnlockPrompt(ValueResult)
     case windowRead(ValueResult)
 
+    public func matches(_ request: ServerRequest) -> Bool {
+        switch (self, request) {
+        case (.approval, .approval): true
+        case (.clarify, .clarify): true
+        case (.previewAct, .previewAct): true
+        case (.previewRead, .previewRead): true
+        case (.secret, .secret): true
+        case (.sudo, .sudo): true
+        case (.terminalRead, .terminalRead): true
+        case (.tour, .tour): true
+        case (.vaultCode, .vaultCode): true
+        case (.vaultSaveLogin, .vaultSaveLogin): true
+        case (.vaultUnlockPrompt, .vaultUnlockPrompt): true
+        case (.windowRead, .windowRead): true
+        default: false
+        }
+    }
+
     public func encodedJSON() throws -> Data {
         let encoder = JSONEncoder()
         switch self {

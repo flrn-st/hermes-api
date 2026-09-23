@@ -53,6 +53,12 @@ public sealed interface ServerRequestResult {
     public data class {{ request.kotlin_name }}(public val value: {{ request.result }}) : ServerRequestResult
 {% endfor %}
 
+    public fun matches(request: ServerRequest): Boolean = when (this) {
+{% for request in requests %}
+        is {{ request.kotlin_name }} -> request is ServerRequest.{{ request.kotlin_name }}
+{% endfor %}
+    }
+
     public fun encodedJSON(json: Json): String = when (this) {
 {% for request in requests %}
         is {{ request.kotlin_name }} -> json.encodeToString({{ request.result }}.serializer(), value)

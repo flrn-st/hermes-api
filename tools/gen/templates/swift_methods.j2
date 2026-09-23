@@ -8,6 +8,7 @@ public struct GatewayMethodCatalog: Sendable {
 {% for namespace in namespaces %}
     public var {{ namespace.swift_name }}: {{ namespace.type_name }} { {{ namespace.type_name }}(caller: caller) }
 {% endfor %}
+
 {% for method in root_methods %}
     public func {{ method.swift_name }}(_ params: {{ method.params }}) async throws -> {{ method.result }} {
         try await caller.call({{ method.wire_literal }}, params: params, as: {{ method.result }}.self)
@@ -27,3 +28,14 @@ public struct {{ namespace.type_name }}: Sendable {
 {% endfor %}
 }
 {% endfor %}
+
+public extension HermesGateway {
+{% for namespace in namespaces %}
+    nonisolated var {{ namespace.swift_name }}: {{ namespace.type_name }} { {{ namespace.type_name }}(caller: self) }
+{% endfor %}
+{% for method in root_methods %}
+    nonisolated func {{ method.swift_name }}(_ params: {{ method.params }}) async throws -> {{ method.result }} {
+        try await call({{ method.wire_literal }}, params: params, as: {{ method.result }}.self)
+    }
+{% endfor %}
+}

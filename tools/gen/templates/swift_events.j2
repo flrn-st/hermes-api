@@ -55,6 +55,15 @@ public enum ServerRequestResult: Sendable, Hashable {
     case {{ request.swift_name }}({{ request.result }})
 {% endfor %}
 
+    public func matches(_ request: ServerRequest) -> Bool {
+        switch (self, request) {
+{% for request in requests %}
+        case (.{{ request.swift_name }}, .{{ request.swift_name }}): true
+{% endfor %}
+        default: false
+        }
+    }
+
     public func encodedJSON() throws -> Data {
         let encoder = JSONEncoder()
         switch self {

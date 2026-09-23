@@ -204,6 +204,21 @@ public sealed interface ServerRequestResult {
     public data class VaultUnlockPrompt(public val value: ValueResult) : ServerRequestResult
     public data class WindowRead(public val value: ValueResult) : ServerRequestResult
 
+    public fun matches(request: ServerRequest): Boolean = when (this) {
+        is Approval -> request is ServerRequest.Approval
+        is Clarify -> request is ServerRequest.Clarify
+        is PreviewAct -> request is ServerRequest.PreviewAct
+        is PreviewRead -> request is ServerRequest.PreviewRead
+        is Secret -> request is ServerRequest.Secret
+        is Sudo -> request is ServerRequest.Sudo
+        is TerminalRead -> request is ServerRequest.TerminalRead
+        is Tour -> request is ServerRequest.Tour
+        is VaultCode -> request is ServerRequest.VaultCode
+        is VaultSaveLogin -> request is ServerRequest.VaultSaveLogin
+        is VaultUnlockPrompt -> request is ServerRequest.VaultUnlockPrompt
+        is WindowRead -> request is ServerRequest.WindowRead
+    }
+
     public fun encodedJSON(json: Json): String = when (this) {
         is Approval -> json.encodeToString(ApprovalResult.serializer(), value)
         is Clarify -> json.encodeToString(ClarifyResult.serializer(), value)

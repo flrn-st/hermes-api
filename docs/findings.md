@@ -60,7 +60,8 @@ An isolated import of this release produced 293 OpenAPI paths and 334 operations
 All 333 JSON success response schemas were empty objects; the remaining
 operation is a `HEAD` response without a body. The extraction recorded
 per-operation source locations and SHA-256 hashes; two authentication responses
-are currently overlaid. The remaining operations are deliberately untyped.
+and the empty-session count are currently overlaid. The remaining operations
+are deliberately untyped.
 
 `hermes_cli.web_server` imports and mounts its ordinary routers, then calls
 `_mount_plugin_api_routes()` during module import (`web_server.py:995`).
@@ -92,6 +93,9 @@ the streamed `message.complete` response, then lists and closes the session
 through both clients. The recorder validates each frame against the tagged
 Pydantic catalog before writing the fixture. It does not yet cover tool calls,
 approvals, clarify, or subagent flows.
+It also calls the reviewed `GET /api/sessions/empty/count` route and validates
+the JSON response against the overlay. Both mobile clients exercise the
+generated query parameter and decode the result during the live scenario.
 
 A separate strict WebSocket probe verifies both client adapters transmit the
 public `hermes-gateway-v1` and private ticket subprotocols, with no ticket in

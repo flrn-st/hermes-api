@@ -88,7 +88,8 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                     subprocess.run(
                         [str(python), str(ROOT / "harness/record.py"),
                          "--scenario", str(ROOT / "scenarios/liveness.yaml"),
-                         "--output", str(ROOT / "fixtures" / ref / "liveness.jsonl")],
+                         "--output", str(ROOT / "fixtures" / ref / "liveness.jsonl"),
+                         "--openapi", str(ROOT / "spec/out" / ref / "openapi.json")],
                         cwd=repo, env=env, check=True,
                     )
                 subprocess.run(
@@ -116,9 +117,11 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                         "fixture_sha256": hashlib.sha256(fixture.read_bytes()).hexdigest(),
                         "methods": sorted({entry["name"] for entry in recorded if entry["kind"] == "response"}),
                         "events": sorted({entry["name"] for entry in recorded if entry["kind"] == "event"}),
+                        "rest": sorted({entry["name"] for entry in recorded if entry["kind"] == "rest"}),
                         "live_methods": ["client.capabilities", "ping", "gateway.capabilities",
                                          "session.create", "prompt.submit", "session.list", "session.close"],
                         "live_events": ["gateway.ready", "message.complete"],
+                        "live_rest": ["GET /api/sessions/empty/count"],
                         "decode_swift": True,
                         "decode_kotlin": True,
                         "live_swift": True,

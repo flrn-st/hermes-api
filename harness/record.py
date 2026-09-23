@@ -7,6 +7,8 @@ import asyncio
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 import yaml
 from tui_gateway.contracts import EVENTS, METHODS
@@ -23,7 +25,27 @@ def _resolve(value: object, captured: dict[str, object]) -> object:
     return value
 
 
-async def record(scenario: Path, output: Path) -> None:
+def _validate_rest_response(body: object, schema: dict) -> None:
+    if schema.get("type") != "object" or schema.get("additionalProperties") is not False:
+        raise ValueError("REST fixture requires a reviewed closed response object")
+    if not isinstance(body, dict):
+        raise TypeError("REST response is not an object")
+    fields = schema.get("properties", {})
+    if not set(schema.get("required", [])) <= body.keys() or not body.keys() <= fields.keys():
+        raise ValueError("REST response fields differ from the reviewed schema")
+    kinds = {"string": str, "integer": int, "number": (int, float), "boolean": bool}
+    for name, value in body.items():
+        kind = fields[name].get("type")
+        if kind not in kinds or not isinstance(value, kinds[kind]) or (kind != "boolean" and isinstance(value, bool)):
+            raise TypeError(f"REST response field {name} violates the reviewed schema")
+
+
+def _fetch_rest(request: Request) -> tuple[int, object]:
+    with urlopen(request, timeout=10) as response:
+        return response.status, json.load(response)
+
+
+async def record(scenario: Path, output: Path, openapi: Path) -> None:
     definition = yaml.safe_load(scenario.read_text(encoding="utf-8"))
     if not isinstance(definition, dict) or not isinstance(definition.get("calls"), list):
         raise TypeError("Invalid scenario")
@@ -83,6 +105,22 @@ async def record(scenario: Path, output: Path) -> None:
                     actual = seen_frames[wait_for]["params"]["payload"].get("text")
                     if actual != expected_text:
                         raise ValueError(f"Unexpected {wait_for} text: {actual!r}")
+    document = json.loads(openapi.read_text(encoding="utf-8"))
+    base = os.environ["HERMES_LIVE_URL"]
+    for call in definition.get("rest_calls", []):
+        method, path = call["method"].upper(), call["path"]
+        if not path.startswith("/api/"):
+            raise ValueError("REST scenario path must be under /api/")
+        operation = document["paths"][path][method.lower()]
+        schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
+        query = urlencode(call.get("query", {}))
+        url = base + path + ("?" + query if query else "")
+        request = Request(url, method=method,
+                          headers={"X-Hermes-Session-Token": token})
+        status, body = await asyncio.to_thread(_fetch_rest, request)
+        _validate_rest_response(body, schema)
+        entries.append({"kind": "rest", "name": f"{method} {path}",
+                        "frame": {"status": status, "body": body}})
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("".join(json.dumps(entry, sort_keys=True) + "\n" for entry in entries), encoding="utf-8")
 
@@ -91,8 +129,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenario", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--openapi", type=Path, required=True)
     args = parser.parse_args()
-    asyncio.run(record(args.scenario, args.output))
+    asyncio.run(record(args.scenario, args.output, args.openapi))
 
 
 if __name__ == "__main__":

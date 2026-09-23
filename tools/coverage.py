@@ -93,19 +93,22 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
     if evidence["fixture_sha256"] != hashlib.sha256(fixture.read_bytes()).hexdigest():
         raise ValueError("Coverage fixture changed after evidence was recorded")
     recorded = {json.loads(line)["name"] for line in fixture.read_text(encoding="utf-8").splitlines()}
-    declared = set(evidence["methods"]) | set(evidence["events"])
+    declared = set(evidence["methods"]) | set(evidence["events"]) | set(evidence["rest"])
     if recorded != declared:
         raise ValueError("Coverage evidence does not match recorded frame names")
     if (not set(evidence["live_methods"]) <= set(evidence["methods"]) or
-            not set(evidence["live_events"]) <= set(evidence["events"])):
+            not set(evidence["live_events"]) <= set(evidence["events"]) or
+            not set(evidence["live_rest"]) <= set(evidence["rest"])):
         raise ValueError("Live evidence includes an unrecorded contract item")
     for entry in entries:
         if ((entry["kind"] == "gateway_method" and entry["name"] in evidence["methods"]) or
-                (entry["kind"] == "event" and entry["name"] in evidence["events"])):
+                (entry["kind"] == "event" and entry["name"] in evidence["events"]) or
+                (entry["kind"] == "rest" and entry["name"] in evidence["rest"])):
             entry["fixture"] = True
             entry["decode"] = evidence["decode_swift"] and evidence["decode_kotlin"]
             live = ((entry["kind"] == "gateway_method" and entry["name"] in evidence["live_methods"]) or
-                    (entry["kind"] == "event" and entry["name"] in evidence["live_events"]))
+                    (entry["kind"] == "event" and entry["name"] in evidence["live_events"]) or
+                    (entry["kind"] == "rest" and entry["name"] in evidence["live_rest"]))
             entry["live_swift"] = live and evidence["live_swift"]
             entry["live_kotlin"] = live and evidence["live_kotlin"]
 

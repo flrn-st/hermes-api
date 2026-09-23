@@ -21,6 +21,9 @@ import st.flrn.hermes.api.runtime.GatewayCredential
 import st.flrn.hermes.api.runtime.GatewayHTTPTransport
 import st.flrn.hermes.api.runtime.LocalTokenAuth
 import st.flrn.hermes.api.runtime.KtorGatewayTransport
+import st.flrn.hermes.api.runtime.KtorRESTTransport
+import st.flrn.hermes.api.runtime.HermesREST
+import st.flrn.hermes.api.runtime.HermesRESTConfiguration
 import st.flrn.hermes.api.runtime.Patch
 
 /** Invoked by the dedicated Gradle smoke task against a tagged Hermes server. */
@@ -69,6 +72,17 @@ suspend fun main() {
             gateway.methods.session.list(SessionListParams())
             check(gateway.methods.session.close(SessionCloseParams(session.sessionId)).closed) {
                 "Gateway session did not close"
+            }
+            val token = System.getenv("HERMES_LIVE_TOKEN") ?: error("Local token is required for REST smoke")
+            val restTransport = KtorRESTTransport()
+            try {
+                val rest = HermesREST(HermesRESTConfiguration(URI(url),
+                    headers = { mapOf("X-Hermes-Session-Token" to token) }, transport = restTransport))
+                check(rest.methods.sessions.emptyCount(profile = "default").count >= 0) {
+                    "Invalid empty session count"
+                }
+            } finally {
+                restTransport.close()
             }
         }
         System.out.write("Hermes ${HermesAPI.hermesRelease} gateway ping passed\n".toByteArray())

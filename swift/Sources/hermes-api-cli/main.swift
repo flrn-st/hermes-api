@@ -38,6 +38,11 @@ struct HermesAPICLI {
                 _ = try await gateway.session.list(.init())
                 let closed = try await gateway.session.close(.init(sessionId: session.sessionId))
                 guard closed.closed else { throw CLIError.sessionCloseFailed }
+                guard let token = environment["HERMES_LIVE_TOKEN"] else { throw CLIError.usage }
+                let rest = HermesREST(configuration: .init(
+                    baseURL: url, headers: { ["X-Hermes-Session-Token": token] }))
+                let count = try await rest.sessions.emptyCount(profile: "default")
+                guard count.count >= 0 else { throw CLIError.invalidRESTCount }
             }
             FileHandle.standardOutput.write(Data("Hermes \(HermesAPI.hermesRelease) gateway ping passed\n".utf8))
             await gateway.disconnect()
@@ -90,4 +95,5 @@ private enum CLIError: Error {
     case sessionCloseFailed
     case turnFailed
     case turnTimedOut
+    case invalidRESTCount
 }

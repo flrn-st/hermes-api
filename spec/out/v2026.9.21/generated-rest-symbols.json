@@ -10,5 +10,11 @@
     "path": "/api/auth/ws-ticket",
     "public_name": "auth.wsTicket",
     "response": "AuthWsTicketResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/empty/count",
+    "public_name": "sessions.emptyCount",
+    "response": "SessionsEmptyCountResponse"
   }
 ]

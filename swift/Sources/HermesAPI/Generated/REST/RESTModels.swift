@@ -86,3 +86,31 @@ public struct AuthWsTicketResponse: Codable, Sendable, Hashable {
         try container.encode(ttlSeconds, forKey: .ttlSeconds)
     }
 }
+
+/// Generated from the reviewed REST response for GET /api/sessions/empty/count.
+public struct SessionsEmptyCountResponse: Codable, Sendable, Hashable {
+    public let count: Int
+
+    public init(count: Int) {
+        self.count = count
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case count = "count"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let allowed: Set<String> = ["count"]
+        guard raw.allKeys.allSatisfy({ allowed.contains($0.stringValue) }) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected REST response field"))
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        count = try container.decode(Int.self, forKey: .count)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(count, forKey: .count)
+    }
+}

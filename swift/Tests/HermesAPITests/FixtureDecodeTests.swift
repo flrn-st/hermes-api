@@ -36,6 +36,15 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
         let record = try decoder.decode(FixtureRecord.self, from: Data(line.utf8))
         seen.insert(record.name)
         guard case .object(let frame) = record.frame else { throw HermesGatewayError.decoding("Invalid fixture frame") }
+        if record.kind == "rest" {
+            #expect(record.name == "GET /api/sessions/empty/count")
+            #expect(frame["status"] == .integer(200))
+            let result = try decoder.decode(SessionsEmptyCountResponse.self,
+                                            from: JSONEncoder().encode(frame["body"]))
+            #expect(result.count >= 0)
+            #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
+            continue
+        }
         if record.kind == "event" {
             guard case .object(let params) = frame["params"] else {
                 throw HermesGatewayError.decoding("Missing event params")
@@ -86,5 +95,6 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
         }
     }
     #expect(Set(["gateway.ready", "ping", "prompt.submit", "message.delta", "message.complete",
+                 "GET /api/sessions/empty/count",
                  "session.create", "session.list", "session.close"]).isSubset(of: seen))
 }

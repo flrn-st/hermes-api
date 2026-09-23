@@ -12,6 +12,20 @@ import kotlin.test.assertFailsWith
 
 class HermesRESTTest {
     @Test
+    fun generatedRESTQueryIsEncoded() = runTest {
+        val transport = object : RESTTransport {
+            override suspend fun request(method: String, uri: URI, headers: Map<String, String>): Pair<Int, String> {
+                assertEquals("GET", method)
+                assertEquals("/api/sessions/empty/count", uri.path)
+                assertEquals("profile=qa+%26+mobile", uri.rawQuery)
+                return 200 to """{"count":2}"""
+            }
+        }
+        val rest = HermesREST(HermesRESTConfiguration(URI("https://dashboard.example"), transport = transport))
+        assertEquals(2, rest.methods.sessions.emptyCount("qa & mobile").count)
+    }
+
+    @Test
     fun generatedAuthCallDecodesReviewedResponse() = runTest {
         val transport = object : RESTTransport {
             override suspend fun request(method: String, uri: URI, headers: Map<String, String>): Pair<Int, String> {

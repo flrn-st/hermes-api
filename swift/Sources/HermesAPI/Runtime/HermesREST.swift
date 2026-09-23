@@ -3,7 +3,7 @@ import Foundation
 /// The narrow HTTP boundary used by generated REST methods.
 public protocol RESTCalling: Sendable {
     func request<Result: Decodable & Sendable>(
-        _ method: String, path: String, as resultType: Result.Type
+        _ method: String, path: String, as resultType: Result.Type, query: [String: String]
     ) async throws -> Result
 }
 
@@ -38,13 +38,18 @@ public struct HermesREST: RESTCalling {
     public var methods: RESTMethodCatalog { RESTMethodCatalog(caller: self) }
 
     public func request<Result: Decodable & Sendable>(
-        _ method: String, path: String, as resultType: Result.Type
+        _ method: String, path: String, as resultType: Result.Type, query: [String: String]
     ) async throws -> Result {
         guard path.hasPrefix("/api/"),
-              let url = URL(string: path, relativeTo: configuration.baseURL)?.absoluteURL else {
+              let url = URL(string: path, relativeTo: configuration.baseURL)?.absoluteURL,
+              var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             throw HermesRESTError.transport("Invalid REST path")
         }
-        var request = URLRequest(url: url)
+        if !query.isEmpty {
+            components.queryItems = query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
+        }
+        guard let endpoint = components.url else { throw HermesRESTError.transport("Invalid REST query") }
+        var request = URLRequest(url: endpoint)
         request.httpMethod = method
         let headers = try await configuration.headers()
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }

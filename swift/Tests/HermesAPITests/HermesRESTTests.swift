@@ -18,6 +18,27 @@ private struct RESTFixtureTransport: HTTPTransport {
     }
 }
 
+private struct RESTCountTransport: HTTPTransport {
+    func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        #expect(request.url?.path == "/api/sessions/empty/count")
+        #expect(request.url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false)?.percentEncodedQuery }
+                == "profile=qa%20%26%20mobile")
+        guard let url = request.url,
+              let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil,
+                                             headerFields: nil) else {
+            throw HermesRESTError.transport("Invalid test response")
+        }
+        return (Data(#"{"count":2}"#.utf8), response)
+    }
+}
+
+@Test func generatedRESTQueryIsEncoded() async throws {
+    let rest = HermesREST(configuration: .init(
+        baseURL: URL(string: "https://dashboard.example")!, transport: RESTCountTransport()))
+    let result = try await rest.sessions.emptyCount(profile: "qa & mobile")
+    #expect(result.count == 2)
+}
+
 @Test func generatedRESTAuthCallDecodesReviewedResponse() async throws {
     let rest = HermesREST(configuration: .init(
         baseURL: URL(string: "https://dashboard.example")!, headers: { ["Authorization": "Bearer test"] },

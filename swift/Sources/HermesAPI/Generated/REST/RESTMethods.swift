@@ -5,19 +5,33 @@ public struct RESTMethodCatalog: Sendable {
     private let caller: any RESTCalling
     public init(caller: any RESTCalling) { self.caller = caller }
     public var auth: AuthRESTMethods { AuthRESTMethods(caller: caller) }
+    public var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: caller) }
 }
 
 public struct AuthRESTMethods: Sendable {
     private let caller: any RESTCalling
     init(caller: any RESTCalling) { self.caller = caller }
     public func me() async throws -> AuthMeResponse {
-        try await caller.request("GET", path: "/api/auth/me", as: AuthMeResponse.self)
+        let query: [String: String] = [:]
+        return try await caller.request("GET", path: "/api/auth/me", as: AuthMeResponse.self, query: query)
     }
     public func wsTicket() async throws -> AuthWsTicketResponse {
-        try await caller.request("POST", path: "/api/auth/ws-ticket", as: AuthWsTicketResponse.self)
+        let query: [String: String] = [:]
+        return try await caller.request("POST", path: "/api/auth/ws-ticket", as: AuthWsTicketResponse.self, query: query)
+    }
+}
+
+public struct SessionsRESTMethods: Sendable {
+    private let caller: any RESTCalling
+    init(caller: any RESTCalling) { self.caller = caller }
+    public func emptyCount(profile: String? = nil) async throws -> SessionsEmptyCountResponse {
+        var query: [String: String] = [:]
+        if let profile { query["profile"] = profile }
+        return try await caller.request("GET", path: "/api/sessions/empty/count", as: SessionsEmptyCountResponse.self, query: query)
     }
 }
 
 public extension HermesREST {
     var auth: AuthRESTMethods { AuthRESTMethods(caller: self) }
+    var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: self) }
 }

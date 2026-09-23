@@ -24,6 +24,15 @@ class Property:
 
 
 @dataclass(frozen=True)
+class QueryParam:
+    wire: str
+    name: str
+    swift_type: str
+    kotlin_type: str
+    required: bool
+
+
+@dataclass(frozen=True)
 class Operation:
     method: str
     path: str
@@ -31,6 +40,7 @@ class Operation:
     name: str
     type_name: str
     properties: tuple[Property, ...]
+    query_params: tuple[QueryParam, ...]
 
 
 def _typed_operations(document: dict) -> list[Operation]:
@@ -40,8 +50,26 @@ def _typed_operations(document: dict) -> list[Operation]:
         for method, item in sorted(methods.items()):
             if "x-handler-hash" not in item:
                 continue
-            if item.get("parameters") or item.get("requestBody"):
-                raise ValueError(f"REST generator does not yet support parameters or bodies: {method} {path}")
+            if item.get("requestBody"):
+                raise ValueError(f"REST generator does not yet support request bodies: {method} {path}")
+            query_params: list[QueryParam] = []
+            for parameter in item.get("parameters", []):
+                if parameter.get("in") != "query":
+                    raise ValueError(f"REST generator does not yet support {parameter.get('in')} parameters: {method} {path}")
+                wire = parameter["name"]
+                schema = parameter["schema"]
+                variants = schema.get("anyOf")
+                if variants is not None:
+                    non_null = [variant for variant in variants if variant.get("type") != "null"]
+                    if len(variants) != 2 or len(non_null) != 1:
+                        raise ValueError(f"Unsupported REST query union: {method} {path} {wire}")
+                    schema = non_null[0]
+                types = {"string": ("String", "String"), "integer": ("Int", "Long"),
+                         "number": ("Double", "Double"), "boolean": ("Bool", "Boolean")}
+                if schema.get("type") not in types:
+                    raise ValueError(f"Unsupported REST query type: {method} {path} {wire}")
+                swift, kotlin = types[schema["type"]]
+                query_params.append(QueryParam(wire, camel(wire), swift, kotlin, parameter.get("required", False)))
             response = item["responses"]["200"]["content"]["application/json"]["schema"]
             if response.get("type") != "object" or response.get("additionalProperties") is not False:
                 raise ValueError(f"REST response must be a closed object: {method} {path}")
@@ -71,7 +99,8 @@ def _typed_operations(document: dict) -> list[Operation]:
                 props.append(Property(wire, camel(wire), swift, kotlin, wire in required))
             if not props or required - set(response["properties"]):
                 raise ValueError(f"Invalid reviewed REST response: {method} {path}")
-            result.append(Operation(method.upper(), path, namespace, name, type_name, tuple(props)))
+            result.append(Operation(method.upper(), path, namespace, name, type_name,
+                                    tuple(props), tuple(query_params)))
     return result
 
 
@@ -143,9 +172,20 @@ def _swift_methods(ops: list[Operation]) -> str:
                       "    private let caller: any RESTCalling",
                       "    init(caller: any RESTCalling) { self.caller = caller }"])
         for op in entries:
-            lines.extend([f"    public func {op.name}() async throws -> {op.type_name} {{",
-                          f'        try await caller.request("{op.method}", path: "{op.path}", as: {op.type_name}.self)',
-                          "    }"])
+            args = ", ".join(f"{p.name}: {p.swift_type}{'' if p.required else '?'}"
+                             f"{'' if p.required else ' = nil'}" for p in op.query_params)
+            lines.append(f"    public func {op.name}({args}) async throws -> {op.type_name} {{")
+            lines.append("        var query: [String: String] = [:]" if op.query_params else
+                         "        let query: [String: String] = [:]")
+            for p in op.query_params:
+                value = p.name if p.swift_type == "String" else f"String({p.name})"
+                if p.required:
+                    lines.append(f'        query["{p.wire}"] = {value}')
+                else:
+                    lines.append(f'        if let {p.name} {{ query["{p.wire}"] = {value} }}')
+            lines.append(f'        return try await caller.request("{op.method}", path: "{op.path}", '
+                         f'as: {op.type_name}.self, query: query)')
+            lines.append("    }")
         lines.append("}")
     lines.extend(["", "public extension HermesREST {"])
     for namespace in sorted(groups):
@@ -168,8 +208,22 @@ def _kotlin_methods(ops: list[Operation]) -> str:
     for namespace, entries in sorted(groups.items()):
         lines.extend(["", f"public class {pascal(namespace)}RESTMethods(private val caller: RESTCaller) {{"])
         for op in entries:
-            lines.extend([f"    public suspend fun {op.name}(): {op.type_name} =",
-                          f'        caller.request("{op.method}", "{op.path}", serializer<{op.type_name}>())'])
+            args = ", ".join(f"{p.name}: {p.kotlin_type}{'' if p.required else '?'}"
+                             f"{'' if p.required else ' = null'}" for p in op.query_params)
+            lines.append(f"    public suspend fun {op.name}({args}): {op.type_name} {{")
+            if op.query_params:
+                lines.append("        val query = buildMap<String, String> {")
+                for p in op.query_params:
+                    if p.required:
+                        lines.append(f'            put("{p.wire}", {p.name}.toString())')
+                    else:
+                        lines.append(f'            {p.name}?.let {{ put("{p.wire}", it.toString()) }}')
+                lines.append("        }")
+            else:
+                lines.append("        val query = emptyMap<String, String>()")
+            lines.append(f'        return caller.request("{op.method}", "{op.path}", '
+                         f'serializer<{op.type_name}>(), query)')
+            lines.append("    }")
         lines.append("}")
     return "\n".join(lines) + "\n"
 

@@ -18,6 +18,7 @@ import st.flrn.hermes.api.generated.gateway.PromptSubmitResult
 import st.flrn.hermes.api.generated.gateway.SessionCreateResult
 import st.flrn.hermes.api.generated.gateway.SessionListResult
 import st.flrn.hermes.api.generated.gateway.SessionCloseResult
+import st.flrn.hermes.api.generated.rest.SessionsEmptyCountResponse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -43,6 +44,15 @@ class FixtureDecodeTest {
             val name = record.getValue("name").jsonPrimitive.content
             seen += name
             val frame = record.getValue("frame").jsonObject
+            if (record.getValue("kind").jsonPrimitive.content == "rest") {
+                assertEquals("GET /api/sessions/empty/count", name)
+                assertEquals(200, frame.getValue("status").jsonPrimitive.content.toInt())
+                val body = frame.getValue("body")
+                val result = json.decodeFromJsonElement(SessionsEmptyCountResponse.serializer(), body)
+                assertTrue(result.count >= 0)
+                assertEquals(body, json.encodeToJsonElement(SessionsEmptyCountResponse.serializer(), result))
+                continue
+            }
             if (record.getValue("kind").jsonPrimitive.content == "event") {
                 val params = frame.getValue("params").jsonObject
                 val rawPayload = params["payload"] ?: JsonObject(emptyMap())
@@ -102,6 +112,7 @@ class FixtureDecodeTest {
             }
         }
         assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "message.delta",
+            "GET /api/sessions/empty/count",
             "message.complete", "session.create", "session.list", "session.close")))
     }
 }

@@ -29,3 +29,10 @@ public data class AuthWsTicketResponse(
     @SerialName("ttl_seconds")
     public val ttlSeconds: Long,
 )
+
+/** Generated from the reviewed REST response for GET /api/sessions/empty/count. */
+@Serializable
+public data class SessionsEmptyCountResponse(
+    @SerialName("count")
+    public val count: Long,
+)

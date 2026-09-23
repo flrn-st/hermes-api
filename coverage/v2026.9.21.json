@@ -1,5 +1,5 @@
 {
-  "complete": 5,
+  "complete": 6,
   "entries": [
     {
       "complete": false,
@@ -6614,16 +6614,16 @@
       "typed": false
     },
     {
-      "complete": false,
-      "decode": false,
-      "fixture": false,
-      "fresh": false,
-      "generated": false,
+      "complete": true,
+      "decode": true,
+      "fixture": true,
+      "fresh": true,
+      "generated": true,
       "kind": "rest",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "GET /api/sessions/empty/count",
-      "typed": false
+      "typed": true
     },
     {
       "complete": false,
@@ -7331,13 +7331,13 @@
       "typed": 145
     },
     "rest": {
-      "complete": 0,
-      "decode": 0,
-      "fixture": 0,
-      "generated": 2,
-      "live_both": 0,
+      "complete": 1,
+      "decode": 1,
+      "fixture": 1,
+      "generated": 3,
+      "live_both": 1,
       "total": 334,
-      "typed": 3
+      "typed": 4
     },
     "server_request": {
       "complete": 0,

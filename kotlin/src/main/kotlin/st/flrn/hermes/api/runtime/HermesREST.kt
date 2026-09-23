@@ -1,6 +1,8 @@
 package st.flrn.hermes.api.runtime
 
 import java.net.URI
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.request
@@ -12,7 +14,9 @@ import kotlinx.serialization.json.Json
 import st.flrn.hermes.api.generated.rest.RESTMethodCatalog
 
 public interface RESTCaller {
-    public suspend fun <Result : Any> request(method: String, path: String, resultSerializer: KSerializer<Result>): Result
+    public suspend fun <Result : Any> request(
+        method: String, path: String, resultSerializer: KSerializer<Result>, query: Map<String, String>,
+    ): Result
 }
 
 public interface RESTTransport {
@@ -20,7 +24,7 @@ public interface RESTTransport {
 }
 
 /** Inject a configured Ktor client for app TLS trust, cookies and SSH tunnels. */
-public class KtorRESTTransport(public val client: HttpClient = HttpClient(CIO)) : RESTTransport {
+public class KtorRESTTransport(public val client: HttpClient = HttpClient(CIO)) : RESTTransport, AutoCloseable {
     override suspend fun request(method: String, uri: URI, headers: Map<String, String>): Pair<Int, String> {
         val response = client.request(uri.toString()) {
             this.method = HttpMethod.parse(method)
@@ -28,6 +32,8 @@ public class KtorRESTTransport(public val client: HttpClient = HttpClient(CIO)) 
         }
         return response.status.value to response.bodyAsText()
     }
+
+    override fun close(): Unit = client.close()
 }
 
 public sealed class HermesRESTException(message: String) : Exception(message) {
@@ -49,9 +55,15 @@ public class HermesREST(
 ) : RESTCaller {
     public val methods: RESTMethodCatalog = RESTMethodCatalog(this)
 
-    override suspend fun <Result : Any> request(method: String, path: String, resultSerializer: KSerializer<Result>): Result {
+    override suspend fun <Result : Any> request(
+        method: String, path: String, resultSerializer: KSerializer<Result>, query: Map<String, String>,
+    ): Result {
         if (!path.startsWith("/api/")) throw HermesRESTException.Transport("Invalid REST path")
-        val uri = configuration.baseURI.resolve(path)
+        val suffix = query.toSortedMap().entries.joinToString("&") { (name, value) ->
+            "${URLEncoder.encode(name, StandardCharsets.UTF_8)}=${URLEncoder.encode(value, StandardCharsets.UTF_8)}"
+        }
+        val base = configuration.baseURI.resolve(path)
+        val uri = if (suffix.isEmpty()) base else URI("$base?$suffix")
         val (status, body) = try { configuration.transport.request(method, uri, configuration.headers()) }
         catch (error: CancellationException) { throw error }
         catch (error: Exception) { throw HermesRESTException.Transport(error.message ?: "HTTP transport failed") }

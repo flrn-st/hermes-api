@@ -16793,7 +16793,18 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "count"
+                  ],
+                  "type": "object"
+                }
               }
             },
             "description": "Successful Response"
@@ -16809,7 +16820,9 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Count Empty Sessions Endpoint"
+        "summary": "Count Empty Sessions Endpoint",
+        "x-handler-hash": "15b13fa34f08f74e31cc05412efa4f2fc76de2e331b2a62e5d88cd43faf33d12",
+        "x-source": "hermes_cli/web_routers/sessions.py:441"
       }
     },
     "/api/sessions/import": {

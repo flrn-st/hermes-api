@@ -6,11 +6,25 @@ import st.flrn.hermes.api.runtime.RESTCaller
 
 public class RESTMethodCatalog(private val caller: RESTCaller) {
     public val auth: AuthRESTMethods = AuthRESTMethods(caller)
+    public val sessions: SessionsRESTMethods = SessionsRESTMethods(caller)
 }
 
 public class AuthRESTMethods(private val caller: RESTCaller) {
-    public suspend fun me(): AuthMeResponse =
-        caller.request("GET", "/api/auth/me", serializer<AuthMeResponse>())
-    public suspend fun wsTicket(): AuthWsTicketResponse =
-        caller.request("POST", "/api/auth/ws-ticket", serializer<AuthWsTicketResponse>())
+    public suspend fun me(): AuthMeResponse {
+        val query = emptyMap<String, String>()
+        return caller.request("GET", "/api/auth/me", serializer<AuthMeResponse>(), query)
+    }
+    public suspend fun wsTicket(): AuthWsTicketResponse {
+        val query = emptyMap<String, String>()
+        return caller.request("POST", "/api/auth/ws-ticket", serializer<AuthWsTicketResponse>(), query)
+    }
+}
+
+public class SessionsRESTMethods(private val caller: RESTCaller) {
+    public suspend fun emptyCount(profile: String? = null): SessionsEmptyCountResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it.toString()) }
+        }
+        return caller.request("GET", "/api/sessions/empty/count", serializer<SessionsEmptyCountResponse>(), query)
+    }
 }

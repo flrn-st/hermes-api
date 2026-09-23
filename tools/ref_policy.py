@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-_TAG = re.compile(r"v\d{4}\.\d{1,2}\.\d{1,2}\Z")
+_TAG = re.compile(r"v\d{4}\.\d{1,2}\.\d{1,2}(?:\.\d+)?\Z")
 
 
 def require_release_tag(ref: str) -> str:

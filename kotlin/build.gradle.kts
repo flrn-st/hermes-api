@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.4.20"
     kotlin("plugin.serialization") version "2.4.20"
     `java-library`
+    `maven-publish`
 }
 
 group = "st.flrn.hermes"
@@ -40,4 +41,34 @@ tasks.register<JavaExec>("smoke") {
     description = "Exercise the Kotlin gateway against a live tagged Hermes server"
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass = "st.flrn.hermes.api.LiveSmokeKt"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("hermesAPI") {
+            from(components["java"])
+            pom {
+                name = "HermesAPI"
+                description = "Generated Kotlin client for stable Hermes Agent releases"
+                url = "https://github.com/flrn-st/hermes-api"
+                licenses {
+                    license {
+                        name = "MIT License"
+                        url = "https://opensource.org/licenses/MIT"
+                    }
+                }
+                scm { url = "https://github.com/flrn-st/hermes-api" }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/flrn-st/hermes-api")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }

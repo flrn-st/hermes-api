@@ -1,6 +1,6 @@
-REF ?= v2026.9.21
+REF ?= $(shell cat spec/current-release.txt)
 
-.PHONY: gen check-gen rest check-rest live test
+.PHONY: gen check-gen rest check-rest live coverage test
 
 gen:
 	uv run --locked python -m tools.fetch_spec --ref $(REF)
@@ -32,3 +32,6 @@ test:
 	swift build
 	swift test
 	cd kotlin && ./gradlew check
+
+coverage:
+	uv run --locked python -m tools.coverage --ref $(REF)

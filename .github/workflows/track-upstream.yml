@@ -1,0 +1,103 @@
+name: Track Hermes releases
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.tag.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Detect newest stable tag
+        id: tag
+        run: uv run --locked python -m tools.track_upstream --github-output "$GITHUB_OUTPUT"
+
+  update:
+    needs: detect
+    if: needs.detect.outputs.ref != ''
+    runs-on: ubuntu-latest
+    env:
+      REF: ${{ needs.detect.outputs.ref }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Check for an existing update PR
+        id: existing
+        run: |
+          if [ "$(gh pr list --state open --head "hermes/$REF" --json number --jq 'length')" != 0 ]; then
+            echo 'skip=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Generate tagged release update
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          previous=$(cat spec/current-release.txt)
+          echo "PREVIOUS_REF=$previous" >> "$GITHUB_ENV"
+          git switch -c "hermes/$REF"
+          uv run --locked python -m tools.track_upstream --adopt "$REF"
+          uv run --locked python -m tools.fetch_spec --ref "$REF"
+          mkdir -p "reports/$REF"
+          if ! uv run --locked python -m tools.schema_audit --ref "$REF" > "reports/$REF/schema-audit.log" 2>&1; then
+            echo 'Schema audit needs review.' >> "reports/$REF/generation.md"
+          fi
+          if ! uv run --locked python -m tools.gen_gateway_models --ref "$REF" > "reports/$REF/gateway-models.log" 2>&1; then
+            echo 'Gateway model generation needs review.' >> "reports/$REF/generation.md"
+          fi
+          if ! uv run --locked python -m tools.gen_gateway_api --ref "$REF" > "reports/$REF/gateway-api.log" 2>&1; then
+            echo 'Gateway API generation needs review.' >> "reports/$REF/generation.md"
+          fi
+          uv run --locked python -m tools.extract_openapi --ref "$REF" > "reports/$REF/rest-extraction.log"
+          if uv run --locked python -m tools.apply_overlay --ref "$REF" > "reports/$REF/overlay.log" 2>&1; then
+            if ! uv run --locked python -m tools.gen_rest_api --ref "$REF" > "reports/$REF/rest-generation.log" 2>&1; then
+              echo 'REST generator needs new schema support.' >> "reports/$REF/generation.md"
+            fi
+          else
+            echo 'REST overlays have stale handler hashes or changed routes. Review the tagged handlers and update the overlays.' >> "reports/$REF/generation.md"
+          fi
+          uv run --locked python -m tools.contract_diff --from-ref "$previous" --to-ref "$REF" --output "reports/$REF/openrpc.md"
+          uv run --locked python -m tools.coverage --ref "$REF"
+      - name: Compare REST contracts with oasdiff
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          curl -fsSL -o /tmp/oasdiff.tar.gz https://github.com/oasdiff/oasdiff/releases/download/v1.32.1/oasdiff_1.32.1_linux_amd64.tar.gz
+          echo '7c8939fc49b75ee11fec66a5b83b37a2fca6aee109fed85013b1ba2ac2a1ee7f  /tmp/oasdiff.tar.gz' | sha256sum --check
+          mkdir -p /tmp/oasdiff
+          tar -xzf /tmp/oasdiff.tar.gz -C /tmp/oasdiff
+          /tmp/oasdiff/oasdiff breaking -f markdown "spec/out/$PREVIOUS_REF/openapi.raw.json" "spec/out/$REF/openapi.raw.json" > "reports/$REF/rest-breaking.md"
+      - name: Commit and open update PR
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "Track Hermes $REF release contracts"
+          git push origin "hermes/$REF"
+          {
+            printf '## Hermes %s\n\n' "$REF"
+            printf 'Generated from the published stable tag. Review any stale REST overlays before merging.\n\n'
+            cat "reports/$REF/openrpc.md"
+            printf '\n## REST breaking changes\n\n'
+            cat "reports/$REF/rest-breaking.md"
+            printf '\n## Generation review\n\n'
+            if [ -f "reports/$REF/generation.md" ]; then cat "reports/$REF/generation.md"; else printf 'No generation errors.\n'; fi
+            printf '\n'
+            cat "coverage/$REF.md"
+          } > /tmp/hermes-release-pr.md
+          gh pr create --base main --head "hermes/$REF" --title "Track Hermes $REF" --body-file /tmp/hermes-release-pr.md
+          gh workflow run ci.yml --ref "hermes/$REF"

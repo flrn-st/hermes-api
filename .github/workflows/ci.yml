@@ -41,15 +41,19 @@ jobs:
         run: uv run --locked ruff check tools
       - name: Audit pinned release schema
         run: |
-          uv run --locked python -m tools.schema_audit --ref v2026.9.21
-          git diff --exit-code -- spec/out/v2026.9.21/schema-audit.json
+          uv run --locked python -m tools.schema_audit --ref "$(cat spec/current-release.txt)"
+          git diff --exit-code -- spec/out/$(cat spec/current-release.txt)/schema-audit.json
       - name: Check committed generated sources
-        run: make check-gen REF=v2026.9.21
+        run: make check-gen
       - name: Check reviewed REST overlays
         run: |
-          make rest REF=v2026.9.21
-          make check-rest REF=v2026.9.21
-          git diff --exit-code -- spec/out/v2026.9.21/openapi.raw.json spec/out/v2026.9.21/openapi.json spec/out/v2026.9.21/rest-hashes.json spec/out/v2026.9.21/rest-meta.json
+          make rest
+          make check-rest
+          git diff --exit-code -- spec/out/$(cat spec/current-release.txt)/openapi.raw.json spec/out/$(cat spec/current-release.txt)/openapi.json spec/out/$(cat spec/current-release.txt)/rest-hashes.json spec/out/$(cat spec/current-release.txt)/rest-meta.json
+      - name: Report contract coverage
+        run: |
+          make coverage
+          git diff --exit-code -- coverage
 
   swift:
     runs-on: macos-15
@@ -86,4 +90,4 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - name: Run both clients against tagged Hermes
-        run: make live REF=v2026.9.21
+        run: make live

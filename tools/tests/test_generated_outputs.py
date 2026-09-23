@@ -6,8 +6,9 @@ from tools.gen_gateway_models import generate as generate_models
 
 
 def test_committed_generated_sources_match_pinned_contract() -> None:
-    assert generate_models("v2026.9.21", check=True) == 0
-    assert generate_api("v2026.9.21", check=True) == 0
+    current = Path("spec/current-release.txt").read_text().strip()
+    assert generate_models(current, check=True) == 0
+    assert generate_api(current, check=True) == 0
 
 
 def test_public_symbol_manifest_covers_every_gateway_item() -> None:

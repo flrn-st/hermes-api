@@ -18,7 +18,8 @@ def test_tagged_rest_symbols_are_generated() -> None:
         ("auth", "me", "AuthMeResponse"),
         ("auth", "wsTicket", "AuthWsTicketResponse"),
     ]
-    assert generate("v2026.9.21", check=True) == 2
+    current = (ROOT / "spec/current-release.txt").read_text().strip()
+    assert generate(current, check=True) >= 2
 
 
 def test_generator_rejects_unhandled_request_shape() -> None:

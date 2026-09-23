@@ -10,6 +10,12 @@ on:
       - 'spec/**'
       - 'scenarios/**'
       - 'harness/**'
+      - 'fixtures/**'
+      - 'coverage/**'
+      - 'Makefile'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.gitattributes'
       - '.github/workflows/**'
   push:
     branches: [main]
@@ -21,6 +27,12 @@ on:
       - 'spec/**'
       - 'scenarios/**'
       - 'harness/**'
+      - 'fixtures/**'
+      - 'coverage/**'
+      - 'Makefile'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.gitattributes'
       - '.github/workflows/**'
   workflow_dispatch:
 
@@ -32,6 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -66,6 +80,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - name: Build
         run: swift build
       - name: Test
@@ -75,6 +91,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -88,6 +106,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true

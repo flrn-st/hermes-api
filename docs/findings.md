@@ -83,8 +83,15 @@ This has not yet been exercised: the local Docker daemon is unavailable.
 A local tagged `uvicorn` process with a temporary `HERMES_HOME` did start.
 Both the Swift URLSession and Kotlin Ktor clients connected to `/api/ws`,
 advertised server-request capability, and completed the typed `ping` call.
-`make live` now repeats this smoke test in CI. It does not yet exercise the
-stub LLM, session actions, replay, or the Docker image.
+`make live` now repeats this smoke test in CI. It does not yet exercise replay
+or the Docker image.
+
+The liveness scenario configures a custom provider against a deterministic
+local OpenAI-compatible stub. It creates a session, submits a prompt, waits for
+the streamed `message.complete` response, then lists and closes the session
+through both clients. The recorder validates each frame against the tagged
+Pydantic catalog before writing the fixture. It does not yet cover tool calls,
+approvals, clarify, or subagent flows.
 
 A separate strict WebSocket probe verifies both client adapters transmit the
 public `hermes-gateway-v1` and private ticket subprotocols, with no ticket in
@@ -96,10 +103,15 @@ HTTP test checks the authenticated POST. The caller closes an owned transport
 after disconnecting to release OkHttp resources.
 `make live-ticket` runs both adapters against the probe in CI.
 
+The session lifecycle fixture contains optional result fields explicitly set
+to `null`. The model mapping in the implementation plan collapses absent and
+null for optional results, so its strict fixture check compares object fields
+after removing nulls and separately checks typed decode and model roundtrip.
+The recorder validates the original frame with the tagged Pydantic contract.
+
 ## Remaining validation
 
 - Verify the exact `hermes web` flags and health endpoint in a running
   tag-pinned container.
 - Check whether bundled plugin APIs are present in the isolated app import.
-- Test the stub inference route with a real prompt, including streaming and
-  approval flows.
+- Extend the stub inference scenarios to approval and tool-call flows.

@@ -3,6 +3,10 @@ package st.flrn.hermes.api
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import st.flrn.hermes.api.generated.gateway.ClientCapabilitiesResult
@@ -10,30 +14,53 @@ import st.flrn.hermes.api.generated.gateway.GatewayCapabilitiesResult
 import st.flrn.hermes.api.generated.gateway.GatewayEventPayload
 import st.flrn.hermes.api.generated.gateway.GatewayReadyPayload
 import st.flrn.hermes.api.generated.gateway.PingResult
+import st.flrn.hermes.api.generated.gateway.PromptSubmitResult
+import st.flrn.hermes.api.generated.gateway.SessionCreateResult
+import st.flrn.hermes.api.generated.gateway.SessionListResult
+import st.flrn.hermes.api.generated.gateway.SessionCloseResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class FixtureDecodeTest {
+    private fun collapsingOptionalNulls(value: JsonElement): JsonElement = when (value) {
+        is JsonObject -> JsonObject(value.filterValues { it != JsonNull }
+            .mapValues { collapsingOptionalNulls(it.value) })
+        is JsonArray -> JsonArray(value.map(::collapsingOptionalNulls))
+        else -> value
+    }
+
     @Test
     fun recordedLivenessFramesDecodeInKotlin() {
         val json = Json { ignoreUnknownKeys = false }
         val ref = Files.readString(Path.of("../spec/current-release.txt")).trim()
         val lines = Files.readAllLines(Path.of("../fixtures/$ref/liveness.jsonl"))
-        assertEquals(4, lines.size)
+        assertTrue(lines.size >= 8)
+        val seen = mutableSetOf<String>()
         for (line in lines) {
             val record = json.parseToJsonElement(line).jsonObject
             val name = record.getValue("name").jsonPrimitive.content
+            seen += name
             val frame = record.getValue("frame").jsonObject
-            when (name) {
-                "gateway.ready" -> {
-                    val params = frame.getValue("params").jsonObject
-                    val payload = GatewayEventPayload.decode("gateway.ready", params.getValue("payload"), json)
-                    val ready = assertIs<GatewayEventPayload.GatewayReady>(payload).payload
-                    assertTrue(ready.replayEpoch.isNotEmpty())
-                    assertEquals(params.getValue("payload"), json.encodeToJsonElement(GatewayReadyPayload.serializer(), ready))
+            if (record.getValue("kind").jsonPrimitive.content == "event") {
+                val params = frame.getValue("params").jsonObject
+                val rawPayload = params["payload"] ?: JsonObject(emptyMap())
+                val payload = GatewayEventPayload.decode(name, rawPayload, json)
+                assertTrue(payload !is GatewayEventPayload.Unknown, "Unmodelled event: $name")
+                if (payload is GatewayEventPayload.GatewayReady) {
+                    assertTrue(payload.payload.replayEpoch.isNotEmpty())
+                    assertEquals(params.getValue("payload"),
+                        json.encodeToJsonElement(GatewayReadyPayload.serializer(), payload.payload))
                 }
+                if (payload is GatewayEventPayload.MessageComplete) {
+                    val reply = assertIs<st.flrn.hermes.api.generated.gateway.MessageCompletePayloadText.StringValue>(
+                        payload.payload.text)
+                    assertEquals("HermesAPI fixture reply.", reply.value)
+                }
+                continue
+            }
+            when (name) {
                 "client.capabilities" -> {
                     val result = json.decodeFromJsonElement(ClientCapabilitiesResult.serializer(), frame.getValue("result"))
                     assertTrue(result.serverRequests.contains("approval"))
@@ -49,8 +76,32 @@ class FixtureDecodeTest {
                     assertTrue(result.perSessionExclusiveSubmit)
                     assertEquals(frame.getValue("result"), json.encodeToJsonElement(GatewayCapabilitiesResult.serializer(), result))
                 }
+                "session.create" -> {
+                    val result = json.decodeFromJsonElement(SessionCreateResult.serializer(), frame.getValue("result"))
+                    assertTrue(result.sessionId.isNotEmpty())
+                    val encoded = json.encodeToJsonElement(SessionCreateResult.serializer(), result)
+                    assertEquals(collapsingOptionalNulls(frame.getValue("result")), collapsingOptionalNulls(encoded))
+                    assertEquals(result, json.decodeFromJsonElement(SessionCreateResult.serializer(), encoded))
+                }
+                "session.list" -> {
+                    val result = json.decodeFromJsonElement(SessionListResult.serializer(), frame.getValue("result"))
+                    val encoded = json.encodeToJsonElement(SessionListResult.serializer(), result)
+                    assertEquals(result, json.decodeFromJsonElement(SessionListResult.serializer(), encoded))
+                }
+                "session.close" -> {
+                    val result = json.decodeFromJsonElement(SessionCloseResult.serializer(), frame.getValue("result"))
+                    assertTrue(result.closed)
+                    assertEquals(frame.getValue("result"), json.encodeToJsonElement(SessionCloseResult.serializer(), result))
+                }
+                "prompt.submit" -> {
+                    val result = json.decodeFromJsonElement(PromptSubmitResult.serializer(), frame.getValue("result"))
+                    assertTrue(result.status != null)
+                    assertEquals(frame.getValue("result"), json.encodeToJsonElement(PromptSubmitResult.serializer(), result))
+                }
                 else -> error("Unexpected fixture: $name")
             }
         }
+        assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "message.delta",
+            "message.complete", "session.create", "session.list", "session.close")))
     }
 }

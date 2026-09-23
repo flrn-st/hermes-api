@@ -15,6 +15,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from harness.stub_llm import MODEL, StubLLM
 from tools.extract_openapi import extract
 from tools.fetch_spec import ROOT
 from tools.ref_policy import require_release_tag
@@ -48,6 +49,12 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
     repo = source_repo or ROOT / "spec" / ".upstream-rest" / ref
     python = repo / ".venv" / "bin" / "python"
     with tempfile.TemporaryDirectory(prefix="hermes-api-live-") as home:
+        stub = StubLLM()
+        (Path(home) / "config.yaml").write_text(
+            f"model:\n  default: {MODEL}\n  provider: custom\n"
+            f"  base_url: {stub.base_url}\n  api_key: fixture-key\n"
+            "  api_mode: chat_completions\n", encoding="utf-8",
+        )
         port = _free_port()
         url = f"http://127.0.0.1:{port}"
         token = secrets.token_urlsafe(24)
@@ -58,6 +65,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
             "HERMES_DASHBOARD_SESSION_TOKEN": token,
             "HERMES_LIVE_URL": url,
             "HERMES_LIVE_TOKEN": token,
+            "HERMES_LIVE_LIFECYCLE": "1",
         })
         if "JAVA_HOME" not in env:
             homebrew_java = Path("/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home")
@@ -91,20 +99,26 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                     [str(ROOT / "kotlin" / "gradlew"), "smoke", "--quiet"],
                     cwd=ROOT / "kotlin", env=env, check=True,
                 )
+                if not any(request["stream"] and request["model"] == MODEL for request in stub.requests):
+                    raise RuntimeError("No streamed prompt reached the isolated model stub")
                 if record:
                     subprocess.run(["swift", "test", "--quiet"], cwd=ROOT, env=env, check=True)
                     subprocess.run([str(ROOT / "kotlin" / "gradlew"), "check", "--quiet"],
                                    cwd=ROOT / "kotlin", env=env, check=True)
                     fixture = ROOT / "fixtures" / ref / "liveness.jsonl"
                     meta = json.loads((ROOT / "spec/out" / ref / "meta.json").read_text())
+                    recorded = [json.loads(line) for line in fixture.read_text(encoding="utf-8").splitlines()]
                     evidence = {
                         "ref": ref,
                         "commit": meta["commit"],
                         "scenario": "liveness",
                         "fixture": str(fixture.relative_to(ROOT)),
                         "fixture_sha256": hashlib.sha256(fixture.read_bytes()).hexdigest(),
-                        "methods": ["client.capabilities", "ping", "gateway.capabilities"],
-                        "events": ["gateway.ready"],
+                        "methods": sorted({entry["name"] for entry in recorded if entry["kind"] == "response"}),
+                        "events": sorted({entry["name"] for entry in recorded if entry["kind"] == "event"}),
+                        "live_methods": ["client.capabilities", "ping", "gateway.capabilities",
+                                         "session.create", "prompt.submit", "session.list", "session.close"],
+                        "live_events": ["gateway.ready", "message.complete"],
                         "decode_swift": True,
                         "decode_kotlin": True,
                         "live_swift": True,
@@ -125,6 +139,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                 except subprocess.TimeoutExpired:
                     server.kill()
                     server.wait(timeout=5)
+                stub.close()
 
 
 def main() -> None:

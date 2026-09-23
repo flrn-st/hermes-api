@@ -20,6 +20,8 @@ def _strict(schema: dict, components: dict, visited: set[str] | None = None) -> 
         if name in visited:
             return True
         return _strict(components[name], components, visited | {name})
+    if not any(key in schema for key in ("type", "enum", "const", "anyOf", "oneOf", "allOf")):
+        return False
     if schema.get("additionalProperties") is True:
         return False
     if isinstance(schema.get("additionalProperties"), dict) and not _strict(schema["additionalProperties"], components, visited):
@@ -44,8 +46,9 @@ def _gateway_entries(contract: dict, symbols: dict) -> list[dict]:
     ):
         generated = {item["wire"] for item in symbols[symbol_key]}
         for item in contract[section]:
-            schemas = ([item["result"]["schema"]] if "result" in item else
-                       [param["schema"] for param in item.get("params", [])])
+            schemas = [param["schema"] for param in item.get("params", [])]
+            if "result" in item:
+                schemas.append(item["result"]["schema"])
             result.append({
                 "kind": kind, "name": item["name"],
                 "typed": all(_strict(schema, components) for schema in schemas),
@@ -64,7 +67,7 @@ def _rest_entries(document: dict, generated_symbols: list[dict], hashes: dict) -
             responses = [value for status, value in operation["responses"].items() if status.startswith("2")]
             schemas = [media["schema"] for response in responses for media in response.get("content", {}).values()]
             typed = bool(schemas) and all(_strict(schema, document["components"]["schemas"]) for schema in schemas)
-            if not schemas and method.lower() == "head":
+            if method.lower() == "head" and not any(schemas):
                 typed = True
             fresh = (operation.get("x-source") == hashes.get(key, {}).get("source") and
                      operation.get("x-handler-hash") == hashes.get(key, {}).get("handler_sha256"))
@@ -93,13 +96,18 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
     declared = set(evidence["methods"]) | set(evidence["events"])
     if recorded != declared:
         raise ValueError("Coverage evidence does not match recorded frame names")
+    if (not set(evidence["live_methods"]) <= set(evidence["methods"]) or
+            not set(evidence["live_events"]) <= set(evidence["events"])):
+        raise ValueError("Live evidence includes an unrecorded contract item")
     for entry in entries:
         if ((entry["kind"] == "gateway_method" and entry["name"] in evidence["methods"]) or
                 (entry["kind"] == "event" and entry["name"] in evidence["events"])):
             entry["fixture"] = True
             entry["decode"] = evidence["decode_swift"] and evidence["decode_kotlin"]
-            entry["live_swift"] = evidence["live_swift"]
-            entry["live_kotlin"] = evidence["live_kotlin"]
+            live = ((entry["kind"] == "gateway_method" and entry["name"] in evidence["live_methods"]) or
+                    (entry["kind"] == "event" and entry["name"] in evidence["live_events"]))
+            entry["live_swift"] = live and evidence["live_swift"]
+            entry["live_kotlin"] = live and evidence["live_kotlin"]
 
 
 def report(ref: str, root: Path = ROOT) -> dict:

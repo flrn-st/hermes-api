@@ -38,6 +38,7 @@ def run(ref: str, source_repo: Path | None = None) -> None:
     port = _free_port()
     env = os.environ.copy()
     env.pop("HERMES_LIVE_TOKEN", None)
+    env.pop("HERMES_LIVE_LIFECYCLE", None)
     env.update({"HERMES_LIVE_URL": f"http://127.0.0.1:{port}",
                 "HERMES_LIVE_TICKET": secrets.token_urlsafe(24)})
     if "JAVA_HOME" not in env:

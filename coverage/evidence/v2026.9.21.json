@@ -3,16 +3,41 @@
   "decode_kotlin": true,
   "decode_swift": true,
   "events": [
-    "gateway.ready"
+    "gateway.ready",
+    "message.complete",
+    "message.delta",
+    "message.start",
+    "reasoning.available",
+    "session.info",
+    "session.title",
+    "sessions.changed",
+    "thinking.delta"
   ],
   "fixture": "fixtures/v2026.9.21/liveness.jsonl",
-  "fixture_sha256": "79cf8688ee2d9e3710168c8cfa354efd3cd69c79465e5bf034231e912167b942",
+  "fixture_sha256": "319af47f3beb7e1c9eb0138a8a58dec5017402f781a0edc0d4afc9242b1c92c6",
+  "live_events": [
+    "gateway.ready",
+    "message.complete"
+  ],
   "live_kotlin": true,
+  "live_methods": [
+    "client.capabilities",
+    "ping",
+    "gateway.capabilities",
+    "session.create",
+    "prompt.submit",
+    "session.list",
+    "session.close"
+  ],
   "live_swift": true,
   "methods": [
     "client.capabilities",
+    "gateway.capabilities",
     "ping",
-    "gateway.capabilities"
+    "prompt.submit",
+    "session.close",
+    "session.create",
+    "session.list"
   ],
   "ref": "v2026.9.21",
   "scenario": "liveness"

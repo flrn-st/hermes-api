@@ -4,3 +4,21 @@ calls:
     params: {}
   - method: gateway.capabilities
     params: {}
+  - method: session.create
+    params:
+      title: HermesAPI live session
+      cwd: /tmp
+      close_on_disconnect: true
+    capture:
+      session_id: session_id
+  - method: prompt.submit
+    params:
+      session_id: ${session_id}
+      text: Reply with a short greeting.
+    wait_for_event: message.complete
+    expect_event_text: HermesAPI fixture reply.
+  - method: session.list
+    params: {}
+  - method: session.close
+    params:
+      session_id: ${session_id}

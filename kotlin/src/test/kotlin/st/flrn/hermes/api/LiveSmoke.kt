@@ -50,11 +50,18 @@ suspend fun main() {
                 closeOnDisconnect = true,
             ))
             coroutineScope {
+                var sawStart = false
+                val streamed = StringBuilder()
                 val completion = async(start = CoroutineStart.UNDISPATCHED) {
                     withTimeout(30_000) {
                         gateway.events.first { event ->
-                            event.sessionId == session.sessionId &&
-                                event.type in setOf("message.complete", "error")
+                            if (event.sessionId != session.sessionId) return@first false
+                            when (val payload = event.payload) {
+                                GatewayEventPayload.MessageStart -> sawStart = true
+                                is GatewayEventPayload.MessageDelta -> streamed.append(payload.payload.text)
+                                else -> Unit
+                            }
+                            event.type in setOf("message.complete", "error")
                         }
                     }
                 }
@@ -68,6 +75,7 @@ suspend fun main() {
                     ?: error("Gateway turn failed: ${event.type}")
                 val reply = payload.payload.text as? MessageCompletePayloadText.StringValue
                 check(reply?.value == "HermesAPI fixture reply.") { "Unexpected gateway reply" }
+                check(sawStart && streamed.toString() == reply.value) { "Streamed gateway text differs" }
             }
             gateway.methods.session.list(SessionListParams())
             check(gateway.methods.session.close(SessionCloseParams(session.sessionId)).closed) {

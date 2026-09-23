@@ -11,7 +11,7 @@ def test_coverage_accounts_for_every_tagged_operation() -> None:
     assert data["summary"]["server_request"]["total"] == 12
     assert data["summary"]["event"]["total"] == 69
     assert data["summary"]["rest"]["total"] == 334
-    assert data["complete"] >= 6
+    assert data["complete"] >= 8
     assert data["summary"]["gateway_method"]["fixture"] >= 6
     assert data["summary"]["rest"]["fixture"] >= 1
     symbols = json.loads((ROOT / "spec/out/v2026.9.21/generated-rest-symbols.json").read_text())

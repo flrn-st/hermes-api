@@ -58,6 +58,9 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
             if case .messageComplete(let complete) = payload {
                 #expect(complete.text == .string("HermesAPI fixture reply."))
             }
+            if case .messageDelta(let delta) = payload {
+                #expect(delta.text == "HermesAPI fixture reply.")
+            }
             continue
         }
         switch record.name {

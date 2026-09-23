@@ -68,6 +68,9 @@ class FixtureDecodeTest {
                         payload.payload.text)
                     assertEquals("HermesAPI fixture reply.", reply.value)
                 }
+                if (payload is GatewayEventPayload.MessageDelta) {
+                    assertEquals("HermesAPI fixture reply.", payload.payload.text)
+                }
                 continue
             }
             when (name) {

@@ -1,5 +1,5 @@
 {
-  "complete": 6,
+  "complete": 8,
   "entries": [
     {
       "complete": false,
@@ -2708,13 +2708,13 @@
       "typed": false
     },
     {
-      "complete": false,
+      "complete": true,
       "decode": true,
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "message.delta",
       "typed": true
     },
@@ -2741,13 +2741,13 @@
       "typed": false
     },
     {
-      "complete": false,
+      "complete": true,
       "decode": true,
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "message.start",
       "typed": true
     },
@@ -7313,11 +7313,11 @@
   "ref": "v2026.9.21",
   "summary": {
     "event": {
-      "complete": 0,
+      "complete": 2,
       "decode": 9,
       "fixture": 9,
       "generated": 69,
-      "live_both": 2,
+      "live_both": 4,
       "total": 69,
       "typed": 48
     },

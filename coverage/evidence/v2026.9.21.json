@@ -14,9 +14,11 @@
     "thinking.delta"
   ],
   "fixture": "fixtures/v2026.9.21/liveness.jsonl",
-  "fixture_sha256": "941f178562665d38eb6f0c38145b2984babdb4dfaad1455d25f64cf1e01579e1",
+  "fixture_sha256": "4cdcd838bd647a238ad21d31844bcc3bebfe9889d342b16278b7b9c7ee46597f",
   "live_events": [
     "gateway.ready",
+    "message.start",
+    "message.delta",
     "message.complete"
   ],
   "live_kotlin": true,

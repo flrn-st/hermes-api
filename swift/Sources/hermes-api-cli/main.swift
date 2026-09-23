@@ -57,10 +57,17 @@ struct HermesAPICLI {
     ) async throws -> String {
         try await withThrowingTaskGroup(of: String.self) { group in
             group.addTask {
+                var sawStart = false
+                var streamed = ""
                 for await event in events where event.sessionID == sessionID {
                     switch event.payload {
+                    case .messageStart:
+                        sawStart = true
+                    case .messageDelta(let payload):
+                        streamed += payload.text
                     case .messageComplete(let payload):
-                        if case .string(let text)? = payload.text { return text }
+                        if case .string(let text)? = payload.text,
+                           sawStart, streamed == text { return text }
                         throw CLIError.turnFailed
                     case .error:
                         throw CLIError.turnFailed

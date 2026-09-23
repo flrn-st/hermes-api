@@ -12,6 +12,13 @@ reports `DESKTOP_BACKEND_CONTRACT = 7` in `tui_gateway/server.py`. The
 `pyproject.toml` package version is `0.21.4`. All extraction and generated
 version constants must come from the tag, not from the plan's snapshot.
 
+The schema audit found 1,446 `anyOf` nodes. Forty have more than one non-null
+variant (for example `number | string | null` and `integer | string`), one
+node is a discriminated `oneOf`, and 24 nodes are unrestricted JSON schemas.
+The generator needs explicit union types and a deliberate JSON value type for
+the unrestricted schemas. Treating every union as nullable single-type data
+would misrepresent the tagged contract.
+
 ## Authentication and WebSocket upgrade
 
 `/api/ws` is mounted by `hermes_cli/web_routers/chat_ws.py`. It first requires

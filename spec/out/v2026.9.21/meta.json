@@ -1,0 +1,11 @@
+{
+  "commit": "d337b736aa1e8ebecfab043842d13e4a2d2f48a3",
+  "desktop_contract": 7,
+  "hermes_version": "0.21.4",
+  "method_count": 219,
+  "notification_count": 69,
+  "openrpc_sha256": "358b160cd3e9420111fa6f97e4c08d27b648ff802738f79712fe1e92fbd3556f",
+  "ref": "v2026.9.21",
+  "schema_count": 624,
+  "server_request_count": 12
+}

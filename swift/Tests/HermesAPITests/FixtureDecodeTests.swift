@@ -38,17 +38,30 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
         seen.insert(record.name)
         guard case .object(let frame) = record.frame else { throw HermesGatewayError.decoding("Invalid fixture frame") }
         if record.kind == "server_request" {
-            #expect(record.name == "clarify")
-            let request = try decoder.decode(ClarifyRequestParams.self,
-                                             from: JSONEncoder().encode(frame["params"]))
-            guard case .value(let questions) = request.questions else {
-                throw HermesGatewayError.decoding("Missing recorded clarification")
+            switch record.name {
+            case "clarify":
+                let request = try decoder.decode(ClarifyRequestParams.self,
+                                                 from: JSONEncoder().encode(frame["params"]))
+                guard case .value(let questions) = request.questions else {
+                    throw HermesGatewayError.decoding("Missing recorded clarification")
+                }
+                #expect(questions.count == 1 && questions[0].question == "Which release channel?")
+                let answer = try decoder.decode(ClarifyResult.self,
+                                                from: JSONEncoder().encode(record.answer))
+                #expect(answer.answers?["q0"] == "Stable")
+                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(answer)) == record.answer)
+            case "approval":
+                let request = try decoder.decode(ApprovalRequestParams.self,
+                                                 from: JSONEncoder().encode(frame["params"]))
+                #expect(request.command == "rm -rf /tmp/hermes-api-fixture-approval-target")
+                #expect(request.choices?.contains(.deny) == true)
+                let answer = try decoder.decode(ApprovalResult.self,
+                                                from: JSONEncoder().encode(record.answer))
+                #expect(answer.choice == .deny)
+                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(answer)) == record.answer)
+            default:
+                Issue.record("Unexpected server request: \(record.name)")
             }
-            #expect(questions.count == 1 && questions[0].question == "Which release channel?")
-            let answer = try decoder.decode(ClarifyResult.self,
-                                            from: JSONEncoder().encode(record.answer))
-            #expect(answer.answers?["q0"] == "Stable")
-            #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(answer)) == record.answer)
             continue
         }
         if record.kind == "rest" {
@@ -91,17 +104,26 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
             }
             if case .messageComplete(let complete) = payload {
                 #expect([.string("HermesAPI fixture reply."),
-                         .string("HermesAPI stable release selected.")].contains(complete.text))
+                         .string("HermesAPI stable release selected."),
+                         .string("HermesAPI approval denied as expected.")].contains(complete.text))
             }
             if case .messageDelta(let delta) = payload {
-                #expect(["HermesAPI fixture reply.", "HermesAPI stable release selected."].contains(
+                #expect(["HermesAPI fixture reply.", "HermesAPI stable release selected.",
+                         "HermesAPI approval denied as expected."].contains(
                     delta.text.trimmingCharacters(in: .whitespacesAndNewlines)))
             }
             if case .toolStart(let started) = payload {
-                #expect(started.name == "clarify")
+                #expect(["clarify", "terminal"].contains(started.name))
             }
             if case .toolComplete(let completed) = payload {
-                #expect(completed.name == "clarify")
+                #expect(["clarify", "terminal"].contains(completed.name))
+                if completed.name == "terminal" {
+                    guard case .object(let result)? = completed.result else {
+                        throw HermesGatewayError.decoding("Missing denied terminal result")
+                    }
+                    #expect(result["status"] == .string("blocked"))
+                    #expect(result["exit_code"] == .integer(-1))
+                }
             }
             continue
         }
@@ -139,7 +161,7 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
             Issue.record("Unexpected fixture: \(record.name)")
         }
     }
-    #expect(Set(["gateway.ready", "ping", "prompt.submit", "clarify", "tool.start",
+    #expect(Set(["gateway.ready", "ping", "prompt.submit", "clarify", "approval", "tool.start",
                  "tool.complete", "message.delta", "message.complete",
                  "GET /api/audio/voice-live/status",
                  "GET /api/sessions/empty/count",

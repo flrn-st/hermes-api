@@ -20,13 +20,22 @@ struct HermesAPICLI {
         }
         let gateway = HermesGateway(configuration: .init(baseURL: url, auth: auth))
         await gateway.setServerRequestHandler { request in
-            guard case .clarify(let params) = request,
-                  case .value(let questions) = params.questions,
-                  questions.count == 1,
-                  questions[0].question == "Which release channel?" else {
+            switch request {
+            case .clarify(let params):
+                guard case .value(let questions) = params.questions,
+                      questions.count == 1,
+                      questions[0].question == "Which release channel?" else {
+                    throw CLIError.unexpectedServerRequest
+                }
+                return .clarify(ClarifyResult(answers: [questions[0].qid: "Stable"]))
+            case .approval(let params):
+                guard params.command == "rm -rf /tmp/hermes-api-fixture-approval-target" else {
+                    throw CLIError.unexpectedServerRequest
+                }
+                return .approval(ApprovalResult(choice: .deny))
+            default:
                 throw CLIError.unexpectedServerRequest
             }
-            return .clarify(ClarifyResult(answers: [questions[0].qid: "Stable"]))
         }
         do {
             try await gateway.connect()
@@ -43,7 +52,7 @@ struct HermesAPICLI {
                 guard submission.status != nil else { throw CLIError.turnFailed }
                 let reply = try await waitForFixtureReply(
                     events: gateway.events, sessionID: session.sessionId,
-                    expected: "HermesAPI fixture reply.", expectTool: false)
+                    expected: "HermesAPI fixture reply.", expectedTool: nil)
                 guard reply == "HermesAPI fixture reply." else { throw CLIError.turnFailed }
                 let clarification = try await gateway.prompt.submit(.init(
                     sessionId: session.sessionId,
@@ -51,8 +60,16 @@ struct HermesAPICLI {
                 guard clarification.status != nil else { throw CLIError.turnFailed }
                 let clarifiedReply = try await waitForFixtureReply(
                     events: gateway.events, sessionID: session.sessionId,
-                    expected: "HermesAPI stable release selected.", expectTool: true)
+                    expected: "HermesAPI stable release selected.", expectedTool: "clarify")
                 guard clarifiedReply == "HermesAPI stable release selected." else { throw CLIError.turnFailed }
+                let approval = try await gateway.prompt.submit(.init(
+                    sessionId: session.sessionId,
+                    text: .string("Try the fixture cleanup command and report whether it was approved.")))
+                guard approval.status != nil else { throw CLIError.turnFailed }
+                let deniedReply = try await waitForFixtureReply(
+                    events: gateway.events, sessionID: session.sessionId,
+                    expected: "HermesAPI approval denied as expected.", expectedTool: "terminal")
+                guard deniedReply == "HermesAPI approval denied as expected." else { throw CLIError.turnFailed }
                 _ = try await gateway.session.list(.init())
                 let closed = try await gateway.session.close(.init(sessionId: session.sessionId))
                 guard closed.closed else { throw CLIError.sessionCloseFailed }
@@ -81,7 +98,7 @@ struct HermesAPICLI {
     }
 
     private static func waitForFixtureReply(
-        events: AsyncStream<GatewayEvent>, sessionID: String, expected: String, expectTool: Bool
+        events: AsyncStream<GatewayEvent>, sessionID: String, expected: String, expectedTool: String?
     ) async throws -> String {
         try await withThrowingTaskGroup(of: String.self) { group in
             group.addTask {
@@ -93,9 +110,14 @@ struct HermesAPICLI {
                     switch event.payload {
                     case .messageStart:
                         sawStart = true
-                    case .toolStart(let payload) where payload.name == "clarify":
+                    case .toolStart(let payload) where payload.name == expectedTool:
                         sawToolStart = true
-                    case .toolComplete(let payload) where payload.name == "clarify":
+                    case .toolComplete(let payload) where payload.name == expectedTool:
+                        if expectedTool == "terminal" {
+                            guard case .object(let result)? = payload.result,
+                                  result["status"] == .string("blocked"),
+                                  result["exit_code"] == .integer(-1) else { throw CLIError.turnFailed }
+                        }
                         sawToolComplete = true
                     case .messageDelta(let payload):
                         streamed += payload.text
@@ -103,7 +125,7 @@ struct HermesAPICLI {
                         if case .string(let text)? = payload.text,
                            sawStart, text == expected,
                            streamed.trimmingCharacters(in: .whitespacesAndNewlines) == text,
-                           (!expectTool || (sawToolStart && sawToolComplete)) { return text }
+                           (expectedTool == nil || (sawToolStart && sawToolComplete)) { return text }
                         throw CLIError.turnFailed
                     case .error:
                         throw CLIError.turnFailed

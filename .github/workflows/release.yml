@@ -35,7 +35,7 @@ jobs:
           make check-rest
           uv run --locked pytest
           uv run --locked ruff check tools harness
-          swift test
+          swift test --no-parallel
           (cd kotlin && ./gradlew check)
           make live
       - name: Enforce complete tagged coverage

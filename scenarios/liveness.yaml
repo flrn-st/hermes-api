@@ -24,6 +24,13 @@ calls:
     wait_for_server_request: clarify
     wait_for_event: message.complete
     expect_event_text: HermesAPI stable release selected.
+  - method: prompt.submit
+    params:
+      session_id: ${session_id}
+      text: Try the fixture cleanup command and report whether it was approved.
+    wait_for_server_request: approval
+    wait_for_event: message.complete
+    expect_event_text: HermesAPI approval denied as expected.
   - method: session.list
     params: {}
   - method: session.close
@@ -33,6 +40,8 @@ server_requests:
   clarify:
     answers:
       q0: Stable
+  approval:
+    choice: deny
 rest_calls:
   - method: GET
     path: /api/audio/voice-live/status

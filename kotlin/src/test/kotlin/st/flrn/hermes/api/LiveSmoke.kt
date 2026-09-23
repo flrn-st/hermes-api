@@ -7,6 +7,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import st.flrn.hermes.api.generated.gateway.PingParams
 import st.flrn.hermes.api.generated.gateway.PromptSubmitParams
 import st.flrn.hermes.api.generated.gateway.GatewayEventPayload
@@ -15,6 +17,8 @@ import st.flrn.hermes.api.generated.gateway.SessionCreateParams
 import st.flrn.hermes.api.generated.gateway.SessionListParams
 import st.flrn.hermes.api.generated.gateway.SessionCloseParams
 import st.flrn.hermes.api.generated.gateway.ClarifyResult
+import st.flrn.hermes.api.generated.gateway.ApprovalChoice
+import st.flrn.hermes.api.generated.gateway.ApprovalResult
 import st.flrn.hermes.api.generated.gateway.ServerRequest
 import st.flrn.hermes.api.generated.gateway.ServerRequestResult
 import st.flrn.hermes.api.generated.rest.ProfilesSetActiveRequest
@@ -45,13 +49,23 @@ suspend fun main() {
     val transport = KtorGatewayTransport()
     val gateway = HermesGateway(HermesGatewayConfiguration(URI(url), auth, transport))
     gateway.setServerRequestHandler { request ->
-        val clarify = request as? ServerRequest.Clarify ?: error("Unexpected server request")
-        val questions = (clarify.params.questions as? Patch.Value)?.value
-            ?: error("Missing clarification questions")
-        check(questions.size == 1 && questions[0].question == "Which release channel?") {
-            "Unexpected clarification question"
+        when (request) {
+            is ServerRequest.Clarify -> {
+                val questions = (request.params.questions as? Patch.Value)?.value
+                    ?: error("Missing clarification questions")
+                check(questions.size == 1 && questions[0].question == "Which release channel?") {
+                    "Unexpected clarification question"
+                }
+                ServerRequestResult.Clarify(ClarifyResult(answers = mapOf(questions[0].qid to "Stable")))
+            }
+            is ServerRequest.Approval -> {
+                check(request.params.command == "rm -rf /tmp/hermes-api-fixture-approval-target") {
+                    "Unexpected approval command"
+                }
+                ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Deny))
+            }
+            else -> error("Unexpected server request")
         }
-        ServerRequestResult.Clarify(ClarifyResult(answers = mapOf(questions[0].qid to "Stable")))
     }
     try {
         gateway.connect()
@@ -90,44 +104,12 @@ suspend fun main() {
                 check(reply?.value == "HermesAPI fixture reply.") { "Unexpected gateway reply" }
                 check(sawStart && streamed.toString() == reply.value) { "Streamed gateway text differs" }
             }
-            coroutineScope {
-                var sawToolStart = false
-                var sawToolComplete = false
-                val streamed = StringBuilder()
-                val completion = async(start = CoroutineStart.UNDISPATCHED) {
-                    withTimeout(30_000) {
-                        gateway.events.first { event ->
-                            if (event.sessionId != session.sessionId) return@first false
-                            when (val payload = event.payload) {
-                                is GatewayEventPayload.ToolStart -> {
-                                    check(payload.payload.name == "clarify") { "Unexpected tool started" }
-                                    sawToolStart = true
-                                }
-                                is GatewayEventPayload.ToolComplete -> {
-                                    check(payload.payload.name == "clarify") { "Unexpected tool completed" }
-                                    sawToolComplete = true
-                                }
-                                is GatewayEventPayload.MessageDelta -> streamed.append(payload.payload.text)
-                                else -> Unit
-                            }
-                            event.type in setOf("message.complete", "error")
-                        }
-                    }
-                }
-                val submitted = gateway.methods.prompt.submit(PromptSubmitParams(
-                    sessionId = session.sessionId,
-                    text = JsonPrimitive("Ask which release channel to use for HermesAPI."),
-                ))
-                check(submitted.status != null) { "Gateway rejected the clarification prompt" }
-                val event = completion.await()
-                val payload = event.payload as? GatewayEventPayload.MessageComplete
-                    ?: error("Gateway clarification turn failed: ${event.type}")
-                val reply = payload.payload.text as? MessageCompletePayloadText.StringValue
-                check(reply?.value == "HermesAPI stable release selected.") { "Unexpected clarification reply" }
-                check(sawToolStart && sawToolComplete && streamed.toString().trim() == reply.value) {
-                    "Clarification tool flow was incomplete"
-                }
-            }
+            runToolTurn(gateway, session.sessionId,
+                "Ask which release channel to use for HermesAPI.", "clarify",
+                "HermesAPI stable release selected.")
+            runToolTurn(gateway, session.sessionId,
+                "Try the fixture cleanup command and report whether it was approved.", "terminal",
+                "HermesAPI approval denied as expected.")
             gateway.methods.session.list(SessionListParams())
             check(gateway.methods.session.close(SessionCloseParams(session.sessionId)).closed) {
                 "Gateway session did not close"
@@ -158,5 +140,50 @@ suspend fun main() {
     } finally {
         gateway.disconnect()
         transport.close()
+    }
+}
+
+private suspend fun runToolTurn(gateway: HermesGateway, sessionID: String, prompt: String,
+                                toolName: String, expected: String): Unit = coroutineScope {
+    var sawToolStart = false
+    var sawToolComplete = false
+    val streamed = StringBuilder()
+    val completion = async(start = CoroutineStart.UNDISPATCHED) {
+        withTimeout(30_000) {
+            gateway.events.first { event ->
+                if (event.sessionId != sessionID) return@first false
+                when (val payload = event.payload) {
+                    is GatewayEventPayload.ToolStart -> {
+                        check(payload.payload.name == toolName) { "Unexpected tool started" }
+                        sawToolStart = true
+                    }
+                    is GatewayEventPayload.ToolComplete -> {
+                        check(payload.payload.name == toolName) { "Unexpected tool completed" }
+                        if (toolName == "terminal") {
+                            val result = payload.payload.result as? JsonObject
+                            check(result?.get("status")?.jsonPrimitive?.content == "blocked" &&
+                                result?.get("exit_code")?.jsonPrimitive?.content == "-1") {
+                                "Denied terminal command was not blocked"
+                            }
+                        }
+                        sawToolComplete = true
+                    }
+                    is GatewayEventPayload.MessageDelta -> streamed.append(payload.payload.text)
+                    else -> Unit
+                }
+                event.type in setOf("message.complete", "error")
+            }
+        }
+    }
+    val submitted = gateway.methods.prompt.submit(PromptSubmitParams(
+        sessionId = sessionID, text = JsonPrimitive(prompt)))
+    check(submitted.status != null) { "Gateway rejected the $toolName prompt" }
+    val event = completion.await()
+    val payload = event.payload as? GatewayEventPayload.MessageComplete
+        ?: error("Gateway $toolName turn failed: ${event.type}")
+    val reply = payload.payload.text as? MessageCompletePayloadText.StringValue
+    check(reply?.value == expected) { "Unexpected $toolName reply" }
+    check(sawToolStart && sawToolComplete && streamed.toString().trim() == reply.value) {
+        "$toolName flow was incomplete"
     }
 }

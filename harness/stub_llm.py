@@ -5,11 +5,16 @@ from __future__ import annotations
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 MODEL = "hermes-api-fixture"
 REPLY = "HermesAPI fixture reply."
 CLARIFY_PROMPT = "Ask which release channel to use for HermesAPI."
 CLARIFY_REPLY = "HermesAPI stable release selected."
+APPROVAL_PROMPT = "Try the fixture cleanup command and report whether it was approved."
+APPROVAL_TARGET = Path("/tmp/hermes-api-fixture-approval-target")
+APPROVAL_COMMAND = f"rm -rf {APPROVAL_TARGET}"
+APPROVAL_REPLY = "HermesAPI approval denied as expected."
 
 
 class StubLLM:
@@ -45,15 +50,21 @@ class StubLLM:
                 model = request.get("model", MODEL)
                 usage = {"prompt_tokens": 10, "completion_tokens": 4, "total_tokens": 14}
                 messages = request.get("messages", [])
-                clarify_turn = CLARIFY_PROMPT in json.dumps(messages)
-                answered_clarify = any(message.get("role") == "tool" and
-                                       "Stable" in str(message.get("content")) for message in messages)
-                if clarify_turn and not answered_clarify:
-                    arguments = json.dumps({"questions": [{"question": "Which release channel?",
-                                                            "choices": ["Stable", "Beta"]}]})
+                latest_user = next((str(message.get("content")) for message in reversed(messages)
+                                    if message.get("role") == "user"), "")
+                clarify_turn = CLARIFY_PROMPT in latest_user
+                approval_turn = APPROVAL_PROMPT in latest_user
+                latest_user_index = max((index for index, message in enumerate(messages)
+                                         if message.get("role") == "user"), default=-1)
+                answered_tool = any(message.get("role") == "tool" for message in messages[latest_user_index + 1:])
+                if (clarify_turn or approval_turn) and not answered_tool:
+                    tool_name = "clarify" if clarify_turn else "terminal"
+                    arguments = (json.dumps({"questions": [{"question": "Which release channel?",
+                                                          "choices": ["Stable", "Beta"]}]}) if clarify_turn
+                                 else json.dumps({"command": APPROVAL_COMMAND}))
                     choice = {"index": 0, "delta": {"role": "assistant", "content": None,
-                              "tool_calls": [{"index": 0, "id": "call_hermes_api_clarify",
-                                              "type": "function", "function": {"name": "clarify",
+                              "tool_calls": [{"index": 0, "id": f"call_hermes_api_{tool_name}",
+                                              "type": "function", "function": {"name": tool_name,
                                                                           "arguments": arguments}}]},
                               "finish_reason": "tool_calls"}
                     if request.get("stream"):
@@ -70,7 +81,7 @@ class StubLLM:
                                                         "finish_reason": "tool_calls"}], "usage": usage,
                         }).encode())
                     return
-                reply = CLARIFY_REPLY if clarify_turn else REPLY
+                reply = CLARIFY_REPLY if clarify_turn else APPROVAL_REPLY if approval_turn else REPLY
                 if request.get("stream"):
                     chunks = [
                         {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,

@@ -11,9 +11,9 @@ def test_coverage_accounts_for_every_tagged_operation() -> None:
     assert data["summary"]["server_request"]["total"] == 12
     assert data["summary"]["event"]["total"] == 69
     assert data["summary"]["rest"]["total"] == 334
-    assert data["complete"] >= 13
+    assert data["complete"] >= 14
     assert data["summary"]["gateway_method"]["fixture"] >= 6
-    assert data["summary"]["server_request"]["complete"] >= 1
+    assert data["summary"]["server_request"]["complete"] >= 2
     assert data["summary"]["rest"]["fixture"] >= 4
     prompt = next(item for item in data["entries"] if item["name"] == "prompt.submit")
     assert prompt["typed"] and prompt["complete"]

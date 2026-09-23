@@ -15,7 +15,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from harness.stub_llm import MODEL, StubLLM
+from harness.stub_llm import APPROVAL_TARGET, MODEL, StubLLM
 from tools.extract_openapi import extract
 from tools.fetch_spec import ROOT
 from tools.ref_policy import require_release_tag
@@ -46,6 +46,8 @@ def _await_status(url: str, token: str, server: subprocess.Popen[bytes]) -> None
 def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> None:
     ref = require_release_tag(ref)
     extract(ref, source_repo)
+    if APPROVAL_TARGET.exists():
+        raise RuntimeError(f"Approval fixture target must be absent: {APPROVAL_TARGET}")
     repo = source_repo or ROOT / "spec" / ".upstream-rest" / ref
     python = repo / ".venv" / "bin" / "python"
     with tempfile.TemporaryDirectory(prefix="hermes-api-live-") as home:
@@ -53,7 +55,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
         (Path(home) / "config.yaml").write_text(
             f"model:\n  default: {MODEL}\n  provider: custom\n"
             f"  base_url: {stub.base_url}\n  api_key: fixture-key\n"
-            "  api_mode: chat_completions\n", encoding="utf-8",
+            "  api_mode: chat_completions\napprovals:\n  mode: manual\n", encoding="utf-8",
         )
         port = _free_port()
         url = f"http://127.0.0.1:{port}"
@@ -100,10 +102,13 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                     [str(ROOT / "kotlin" / "gradlew"), "smoke", "--quiet"],
                     cwd=ROOT / "kotlin", env=env, check=True,
                 )
+                if APPROVAL_TARGET.exists():
+                    raise RuntimeError(f"Denied approval command created its target: {APPROVAL_TARGET}")
                 if not any(request["stream"] and request["model"] == MODEL for request in stub.requests):
                     raise RuntimeError("No streamed prompt reached the isolated model stub")
                 if record:
-                    subprocess.run(["swift", "test", "--quiet"], cwd=ROOT, env=env, check=True)
+                    subprocess.run(["swift", "test", "--no-parallel", "--quiet"],
+                                   cwd=ROOT, env=env, check=True)
                     subprocess.run([str(ROOT / "kotlin" / "gradlew"), "check", "--quiet"],
                                    cwd=ROOT / "kotlin", env=env, check=True)
                     fixture = ROOT / "fixtures" / ref / "liveness.jsonl"
@@ -124,7 +129,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False) -> N
                                          "session.create", "prompt.submit", "session.list", "session.close"],
                         "live_events": ["gateway.ready", "message.start", "message.delta", "message.complete",
                                         "tool.start", "tool.complete"],
-                        "live_server_requests": ["clarify"],
+                        "live_server_requests": ["clarify", "approval"],
                         "live_rest": ["GET /api/audio/voice-live/status",
                                       "GET /api/profiles/active", "POST /api/profiles/active",
                                       "GET /api/sessions/empty/count"],

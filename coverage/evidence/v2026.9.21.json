@@ -10,6 +10,7 @@
     "reasoning.available",
     "session.info",
     "session.title",
+    "session.usage",
     "sessions.changed",
     "thinking.delta",
     "tool.complete",
@@ -17,7 +18,7 @@
     "tool.start"
   ],
   "fixture": "fixtures/v2026.9.21/liveness.jsonl",
-  "fixture_sha256": "41ca708eb31ff41e31763078ed569f73a0b6bf24b90a573a41dec73d8095c8e4",
+  "fixture_sha256": "8042f219b04b84707710e9bb406b97066b0c64be2189f50ad775b67d898e58ce",
   "live_events": [
     "gateway.ready",
     "message.start",
@@ -43,7 +44,8 @@
     "GET /api/sessions/empty/count"
   ],
   "live_server_requests": [
-    "clarify"
+    "clarify",
+    "approval"
   ],
   "live_swift": true,
   "methods": [
@@ -64,6 +66,7 @@
   ],
   "scenario": "liveness",
   "server_requests": [
+    "approval",
     "clarify"
   ]
 }

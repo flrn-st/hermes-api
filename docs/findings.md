@@ -93,9 +93,11 @@ the streamed `message.complete` response, then lists and closes the session
 through both clients. The recorder validates each frame against the tagged
 Pydantic catalog before writing the fixture. A second prompt makes the stub
 call `clarify`; the recorder and both mobile clients answer the real server
-request with a typed result and verify the completed turn. The fixture redacts
+request with a typed result and verify the completed turn. A third prompt
+requests terminal approval for a nonexistent fixture target. Both clients deny
+it, and the recorder verifies the resulting turn. The fixture redacts
 `session.info.system_prompt` after validating the original frame. It does not
-yet cover approval, cancellation, or subagent flows.
+yet cover approval acceptance, cancellation, or subagent flows.
 It also calls the reviewed `GET /api/audio/voice-live/status`, `GET /api/profiles/active`,
 `POST /api/profiles/active`, and `GET /api/sessions/empty/count` routes and
 validates each JSON response against its overlay. Both mobile clients decode
@@ -143,4 +145,4 @@ were excluded from this static comparison.
 - Verify the exact `hermes web` flags and health endpoint in a running
   tag-pinned container.
 - Check whether bundled plugin APIs are present in the isolated app import.
-- Extend the stub inference scenarios to approval and tool-call flows.
+- Extend the stub inference scenarios to approval acceptance and other tool-call flows.

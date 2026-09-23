@@ -33,7 +33,7 @@ test:
 	uv run --locked pytest
 	uv run --locked ruff check tools harness
 	swift build
-	swift test
+	swift test --no-parallel
 	cd kotlin && ./gradlew check
 
 coverage:

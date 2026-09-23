@@ -12,6 +12,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import st.flrn.hermes.api.generated.gateway.ClientCapabilitiesResult
 import st.flrn.hermes.api.generated.gateway.ClarifyRequestParams
 import st.flrn.hermes.api.generated.gateway.ClarifyResult
+import st.flrn.hermes.api.generated.gateway.ApprovalChoice
+import st.flrn.hermes.api.generated.gateway.ApprovalRequestParams
+import st.flrn.hermes.api.generated.gateway.ApprovalResult
 import st.flrn.hermes.api.generated.gateway.GatewayCapabilitiesResult
 import st.flrn.hermes.api.generated.gateway.GatewayEventPayload
 import st.flrn.hermes.api.generated.gateway.GatewayReadyPayload
@@ -51,15 +54,27 @@ class FixtureDecodeTest {
             seen += name
             val frame = record.getValue("frame").jsonObject
             if (record.getValue("kind").jsonPrimitive.content == "server_request") {
-                assertEquals("clarify", name)
-                val request = json.decodeFromJsonElement(ClarifyRequestParams.serializer(), frame.getValue("params"))
-                val questions = (request.questions as? Patch.Value)?.value
-                    ?: error("Missing recorded clarification")
-                assertEquals("Which release channel?", questions.single().question)
                 val answerBody = record.getValue("answer")
-                val answer = json.decodeFromJsonElement(ClarifyResult.serializer(), answerBody)
-                assertEquals("Stable", answer.answers?.get("q0"))
-                assertEquals(answerBody, json.encodeToJsonElement(ClarifyResult.serializer(), answer))
+                when (name) {
+                    "clarify" -> {
+                        val request = json.decodeFromJsonElement(ClarifyRequestParams.serializer(), frame.getValue("params"))
+                        val questions = (request.questions as? Patch.Value)?.value
+                            ?: error("Missing recorded clarification")
+                        assertEquals("Which release channel?", questions.single().question)
+                        val answer = json.decodeFromJsonElement(ClarifyResult.serializer(), answerBody)
+                        assertEquals("Stable", answer.answers?.get("q0"))
+                        assertEquals(answerBody, json.encodeToJsonElement(ClarifyResult.serializer(), answer))
+                    }
+                    "approval" -> {
+                        val request = json.decodeFromJsonElement(ApprovalRequestParams.serializer(), frame.getValue("params"))
+                        assertEquals("rm -rf /tmp/hermes-api-fixture-approval-target", request.command)
+                        assertTrue(request.choices?.contains(ApprovalChoice.Deny) == true)
+                        val answer = json.decodeFromJsonElement(ApprovalResult.serializer(), answerBody)
+                        assertEquals(ApprovalChoice.Deny, answer.choice)
+                        assertEquals(answerBody, json.encodeToJsonElement(ApprovalResult.serializer(), answer))
+                    }
+                    else -> error("Unexpected server request: $name")
+                }
                 continue
             }
             if (record.getValue("kind").jsonPrimitive.content == "rest") {
@@ -106,14 +121,21 @@ class FixtureDecodeTest {
                     val reply = assertIs<st.flrn.hermes.api.generated.gateway.MessageCompletePayloadText.StringValue>(
                         payload.payload.text)
                     assertTrue(reply.value in setOf("HermesAPI fixture reply.",
-                        "HermesAPI stable release selected."))
+                        "HermesAPI stable release selected.", "HermesAPI approval denied as expected."))
                 }
                 if (payload is GatewayEventPayload.MessageDelta) {
                     assertTrue(payload.payload.text.trim() in setOf("HermesAPI fixture reply.",
-                        "HermesAPI stable release selected."))
+                        "HermesAPI stable release selected.", "HermesAPI approval denied as expected."))
                 }
-                if (payload is GatewayEventPayload.ToolStart) assertEquals("clarify", payload.payload.name)
-                if (payload is GatewayEventPayload.ToolComplete) assertEquals("clarify", payload.payload.name)
+                if (payload is GatewayEventPayload.ToolStart) assertTrue(payload.payload.name in setOf("clarify", "terminal"))
+                if (payload is GatewayEventPayload.ToolComplete) {
+                    assertTrue(payload.payload.name in setOf("clarify", "terminal"))
+                    if (payload.payload.name == "terminal") {
+                        val result = assertIs<JsonObject>(payload.payload.result)
+                        assertEquals("blocked", result.getValue("status").jsonPrimitive.content)
+                        assertEquals("-1", result.getValue("exit_code").jsonPrimitive.content)
+                    }
+                }
                 continue
             }
             when (name) {
@@ -157,7 +179,7 @@ class FixtureDecodeTest {
                 else -> error("Unexpected fixture: $name")
             }
         }
-        assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "clarify",
+        assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "clarify", "approval",
             "tool.start", "tool.complete", "message.delta",
             "GET /api/audio/voice-live/status",
             "GET /api/sessions/empty/count",

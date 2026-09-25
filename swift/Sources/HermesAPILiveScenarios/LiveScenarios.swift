@@ -244,7 +244,8 @@ public enum LiveScenarios {
         let events = gateway.events()
         let submission = try await gateway.prompt.submit(.init(sessionId: sessionID, text: .string(prompt)))
         guard submission.status != nil else { throw LiveScenarioError("Gateway rejected the prompt") }
-        return try await withDeadline(.seconds(45), "the turn for \"\(prompt)\" to complete") {
+        // Generous: Hermes builds the agent on the first turn, which is slow on a cold CI runner.
+        return try await withDeadline(.seconds(120), "the turn for \"\(prompt)\" to complete") {
             var turn = Turn(tool: tool)
             for await event in events where event.sessionID == sessionID {
                 if let seq = event.seq { turn.sequence.append(seq) }

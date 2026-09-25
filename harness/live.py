@@ -120,7 +120,8 @@ def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,
         for name in ("HERMES_LIVE_URL", "HERMES_LIVE_TOKEN", "HERMES_LIVE_LIFECYCLE", "HERMES_LIVE_CONTROL"):
             runner["TEST_RUNNER_" + name] = env[name]
         # The whole suite runs in the simulator: the unit tests as well as the live scenarios.
-        return ["xcodebuild", "test", "-quiet", "-scheme", "HermesAPI-Package",
+        # Not quiet: a failing scenario reports its reason only in the test output.
+        return ["xcodebuild", "test", "-scheme", "HermesAPI-Package",
                 "-destination", _simulator_destination(client, env), "-derivedDataPath", str(ROOT / ".build" / "xcode"),
                 "-only-testing:HermesAPITests"], ROOT, runner
     if client == "android":

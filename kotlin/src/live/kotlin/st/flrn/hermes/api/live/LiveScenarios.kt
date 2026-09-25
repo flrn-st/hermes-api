@@ -248,7 +248,8 @@ public object LiveScenarios {
     ): Turn = coroutineScope {
         val turn = Turn(tool)
         val completion = async(start = CoroutineStart.UNDISPATCHED) {
-            deadline(45_000, "the turn for \"$prompt\" to complete") {
+            // Generous: Hermes builds the agent on the first turn, which is slow on a cold CI runner.
+            deadline(120_000, "the turn for \"$prompt\" to complete") {
                 gateway.events.first { event ->
                     if (event.sessionId != sessionId) return@first false
                     event.seq?.let(turn.sequence::add)

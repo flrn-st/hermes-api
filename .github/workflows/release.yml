@@ -15,6 +15,10 @@ jobs:
   # Every platform check, including the iOS simulator and Android emulator live scenarios.
   ci:
     uses: ./.github/workflows/ci.yml
+    # A called workflow gets at most these; CI's changes job reads pull request files.
+    permissions:
+      contents: read
+      pull-requests: read
 
   # CI above already built and tested this commit on every platform; publishing needs no macOS.
   publish:

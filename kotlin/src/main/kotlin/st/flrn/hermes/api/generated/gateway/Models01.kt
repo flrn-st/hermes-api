@@ -9,6 +9,86 @@ import st.flrn.hermes.api.runtime.EmptyObject
 import st.flrn.hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = BillingChargeStatusResultAmountUsd.Serializer::class)
+public sealed interface BillingChargeStatusResultAmountUsd {
+    public data class StringValue(public val value: String) : BillingChargeStatusResultAmountUsd
+    public data class DoubleValue(public val value: Double) : BillingChargeStatusResultAmountUsd
+
+    public object Serializer : KSerializer<BillingChargeStatusResultAmountUsd> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): BillingChargeStatusResultAmountUsd {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("BillingChargeStatusResultAmountUsd requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No BillingChargeStatusResultAmountUsd variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: BillingChargeStatusResultAmountUsd) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("BillingChargeStatusResultAmountUsd requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = BillingChargeStatusResultRetryAfter.Serializer::class)
+public sealed interface BillingChargeStatusResultRetryAfter {
+    public data class LongValue(public val value: Long) : BillingChargeStatusResultRetryAfter
+    public data class DoubleValue(public val value: Double) : BillingChargeStatusResultRetryAfter
+
+    public object Serializer : KSerializer<BillingChargeStatusResultRetryAfter> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): BillingChargeStatusResultRetryAfter {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("BillingChargeStatusResultRetryAfter requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return LongValue(json.decodeFromJsonElement<Long>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No BillingChargeStatusResultRetryAfter variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: BillingChargeStatusResultRetryAfter) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("BillingChargeStatusResultRetryAfter requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is LongValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class BillingMonthlyCap(
     @SerialName("limit_usd")
@@ -555,7 +635,7 @@ public sealed interface BrowserAction {
     public data object Status : BrowserAction
     public data object Connect : BrowserAction
     public data object Disconnect : BrowserAction
-    public data class Unknown(public val raw: String) : BrowserAction
+    public data class Unknown(public val raw: kotlin.String) : BrowserAction
 
     public object Serializer : KSerializer<BrowserAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("BrowserAction", PrimitiveKind.STRING)
@@ -568,7 +648,7 @@ public sealed interface BrowserAction {
         }
 
         override fun serialize(encoder: Encoder, value: BrowserAction) {
-            val raw = when (value) {
+            val raw: kotlin.String = when (value) {
                 Status -> "status"
                 Connect -> "connect"
                 Disconnect -> "disconnect"
@@ -828,110 +908,43 @@ public data class CapabilityEntry(
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ChangeSignalPayload.Serializer::class)
-public data class ChangeSignalPayload(
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<ChangeSignalPayload> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+@Serializable(with = CatalogAppState.Serializer::class)
+public sealed interface CatalogAppState {
+    public data object Present : CatalogAppState
+    public data object MissingApp : CatalogAppState
+    public data object AppNotRunning : CatalogAppState
+    public data object KnownUnknown : CatalogAppState
+    public data class Unknown(public val raw: kotlin.String) : CatalogAppState
 
-        override fun deserialize(decoder: Decoder): ChangeSignalPayload {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ChangeSignalPayload requires JSON")
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ChangeSignalPayload requires an object")
-            return ChangeSignalPayload(
-                additionalProperties = input,
-            )
-        }
+    public object Serializer : KSerializer<CatalogAppState> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CatalogAppState", PrimitiveKind.STRING)
 
-        override fun serialize(encoder: Encoder, value: ChangeSignalPayload) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ChangeSignalPayload requires JSON")
-            val output = mutableMapOf<String, JsonElement>()
-            output.putAll(value.additionalProperties)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ClarifyLockParams.Serializer::class)
-public data class ClarifyLockParams(
-    public val requestId: String,
-    public val questionId: String,
-    public val answer: JsonElement? = null,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ClarifyLockParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ClarifyLockParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ClarifyLockParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ClarifyLockParams requires an object")
-            return ClarifyLockParams(
-                requestId = json.decodeFromJsonElement<String>((input["request_id"] ?: throw SerializationException("Missing request_id"))),
-                questionId = json.decodeFromJsonElement<String>((input["question_id"] ?: throw SerializationException("Missing question_id"))),
-                answer = input["answer"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<JsonElement>(it) },
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ClarifyLockParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ClarifyLockParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["request_id"] = json.encodeToJsonElement(value.requestId)
-            output["question_id"] = json.encodeToJsonElement(value.questionId)
-            value.answer?.let { output["answer"] = json.encodeToJsonElement(it) }
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ClarifyLockResult(
-    @SerialName("status")
-    public val status: ClarifyLockStatus,
-    @SerialName("remaining")
-    public val remaining: List<String>? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ClarifyLockStatus.Serializer::class)
-public sealed interface ClarifyLockStatus {
-    public data object Ok : ClarifyLockStatus
-    public data object Expired : ClarifyLockStatus
-    public data class Unknown(public val raw: String) : ClarifyLockStatus
-
-    public object Serializer : KSerializer<ClarifyLockStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ClarifyLockStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ClarifyLockStatus = when (val raw = decoder.decodeString()) {
-            "ok" -> Ok
-            "expired" -> Expired
+        override fun deserialize(decoder: Decoder): CatalogAppState = when (val raw = decoder.decodeString()) {
+            "present" -> Present
+            "missing_app" -> MissingApp
+            "app_not_running" -> AppNotRunning
+            "unknown" -> KnownUnknown
             else -> Unknown(raw)
         }
 
-        override fun serialize(encoder: Encoder, value: ClarifyLockStatus) {
-            val raw = when (value) {
-                Ok -> "ok"
-                Expired -> "expired"
+        override fun serialize(encoder: Encoder, value: CatalogAppState) {
+            val raw: kotlin.String = when (value) {
+                Present -> "present"
+                MissingApp -> "missing_app"
+                AppNotRunning -> "app_not_running"
+                KnownUnknown -> "unknown"
                 is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
     }
 }
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class CatalogScan(
+    @SerialName("status")
+    public val status: CatalogScanStatus,
+    @SerialName("summary")
+    public val summary: String,
+)

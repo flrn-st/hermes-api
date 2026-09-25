@@ -9,6 +9,172 @@ import st.flrn.hermes.api.runtime.EmptyObject
 import st.flrn.hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = CatalogScanStatus.Serializer::class)
+public sealed interface CatalogScanStatus {
+    public data object Passed : CatalogScanStatus
+    public data object Warnings : CatalogScanStatus
+    public data object Failed : CatalogScanStatus
+    public data class Unknown(public val raw: kotlin.String) : CatalogScanStatus
+
+    public object Serializer : KSerializer<CatalogScanStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CatalogScanStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): CatalogScanStatus = when (val raw = decoder.decodeString()) {
+            "passed" -> Passed
+            "warnings" -> Warnings
+            "failed" -> Failed
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: CatalogScanStatus) {
+            val raw: kotlin.String = when (value) {
+                Passed -> "passed"
+                Warnings -> "warnings"
+                Failed -> "failed"
+                is Unknown -> value.raw
+            }
+            encoder.encodeString(raw)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = CatalogTier.Serializer::class)
+public sealed interface CatalogTier {
+    public data object Official : CatalogTier
+    public data object Community : CatalogTier
+    public data class Unknown(public val raw: kotlin.String) : CatalogTier
+
+    public object Serializer : KSerializer<CatalogTier> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CatalogTier", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): CatalogTier = when (val raw = decoder.decodeString()) {
+            "official" -> Official
+            "community" -> Community
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: CatalogTier) {
+            val raw: kotlin.String = when (value) {
+                Official -> "official"
+                Community -> "community"
+                is Unknown -> value.raw
+            }
+            encoder.encodeString(raw)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ChangeSignalPayload.Serializer::class)
+public data class ChangeSignalPayload(
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<ChangeSignalPayload> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ChangeSignalPayload {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ChangeSignalPayload requires JSON")
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ChangeSignalPayload requires an object")
+            return ChangeSignalPayload(
+                additionalProperties = input,
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ChangeSignalPayload) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ChangeSignalPayload requires JSON")
+            val output = mutableMapOf<String, JsonElement>()
+            output.putAll(value.additionalProperties)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ClarifyLockParams.Serializer::class)
+public data class ClarifyLockParams(
+    public val requestId: String,
+    public val questionId: String,
+    public val answer: JsonElement? = null,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ClarifyLockParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ClarifyLockParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ClarifyLockParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ClarifyLockParams requires an object")
+            return ClarifyLockParams(
+                requestId = json.decodeFromJsonElement<String>((input["request_id"] ?: throw SerializationException("Missing request_id"))),
+                questionId = json.decodeFromJsonElement<String>((input["question_id"] ?: throw SerializationException("Missing question_id"))),
+                answer = input["answer"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<JsonElement>(it) },
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ClarifyLockParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ClarifyLockParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["request_id"] = json.encodeToJsonElement(value.requestId)
+            output["question_id"] = json.encodeToJsonElement(value.questionId)
+            value.answer?.let { output["answer"] = json.encodeToJsonElement(it) }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ClarifyLockResult(
+    @SerialName("status")
+    public val status: ClarifyLockStatus,
+    @SerialName("remaining")
+    public val remaining: List<String>? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ClarifyLockStatus.Serializer::class)
+public sealed interface ClarifyLockStatus {
+    public data object Ok : ClarifyLockStatus
+    public data object Expired : ClarifyLockStatus
+    public data class Unknown(public val raw: kotlin.String) : ClarifyLockStatus
+
+    public object Serializer : KSerializer<ClarifyLockStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ClarifyLockStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): ClarifyLockStatus = when (val raw = decoder.decodeString()) {
+            "ok" -> Ok
+            "expired" -> Expired
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: ClarifyLockStatus) {
+            val raw: kotlin.String = when (value) {
+                Ok -> "ok"
+                Expired -> "expired"
+                is Unknown -> value.raw
+            }
+            encoder.encodeString(raw)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = ClarifyQuestion.Serializer::class)
 public data class ClarifyQuestion(
     public val qid: String,
@@ -889,222 +1055,6 @@ public sealed interface ConfigSetResultValue {
                 is BooleanValue -> json.encodeToJsonElement(value.value)
             }
             jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConfigShowParams.Serializer::class)
-public data class ConfigShowParams(
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ConfigShowParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConfigShowParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConfigShowParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ConfigShowParams requires an object")
-            return ConfigShowParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ConfigShowParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConfigShowParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConfigShowResult.Serializer::class)
-public data class ConfigShowResult(
-    public val sections: List<ConfigSection>? = null,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<ConfigShowResult> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConfigShowResult {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConfigShowResult requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ConfigShowResult requires an object")
-            return ConfigShowResult(
-                sections = input["sections"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<ConfigSection>>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("sections") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ConfigShowResult) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConfigShowResult requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("sections")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            value.sections?.let { output["sections"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectionActor.Serializer::class)
-public sealed interface ConnectionActor {
-    public data object User : ConnectionActor
-    public data object BackendWatcher : ConnectionActor
-    public data object Clock : ConnectionActor
-    public data class Unknown(public val raw: String) : ConnectionActor
-
-    public object Serializer : KSerializer<ConnectionActor> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionActor", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectionActor = when (val raw = decoder.decodeString()) {
-            "user" -> User
-            "backend_watcher" -> BackendWatcher
-            "clock" -> Clock
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectionActor) {
-            val raw = when (value) {
-                User -> "user"
-                BackendWatcher -> "backend_watcher"
-                Clock -> "clock"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectionAnswer.Serializer::class)
-public data class ConnectionAnswer(
-    public val targets: List<ConnectionAnswerTarget>? = null,
-    public val settledBy: Patch<ConnectionSettleReason> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ConnectionAnswer> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConnectionAnswer {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectionAnswer requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ConnectionAnswer requires an object")
-            return ConnectionAnswer(
-                targets = input["targets"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<ConnectionAnswerTarget>>(it) },
-                settledBy = when (val raw = input["settled_by"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ConnectionSettleReason>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectionAnswer) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectionAnswer requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            value.targets?.let { output["targets"] = json.encodeToJsonElement(it) }
-            when (val patch = value.settledBy) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["settled_by"] = JsonNull
-                is Patch.Value -> output["settled_by"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectionAnswerStatus.Serializer::class)
-public sealed interface ConnectionAnswerStatus {
-    public data object Approved : ConnectionAnswerStatus
-    public data object Skipped : ConnectionAnswerStatus
-    public data class Unknown(public val raw: String) : ConnectionAnswerStatus
-
-    public object Serializer : KSerializer<ConnectionAnswerStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionAnswerStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectionAnswerStatus = when (val raw = decoder.decodeString()) {
-            "approved" -> Approved
-            "skipped" -> Skipped
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectionAnswerStatus) {
-            val raw = when (value) {
-                Approved -> "approved"
-                Skipped -> "skipped"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectionAnswerTarget.Serializer::class)
-public data class ConnectionAnswerTarget(
-    public val name: String,
-    public val status: ConnectionAnswerStatus,
-    public val detail: Patch<String> = Patch.Absent,
-    public val env: Patch<Map<String, String>> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ConnectionAnswerTarget> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConnectionAnswerTarget {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectionAnswerTarget requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ConnectionAnswerTarget requires an object")
-            return ConnectionAnswerTarget(
-                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
-                status = json.decodeFromJsonElement<ConnectionAnswerStatus>((input["status"] ?: throw SerializationException("Missing status"))),
-                detail = when (val raw = input["detail"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                env = when (val raw = input["env"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Map<String, String>>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectionAnswerTarget) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectionAnswerTarget requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["name"] = json.encodeToJsonElement(value.name)
-            output["status"] = json.encodeToJsonElement(value.status)
-            when (val patch = value.detail) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["detail"] = JsonNull
-                is Patch.Value -> output["detail"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.env) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["env"] = JsonNull
-                is Patch.Value -> output["env"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }

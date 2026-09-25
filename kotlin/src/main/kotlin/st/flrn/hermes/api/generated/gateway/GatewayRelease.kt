@@ -3,10 +3,10 @@ package st.flrn.hermes.api.generated.gateway
 
 /** Release identity and protocol compatibility of this generated gateway contract. */
 public object HermesGatewayContract {
-    public const val release: String = "v0.21.4"
-    public const val upstreamVersion: String = "0.21.4"
+    public const val release: String = "v0.21.5"
+    public const val upstreamVersion: String = "0.21.5"
     /** The upstream git tag of this release. */
-    public const val upstreamTag: String = "v2026.9.21"
-    public const val desktopContract: Int = 7
-    public val supportedContractRange: IntRange = 7..7
+    public const val upstreamTag: String = "v2026.9.24"
+    public const val desktopContract: Int = 8
+    public val supportedContractRange: IntRange = 8..8
 }

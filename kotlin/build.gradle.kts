@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "st.flrn.hermes"
-version = "0.21.4"
+version = "0.21.5"
 
 repositories {
     mavenCentral()

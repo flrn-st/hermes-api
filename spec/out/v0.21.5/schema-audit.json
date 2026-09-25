@@ -1,0 +1,23 @@
+{
+  "anyOf": 1556,
+  "array": 248,
+  "boolean": 416,
+  "const": 19,
+  "discriminated_oneOf": 10,
+  "enum": 55,
+  "freeform": 27,
+  "freeform_object": 84,
+  "integer": 349,
+  "integer_const": 4,
+  "maxItems": 1,
+  "minItems": 1,
+  "minLength": 3,
+  "multi_type_anyOf": 40,
+  "null": 1547,
+  "nullable_anyOf": 1546,
+  "number": 99,
+  "object": 721,
+  "pattern": 3,
+  "ref": 891,
+  "string": 1873
+}

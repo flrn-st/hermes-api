@@ -24,6 +24,7 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
     public val cron: CronMethods = CronMethods(caller)
     public val delegation: DelegationMethods = DelegationMethods(caller)
     public val diagnostics: DiagnosticsMethods = DiagnosticsMethods(caller)
+    public val display: DisplayMethods = DisplayMethods(caller)
     public val file: FileMethods = FileMethods(caller)
     public val freeTier: FreeTierMethods = FreeTierMethods(caller)
     public val gateway: GatewayMethods = GatewayMethods(caller)
@@ -37,6 +38,7 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
     public val mcp: McpMethods = McpMethods(caller)
     public val message: MessageMethods = MessageMethods(caller)
     public val model: ModelMethods = ModelMethods(caller)
+    public val onboarding: OnboardingMethods = OnboardingMethods(caller)
     public val paste: PasteMethods = PasteMethods(caller)
     public val pdf: PdfMethods = PdfMethods(caller)
     public val pet: PetMethods = PetMethods(caller)
@@ -176,6 +178,12 @@ public class ConnectionMethods(private val caller: GatewayCaller) {
 }
 
 public class ConnectorsMethods(private val caller: GatewayCaller) {
+    public suspend fun accounts(params: ConnectorAccountsParams): ConnectorAccountsResult =
+        caller.call("connectors.accounts", params, serializer<ConnectorAccountsParams>(), serializer<ConnectorAccountsResult>())
+    public suspend fun accountsRemove(params: ConnectorAccountsRemoveParams): ConnectorAccountsRemoveResult =
+        caller.call("connectors.accounts.remove", params, serializer<ConnectorAccountsRemoveParams>(), serializer<ConnectorAccountsRemoveResult>())
+    public suspend fun catalog(params: ProfileParams): ConnectorsCatalogResult =
+        caller.call("connectors.catalog", params, serializer<ProfileParams>(), serializer<ConnectorsCatalogResult>())
     public suspend fun connect(params: ConnectorsConnectParams): ConnectorsConnectResult =
         caller.call("connectors.connect", params, serializer<ConnectorsConnectParams>(), serializer<ConnectorsConnectResult>())
     public suspend fun list(params: ConnectorsListParams): ConnectorsListResult =
@@ -184,6 +192,12 @@ public class ConnectorsMethods(private val caller: GatewayCaller) {
         caller.call("connectors.operation.status", params, serializer<ConnectionOperationParams>(), serializer<ConnectionOperationStatus>())
     public suspend fun operationWake(params: ConnectionOperationParams): ConnectionWakeResult =
         caller.call("connectors.operation.wake", params, serializer<ConnectionOperationParams>(), serializer<ConnectionWakeResult>())
+    public suspend fun policyGet(params: ProfileParams): ConnectorPolicyGetResult =
+        caller.call("connectors.policy.get", params, serializer<ProfileParams>(), serializer<ConnectorPolicyGetResult>())
+    public suspend fun policySet(params: ConnectorPolicySetParams): ConnectorPolicySetResult =
+        caller.call("connectors.policy.set", params, serializer<ConnectorPolicySetParams>(), serializer<ConnectorPolicySetResult>())
+    public suspend fun tools(params: ConnectorToolsParams): ConnectorToolsResult =
+        caller.call("connectors.tools", params, serializer<ConnectorToolsParams>(), serializer<ConnectorToolsResult>())
 }
 
 public class CronMethods(private val caller: GatewayCaller) {
@@ -201,6 +215,25 @@ public class DelegationMethods(private val caller: GatewayCaller) {
 public class DiagnosticsMethods(private val caller: GatewayCaller) {
     public suspend fun shareNous(params: DiagnosticsShareNousParams): DiagnosticsShareNousResult =
         caller.call("diagnostics.share_nous", params, serializer<DiagnosticsShareNousParams>(), serializer<DiagnosticsShareNousResult>())
+}
+
+public class DisplayMethods(private val caller: GatewayCaller) {
+    public suspend fun install(params: ProfileParams): DisplayInstallResult =
+        caller.call("display.install", params, serializer<ProfileParams>(), serializer<DisplayInstallResult>())
+    public suspend fun leaseAcquire(params: DisplayLeaseAcquireParams): DisplayLeaseResult =
+        caller.call("display.lease.acquire", params, serializer<DisplayLeaseAcquireParams>(), serializer<DisplayLeaseResult>())
+    public suspend fun leaseRelease(params: DisplayLeaseReleaseParams): DisplayLeaseResult =
+        caller.call("display.lease.release", params, serializer<DisplayLeaseReleaseParams>(), serializer<DisplayLeaseResult>())
+    public suspend fun observe(params: DisplayObserveParams): DisplayObserveResult =
+        caller.call("display.observe", params, serializer<DisplayObserveParams>(), serializer<DisplayObserveResult>())
+    public suspend fun start(params: ProfileParams): DisplayStatus =
+        caller.call("display.start", params, serializer<ProfileParams>(), serializer<DisplayStatus>())
+    public suspend fun status(params: ProfileParams): DisplayStatus =
+        caller.call("display.status", params, serializer<ProfileParams>(), serializer<DisplayStatus>())
+    public suspend fun stop(params: DisplayStopParams): DisplayStopResult =
+        caller.call("display.stop", params, serializer<DisplayStopParams>(), serializer<DisplayStopResult>())
+    public suspend fun thumbnail(params: ProfileParams): DisplayThumbnailResult =
+        caller.call("display.thumbnail", params, serializer<ProfileParams>(), serializer<DisplayThumbnailResult>())
 }
 
 public class FileMethods(private val caller: GatewayCaller) {
@@ -344,6 +377,13 @@ public class ModelMethods(private val caller: GatewayCaller) {
         caller.call("model.options", params, serializer<ModelOptionsParams>(), serializer<ModelOptionsResult>())
     public suspend fun saveKey(params: ModelSaveKeyParams): ModelSaveKeyResult =
         caller.call("model.save_key", params, serializer<ModelSaveKeyParams>(), serializer<ModelSaveKeyResult>())
+}
+
+public class OnboardingMethods(private val caller: GatewayCaller) {
+    public suspend fun ensureSetupProfile(params: Params): OnboardingEnsureSetupProfileResult =
+        caller.call("onboarding.ensure_setup_profile", params, serializer<Params>(), serializer<OnboardingEnsureSetupProfileResult>())
+    public suspend fun resetSetupProfile(params: Params): OnboardingResetSetupProfileResult =
+        caller.call("onboarding.reset_setup_profile", params, serializer<Params>(), serializer<OnboardingResetSetupProfileResult>())
 }
 
 public class PasteMethods(private val caller: GatewayCaller) {
@@ -502,6 +542,10 @@ public class SessionMethods(private val caller: GatewayCaller) {
         caller.call("session.active_list", params, serializer<SessionActiveListParams>(), serializer<SessionActiveListResult>())
     public suspend fun branch(params: SessionBranchParams): SessionBranchResult =
         caller.call("session.branch", params, serializer<SessionBranchParams>(), serializer<SessionBranchResult>())
+    public suspend fun branchStored(params: SessionBranchStoredParams): SessionBranchStoredResult =
+        caller.call("session.branch_stored", params, serializer<SessionBranchStoredParams>(), serializer<SessionBranchStoredResult>())
+    public suspend fun branchWhole(params: SessionBranchWholeParams): SessionBranchWholeResult =
+        caller.call("session.branch_whole", params, serializer<SessionBranchWholeParams>(), serializer<SessionBranchWholeResult>())
     public suspend fun close(params: SessionCloseParams): SessionCloseResult =
         caller.call("session.close", params, serializer<SessionCloseParams>(), serializer<SessionCloseResult>())
     public suspend fun compress(params: SessionCompressParams): SessionCompressResult =

@@ -10,6 +10,35 @@ import st.flrn.hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
+public data class AccountOwner(
+    @SerialName("type")
+    public val type: AccountOwnerType,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = AccountOwnerType.Serializer::class)
+public sealed interface AccountOwnerType {
+    public data object Account : AccountOwnerType
+
+    public object Serializer : KSerializer<AccountOwnerType> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AccountOwnerType", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): AccountOwnerType = when (val raw = decoder.decodeString()) {
+            "account" -> Account
+            else -> throw SerializationException("Unexpected const value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: AccountOwnerType) {
+            val raw: kotlin.String = when (value) {
+                Account -> "account"
+            }
+            encoder.encodeString(raw)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
 public data class ActiveIdResult(
     @SerialName("active_id")
     public val activeId: String? = null,
@@ -101,6 +130,8 @@ public data class AgentPluginRow(
     public val installDir: String,
     @SerialName("has_desktop_half")
     public val hasDesktopHalf: Boolean,
+    @SerialName("servers")
+    public val servers: List<PluginServerRow>,
     @SerialName("catalog_name")
     public val catalogName: String? = null,
     @SerialName("catalog_tier")
@@ -115,6 +146,8 @@ public data class AgentPluginRow(
     public val updateAvailable: Boolean? = null,
     @SerialName("pinned_sha")
     public val pinnedSha: String? = null,
+    @SerialName("settings_schema")
+    public val settingsSchema: List<PluginSettingField>? = null,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
@@ -179,7 +212,7 @@ public sealed interface ApprovalChoice {
     public data object Session : ApprovalChoice
     public data object Always : ApprovalChoice
     public data object Deny : ApprovalChoice
-    public data class Unknown(public val raw: String) : ApprovalChoice
+    public data class Unknown(public val raw: kotlin.String) : ApprovalChoice
 
     public object Serializer : KSerializer<ApprovalChoice> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ApprovalChoice", PrimitiveKind.STRING)
@@ -193,7 +226,7 @@ public sealed interface ApprovalChoice {
         }
 
         override fun serialize(encoder: Encoder, value: ApprovalChoice) {
-            val raw = when (value) {
+            val raw: kotlin.String = when (value) {
                 Once -> "once"
                 Session -> "session"
                 Always -> "always"
@@ -464,7 +497,7 @@ public sealed interface ArgumentMode {
     public data object Options : ArgumentMode
     public data object Text : ArgumentMode
     public data object Mixed : ArgumentMode
-    public data class Unknown(public val raw: String) : ArgumentMode
+    public data class Unknown(public val raw: kotlin.String) : ArgumentMode
 
     public object Serializer : KSerializer<ArgumentMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ArgumentMode", PrimitiveKind.STRING)
@@ -477,7 +510,7 @@ public sealed interface ArgumentMode {
         }
 
         override fun serialize(encoder: Encoder, value: ArgumentMode) {
-            val raw = when (value) {
+            val raw: kotlin.String = when (value) {
                 Options -> "options"
                 Text -> "text"
                 Mixed -> "mixed"
@@ -530,7 +563,7 @@ public sealed interface AutoReloadCardKind {
     public data object Canonical : AutoReloadCardKind
     public data object Distinct : AutoReloadCardKind
     public data object None : AutoReloadCardKind
-    public data class Unknown(public val raw: String) : AutoReloadCardKind
+    public data class Unknown(public val raw: kotlin.String) : AutoReloadCardKind
 
     public object Serializer : KSerializer<AutoReloadCardKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AutoReloadCardKind", PrimitiveKind.STRING)
@@ -543,7 +576,7 @@ public sealed interface AutoReloadCardKind {
         }
 
         override fun serialize(encoder: Encoder, value: AutoReloadCardKind) {
-            val raw = when (value) {
+            val raw: kotlin.String = when (value) {
                 Canonical -> "canonical"
                 Distinct -> "distinct"
                 None -> "none"
@@ -562,7 +595,7 @@ public sealed interface BatteryCategory {
     public data object Bad : BatteryCategory
     public data object Critical : BatteryCategory
     public data object Dim : BatteryCategory
-    public data class Unknown(public val raw: String) : BatteryCategory
+    public data class Unknown(public val raw: kotlin.String) : BatteryCategory
 
     public object Serializer : KSerializer<BatteryCategory> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("BatteryCategory", PrimitiveKind.STRING)
@@ -577,7 +610,7 @@ public sealed interface BatteryCategory {
         }
 
         override fun serialize(encoder: Encoder, value: BatteryCategory) {
-            val raw = when (value) {
+            val raw: kotlin.String = when (value) {
                 Good -> "good"
                 Warn -> "warn"
                 Bad -> "bad"
@@ -1014,83 +1047,3 @@ public data class BillingChargeStatusResult(
     @SerialName("reason")
     public val reason: String? = null,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = BillingChargeStatusResultAmountUsd.Serializer::class)
-public sealed interface BillingChargeStatusResultAmountUsd {
-    public data class StringValue(public val value: String) : BillingChargeStatusResultAmountUsd
-    public data class DoubleValue(public val value: Double) : BillingChargeStatusResultAmountUsd
-
-    public object Serializer : KSerializer<BillingChargeStatusResultAmountUsd> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): BillingChargeStatusResultAmountUsd {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("BillingChargeStatusResultAmountUsd requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            try {
-                return StringValue(json.decodeFromJsonElement<String>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            try {
-                return DoubleValue(json.decodeFromJsonElement<Double>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            throw SerializationException("No BillingChargeStatusResultAmountUsd variant matched")
-        }
-
-        override fun serialize(encoder: Encoder, value: BillingChargeStatusResultAmountUsd) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("BillingChargeStatusResultAmountUsd requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is StringValue -> json.encodeToJsonElement(value.value)
-                is DoubleValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = BillingChargeStatusResultRetryAfter.Serializer::class)
-public sealed interface BillingChargeStatusResultRetryAfter {
-    public data class LongValue(public val value: Long) : BillingChargeStatusResultRetryAfter
-    public data class DoubleValue(public val value: Double) : BillingChargeStatusResultRetryAfter
-
-    public object Serializer : KSerializer<BillingChargeStatusResultRetryAfter> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): BillingChargeStatusResultRetryAfter {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("BillingChargeStatusResultRetryAfter requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            try {
-                return LongValue(json.decodeFromJsonElement<Long>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            try {
-                return DoubleValue(json.decodeFromJsonElement<Double>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            throw SerializationException("No BillingChargeStatusResultRetryAfter variant matched")
-        }
-
-        override fun serialize(encoder: Encoder, value: BillingChargeStatusResultRetryAfter) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("BillingChargeStatusResultRetryAfter requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is LongValue -> json.encodeToJsonElement(value.value)
-                is DoubleValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}

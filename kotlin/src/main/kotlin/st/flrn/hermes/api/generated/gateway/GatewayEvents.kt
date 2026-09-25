@@ -18,6 +18,10 @@ public sealed interface GatewayEventPayload {
     public data class ConnectionRequest(public val payload: ConnectionRequestPayload) : GatewayEventPayload
     public data class ConnectionUpdate(public val payload: ConnectionUpdatePayload) : GatewayEventPayload
     public data class CronChanged(public val payload: ChangeSignalPayload) : GatewayEventPayload
+    public data class DisplayInstallDone(public val payload: DisplayInstallDonePayload) : GatewayEventPayload
+    public data class DisplayInstallLog(public val payload: DisplayInstallLogPayload) : GatewayEventPayload
+    public data class DisplayLease(public val payload: DisplayLeasePayload) : GatewayEventPayload
+    public data class DisplayStatus(public val payload: DisplayStatusPayload) : GatewayEventPayload
     public data class Error(public val payload: ErrorPayload) : GatewayEventPayload
     public data class GatewayReady(public val payload: GatewayReadyPayload) : GatewayEventPayload
     public data class LayoutApply(public val payload: LayoutApplyPayload) : GatewayEventPayload
@@ -91,6 +95,10 @@ public sealed interface GatewayEventPayload {
             "connection.request" -> ConnectionRequest(json.decodeFromJsonElement(ConnectionRequestPayload.serializer(), payload))
             "connection.update" -> ConnectionUpdate(json.decodeFromJsonElement(ConnectionUpdatePayload.serializer(), payload))
             "cron.changed" -> CronChanged(json.decodeFromJsonElement(ChangeSignalPayload.serializer(), payload))
+            "display.install.done" -> DisplayInstallDone(json.decodeFromJsonElement(DisplayInstallDonePayload.serializer(), payload))
+            "display.install.log" -> DisplayInstallLog(json.decodeFromJsonElement(DisplayInstallLogPayload.serializer(), payload))
+            "display.lease" -> DisplayLease(json.decodeFromJsonElement(DisplayLeasePayload.serializer(), payload))
+            "display.status" -> DisplayStatus(json.decodeFromJsonElement(DisplayStatusPayload.serializer(), payload))
             "error" -> Error(json.decodeFromJsonElement(ErrorPayload.serializer(), payload))
             "gateway.ready" -> GatewayReady(json.decodeFromJsonElement(GatewayReadyPayload.serializer(), payload))
             "layout.apply" -> LayoutApply(json.decodeFromJsonElement(LayoutApplyPayload.serializer(), payload))
@@ -158,6 +166,7 @@ public sealed interface GatewayEventPayload {
 public sealed interface ServerRequest {
     public data class Approval(public val params: ApprovalRequestParams) : ServerRequest
     public data class Clarify(public val params: ClarifyRequestParams) : ServerRequest
+    public data class DisplayInstallSudo(public val params: DisplayInstallSudoParams) : ServerRequest
     public data class PreviewAct(public val params: PreviewActRequestParams) : ServerRequest
     public data class PreviewRead(public val params: ReadRangeRequestParams) : ServerRequest
     public data class Secret(public val params: SecretRequestParams) : ServerRequest
@@ -174,6 +183,7 @@ public sealed interface ServerRequest {
         public fun decode(method: String, params: JsonElement, json: Json): ServerRequest = when (method) {
             "approval" -> Approval(json.decodeFromJsonElement(ApprovalRequestParams.serializer(), params))
             "clarify" -> Clarify(json.decodeFromJsonElement(ClarifyRequestParams.serializer(), params))
+            "display.install.sudo" -> DisplayInstallSudo(json.decodeFromJsonElement(DisplayInstallSudoParams.serializer(), params))
             "preview.act" -> PreviewAct(json.decodeFromJsonElement(PreviewActRequestParams.serializer(), params))
             "preview.read" -> PreviewRead(json.decodeFromJsonElement(ReadRangeRequestParams.serializer(), params))
             "secret" -> Secret(json.decodeFromJsonElement(SecretRequestParams.serializer(), params))
@@ -193,6 +203,7 @@ public sealed interface ServerRequest {
 public sealed interface ServerRequestResult {
     public data class Approval(public val value: ApprovalResult) : ServerRequestResult
     public data class Clarify(public val value: ClarifyResult) : ServerRequestResult
+    public data class DisplayInstallSudo(public val value: ValueResult) : ServerRequestResult
     public data class PreviewAct(public val value: ValueResult) : ServerRequestResult
     public data class PreviewRead(public val value: ValueResult) : ServerRequestResult
     public data class Secret(public val value: ValueResult) : ServerRequestResult
@@ -207,6 +218,7 @@ public sealed interface ServerRequestResult {
     public fun matches(request: ServerRequest): Boolean = when (this) {
         is Approval -> request is ServerRequest.Approval
         is Clarify -> request is ServerRequest.Clarify
+        is DisplayInstallSudo -> request is ServerRequest.DisplayInstallSudo
         is PreviewAct -> request is ServerRequest.PreviewAct
         is PreviewRead -> request is ServerRequest.PreviewRead
         is Secret -> request is ServerRequest.Secret
@@ -222,6 +234,7 @@ public sealed interface ServerRequestResult {
     public fun encodedJSON(json: Json): String = when (this) {
         is Approval -> json.encodeToString(ApprovalResult.serializer(), value)
         is Clarify -> json.encodeToString(ClarifyResult.serializer(), value)
+        is DisplayInstallSudo -> json.encodeToString(ValueResult.serializer(), value)
         is PreviewAct -> json.encodeToString(ValueResult.serializer(), value)
         is PreviewRead -> json.encodeToString(ValueResult.serializer(), value)
         is Secret -> json.encodeToString(ValueResult.serializer(), value)

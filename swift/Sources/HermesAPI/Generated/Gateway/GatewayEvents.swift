@@ -14,6 +14,10 @@ public enum GatewayEventPayload: Sendable, Hashable {
     case connectionRequest(ConnectionRequestPayload)
     case connectionUpdate(ConnectionUpdatePayload)
     case cronChanged(ChangeSignalPayload)
+    case displayInstallDone(DisplayInstallDonePayload)
+    case displayInstallLog(DisplayInstallLogPayload)
+    case displayLease(DisplayLeasePayload)
+    case displayStatus(DisplayStatusPayload)
     case error(ErrorPayload)
     case gatewayReady(GatewayReadyPayload)
     case layoutApply(LayoutApplyPayload)
@@ -99,6 +103,14 @@ public enum GatewayEventPayload: Sendable, Hashable {
             return .connectionUpdate(try JSONDecoder().decode(ConnectionUpdatePayload.self, from: data))
         case "cron.changed":
             return .cronChanged(try JSONDecoder().decode(ChangeSignalPayload.self, from: data))
+        case "display.install.done":
+            return .displayInstallDone(try JSONDecoder().decode(DisplayInstallDonePayload.self, from: data))
+        case "display.install.log":
+            return .displayInstallLog(try JSONDecoder().decode(DisplayInstallLogPayload.self, from: data))
+        case "display.lease":
+            return .displayLease(try JSONDecoder().decode(DisplayLeasePayload.self, from: data))
+        case "display.status":
+            return .displayStatus(try JSONDecoder().decode(DisplayStatusPayload.self, from: data))
         case "error":
             return .error(try JSONDecoder().decode(ErrorPayload.self, from: data))
         case "gateway.ready":
@@ -226,6 +238,7 @@ public enum GatewayEventPayload: Sendable, Hashable {
 public enum ServerRequest: Sendable, Hashable {
     case approval(ApprovalRequestParams)
     case clarify(ClarifyRequestParams)
+    case displayInstallSudo(DisplayInstallSudoParams)
     case previewAct(PreviewActRequestParams)
     case previewRead(ReadRangeRequestParams)
     case secret(SecretRequestParams)
@@ -245,6 +258,8 @@ public enum ServerRequest: Sendable, Hashable {
             return .approval(try JSONDecoder().decode(ApprovalRequestParams.self, from: data))
         case "clarify":
             return .clarify(try JSONDecoder().decode(ClarifyRequestParams.self, from: data))
+        case "display.install.sudo":
+            return .displayInstallSudo(try JSONDecoder().decode(DisplayInstallSudoParams.self, from: data))
         case "preview.act":
             return .previewAct(try JSONDecoder().decode(PreviewActRequestParams.self, from: data))
         case "preview.read":
@@ -274,6 +289,7 @@ public enum ServerRequest: Sendable, Hashable {
 public enum ServerRequestResult: Sendable, Hashable {
     case approval(ApprovalResult)
     case clarify(ClarifyResult)
+    case displayInstallSudo(ValueResult)
     case previewAct(ValueResult)
     case previewRead(ValueResult)
     case secret(ValueResult)
@@ -289,6 +305,7 @@ public enum ServerRequestResult: Sendable, Hashable {
         switch (self, request) {
         case (.approval, .approval): true
         case (.clarify, .clarify): true
+        case (.displayInstallSudo, .displayInstallSudo): true
         case (.previewAct, .previewAct): true
         case (.previewRead, .previewRead): true
         case (.secret, .secret): true
@@ -308,6 +325,7 @@ public enum ServerRequestResult: Sendable, Hashable {
         switch self {
         case .approval(let value): return try encoder.encode(value)
         case .clarify(let value): return try encoder.encode(value)
+        case .displayInstallSudo(let value): return try encoder.encode(value)
         case .previewAct(let value): return try encoder.encode(value)
         case .previewRead(let value): return try encoder.encode(value)
         case .secret(let value): return try encoder.encode(value)

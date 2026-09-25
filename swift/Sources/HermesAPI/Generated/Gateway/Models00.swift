@@ -2,6 +2,49 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct AccountOwner: Codable, Sendable, Hashable {
+    public var type: AccountOwnerType
+
+    public init(type: AccountOwnerType) {
+        self.type = type
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case type = "type"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(AccountOwnerType.self, forKey: .type)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public enum AccountOwnerType: Codable, Sendable, Hashable {
+    case account
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "account": self = .account
+        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .account: try container.encode("account")
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct ActiveIdResult: Codable, Sendable, Hashable {
     public var activeId: String?
 
@@ -120,6 +163,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
     public var portable: Bool
     public var installDir: String
     public var hasDesktopHalf: Bool
+    public var servers: [PluginServerRow]
     public var catalogName: String?
     public var catalogTier: String?
     public var installedSha: String?
@@ -127,8 +171,9 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
     public var catalogVersion: String?
     public var updateAvailable: Bool?
     public var pinnedSha: String?
+    public var settingsSchema: [PluginSettingField]?
 
-    public init(name: String, key: String, version: String, description: String, source: String, status: String, portable: Bool, installDir: String, hasDesktopHalf: Bool, catalogName: String? = nil, catalogTier: String? = nil, installedSha: String? = nil, catalogSha: String? = nil, catalogVersion: String? = nil, updateAvailable: Bool? = nil, pinnedSha: String? = nil) {
+    public init(name: String, key: String, version: String, description: String, source: String, status: String, portable: Bool, installDir: String, hasDesktopHalf: Bool, servers: [PluginServerRow], catalogName: String? = nil, catalogTier: String? = nil, installedSha: String? = nil, catalogSha: String? = nil, catalogVersion: String? = nil, updateAvailable: Bool? = nil, pinnedSha: String? = nil, settingsSchema: [PluginSettingField]? = nil) {
         self.name = name
         self.key = key
         self.version = version
@@ -138,6 +183,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         self.portable = portable
         self.installDir = installDir
         self.hasDesktopHalf = hasDesktopHalf
+        self.servers = servers
         self.catalogName = catalogName
         self.catalogTier = catalogTier
         self.installedSha = installedSha
@@ -145,6 +191,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         self.catalogVersion = catalogVersion
         self.updateAvailable = updateAvailable
         self.pinnedSha = pinnedSha
+        self.settingsSchema = settingsSchema
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -157,6 +204,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         case portable = "portable"
         case installDir = "install_dir"
         case hasDesktopHalf = "has_desktop_half"
+        case servers = "servers"
         case catalogName = "catalog_name"
         case catalogTier = "catalog_tier"
         case installedSha = "installed_sha"
@@ -164,6 +212,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         case catalogVersion = "catalog_version"
         case updateAvailable = "update_available"
         case pinnedSha = "pinned_sha"
+        case settingsSchema = "settings_schema"
     }
 
     public init(from decoder: Decoder) throws {
@@ -177,6 +226,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         portable = try container.decode(Bool.self, forKey: .portable)
         installDir = try container.decode(String.self, forKey: .installDir)
         hasDesktopHalf = try container.decode(Bool.self, forKey: .hasDesktopHalf)
+        servers = try container.decode([PluginServerRow].self, forKey: .servers)
         catalogName = try container.decodeIfPresent(String.self, forKey: .catalogName)
         catalogTier = try container.decodeIfPresent(String.self, forKey: .catalogTier)
         installedSha = try container.decodeIfPresent(String.self, forKey: .installedSha)
@@ -184,6 +234,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         catalogVersion = try container.decodeIfPresent(String.self, forKey: .catalogVersion)
         updateAvailable = try container.decodeIfPresent(Bool.self, forKey: .updateAvailable)
         pinnedSha = try container.decodeIfPresent(String.self, forKey: .pinnedSha)
+        settingsSchema = try container.decodeIfPresent([PluginSettingField].self, forKey: .settingsSchema)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -197,6 +248,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         try container.encode(portable, forKey: .portable)
         try container.encode(installDir, forKey: .installDir)
         try container.encode(hasDesktopHalf, forKey: .hasDesktopHalf)
+        try container.encode(servers, forKey: .servers)
         try container.encodeIfPresent(catalogName, forKey: .catalogName)
         try container.encodeIfPresent(catalogTier, forKey: .catalogTier)
         try container.encodeIfPresent(installedSha, forKey: .installedSha)
@@ -204,6 +256,7 @@ public struct AgentPluginRow: Codable, Sendable, Hashable {
         try container.encodeIfPresent(catalogVersion, forKey: .catalogVersion)
         try container.encodeIfPresent(updateAvailable, forKey: .updateAvailable)
         try container.encodeIfPresent(pinnedSha, forKey: .pinnedSha)
+        try container.encodeIfPresent(settingsSchema, forKey: .settingsSchema)
     }
 }
 
@@ -1541,59 +1594,5 @@ public struct BillingChargeStatusResult: Codable, Sendable, Hashable {
         try container.encodeIfPresent(amountUsd, forKey: .amountUsd)
         try container.encodeIfPresent(settledAt, forKey: .settledAt)
         try container.encodeIfPresent(reason, forKey: .reason)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum BillingChargeStatusResultAmountUsd: Codable, Sendable, Hashable {
-    case string(String)
-    case double(Double)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(String.self) {
-            self = .string(value)
-            return
-        }
-        if let value = try? container.decode(Double.self) {
-            self = .double(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .string(let value): try container.encode(value)
-        case .double(let value): try container.encode(value)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum BillingChargeStatusResultRetryAfter: Codable, Sendable, Hashable {
-    case long(Int)
-    case double(Double)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(Int.self) {
-            self = .long(value)
-            return
-        }
-        if let value = try? container.decode(Double.self) {
-            self = .double(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .long(let value): try container.encode(value)
-        case .double(let value): try container.encode(value)
-        }
     }
 }

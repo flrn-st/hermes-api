@@ -1,7 +1,7 @@
 operations:
   - method: GET
     path: /api/sessions/empty/count
-    x-source: hermes_cli/web_routers/sessions.py:441
+    x-source: hermes_cli/web_routers/sessions.py:455
     x-handler-hash: 15b13fa34f08f74e31cc05412efa4f2fc76de2e331b2a62e5d88cd43faf33d12
     response:
       type: object

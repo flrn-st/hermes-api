@@ -23,6 +23,7 @@ public struct GatewayMethodCatalog: Sendable {
     public var cron: CronMethods { CronMethods(caller: caller) }
     public var delegation: DelegationMethods { DelegationMethods(caller: caller) }
     public var diagnostics: DiagnosticsMethods { DiagnosticsMethods(caller: caller) }
+    public var display: DisplayMethods { DisplayMethods(caller: caller) }
     public var file: FileMethods { FileMethods(caller: caller) }
     public var freeTier: FreeTierMethods { FreeTierMethods(caller: caller) }
     public var gateway: GatewayMethods { GatewayMethods(caller: caller) }
@@ -36,6 +37,7 @@ public struct GatewayMethodCatalog: Sendable {
     public var mcp: McpMethods { McpMethods(caller: caller) }
     public var message: MessageMethods { MessageMethods(caller: caller) }
     public var model: ModelMethods { ModelMethods(caller: caller) }
+    public var onboarding: OnboardingMethods { OnboardingMethods(caller: caller) }
     public var paste: PasteMethods { PasteMethods(caller: caller) }
     public var pdf: PdfMethods { PdfMethods(caller: caller) }
     public var pet: PetMethods { PetMethods(caller: caller) }
@@ -253,6 +255,15 @@ public struct ConnectorsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    public func accounts(_ params: ConnectorAccountsParams) async throws -> ConnectorAccountsResult {
+        try await caller.call("connectors.accounts", params: params, as: ConnectorAccountsResult.self)
+    }
+    public func accountsRemove(_ params: ConnectorAccountsRemoveParams) async throws -> ConnectorAccountsRemoveResult {
+        try await caller.call("connectors.accounts.remove", params: params, as: ConnectorAccountsRemoveResult.self)
+    }
+    public func catalog(_ params: ProfileParams) async throws -> ConnectorsCatalogResult {
+        try await caller.call("connectors.catalog", params: params, as: ConnectorsCatalogResult.self)
+    }
     public func connect(_ params: ConnectorsConnectParams) async throws -> ConnectorsConnectResult {
         try await caller.call("connectors.connect", params: params, as: ConnectorsConnectResult.self)
     }
@@ -264,6 +275,15 @@ public struct ConnectorsMethods: Sendable {
     }
     public func operationWake(_ params: ConnectionOperationParams) async throws -> ConnectionWakeResult {
         try await caller.call("connectors.operation.wake", params: params, as: ConnectionWakeResult.self)
+    }
+    public func policyGet(_ params: ProfileParams) async throws -> ConnectorPolicyGetResult {
+        try await caller.call("connectors.policy.get", params: params, as: ConnectorPolicyGetResult.self)
+    }
+    public func policySet(_ params: ConnectorPolicySetParams) async throws -> ConnectorPolicySetResult {
+        try await caller.call("connectors.policy.set", params: params, as: ConnectorPolicySetResult.self)
+    }
+    public func tools(_ params: ConnectorToolsParams) async throws -> ConnectorToolsResult {
+        try await caller.call("connectors.tools", params: params, as: ConnectorToolsResult.self)
     }
 }
 
@@ -294,6 +314,36 @@ public struct DiagnosticsMethods: Sendable {
     init(caller: any GatewayCalling) { self.caller = caller }
     public func shareNous(_ params: DiagnosticsShareNousParams) async throws -> DiagnosticsShareNousResult {
         try await caller.call("diagnostics.share_nous", params: params, as: DiagnosticsShareNousResult.self)
+    }
+}
+
+public struct DisplayMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    public func install(_ params: ProfileParams) async throws -> DisplayInstallResult {
+        try await caller.call("display.install", params: params, as: DisplayInstallResult.self)
+    }
+    public func leaseAcquire(_ params: DisplayLeaseAcquireParams) async throws -> DisplayLeaseResult {
+        try await caller.call("display.lease.acquire", params: params, as: DisplayLeaseResult.self)
+    }
+    public func leaseRelease(_ params: DisplayLeaseReleaseParams) async throws -> DisplayLeaseResult {
+        try await caller.call("display.lease.release", params: params, as: DisplayLeaseResult.self)
+    }
+    public func observe(_ params: DisplayObserveParams) async throws -> DisplayObserveResult {
+        try await caller.call("display.observe", params: params, as: DisplayObserveResult.self)
+    }
+    public func start(_ params: ProfileParams) async throws -> DisplayStatus {
+        try await caller.call("display.start", params: params, as: DisplayStatus.self)
+    }
+    public func status(_ params: ProfileParams) async throws -> DisplayStatus {
+        try await caller.call("display.status", params: params, as: DisplayStatus.self)
+    }
+    public func stop(_ params: DisplayStopParams) async throws -> DisplayStopResult {
+        try await caller.call("display.stop", params: params, as: DisplayStopResult.self)
+    }
+    public func thumbnail(_ params: ProfileParams) async throws -> DisplayThumbnailResult {
+        try await caller.call("display.thumbnail", params: params, as: DisplayThumbnailResult.self)
     }
 }
 
@@ -528,6 +578,18 @@ public struct ModelMethods: Sendable {
     }
     public func saveKey(_ params: ModelSaveKeyParams) async throws -> ModelSaveKeyResult {
         try await caller.call("model.save_key", params: params, as: ModelSaveKeyResult.self)
+    }
+}
+
+public struct OnboardingMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    public func ensureSetupProfile(_ params: Params) async throws -> OnboardingEnsureSetupProfileResult {
+        try await caller.call("onboarding.ensure_setup_profile", params: params, as: OnboardingEnsureSetupProfileResult.self)
+    }
+    public func resetSetupProfile(_ params: Params) async throws -> OnboardingResetSetupProfileResult {
+        try await caller.call("onboarding.reset_setup_profile", params: params, as: OnboardingResetSetupProfileResult.self)
     }
 }
 
@@ -786,6 +848,12 @@ public struct SessionMethods: Sendable {
     }
     public func branch(_ params: SessionBranchParams) async throws -> SessionBranchResult {
         try await caller.call("session.branch", params: params, as: SessionBranchResult.self)
+    }
+    public func branchStored(_ params: SessionBranchStoredParams) async throws -> SessionBranchStoredResult {
+        try await caller.call("session.branch_stored", params: params, as: SessionBranchStoredResult.self)
+    }
+    public func branchWhole(_ params: SessionBranchWholeParams) async throws -> SessionBranchWholeResult {
+        try await caller.call("session.branch_whole", params: params, as: SessionBranchWholeResult.self)
     }
     public func close(_ params: SessionCloseParams) async throws -> SessionCloseResult {
         try await caller.call("session.close", params: params, as: SessionCloseResult.self)
@@ -1111,6 +1179,7 @@ public extension HermesGateway {
     nonisolated var cron: CronMethods { CronMethods(caller: self) }
     nonisolated var delegation: DelegationMethods { DelegationMethods(caller: self) }
     nonisolated var diagnostics: DiagnosticsMethods { DiagnosticsMethods(caller: self) }
+    nonisolated var display: DisplayMethods { DisplayMethods(caller: self) }
     nonisolated var file: FileMethods { FileMethods(caller: self) }
     nonisolated var freeTier: FreeTierMethods { FreeTierMethods(caller: self) }
     nonisolated var gateway: GatewayMethods { GatewayMethods(caller: self) }
@@ -1124,6 +1193,7 @@ public extension HermesGateway {
     nonisolated var mcp: McpMethods { McpMethods(caller: self) }
     nonisolated var message: MessageMethods { MessageMethods(caller: self) }
     nonisolated var model: ModelMethods { ModelMethods(caller: self) }
+    nonisolated var onboarding: OnboardingMethods { OnboardingMethods(caller: self) }
     nonisolated var paste: PasteMethods { PasteMethods(caller: self) }
     nonisolated var pdf: PdfMethods { PdfMethods(caller: self) }
     nonisolated var pet: PetMethods { PetMethods(caller: self) }

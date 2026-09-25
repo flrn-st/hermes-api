@@ -2,159 +2,44 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentEventPayload: Codable, Sendable, Hashable {
-    public var goal: String
-    public var taskCount: Int
-    public var taskIndex: Int
-    public var subagentId: String?
-    public var parentId: String?
-    public var childSessionId: String?
-    public var delegationId: String?
-    public var depth: Int?
-    public var model: String?
-    public var toolCount: Int?
-    public var toolsets: [String]?
-    public var inputTokens: Int?
-    public var outputTokens: Int?
-    public var reasoningTokens: Int?
-    public var apiCalls: Int?
-    public var filesRead: [String]?
-    public var filesWritten: [String]?
-    public var outputTail: [SubagentOutputTailEntry]?
-    public var toolName: String?
-    public var text: String?
-    public var status: SubagentStatus?
-    public var summary: String?
-    public var durationSeconds: Double?
-    public var toolPreview: String?
+public struct SessionCloseResult: Codable, Sendable, Hashable {
+    public var closed: Bool
 
-    public init(goal: String, taskCount: Int, taskIndex: Int, subagentId: String? = nil, parentId: String? = nil, childSessionId: String? = nil, delegationId: String? = nil, depth: Int? = nil, model: String? = nil, toolCount: Int? = nil, toolsets: [String]? = nil, inputTokens: Int? = nil, outputTokens: Int? = nil, reasoningTokens: Int? = nil, apiCalls: Int? = nil, filesRead: [String]? = nil, filesWritten: [String]? = nil, outputTail: [SubagentOutputTailEntry]? = nil, toolName: String? = nil, text: String? = nil, status: SubagentStatus? = nil, summary: String? = nil, durationSeconds: Double? = nil, toolPreview: String? = nil) {
-        self.goal = goal
-        self.taskCount = taskCount
-        self.taskIndex = taskIndex
-        self.subagentId = subagentId
-        self.parentId = parentId
-        self.childSessionId = childSessionId
-        self.delegationId = delegationId
-        self.depth = depth
-        self.model = model
-        self.toolCount = toolCount
-        self.toolsets = toolsets
-        self.inputTokens = inputTokens
-        self.outputTokens = outputTokens
-        self.reasoningTokens = reasoningTokens
-        self.apiCalls = apiCalls
-        self.filesRead = filesRead
-        self.filesWritten = filesWritten
-        self.outputTail = outputTail
-        self.toolName = toolName
-        self.text = text
-        self.status = status
-        self.summary = summary
-        self.durationSeconds = durationSeconds
-        self.toolPreview = toolPreview
+    public init(closed: Bool) {
+        self.closed = closed
     }
 
     private enum CodingKeys: String, CodingKey {
-        case goal = "goal"
-        case taskCount = "task_count"
-        case taskIndex = "task_index"
-        case subagentId = "subagent_id"
-        case parentId = "parent_id"
-        case childSessionId = "child_session_id"
-        case delegationId = "delegation_id"
-        case depth = "depth"
-        case model = "model"
-        case toolCount = "tool_count"
-        case toolsets = "toolsets"
-        case inputTokens = "input_tokens"
-        case outputTokens = "output_tokens"
-        case reasoningTokens = "reasoning_tokens"
-        case apiCalls = "api_calls"
-        case filesRead = "files_read"
-        case filesWritten = "files_written"
-        case outputTail = "output_tail"
-        case toolName = "tool_name"
-        case text = "text"
-        case status = "status"
-        case summary = "summary"
-        case durationSeconds = "duration_seconds"
-        case toolPreview = "tool_preview"
+        case closed = "closed"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        goal = try container.decode(String.self, forKey: .goal)
-        taskCount = try container.decode(Int.self, forKey: .taskCount)
-        taskIndex = try container.decode(Int.self, forKey: .taskIndex)
-        subagentId = try container.decodeIfPresent(String.self, forKey: .subagentId)
-        parentId = try container.decodeIfPresent(String.self, forKey: .parentId)
-        childSessionId = try container.decodeIfPresent(String.self, forKey: .childSessionId)
-        delegationId = try container.decodeIfPresent(String.self, forKey: .delegationId)
-        depth = try container.decodeIfPresent(Int.self, forKey: .depth)
-        model = try container.decodeIfPresent(String.self, forKey: .model)
-        toolCount = try container.decodeIfPresent(Int.self, forKey: .toolCount)
-        toolsets = try container.decodeIfPresent([String].self, forKey: .toolsets)
-        inputTokens = try container.decodeIfPresent(Int.self, forKey: .inputTokens)
-        outputTokens = try container.decodeIfPresent(Int.self, forKey: .outputTokens)
-        reasoningTokens = try container.decodeIfPresent(Int.self, forKey: .reasoningTokens)
-        apiCalls = try container.decodeIfPresent(Int.self, forKey: .apiCalls)
-        filesRead = try container.decodeIfPresent([String].self, forKey: .filesRead)
-        filesWritten = try container.decodeIfPresent([String].self, forKey: .filesWritten)
-        outputTail = try container.decodeIfPresent([SubagentOutputTailEntry].self, forKey: .outputTail)
-        toolName = try container.decodeIfPresent(String.self, forKey: .toolName)
-        text = try container.decodeIfPresent(String.self, forKey: .text)
-        status = try container.decodeIfPresent(SubagentStatus.self, forKey: .status)
-        summary = try container.decodeIfPresent(String.self, forKey: .summary)
-        durationSeconds = try container.decodeIfPresent(Double.self, forKey: .durationSeconds)
-        toolPreview = try container.decodeIfPresent(String.self, forKey: .toolPreview)
+        closed = try container.decode(Bool.self, forKey: .closed)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(goal, forKey: .goal)
-        try container.encode(taskCount, forKey: .taskCount)
-        try container.encode(taskIndex, forKey: .taskIndex)
-        try container.encodeIfPresent(subagentId, forKey: .subagentId)
-        try container.encodeIfPresent(parentId, forKey: .parentId)
-        try container.encodeIfPresent(childSessionId, forKey: .childSessionId)
-        try container.encodeIfPresent(delegationId, forKey: .delegationId)
-        try container.encodeIfPresent(depth, forKey: .depth)
-        try container.encodeIfPresent(model, forKey: .model)
-        try container.encodeIfPresent(toolCount, forKey: .toolCount)
-        try container.encodeIfPresent(toolsets, forKey: .toolsets)
-        try container.encodeIfPresent(inputTokens, forKey: .inputTokens)
-        try container.encodeIfPresent(outputTokens, forKey: .outputTokens)
-        try container.encodeIfPresent(reasoningTokens, forKey: .reasoningTokens)
-        try container.encodeIfPresent(apiCalls, forKey: .apiCalls)
-        try container.encodeIfPresent(filesRead, forKey: .filesRead)
-        try container.encodeIfPresent(filesWritten, forKey: .filesWritten)
-        try container.encodeIfPresent(outputTail, forKey: .outputTail)
-        try container.encodeIfPresent(toolName, forKey: .toolName)
-        try container.encodeIfPresent(text, forKey: .text)
-        try container.encodeIfPresent(status, forKey: .status)
-        try container.encodeIfPresent(summary, forKey: .summary)
-        try container.encodeIfPresent(durationSeconds, forKey: .durationSeconds)
-        try container.encodeIfPresent(toolPreview, forKey: .toolPreview)
+        try container.encode(closed, forKey: .closed)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentIdParams: Codable, Sendable, Hashable {
+public struct SessionCompressParams: Codable, Sendable, Hashable {
     public var sessionId: String
     public var profile: Patch<String>
-    public var subagentId: String
+    public var focusTopic: Patch<String>
 
-    public init(sessionId: String, profile: Patch<String> = .absent, subagentId: String) {
+    public init(sessionId: String, profile: Patch<String> = .absent, focusTopic: Patch<String> = .absent) {
         self.sessionId = sessionId
         self.profile = profile
-        self.subagentId = subagentId
+        self.focusTopic = focusTopic
     }
 
     private enum CodingKeys: String, CodingKey {
         case sessionId = "session_id"
         case profile = "profile"
-        case subagentId = "subagent_id"
+        case focusTopic = "focus_topic"
     }
 
     public init(from decoder: Decoder) throws {
@@ -167,7 +52,13 @@ public struct SubagentIdParams: Codable, Sendable, Hashable {
         } else {
             profile = .value(try container.decode(String.self, forKey: .profile))
         }
-        subagentId = try container.decode(String.self, forKey: .subagentId)
+        if !container.contains(.focusTopic) {
+            focusTopic = .absent
+        } else if try container.decodeNil(forKey: .focusTopic) {
+            focusTopic = .null
+        } else {
+            focusTopic = .value(try container.decode(String.self, forKey: .focusTopic))
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -178,230 +69,544 @@ public struct SubagentIdParams: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .profile)
         case .value(let value): try container.encode(value, forKey: .profile)
         }
-        try container.encode(subagentId, forKey: .subagentId)
+        switch focusTopic {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .focusTopic)
+        case .value(let value): try container.encode(value, forKey: .focusTopic)
+        }
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentInterruptResult: Codable, Sendable, Hashable {
-    public var found: Bool
-    public var subagentId: String
+public struct SessionCompressResult: Codable, Sendable, Hashable {
+    public var status: String?
+    public var removed: Int?
+    public var beforeMessages: Int?
+    public var afterMessages: Int?
+    public var beforeTokens: Int?
+    public var afterTokens: Int?
+    public var summary: CompressionSummary?
+    public var usage: Usage?
+    public var info: SessionLiveInfo?
+    public var messages: [TranscriptMessage]?
+    public var compressed: Bool?
+    public var lockHeld: Bool?
+    public var message: String?
+    public var turnIsolation: Bool?
+    public var hostAck: [String: JSONValue]?
+    public var additionalProperties: [String: JSONValue]
 
-    public init(found: Bool, subagentId: String) {
-        self.found = found
-        self.subagentId = subagentId
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case found = "found"
-        case subagentId = "subagent_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        found = try container.decode(Bool.self, forKey: .found)
-        subagentId = try container.decode(String.self, forKey: .subagentId)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(found, forKey: .found)
-        try container.encode(subagentId, forKey: .subagentId)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentListResult: Codable, Sendable, Hashable {
-    public var subagents: [SubagentSnapshot]?
-    public var delegations: [[String: JSONValue]]?
-
-    public init(subagents: [SubagentSnapshot]? = nil, delegations: [[String: JSONValue]]? = nil) {
-        self.subagents = subagents
-        self.delegations = delegations
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case subagents = "subagents"
-        case delegations = "delegations"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        subagents = try container.decodeIfPresent([SubagentSnapshot].self, forKey: .subagents)
-        delegations = try container.decodeIfPresent([[String: JSONValue]].self, forKey: .delegations)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(subagents, forKey: .subagents)
-        try container.encodeIfPresent(delegations, forKey: .delegations)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentOutputTailEntry: Codable, Sendable, Hashable {
-    public var tool: String
-    public var preview: String
-    public var isError: Bool
-
-    public init(tool: String, preview: String, isError: Bool) {
-        self.tool = tool
-        self.preview = preview
-        self.isError = isError
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case tool = "tool"
-        case preview = "preview"
-        case isError = "is_error"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        tool = try container.decode(String.self, forKey: .tool)
-        preview = try container.decode(String.self, forKey: .preview)
-        isError = try container.decode(Bool.self, forKey: .isError)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(tool, forKey: .tool)
-        try container.encode(preview, forKey: .preview)
-        try container.encode(isError, forKey: .isError)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentSnapshot: Codable, Sendable, Hashable {
-    public var subagentId: String
-    public var parentId: String?
-    public var depth: Int?
-    public var goal: String?
-    public var delegationId: String?
-    public var model: String?
-    public var startedAt: Double?
-    public var status: SubagentStatus?
-    public var toolCount: Int?
-    public var lastTool: String?
-    public var acceptingSteer: Bool?
-
-    public init(subagentId: String, parentId: String? = nil, depth: Int? = nil, goal: String? = nil, delegationId: String? = nil, model: String? = nil, startedAt: Double? = nil, status: SubagentStatus? = nil, toolCount: Int? = nil, lastTool: String? = nil, acceptingSteer: Bool? = nil) {
-        self.subagentId = subagentId
-        self.parentId = parentId
-        self.depth = depth
-        self.goal = goal
-        self.delegationId = delegationId
-        self.model = model
-        self.startedAt = startedAt
+    public init(status: String? = nil, removed: Int? = nil, beforeMessages: Int? = nil, afterMessages: Int? = nil, beforeTokens: Int? = nil, afterTokens: Int? = nil, summary: CompressionSummary? = nil, usage: Usage? = nil, info: SessionLiveInfo? = nil, messages: [TranscriptMessage]? = nil, compressed: Bool? = nil, lockHeld: Bool? = nil, message: String? = nil, turnIsolation: Bool? = nil, hostAck: [String: JSONValue]? = nil, additionalProperties: [String: JSONValue] = [:]) {
         self.status = status
-        self.toolCount = toolCount
-        self.lastTool = lastTool
-        self.acceptingSteer = acceptingSteer
+        self.removed = removed
+        self.beforeMessages = beforeMessages
+        self.afterMessages = afterMessages
+        self.beforeTokens = beforeTokens
+        self.afterTokens = afterTokens
+        self.summary = summary
+        self.usage = usage
+        self.info = info
+        self.messages = messages
+        self.compressed = compressed
+        self.lockHeld = lockHeld
+        self.message = message
+        self.turnIsolation = turnIsolation
+        self.hostAck = hostAck
+        self.additionalProperties = additionalProperties
     }
 
     private enum CodingKeys: String, CodingKey {
-        case subagentId = "subagent_id"
-        case parentId = "parent_id"
-        case depth = "depth"
-        case goal = "goal"
-        case delegationId = "delegation_id"
-        case model = "model"
-        case startedAt = "started_at"
         case status = "status"
-        case toolCount = "tool_count"
-        case lastTool = "last_tool"
-        case acceptingSteer = "accepting_steer"
+        case removed = "removed"
+        case beforeMessages = "before_messages"
+        case afterMessages = "after_messages"
+        case beforeTokens = "before_tokens"
+        case afterTokens = "after_tokens"
+        case summary = "summary"
+        case usage = "usage"
+        case info = "info"
+        case messages = "messages"
+        case compressed = "compressed"
+        case lockHeld = "lock_held"
+        case message = "message"
+        case turnIsolation = "turn_isolation"
+        case hostAck = "host_ack"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        subagentId = try container.decode(String.self, forKey: .subagentId)
-        parentId = try container.decodeIfPresent(String.self, forKey: .parentId)
-        depth = try container.decodeIfPresent(Int.self, forKey: .depth)
-        goal = try container.decodeIfPresent(String.self, forKey: .goal)
-        delegationId = try container.decodeIfPresent(String.self, forKey: .delegationId)
-        model = try container.decodeIfPresent(String.self, forKey: .model)
-        startedAt = try container.decodeIfPresent(Double.self, forKey: .startedAt)
-        status = try container.decodeIfPresent(SubagentStatus.self, forKey: .status)
-        toolCount = try container.decodeIfPresent(Int.self, forKey: .toolCount)
-        lastTool = try container.decodeIfPresent(String.self, forKey: .lastTool)
-        acceptingSteer = try container.decodeIfPresent(Bool.self, forKey: .acceptingSteer)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+        removed = try container.decodeIfPresent(Int.self, forKey: .removed)
+        beforeMessages = try container.decodeIfPresent(Int.self, forKey: .beforeMessages)
+        afterMessages = try container.decodeIfPresent(Int.self, forKey: .afterMessages)
+        beforeTokens = try container.decodeIfPresent(Int.self, forKey: .beforeTokens)
+        afterTokens = try container.decodeIfPresent(Int.self, forKey: .afterTokens)
+        summary = try container.decodeIfPresent(CompressionSummary.self, forKey: .summary)
+        usage = try container.decodeIfPresent(Usage.self, forKey: .usage)
+        info = try container.decodeIfPresent(SessionLiveInfo.self, forKey: .info)
+        messages = try container.decodeIfPresent([TranscriptMessage].self, forKey: .messages)
+        compressed = try container.decodeIfPresent(Bool.self, forKey: .compressed)
+        lockHeld = try container.decodeIfPresent(Bool.self, forKey: .lockHeld)
+        message = try container.decodeIfPresent(String.self, forKey: .message)
+        turnIsolation = try container.decodeIfPresent(Bool.self, forKey: .turnIsolation)
+        hostAck = try container.decodeIfPresent([String: JSONValue].self, forKey: .hostAck)
+        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = ["status", "removed", "before_messages", "after_messages", "before_tokens", "after_tokens", "summary", "usage", "info", "messages", "compressed", "lock_held", "message", "turn_isolation", "host_ack"]
+        var extra: [String: JSONValue] = [:]
+        for key in dynamic.allKeys where !known.contains(key.stringValue) {
+            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
+        }
+        additionalProperties = extra
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(subagentId, forKey: .subagentId)
-        try container.encodeIfPresent(parentId, forKey: .parentId)
-        try container.encodeIfPresent(depth, forKey: .depth)
-        try container.encodeIfPresent(goal, forKey: .goal)
-        try container.encodeIfPresent(delegationId, forKey: .delegationId)
-        try container.encodeIfPresent(model, forKey: .model)
-        try container.encodeIfPresent(startedAt, forKey: .startedAt)
         try container.encodeIfPresent(status, forKey: .status)
-        try container.encodeIfPresent(toolCount, forKey: .toolCount)
-        try container.encodeIfPresent(lastTool, forKey: .lastTool)
-        try container.encodeIfPresent(acceptingSteer, forKey: .acceptingSteer)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum SubagentStatus: Codable, Sendable, Hashable {
-    case queued
-    case running
-    case completed
-    case failed
-    case error
-    case timeout
-    case interrupted
-    case unknown(String)
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "queued": self = .queued
-        case "running": self = .running
-        case "completed": self = .completed
-        case "failed": self = .failed
-        case "error": self = .error
-        case "timeout": self = .timeout
-        case "interrupted": self = .interrupted
-        default: self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .queued: try container.encode("queued")
-        case .running: try container.encode("running")
-        case .completed: try container.encode("completed")
-        case .failed: try container.encode("failed")
-        case .error: try container.encode("error")
-        case .timeout: try container.encode("timeout")
-        case .interrupted: try container.encode("interrupted")
-        case .unknown(let raw): try container.encode(raw)
+        try container.encodeIfPresent(removed, forKey: .removed)
+        try container.encodeIfPresent(beforeMessages, forKey: .beforeMessages)
+        try container.encodeIfPresent(afterMessages, forKey: .afterMessages)
+        try container.encodeIfPresent(beforeTokens, forKey: .beforeTokens)
+        try container.encodeIfPresent(afterTokens, forKey: .afterTokens)
+        try container.encodeIfPresent(summary, forKey: .summary)
+        try container.encodeIfPresent(usage, forKey: .usage)
+        try container.encodeIfPresent(info, forKey: .info)
+        try container.encodeIfPresent(messages, forKey: .messages)
+        try container.encodeIfPresent(compressed, forKey: .compressed)
+        try container.encodeIfPresent(lockHeld, forKey: .lockHeld)
+        try container.encodeIfPresent(message, forKey: .message)
+        try container.encodeIfPresent(turnIsolation, forKey: .turnIsolation)
+        try container.encodeIfPresent(hostAck, forKey: .hostAck)
+        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = ["status", "removed", "before_messages", "after_messages", "before_tokens", "after_tokens", "summary", "usage", "info", "messages", "compressed", "lock_held", "message", "turn_isolation", "host_ack"]
+        for (key, value) in additionalProperties {
+            guard !known.contains(key) else {
+                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
+            }
+            try dynamic.encode(value, forKey: DynamicCodingKey(key))
         }
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentSteerParams: Codable, Sendable, Hashable {
+public struct SessionContextBreakdownParams: Codable, Sendable, Hashable {
     public var sessionId: String
     public var profile: Patch<String>
-    public var subagentId: String
-    public var text: String
 
-    public init(sessionId: String, profile: Patch<String> = .absent, subagentId: String, text: String) {
+    public init(sessionId: String, profile: Patch<String> = .absent) {
         self.sessionId = sessionId
         self.profile = profile
-        self.subagentId = subagentId
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sessionId, forKey: .sessionId)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionContextBreakdownResult: Codable, Sendable, Hashable {
+    public var categories: [ContextCategory]
+    public var contextMax: Int
+    public var contextPercent: Int
+    public var contextUsed: Int
+    public var estimatedTotal: Int
+    public var contextEstimated: Bool
+    public var contextSource: String
+    public var model: String
+    public var contextFiles: [ContextFileSource]?
+
+    public init(categories: [ContextCategory], contextMax: Int, contextPercent: Int, contextUsed: Int, estimatedTotal: Int, contextEstimated: Bool, contextSource: String, model: String, contextFiles: [ContextFileSource]? = nil) {
+        self.categories = categories
+        self.contextMax = contextMax
+        self.contextPercent = contextPercent
+        self.contextUsed = contextUsed
+        self.estimatedTotal = estimatedTotal
+        self.contextEstimated = contextEstimated
+        self.contextSource = contextSource
+        self.model = model
+        self.contextFiles = contextFiles
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case categories = "categories"
+        case contextMax = "context_max"
+        case contextPercent = "context_percent"
+        case contextUsed = "context_used"
+        case estimatedTotal = "estimated_total"
+        case contextEstimated = "context_estimated"
+        case contextSource = "context_source"
+        case model = "model"
+        case contextFiles = "context_files"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        categories = try container.decode([ContextCategory].self, forKey: .categories)
+        contextMax = try container.decode(Int.self, forKey: .contextMax)
+        contextPercent = try container.decode(Int.self, forKey: .contextPercent)
+        contextUsed = try container.decode(Int.self, forKey: .contextUsed)
+        estimatedTotal = try container.decode(Int.self, forKey: .estimatedTotal)
+        contextEstimated = try container.decode(Bool.self, forKey: .contextEstimated)
+        contextSource = try container.decode(String.self, forKey: .contextSource)
+        model = try container.decode(String.self, forKey: .model)
+        contextFiles = try container.decodeIfPresent([ContextFileSource].self, forKey: .contextFiles)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(categories, forKey: .categories)
+        try container.encode(contextMax, forKey: .contextMax)
+        try container.encode(contextPercent, forKey: .contextPercent)
+        try container.encode(contextUsed, forKey: .contextUsed)
+        try container.encode(estimatedTotal, forKey: .estimatedTotal)
+        try container.encode(contextEstimated, forKey: .contextEstimated)
+        try container.encode(contextSource, forKey: .contextSource)
+        try container.encode(model, forKey: .model)
+        try container.encodeIfPresent(contextFiles, forKey: .contextFiles)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlArgs: Codable, Sendable, Hashable {
+    public var text: Patch<String>
+    public var index: Patch<Int>
+
+    public init(text: Patch<String> = .absent, index: Patch<Int> = .absent) {
+        self.text = text
+        self.index = index
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case text = "text"
+        case index = "index"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.text) {
+            text = .absent
+        } else if try container.decodeNil(forKey: .text) {
+            text = .null
+        } else {
+            text = .value(try container.decode(String.self, forKey: .text))
+        }
+        if !container.contains(.index) {
+            index = .absent
+        } else if try container.decodeNil(forKey: .index) {
+            index = .null
+        } else {
+            index = .value(try container.decode(Int.self, forKey: .index))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch text {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .text)
+        case .value(let value): try container.encode(value, forKey: .text)
+        }
+        switch index {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .index)
+        case .value(let value): try container.encode(value, forKey: .index)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlDispatch: Codable, Sendable, Hashable {
+    public var type: String?
+    public var output: String?
+    public var notice: String?
+    public var message: String?
+    public var display: String?
+
+    public init(type: String?, output: String?, notice: String?, message: String?, display: String?) {
+        self.type = type
+        self.output = output
+        self.notice = notice
+        self.message = message
+        self.display = display
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case type = "type"
+        case output = "output"
+        case notice = "notice"
+        case message = "message"
+        case display = "display"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(Optional<String>.self, forKey: .type)
+        output = try container.decode(Optional<String>.self, forKey: .output)
+        notice = try container.decode(Optional<String>.self, forKey: .notice)
+        message = try container.decode(Optional<String>.self, forKey: .message)
+        display = try container.decode(Optional<String>.self, forKey: .display)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(output, forKey: .output)
+        try container.encode(notice, forKey: .notice)
+        try container.encode(message, forKey: .message)
+        try container.encode(display, forKey: .display)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var sessionId: String
+    public var action: String
+    public var args: Patch<SessionControlArgs>
+
+    public init(profile: Patch<String> = .absent, sessionId: String, action: String, args: Patch<SessionControlArgs> = .absent) {
+        self.profile = profile
+        self.sessionId = sessionId
+        self.action = action
+        self.args = args
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case sessionId = "session_id"
+        case action = "action"
+        case args = "args"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        action = try container.decode(String.self, forKey: .action)
+        if !container.contains(.args) {
+            args = .absent
+        } else if try container.decodeNil(forKey: .args) {
+            args = .null
+        } else {
+            args = .value(try container.decode(SessionControlArgs.self, forKey: .args))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encode(sessionId, forKey: .sessionId)
+        try container.encode(action, forKey: .action)
+        switch args {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .args)
+        case .value(let value): try container.encode(value, forKey: .args)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlReadParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var sessionId: String
+
+    public init(profile: Patch<String> = .absent, sessionId: String) {
+        self.profile = profile
+        self.sessionId = sessionId
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case sessionId = "session_id"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encode(sessionId, forKey: .sessionId)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlReadResult: Codable, Sendable, Hashable {
+    public var control: SessionControlSnapshot
+
+    public init(control: SessionControlSnapshot) {
+        self.control = control
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case control = "control"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        control = try container.decode(SessionControlSnapshot.self, forKey: .control)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(control, forKey: .control)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlResult: Codable, Sendable, Hashable {
+    public var control: SessionControlSnapshot
+    public var dispatch: SessionControlDispatch
+
+    public init(control: SessionControlSnapshot, dispatch: SessionControlDispatch) {
+        self.control = control
+        self.dispatch = dispatch
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case control = "control"
+        case dispatch = "dispatch"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        control = try container.decode(SessionControlSnapshot.self, forKey: .control)
+        dispatch = try container.decode(SessionControlDispatch.self, forKey: .dispatch)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(control, forKey: .control)
+        try container.encode(dispatch, forKey: .dispatch)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlSnapshot: Codable, Sendable, Hashable {
+    public var goal: GoalSnapshot?
+    public var loop: LoopSnapshot?
+    public var heartbeat: HeartbeatSnapshot?
+    public var revision: String
+    public var updatedAt: Double
+
+    public init(goal: GoalSnapshot?, loop: LoopSnapshot?, heartbeat: HeartbeatSnapshot?, revision: String, updatedAt: Double) {
+        self.goal = goal
+        self.loop = loop
+        self.heartbeat = heartbeat
+        self.revision = revision
+        self.updatedAt = updatedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case goal = "goal"
+        case loop = "loop"
+        case heartbeat = "heartbeat"
+        case revision = "revision"
+        case updatedAt = "updated_at"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        goal = try container.decode(Optional<GoalSnapshot>.self, forKey: .goal)
+        loop = try container.decode(Optional<LoopSnapshot>.self, forKey: .loop)
+        heartbeat = try container.decode(Optional<HeartbeatSnapshot>.self, forKey: .heartbeat)
+        revision = try container.decode(String.self, forKey: .revision)
+        updatedAt = try container.decode(Double.self, forKey: .updatedAt)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(goal, forKey: .goal)
+        try container.encode(loop, forKey: .loop)
+        try container.encode(heartbeat, forKey: .heartbeat)
+        try container.encode(revision, forKey: .revision)
+        try container.encode(updatedAt, forKey: .updatedAt)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionControlUpdatePayload: Codable, Sendable, Hashable {
+    public var control: SessionControlSnapshot
+
+    public init(control: SessionControlSnapshot) {
+        self.control = control
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case control = "control"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        control = try container.decode(SessionControlSnapshot.self, forKey: .control)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(control, forKey: .control)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionCorrectionParams: Codable, Sendable, Hashable {
+    public var sessionId: String
+    public var profile: Patch<String>
+    public var text: String
+
+    public init(sessionId: String, profile: Patch<String> = .absent, text: String) {
+        self.sessionId = sessionId
+        self.profile = profile
         self.text = text
     }
 
     private enum CodingKeys: String, CodingKey {
         case sessionId = "session_id"
         case profile = "profile"
-        case subagentId = "subagent_id"
         case text = "text"
     }
 
@@ -415,7 +620,6 @@ public struct SubagentSteerParams: Codable, Sendable, Hashable {
         } else {
             profile = .value(try container.decode(String.self, forKey: .profile))
         }
-        subagentId = try container.decode(String.self, forKey: .subagentId)
         text = try container.decode(String.self, forKey: .text)
     }
 
@@ -427,129 +631,90 @@ public struct SubagentSteerParams: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .profile)
         case .value(let value): try container.encode(value, forKey: .profile)
         }
-        try container.encode(subagentId, forKey: .subagentId)
         try container.encode(text, forKey: .text)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentSteerResult: Codable, Sendable, Hashable {
-    public var status: SteerStatus
-    public var subagentId: String
+public struct SessionCorrectionResult: Codable, Sendable, Hashable {
+    public var status: CorrectionStatus
     public var text: String
 
-    public init(status: SteerStatus, subagentId: String, text: String) {
+    public init(status: CorrectionStatus, text: String) {
         self.status = status
-        self.subagentId = subagentId
         self.text = text
     }
 
     private enum CodingKeys: String, CodingKey {
         case status = "status"
-        case subagentId = "subagent_id"
         case text = "text"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        status = try container.decode(SteerStatus.self, forKey: .status)
-        subagentId = try container.decode(String.self, forKey: .subagentId)
+        status = try container.decode(CorrectionStatus.self, forKey: .status)
         text = try container.decode(String.self, forKey: .text)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(status, forKey: .status)
-        try container.encode(subagentId, forKey: .subagentId)
         try container.encode(text, forKey: .text)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SubagentTailResult: Codable, Sendable, Hashable {
-    public var subagentId: String
-    public var available: Bool?
-    public var text: String?
-    public var truncated: Bool?
-
-    public init(subagentId: String, available: Bool? = nil, text: String? = nil, truncated: Bool? = nil) {
-        self.subagentId = subagentId
-        self.available = available
-        self.text = text
-        self.truncated = truncated
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case subagentId = "subagent_id"
-        case available = "available"
-        case text = "text"
-        case truncated = "truncated"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        subagentId = try container.decode(String.self, forKey: .subagentId)
-        available = try container.decodeIfPresent(Bool.self, forKey: .available)
-        text = try container.decodeIfPresent(String.self, forKey: .text)
-        truncated = try container.decodeIfPresent(Bool.self, forKey: .truncated)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(subagentId, forKey: .subagentId)
-        try container.encodeIfPresent(available, forKey: .available)
-        try container.encodeIfPresent(text, forKey: .text)
-        try container.encodeIfPresent(truncated, forKey: .truncated)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum SubscriptionChangeEffect: Codable, Sendable, Hashable {
-    case chargeNow
-    case scheduled
-    case noOp
-    case blocked
-    case unknown(String)
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "charge_now": self = .chargeNow
-        case "scheduled": self = .scheduled
-        case "no_op": self = .noOp
-        case "blocked": self = .blocked
-        default: self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .chargeNow: try container.encode("charge_now")
-        case .scheduled: try container.encode("scheduled")
-        case .noOp: try container.encode("no_op")
-        case .blocked: try container.encode("blocked")
-        case .unknown(let raw): try container.encode(raw)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubscriptionChangeParams: Codable, Sendable, Hashable {
+public struct SessionCreateParams: Codable, Sendable, Hashable {
     public var profile: Patch<String>
-    public var subscriptionTypeId: Patch<String>
-    public var cancel: Bool?
+    public var cols: Patch<Int>
+    public var source: Patch<String>
+    public var cwd: Patch<String>
+    public var messages: Patch<[SeedMessage]>
+    public var parentSessionId: Patch<String>
+    public var title: Patch<String>
+    public var model: Patch<String>
+    public var provider: Patch<String>
+    public var reasoningEffort: Patch<String>
+    public var fast: Patch<Bool>
+    public var closeOnDisconnect: Bool?
+    public var hidden: Bool?
+    public var roomPlumbing: Bool?
+    public var followProfileConfig: Bool?
 
-    public init(profile: Patch<String> = .absent, subscriptionTypeId: Patch<String> = .absent, cancel: Bool? = nil) {
+    public init(profile: Patch<String> = .absent, cols: Patch<Int> = .absent, source: Patch<String> = .absent, cwd: Patch<String> = .absent, messages: Patch<[SeedMessage]> = .absent, parentSessionId: Patch<String> = .absent, title: Patch<String> = .absent, model: Patch<String> = .absent, provider: Patch<String> = .absent, reasoningEffort: Patch<String> = .absent, fast: Patch<Bool> = .absent, closeOnDisconnect: Bool? = nil, hidden: Bool? = nil, roomPlumbing: Bool? = nil, followProfileConfig: Bool? = nil) {
         self.profile = profile
-        self.subscriptionTypeId = subscriptionTypeId
-        self.cancel = cancel
+        self.cols = cols
+        self.source = source
+        self.cwd = cwd
+        self.messages = messages
+        self.parentSessionId = parentSessionId
+        self.title = title
+        self.model = model
+        self.provider = provider
+        self.reasoningEffort = reasoningEffort
+        self.fast = fast
+        self.closeOnDisconnect = closeOnDisconnect
+        self.hidden = hidden
+        self.roomPlumbing = roomPlumbing
+        self.followProfileConfig = followProfileConfig
     }
 
     private enum CodingKeys: String, CodingKey {
         case profile = "profile"
-        case subscriptionTypeId = "subscription_type_id"
-        case cancel = "cancel"
+        case cols = "cols"
+        case source = "source"
+        case cwd = "cwd"
+        case messages = "messages"
+        case parentSessionId = "parent_session_id"
+        case title = "title"
+        case model = "model"
+        case provider = "provider"
+        case reasoningEffort = "reasoning_effort"
+        case fast = "fast"
+        case closeOnDisconnect = "close_on_disconnect"
+        case hidden = "hidden"
+        case roomPlumbing = "room_plumbing"
+        case followProfileConfig = "follow_profile_config"
     }
 
     public init(from decoder: Decoder) throws {
@@ -561,14 +726,80 @@ public struct SubscriptionChangeParams: Codable, Sendable, Hashable {
         } else {
             profile = .value(try container.decode(String.self, forKey: .profile))
         }
-        if !container.contains(.subscriptionTypeId) {
-            subscriptionTypeId = .absent
-        } else if try container.decodeNil(forKey: .subscriptionTypeId) {
-            subscriptionTypeId = .null
+        if !container.contains(.cols) {
+            cols = .absent
+        } else if try container.decodeNil(forKey: .cols) {
+            cols = .null
         } else {
-            subscriptionTypeId = .value(try container.decode(String.self, forKey: .subscriptionTypeId))
+            cols = .value(try container.decode(Int.self, forKey: .cols))
         }
-        cancel = try container.decodeIfPresent(Bool.self, forKey: .cancel)
+        if !container.contains(.source) {
+            source = .absent
+        } else if try container.decodeNil(forKey: .source) {
+            source = .null
+        } else {
+            source = .value(try container.decode(String.self, forKey: .source))
+        }
+        if !container.contains(.cwd) {
+            cwd = .absent
+        } else if try container.decodeNil(forKey: .cwd) {
+            cwd = .null
+        } else {
+            cwd = .value(try container.decode(String.self, forKey: .cwd))
+        }
+        if !container.contains(.messages) {
+            messages = .absent
+        } else if try container.decodeNil(forKey: .messages) {
+            messages = .null
+        } else {
+            messages = .value(try container.decode([SeedMessage].self, forKey: .messages))
+        }
+        if !container.contains(.parentSessionId) {
+            parentSessionId = .absent
+        } else if try container.decodeNil(forKey: .parentSessionId) {
+            parentSessionId = .null
+        } else {
+            parentSessionId = .value(try container.decode(String.self, forKey: .parentSessionId))
+        }
+        if !container.contains(.title) {
+            title = .absent
+        } else if try container.decodeNil(forKey: .title) {
+            title = .null
+        } else {
+            title = .value(try container.decode(String.self, forKey: .title))
+        }
+        if !container.contains(.model) {
+            model = .absent
+        } else if try container.decodeNil(forKey: .model) {
+            model = .null
+        } else {
+            model = .value(try container.decode(String.self, forKey: .model))
+        }
+        if !container.contains(.provider) {
+            provider = .absent
+        } else if try container.decodeNil(forKey: .provider) {
+            provider = .null
+        } else {
+            provider = .value(try container.decode(String.self, forKey: .provider))
+        }
+        if !container.contains(.reasoningEffort) {
+            reasoningEffort = .absent
+        } else if try container.decodeNil(forKey: .reasoningEffort) {
+            reasoningEffort = .null
+        } else {
+            reasoningEffort = .value(try container.decode(String.self, forKey: .reasoningEffort))
+        }
+        if !container.contains(.fast) {
+            fast = .absent
+        } else if try container.decodeNil(forKey: .fast) {
+            fast = .null
+        } else {
+            fast = .value(try container.decode(Bool.self, forKey: .fast))
+        }
+        closeOnDisconnect = try container.decodeIfPresent(Bool.self, forKey: .closeOnDisconnect)
+        hidden = try container.decodeIfPresent(Bool.self, forKey: .hidden)
+        roomPlumbing = try container.decodeIfPresent(Bool.self, forKey: .roomPlumbing)
+        followProfileConfig = try container.decodeIfPresent(Bool.self, forKey: .followProfileConfig)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -578,567 +809,525 @@ public struct SubscriptionChangeParams: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .profile)
         case .value(let value): try container.encode(value, forKey: .profile)
         }
-        switch subscriptionTypeId {
+        switch cols {
         case .absent: break
-        case .null: try container.encodeNil(forKey: .subscriptionTypeId)
-        case .value(let value): try container.encode(value, forKey: .subscriptionTypeId)
+        case .null: try container.encodeNil(forKey: .cols)
+        case .value(let value): try container.encode(value, forKey: .cols)
         }
-        try container.encodeIfPresent(cancel, forKey: .cancel)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum SubscriptionContext: Codable, Sendable, Hashable {
-    case personal
-    case team
-    case unknown(String)
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "personal": self = .personal
-        case "team": self = .team
-        default: self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .personal: try container.encode("personal")
-        case .team: try container.encode("team")
-        case .unknown(let raw): try container.encode(raw)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubscriptionPreviewParams: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var subscriptionTypeId: Patch<String>
-
-    public init(profile: Patch<String> = .absent, subscriptionTypeId: Patch<String> = .absent) {
-        self.profile = profile
-        self.subscriptionTypeId = subscriptionTypeId
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case subscriptionTypeId = "subscription_type_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        if !container.contains(.subscriptionTypeId) {
-            subscriptionTypeId = .absent
-        } else if try container.decodeNil(forKey: .subscriptionTypeId) {
-            subscriptionTypeId = .null
-        } else {
-            subscriptionTypeId = .value(try container.decode(String.self, forKey: .subscriptionTypeId))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
+        switch source {
         case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
+        case .null: try container.encodeNil(forKey: .source)
+        case .value(let value): try container.encode(value, forKey: .source)
         }
-        switch subscriptionTypeId {
+        switch cwd {
         case .absent: break
-        case .null: try container.encodeNil(forKey: .subscriptionTypeId)
-        case .value(let value): try container.encode(value, forKey: .subscriptionTypeId)
+        case .null: try container.encodeNil(forKey: .cwd)
+        case .value(let value): try container.encode(value, forKey: .cwd)
         }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubscriptionPreviewResult: Codable, Sendable, Hashable {
-    public var ok: Bool
-    public var error: String?
-    public var message: String?
-    public var portalUrl: String?
-    public var retryAfter: SubscriptionPreviewResultRetryAfter?
-    public var payload: [String: JSONValue]?
-    public var actor: String?
-    public var code: String?
-    public var recovery: String?
-    public var effect: SubscriptionChangeEffect?
-    public var reason: String?
-    public var currentTierId: String?
-    public var currentTierName: String?
-    public var targetTierId: String?
-    public var targetTierName: String?
-    public var monthlyCreditsDelta: String?
-    public var amountDueNowCents: Int?
-    public var effectiveAt: String?
-
-    public init(ok: Bool, error: String? = nil, message: String? = nil, portalUrl: String? = nil, retryAfter: SubscriptionPreviewResultRetryAfter? = nil, payload: [String: JSONValue]? = nil, actor: String? = nil, code: String? = nil, recovery: String? = nil, effect: SubscriptionChangeEffect? = nil, reason: String? = nil, currentTierId: String? = nil, currentTierName: String? = nil, targetTierId: String? = nil, targetTierName: String? = nil, monthlyCreditsDelta: String? = nil, amountDueNowCents: Int? = nil, effectiveAt: String? = nil) {
-        self.ok = ok
-        self.error = error
-        self.message = message
-        self.portalUrl = portalUrl
-        self.retryAfter = retryAfter
-        self.payload = payload
-        self.actor = actor
-        self.code = code
-        self.recovery = recovery
-        self.effect = effect
-        self.reason = reason
-        self.currentTierId = currentTierId
-        self.currentTierName = currentTierName
-        self.targetTierId = targetTierId
-        self.targetTierName = targetTierName
-        self.monthlyCreditsDelta = monthlyCreditsDelta
-        self.amountDueNowCents = amountDueNowCents
-        self.effectiveAt = effectiveAt
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case ok = "ok"
-        case error = "error"
-        case message = "message"
-        case portalUrl = "portal_url"
-        case retryAfter = "retry_after"
-        case payload = "payload"
-        case actor = "actor"
-        case code = "code"
-        case recovery = "recovery"
-        case effect = "effect"
-        case reason = "reason"
-        case currentTierId = "current_tier_id"
-        case currentTierName = "current_tier_name"
-        case targetTierId = "target_tier_id"
-        case targetTierName = "target_tier_name"
-        case monthlyCreditsDelta = "monthly_credits_delta"
-        case amountDueNowCents = "amount_due_now_cents"
-        case effectiveAt = "effective_at"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        error = try container.decodeIfPresent(String.self, forKey: .error)
-        message = try container.decodeIfPresent(String.self, forKey: .message)
-        portalUrl = try container.decodeIfPresent(String.self, forKey: .portalUrl)
-        retryAfter = try container.decodeIfPresent(SubscriptionPreviewResultRetryAfter.self, forKey: .retryAfter)
-        payload = try container.decodeIfPresent([String: JSONValue].self, forKey: .payload)
-        actor = try container.decodeIfPresent(String.self, forKey: .actor)
-        code = try container.decodeIfPresent(String.self, forKey: .code)
-        recovery = try container.decodeIfPresent(String.self, forKey: .recovery)
-        effect = try container.decodeIfPresent(SubscriptionChangeEffect.self, forKey: .effect)
-        reason = try container.decodeIfPresent(String.self, forKey: .reason)
-        currentTierId = try container.decodeIfPresent(String.self, forKey: .currentTierId)
-        currentTierName = try container.decodeIfPresent(String.self, forKey: .currentTierName)
-        targetTierId = try container.decodeIfPresent(String.self, forKey: .targetTierId)
-        targetTierName = try container.decodeIfPresent(String.self, forKey: .targetTierName)
-        monthlyCreditsDelta = try container.decodeIfPresent(String.self, forKey: .monthlyCreditsDelta)
-        amountDueNowCents = try container.decodeIfPresent(Int.self, forKey: .amountDueNowCents)
-        effectiveAt = try container.decodeIfPresent(String.self, forKey: .effectiveAt)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(ok, forKey: .ok)
-        try container.encodeIfPresent(error, forKey: .error)
-        try container.encodeIfPresent(message, forKey: .message)
-        try container.encodeIfPresent(portalUrl, forKey: .portalUrl)
-        try container.encodeIfPresent(retryAfter, forKey: .retryAfter)
-        try container.encodeIfPresent(payload, forKey: .payload)
-        try container.encodeIfPresent(actor, forKey: .actor)
-        try container.encodeIfPresent(code, forKey: .code)
-        try container.encodeIfPresent(recovery, forKey: .recovery)
-        try container.encodeIfPresent(effect, forKey: .effect)
-        try container.encodeIfPresent(reason, forKey: .reason)
-        try container.encodeIfPresent(currentTierId, forKey: .currentTierId)
-        try container.encodeIfPresent(currentTierName, forKey: .currentTierName)
-        try container.encodeIfPresent(targetTierId, forKey: .targetTierId)
-        try container.encodeIfPresent(targetTierName, forKey: .targetTierName)
-        try container.encodeIfPresent(monthlyCreditsDelta, forKey: .monthlyCreditsDelta)
-        try container.encodeIfPresent(amountDueNowCents, forKey: .amountDueNowCents)
-        try container.encodeIfPresent(effectiveAt, forKey: .effectiveAt)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum SubscriptionPreviewResultRetryAfter: Codable, Sendable, Hashable {
-    case long(Int)
-    case double(Double)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(Int.self) {
-            self = .long(value)
-            return
-        }
-        if let value = try? container.decode(Double.self) {
-            self = .double(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .long(let value): try container.encode(value)
-        case .double(let value): try container.encode(value)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubscriptionStateResult: Codable, Sendable, Hashable {
-    public var ok: Bool
-    public var loggedIn: Bool
-    public var isAdmin: Bool?
-    public var canChangePlan: Bool?
-    public var orgName: String?
-    public var orgId: String?
-    public var role: String?
-    public var context: SubscriptionContext?
-    public var current: CurrentSubscription?
-    public var tiers: [SubscriptionTierOption]?
-    public var portalUrl: String?
-    public var error: String?
-    public var usage: UsageModel?
-
-    public init(ok: Bool, loggedIn: Bool, isAdmin: Bool? = nil, canChangePlan: Bool? = nil, orgName: String? = nil, orgId: String? = nil, role: String? = nil, context: SubscriptionContext? = nil, current: CurrentSubscription? = nil, tiers: [SubscriptionTierOption]? = nil, portalUrl: String? = nil, error: String? = nil, usage: UsageModel? = nil) {
-        self.ok = ok
-        self.loggedIn = loggedIn
-        self.isAdmin = isAdmin
-        self.canChangePlan = canChangePlan
-        self.orgName = orgName
-        self.orgId = orgId
-        self.role = role
-        self.context = context
-        self.current = current
-        self.tiers = tiers
-        self.portalUrl = portalUrl
-        self.error = error
-        self.usage = usage
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case ok = "ok"
-        case loggedIn = "logged_in"
-        case isAdmin = "is_admin"
-        case canChangePlan = "can_change_plan"
-        case orgName = "org_name"
-        case orgId = "org_id"
-        case role = "role"
-        case context = "context"
-        case current = "current"
-        case tiers = "tiers"
-        case portalUrl = "portal_url"
-        case error = "error"
-        case usage = "usage"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        loggedIn = try container.decode(Bool.self, forKey: .loggedIn)
-        isAdmin = try container.decodeIfPresent(Bool.self, forKey: .isAdmin)
-        canChangePlan = try container.decodeIfPresent(Bool.self, forKey: .canChangePlan)
-        orgName = try container.decodeIfPresent(String.self, forKey: .orgName)
-        orgId = try container.decodeIfPresent(String.self, forKey: .orgId)
-        role = try container.decodeIfPresent(String.self, forKey: .role)
-        context = try container.decodeIfPresent(SubscriptionContext.self, forKey: .context)
-        current = try container.decodeIfPresent(CurrentSubscription.self, forKey: .current)
-        tiers = try container.decodeIfPresent([SubscriptionTierOption].self, forKey: .tiers)
-        portalUrl = try container.decodeIfPresent(String.self, forKey: .portalUrl)
-        error = try container.decodeIfPresent(String.self, forKey: .error)
-        usage = try container.decodeIfPresent(UsageModel.self, forKey: .usage)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(loggedIn, forKey: .loggedIn)
-        try container.encodeIfPresent(isAdmin, forKey: .isAdmin)
-        try container.encodeIfPresent(canChangePlan, forKey: .canChangePlan)
-        try container.encodeIfPresent(orgName, forKey: .orgName)
-        try container.encodeIfPresent(orgId, forKey: .orgId)
-        try container.encodeIfPresent(role, forKey: .role)
-        try container.encodeIfPresent(context, forKey: .context)
-        try container.encodeIfPresent(current, forKey: .current)
-        try container.encodeIfPresent(tiers, forKey: .tiers)
-        try container.encodeIfPresent(portalUrl, forKey: .portalUrl)
-        try container.encodeIfPresent(error, forKey: .error)
-        try container.encodeIfPresent(usage, forKey: .usage)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubscriptionTierOption: Codable, Sendable, Hashable {
-    public var tierId: String
-    public var name: String
-    public var tierOrder: Int
-    public var dollarsPerMonthDisplay: String
-    public var monthlyCredits: String?
-    public var isCurrent: Bool
-    public var isEnabled: Bool
-
-    public init(tierId: String, name: String, tierOrder: Int, dollarsPerMonthDisplay: String, monthlyCredits: String? = nil, isCurrent: Bool, isEnabled: Bool) {
-        self.tierId = tierId
-        self.name = name
-        self.tierOrder = tierOrder
-        self.dollarsPerMonthDisplay = dollarsPerMonthDisplay
-        self.monthlyCredits = monthlyCredits
-        self.isCurrent = isCurrent
-        self.isEnabled = isEnabled
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case tierId = "tier_id"
-        case name = "name"
-        case tierOrder = "tier_order"
-        case dollarsPerMonthDisplay = "dollars_per_month_display"
-        case monthlyCredits = "monthly_credits"
-        case isCurrent = "is_current"
-        case isEnabled = "is_enabled"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        tierId = try container.decode(String.self, forKey: .tierId)
-        name = try container.decode(String.self, forKey: .name)
-        tierOrder = try container.decode(Int.self, forKey: .tierOrder)
-        dollarsPerMonthDisplay = try container.decode(String.self, forKey: .dollarsPerMonthDisplay)
-        monthlyCredits = try container.decodeIfPresent(String.self, forKey: .monthlyCredits)
-        isCurrent = try container.decode(Bool.self, forKey: .isCurrent)
-        isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(tierId, forKey: .tierId)
-        try container.encode(name, forKey: .name)
-        try container.encode(tierOrder, forKey: .tierOrder)
-        try container.encode(dollarsPerMonthDisplay, forKey: .dollarsPerMonthDisplay)
-        try container.encodeIfPresent(monthlyCredits, forKey: .monthlyCredits)
-        try container.encode(isCurrent, forKey: .isCurrent)
-        try container.encode(isEnabled, forKey: .isEnabled)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SubscriptionUpgradeParams: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var subscriptionTypeId: Patch<String>
-    public var idempotencyKey: Patch<String>
-
-    public init(profile: Patch<String> = .absent, subscriptionTypeId: Patch<String> = .absent, idempotencyKey: Patch<String> = .absent) {
-        self.profile = profile
-        self.subscriptionTypeId = subscriptionTypeId
-        self.idempotencyKey = idempotencyKey
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case subscriptionTypeId = "subscription_type_id"
-        case idempotencyKey = "idempotency_key"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        if !container.contains(.subscriptionTypeId) {
-            subscriptionTypeId = .absent
-        } else if try container.decodeNil(forKey: .subscriptionTypeId) {
-            subscriptionTypeId = .null
-        } else {
-            subscriptionTypeId = .value(try container.decode(String.self, forKey: .subscriptionTypeId))
-        }
-        if !container.contains(.idempotencyKey) {
-            idempotencyKey = .absent
-        } else if try container.decodeNil(forKey: .idempotencyKey) {
-            idempotencyKey = .null
-        } else {
-            idempotencyKey = .value(try container.decode(String.self, forKey: .idempotencyKey))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
+        switch messages {
         case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
+        case .null: try container.encodeNil(forKey: .messages)
+        case .value(let value): try container.encode(value, forKey: .messages)
         }
-        switch subscriptionTypeId {
+        switch parentSessionId {
         case .absent: break
-        case .null: try container.encodeNil(forKey: .subscriptionTypeId)
-        case .value(let value): try container.encode(value, forKey: .subscriptionTypeId)
+        case .null: try container.encodeNil(forKey: .parentSessionId)
+        case .value(let value): try container.encode(value, forKey: .parentSessionId)
         }
-        switch idempotencyKey {
+        switch title {
         case .absent: break
-        case .null: try container.encodeNil(forKey: .idempotencyKey)
-        case .value(let value): try container.encode(value, forKey: .idempotencyKey)
+        case .null: try container.encodeNil(forKey: .title)
+        case .value(let value): try container.encode(value, forKey: .title)
         }
+        switch model {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .model)
+        case .value(let value): try container.encode(value, forKey: .model)
+        }
+        switch provider {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .provider)
+        case .value(let value): try container.encode(value, forKey: .provider)
+        }
+        switch reasoningEffort {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .reasoningEffort)
+        case .value(let value): try container.encode(value, forKey: .reasoningEffort)
+        }
+        switch fast {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .fast)
+        case .value(let value): try container.encode(value, forKey: .fast)
+        }
+        try container.encodeIfPresent(closeOnDisconnect, forKey: .closeOnDisconnect)
+        try container.encodeIfPresent(hidden, forKey: .hidden)
+        try container.encodeIfPresent(roomPlumbing, forKey: .roomPlumbing)
+        try container.encodeIfPresent(followProfileConfig, forKey: .followProfileConfig)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SubscriptionUpgradeResult: Codable, Sendable, Hashable {
-    public var ok: Bool
-    public var error: String?
-    public var message: String?
-    public var portalUrl: String?
-    public var retryAfter: SubscriptionUpgradeResultRetryAfter?
-    public var payload: [String: JSONValue]?
-    public var actor: String?
-    public var code: String?
-    public var recovery: String?
-    public var status: String?
-    public var targetTierName: String?
-    public var recoveryUrl: String?
-    public var reason: String?
-    public var idempotencyKey: String?
-
-    public init(ok: Bool, error: String? = nil, message: String? = nil, portalUrl: String? = nil, retryAfter: SubscriptionUpgradeResultRetryAfter? = nil, payload: [String: JSONValue]? = nil, actor: String? = nil, code: String? = nil, recovery: String? = nil, status: String? = nil, targetTierName: String? = nil, recoveryUrl: String? = nil, reason: String? = nil, idempotencyKey: String? = nil) {
-        self.ok = ok
-        self.error = error
-        self.message = message
-        self.portalUrl = portalUrl
-        self.retryAfter = retryAfter
-        self.payload = payload
-        self.actor = actor
-        self.code = code
-        self.recovery = recovery
-        self.status = status
-        self.targetTierName = targetTierName
-        self.recoveryUrl = recoveryUrl
-        self.reason = reason
-        self.idempotencyKey = idempotencyKey
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case ok = "ok"
-        case error = "error"
-        case message = "message"
-        case portalUrl = "portal_url"
-        case retryAfter = "retry_after"
-        case payload = "payload"
-        case actor = "actor"
-        case code = "code"
-        case recovery = "recovery"
-        case status = "status"
-        case targetTierName = "target_tier_name"
-        case recoveryUrl = "recovery_url"
-        case reason = "reason"
-        case idempotencyKey = "idempotency_key"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        error = try container.decodeIfPresent(String.self, forKey: .error)
-        message = try container.decodeIfPresent(String.self, forKey: .message)
-        portalUrl = try container.decodeIfPresent(String.self, forKey: .portalUrl)
-        retryAfter = try container.decodeIfPresent(SubscriptionUpgradeResultRetryAfter.self, forKey: .retryAfter)
-        payload = try container.decodeIfPresent([String: JSONValue].self, forKey: .payload)
-        actor = try container.decodeIfPresent(String.self, forKey: .actor)
-        code = try container.decodeIfPresent(String.self, forKey: .code)
-        recovery = try container.decodeIfPresent(String.self, forKey: .recovery)
-        status = try container.decodeIfPresent(String.self, forKey: .status)
-        targetTierName = try container.decodeIfPresent(String.self, forKey: .targetTierName)
-        recoveryUrl = try container.decodeIfPresent(String.self, forKey: .recoveryUrl)
-        reason = try container.decodeIfPresent(String.self, forKey: .reason)
-        idempotencyKey = try container.decodeIfPresent(String.self, forKey: .idempotencyKey)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(ok, forKey: .ok)
-        try container.encodeIfPresent(error, forKey: .error)
-        try container.encodeIfPresent(message, forKey: .message)
-        try container.encodeIfPresent(portalUrl, forKey: .portalUrl)
-        try container.encodeIfPresent(retryAfter, forKey: .retryAfter)
-        try container.encodeIfPresent(payload, forKey: .payload)
-        try container.encodeIfPresent(actor, forKey: .actor)
-        try container.encodeIfPresent(code, forKey: .code)
-        try container.encodeIfPresent(recovery, forKey: .recovery)
-        try container.encodeIfPresent(status, forKey: .status)
-        try container.encodeIfPresent(targetTierName, forKey: .targetTierName)
-        try container.encodeIfPresent(recoveryUrl, forKey: .recoveryUrl)
-        try container.encodeIfPresent(reason, forKey: .reason)
-        try container.encodeIfPresent(idempotencyKey, forKey: .idempotencyKey)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum SubscriptionUpgradeResultRetryAfter: Codable, Sendable, Hashable {
-    case long(Int)
-    case double(Double)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(Int.self) {
-            self = .long(value)
-            return
-        }
-        if let value = try? container.decode(Double.self) {
-            self = .double(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .long(let value): try container.encode(value)
-        case .double(let value): try container.encode(value)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SudoRequestParams: Codable, Sendable, Hashable {
+public struct SessionCreateResult: Codable, Sendable, Hashable {
     public var sessionId: String
-    public var command: String?
+    public var storedSessionId: String
+    public var messageCount: Int
+    public var messages: [TranscriptMessage]
+    public var info: SessionLiveInfo
 
-    public init(sessionId: String, command: String? = nil) {
+    public init(sessionId: String, storedSessionId: String, messageCount: Int, messages: [TranscriptMessage], info: SessionLiveInfo) {
         self.sessionId = sessionId
-        self.command = command
+        self.storedSessionId = storedSessionId
+        self.messageCount = messageCount
+        self.messages = messages
+        self.info = info
     }
 
     private enum CodingKeys: String, CodingKey {
         case sessionId = "session_id"
-        case command = "command"
+        case storedSessionId = "stored_session_id"
+        case messageCount = "message_count"
+        case messages = "messages"
+        case info = "info"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         sessionId = try container.decode(String.self, forKey: .sessionId)
-        command = try container.decodeIfPresent(String.self, forKey: .command)
+        storedSessionId = try container.decode(String.self, forKey: .storedSessionId)
+        messageCount = try container.decode(Int.self, forKey: .messageCount)
+        messages = try container.decode([TranscriptMessage].self, forKey: .messages)
+        info = try container.decode(SessionLiveInfo.self, forKey: .info)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(sessionId, forKey: .sessionId)
-        try container.encodeIfPresent(command, forKey: .command)
+        try container.encode(storedSessionId, forKey: .storedSessionId)
+        try container.encode(messageCount, forKey: .messageCount)
+        try container.encode(messages, forKey: .messages)
+        try container.encode(info, forKey: .info)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SystemBatteryParams: Codable, Sendable, Hashable {
+public struct SessionCwdSetParams: Codable, Sendable, Hashable {
+    public var sessionId: String
+    public var profile: Patch<String>
+    public var cwd: String
+
+    public init(sessionId: String, profile: Patch<String> = .absent, cwd: String) {
+        self.sessionId = sessionId
+        self.profile = profile
+        self.cwd = cwd
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case profile = "profile"
+        case cwd = "cwd"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        cwd = try container.decode(String.self, forKey: .cwd)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sessionId, forKey: .sessionId)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encode(cwd, forKey: .cwd)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionCwdSetResult: Codable, Sendable, Hashable {
+    public var model: String?
+    public var provider: String?
+    public var reasoningEffort: String?
+    public var reasoningEffortWire: String?
+    public var serviceTier: String?
+    public var fast: Bool?
+    public var yolo: Bool?
+    public var approvalMode: String?
+    public var tools: [String: [String]]?
+    public var skills: [String: [String]]?
+    public var cwd: String?
+    public var branch: String?
+    public var project: ProjectRef?
+    public var terminalBackend: String?
+    public var personality: String?
+    public var running: Bool?
+    public var turnStartedAt: Double?
+    public var title: String?
+    public var storedSessionId: String?
+    public var desktopContract: SessionCwdSetResultDesktopContract?
+    public var version: String?
+    public var releaseDate: String?
+    public var updateBehind: JSONValue?
+    public var updateCommand: String?
+    public var usage: Usage?
+    public var profileName: String?
+    public var mcpServers: [McpServerStatus]?
+    public var systemPrompt: String?
+    public var credentialWarning: String?
+    public var lazy: Bool?
+    public var additionalProperties: [String: JSONValue]
+
+    public init(model: String? = nil, provider: String? = nil, reasoningEffort: String? = nil, reasoningEffortWire: String? = nil, serviceTier: String? = nil, fast: Bool? = nil, yolo: Bool? = nil, approvalMode: String? = nil, tools: [String: [String]]? = nil, skills: [String: [String]]? = nil, cwd: String? = nil, branch: String? = nil, project: ProjectRef? = nil, terminalBackend: String? = nil, personality: String? = nil, running: Bool? = nil, turnStartedAt: Double? = nil, title: String? = nil, storedSessionId: String? = nil, desktopContract: SessionCwdSetResultDesktopContract? = nil, version: String? = nil, releaseDate: String? = nil, updateBehind: JSONValue? = nil, updateCommand: String? = nil, usage: Usage? = nil, profileName: String? = nil, mcpServers: [McpServerStatus]? = nil, systemPrompt: String? = nil, credentialWarning: String? = nil, lazy: Bool? = nil, additionalProperties: [String: JSONValue] = [:]) {
+        self.model = model
+        self.provider = provider
+        self.reasoningEffort = reasoningEffort
+        self.reasoningEffortWire = reasoningEffortWire
+        self.serviceTier = serviceTier
+        self.fast = fast
+        self.yolo = yolo
+        self.approvalMode = approvalMode
+        self.tools = tools
+        self.skills = skills
+        self.cwd = cwd
+        self.branch = branch
+        self.project = project
+        self.terminalBackend = terminalBackend
+        self.personality = personality
+        self.running = running
+        self.turnStartedAt = turnStartedAt
+        self.title = title
+        self.storedSessionId = storedSessionId
+        self.desktopContract = desktopContract
+        self.version = version
+        self.releaseDate = releaseDate
+        self.updateBehind = updateBehind
+        self.updateCommand = updateCommand
+        self.usage = usage
+        self.profileName = profileName
+        self.mcpServers = mcpServers
+        self.systemPrompt = systemPrompt
+        self.credentialWarning = credentialWarning
+        self.lazy = lazy
+        self.additionalProperties = additionalProperties
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case model = "model"
+        case provider = "provider"
+        case reasoningEffort = "reasoning_effort"
+        case reasoningEffortWire = "reasoning_effort_wire"
+        case serviceTier = "service_tier"
+        case fast = "fast"
+        case yolo = "yolo"
+        case approvalMode = "approval_mode"
+        case tools = "tools"
+        case skills = "skills"
+        case cwd = "cwd"
+        case branch = "branch"
+        case project = "project"
+        case terminalBackend = "terminal_backend"
+        case personality = "personality"
+        case running = "running"
+        case turnStartedAt = "turn_started_at"
+        case title = "title"
+        case storedSessionId = "stored_session_id"
+        case desktopContract = "desktop_contract"
+        case version = "version"
+        case releaseDate = "release_date"
+        case updateBehind = "update_behind"
+        case updateCommand = "update_command"
+        case usage = "usage"
+        case profileName = "profile_name"
+        case mcpServers = "mcp_servers"
+        case systemPrompt = "system_prompt"
+        case credentialWarning = "credential_warning"
+        case lazy = "lazy"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        model = try container.decodeIfPresent(String.self, forKey: .model)
+        provider = try container.decodeIfPresent(String.self, forKey: .provider)
+        reasoningEffort = try container.decodeIfPresent(String.self, forKey: .reasoningEffort)
+        reasoningEffortWire = try container.decodeIfPresent(String.self, forKey: .reasoningEffortWire)
+        serviceTier = try container.decodeIfPresent(String.self, forKey: .serviceTier)
+        fast = try container.decodeIfPresent(Bool.self, forKey: .fast)
+        yolo = try container.decodeIfPresent(Bool.self, forKey: .yolo)
+        approvalMode = try container.decodeIfPresent(String.self, forKey: .approvalMode)
+        tools = try container.decodeIfPresent([String: [String]].self, forKey: .tools)
+        skills = try container.decodeIfPresent([String: [String]].self, forKey: .skills)
+        cwd = try container.decodeIfPresent(String.self, forKey: .cwd)
+        branch = try container.decodeIfPresent(String.self, forKey: .branch)
+        project = try container.decodeIfPresent(ProjectRef.self, forKey: .project)
+        terminalBackend = try container.decodeIfPresent(String.self, forKey: .terminalBackend)
+        personality = try container.decodeIfPresent(String.self, forKey: .personality)
+        running = try container.decodeIfPresent(Bool.self, forKey: .running)
+        turnStartedAt = try container.decodeIfPresent(Double.self, forKey: .turnStartedAt)
+        title = try container.decodeIfPresent(String.self, forKey: .title)
+        storedSessionId = try container.decodeIfPresent(String.self, forKey: .storedSessionId)
+        desktopContract = try container.decodeIfPresent(SessionCwdSetResultDesktopContract.self, forKey: .desktopContract)
+        version = try container.decodeIfPresent(String.self, forKey: .version)
+        releaseDate = try container.decodeIfPresent(String.self, forKey: .releaseDate)
+        updateBehind = try container.decodeIfPresent(JSONValue.self, forKey: .updateBehind)
+        updateCommand = try container.decodeIfPresent(String.self, forKey: .updateCommand)
+        usage = try container.decodeIfPresent(Usage.self, forKey: .usage)
+        profileName = try container.decodeIfPresent(String.self, forKey: .profileName)
+        mcpServers = try container.decodeIfPresent([McpServerStatus].self, forKey: .mcpServers)
+        systemPrompt = try container.decodeIfPresent(String.self, forKey: .systemPrompt)
+        credentialWarning = try container.decodeIfPresent(String.self, forKey: .credentialWarning)
+        lazy = try container.decodeIfPresent(Bool.self, forKey: .lazy)
+        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = ["model", "provider", "reasoning_effort", "reasoning_effort_wire", "service_tier", "fast", "yolo", "approval_mode", "tools", "skills", "cwd", "branch", "project", "terminal_backend", "personality", "running", "turn_started_at", "title", "stored_session_id", "desktop_contract", "version", "release_date", "update_behind", "update_command", "usage", "profile_name", "mcp_servers", "system_prompt", "credential_warning", "lazy"]
+        var extra: [String: JSONValue] = [:]
+        for key in dynamic.allKeys where !known.contains(key.stringValue) {
+            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
+        }
+        additionalProperties = extra
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(model, forKey: .model)
+        try container.encodeIfPresent(provider, forKey: .provider)
+        try container.encodeIfPresent(reasoningEffort, forKey: .reasoningEffort)
+        try container.encodeIfPresent(reasoningEffortWire, forKey: .reasoningEffortWire)
+        try container.encodeIfPresent(serviceTier, forKey: .serviceTier)
+        try container.encodeIfPresent(fast, forKey: .fast)
+        try container.encodeIfPresent(yolo, forKey: .yolo)
+        try container.encodeIfPresent(approvalMode, forKey: .approvalMode)
+        try container.encodeIfPresent(tools, forKey: .tools)
+        try container.encodeIfPresent(skills, forKey: .skills)
+        try container.encodeIfPresent(cwd, forKey: .cwd)
+        try container.encodeIfPresent(branch, forKey: .branch)
+        try container.encodeIfPresent(project, forKey: .project)
+        try container.encodeIfPresent(terminalBackend, forKey: .terminalBackend)
+        try container.encodeIfPresent(personality, forKey: .personality)
+        try container.encodeIfPresent(running, forKey: .running)
+        try container.encodeIfPresent(turnStartedAt, forKey: .turnStartedAt)
+        try container.encodeIfPresent(title, forKey: .title)
+        try container.encodeIfPresent(storedSessionId, forKey: .storedSessionId)
+        try container.encodeIfPresent(desktopContract, forKey: .desktopContract)
+        try container.encodeIfPresent(version, forKey: .version)
+        try container.encodeIfPresent(releaseDate, forKey: .releaseDate)
+        try container.encodeIfPresent(updateBehind, forKey: .updateBehind)
+        try container.encodeIfPresent(updateCommand, forKey: .updateCommand)
+        try container.encodeIfPresent(usage, forKey: .usage)
+        try container.encodeIfPresent(profileName, forKey: .profileName)
+        try container.encodeIfPresent(mcpServers, forKey: .mcpServers)
+        try container.encodeIfPresent(systemPrompt, forKey: .systemPrompt)
+        try container.encodeIfPresent(credentialWarning, forKey: .credentialWarning)
+        try container.encodeIfPresent(lazy, forKey: .lazy)
+        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = ["model", "provider", "reasoning_effort", "reasoning_effort_wire", "service_tier", "fast", "yolo", "approval_mode", "tools", "skills", "cwd", "branch", "project", "terminal_backend", "personality", "running", "turn_started_at", "title", "stored_session_id", "desktop_contract", "version", "release_date", "update_behind", "update_command", "usage", "profile_name", "mcp_servers", "system_prompt", "credential_warning", "lazy"]
+        for (key, value) in additionalProperties {
+            guard !known.contains(key) else {
+                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
+            }
+            try dynamic.encode(value, forKey: DynamicCodingKey(key))
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public enum SessionCwdSetResultDesktopContract: Codable, Sendable, Hashable {
+    case long(Int)
+    case string(String)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(Int.self) {
+            self = .long(value)
+            return
+        }
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .long(let value): try container.encode(value)
+        case .string(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionDeleteParams: Codable, Sendable, Hashable {
+    public var sessionId: String
+    public var profile: Patch<String>
+
+    public init(sessionId: String, profile: Patch<String> = .absent) {
+        self.sessionId = sessionId
+        self.profile = profile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sessionId, forKey: .sessionId)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionDeleteResult: Codable, Sendable, Hashable {
+    public var deleted: String
+
+    public init(deleted: String) {
+        self.deleted = deleted
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case deleted = "deleted"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        deleted = try container.decode(String.self, forKey: .deleted)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(deleted, forKey: .deleted)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionEventsSinceParams: Codable, Sendable, Hashable {
+    public var sessionId: String
+    public var profile: Patch<String>
+    public var lastSeen: Patch<Int>
+
+    public init(sessionId: String, profile: Patch<String> = .absent, lastSeen: Patch<Int> = .absent) {
+        self.sessionId = sessionId
+        self.profile = profile
+        self.lastSeen = lastSeen
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case profile = "profile"
+        case lastSeen = "last_seen"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        if !container.contains(.lastSeen) {
+            lastSeen = .absent
+        } else if try container.decodeNil(forKey: .lastSeen) {
+            lastSeen = .null
+        } else {
+            lastSeen = .value(try container.decode(Int.self, forKey: .lastSeen))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sessionId, forKey: .sessionId)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        switch lastSeen {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .lastSeen)
+        case .value(let value): try container.encode(value, forKey: .lastSeen)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionEventsSinceResult: Codable, Sendable, Hashable {
+    public var events: [[String: JSONValue]]
+    public var latestSeq: Int
+    public var truncated: Bool
+    public var count: Int
+    public var epoch: String
+    public var openRequests: [OpenRequestEntry]
+
+    public init(events: [[String: JSONValue]], latestSeq: Int, truncated: Bool, count: Int, epoch: String, openRequests: [OpenRequestEntry]) {
+        self.events = events
+        self.latestSeq = latestSeq
+        self.truncated = truncated
+        self.count = count
+        self.epoch = epoch
+        self.openRequests = openRequests
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case events = "events"
+        case latestSeq = "latest_seq"
+        case truncated = "truncated"
+        case count = "count"
+        case epoch = "epoch"
+        case openRequests = "open_requests"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        events = try container.decode([[String: JSONValue]].self, forKey: .events)
+        latestSeq = try container.decode(Int.self, forKey: .latestSeq)
+        truncated = try container.decode(Bool.self, forKey: .truncated)
+        count = try container.decode(Int.self, forKey: .count)
+        epoch = try container.decode(String.self, forKey: .epoch)
+        openRequests = try container.decode([OpenRequestEntry].self, forKey: .openRequests)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(events, forKey: .events)
+        try container.encode(latestSeq, forKey: .latestSeq)
+        try container.encode(truncated, forKey: .truncated)
+        try container.encode(count, forKey: .count)
+        try container.encode(epoch, forKey: .epoch)
+        try container.encode(openRequests, forKey: .openRequests)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionEventsStatsParams: Codable, Sendable, Hashable {
     public var profile: Patch<String>
 
     public init(profile: Patch<String> = .absent) {
@@ -1171,133 +1360,301 @@ public struct SystemBatteryParams: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct SystemBatteryResult: Codable, Sendable, Hashable {
-    public var available: Bool
-    public var percent: Int?
-    public var plugged: Bool?
-    public var category: BatteryCategory?
+public struct SessionEventsStatsResult: Codable, Sendable, Hashable {
+    public var sessions: Int
+    public var events: Int
+    public var bytes: Int
+    public var maxPerSession: Int
+    public var maxBytesPerSession: Int
+    public var maxBytesProcess: Int
 
-    public init(available: Bool, percent: Int? = nil, plugged: Bool? = nil, category: BatteryCategory? = nil) {
-        self.available = available
-        self.percent = percent
-        self.plugged = plugged
-        self.category = category
+    public init(sessions: Int, events: Int, bytes: Int, maxPerSession: Int, maxBytesPerSession: Int, maxBytesProcess: Int) {
+        self.sessions = sessions
+        self.events = events
+        self.bytes = bytes
+        self.maxPerSession = maxPerSession
+        self.maxBytesPerSession = maxBytesPerSession
+        self.maxBytesProcess = maxBytesProcess
     }
 
     private enum CodingKeys: String, CodingKey {
-        case available = "available"
-        case percent = "percent"
-        case plugged = "plugged"
-        case category = "category"
+        case sessions = "sessions"
+        case events = "events"
+        case bytes = "bytes"
+        case maxPerSession = "max_per_session"
+        case maxBytesPerSession = "max_bytes_per_session"
+        case maxBytesProcess = "max_bytes_process"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        available = try container.decode(Bool.self, forKey: .available)
-        percent = try container.decodeIfPresent(Int.self, forKey: .percent)
-        plugged = try container.decodeIfPresent(Bool.self, forKey: .plugged)
-        category = try container.decodeIfPresent(BatteryCategory.self, forKey: .category)
+        sessions = try container.decode(Int.self, forKey: .sessions)
+        events = try container.decode(Int.self, forKey: .events)
+        bytes = try container.decode(Int.self, forKey: .bytes)
+        maxPerSession = try container.decode(Int.self, forKey: .maxPerSession)
+        maxBytesPerSession = try container.decode(Int.self, forKey: .maxBytesPerSession)
+        maxBytesProcess = try container.decode(Int.self, forKey: .maxBytesProcess)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(available, forKey: .available)
-        try container.encodeIfPresent(percent, forKey: .percent)
-        try container.encodeIfPresent(plugged, forKey: .plugged)
-        try container.encodeIfPresent(category, forKey: .category)
+        try container.encode(sessions, forKey: .sessions)
+        try container.encode(events, forKey: .events)
+        try container.encode(bytes, forKey: .bytes)
+        try container.encode(maxPerSession, forKey: .maxPerSession)
+        try container.encode(maxBytesPerSession, forKey: .maxBytesPerSession)
+        try container.encode(maxBytesProcess, forKey: .maxBytesProcess)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct TaskIdResult: Codable, Sendable, Hashable {
-    public var taskId: String
+public struct SessionForeignIdParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var id: Patch<String>
 
-    public init(taskId: String) {
-        self.taskId = taskId
+    public init(profile: Patch<String> = .absent, id: Patch<String> = .absent) {
+        self.profile = profile
+        self.id = id
     }
 
     private enum CodingKeys: String, CodingKey {
-        case taskId = "task_id"
+        case profile = "profile"
+        case id = "id"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        taskId = try container.decode(String.self, forKey: .taskId)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        if !container.contains(.id) {
+            id = .absent
+        } else if try container.decodeNil(forKey: .id) {
+            id = .null
+        } else {
+            id = .value(try container.decode(String.self, forKey: .id))
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(taskId, forKey: .taskId)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        switch id {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .id)
+        case .value(let value): try container.encode(value, forKey: .id)
+        }
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct TerminalClosePayload: Codable, Sendable, Hashable {
-    public var processId: String
+public struct SessionForeignImportResult: Codable, Sendable, Hashable {
+    public var sessionId: String
+    public var alreadyImported: Bool?
 
-    public init(processId: String) {
-        self.processId = processId
+    public init(sessionId: String, alreadyImported: Bool? = nil) {
+        self.sessionId = sessionId
+        self.alreadyImported = alreadyImported
     }
 
     private enum CodingKeys: String, CodingKey {
-        case processId = "process_id"
+        case sessionId = "session_id"
+        case alreadyImported = "already_imported"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        processId = try container.decode(String.self, forKey: .processId)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        alreadyImported = try container.decodeIfPresent(Bool.self, forKey: .alreadyImported)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(processId, forKey: .processId)
+        try container.encode(sessionId, forKey: .sessionId)
+        try container.encodeIfPresent(alreadyImported, forKey: .alreadyImported)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct TerminalOutputPayload: Codable, Sendable, Hashable {
-    public var processId: String
-    public var chunk: String
+public struct SessionForeignListParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var source: Patch<ForeignSource>
+    public var offset: Patch<Int>
+    public var limit: Patch<Int>
 
-    public init(processId: String, chunk: String) {
-        self.processId = processId
-        self.chunk = chunk
+    public init(profile: Patch<String> = .absent, source: Patch<ForeignSource> = .absent, offset: Patch<Int> = .absent, limit: Patch<Int> = .absent) {
+        self.profile = profile
+        self.source = source
+        self.offset = offset
+        self.limit = limit
     }
 
     private enum CodingKeys: String, CodingKey {
-        case processId = "process_id"
-        case chunk = "chunk"
+        case profile = "profile"
+        case source = "source"
+        case offset = "offset"
+        case limit = "limit"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        processId = try container.decode(String.self, forKey: .processId)
-        chunk = try container.decode(String.self, forKey: .chunk)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        if !container.contains(.source) {
+            source = .absent
+        } else if try container.decodeNil(forKey: .source) {
+            source = .null
+        } else {
+            source = .value(try container.decode(ForeignSource.self, forKey: .source))
+        }
+        if !container.contains(.offset) {
+            offset = .absent
+        } else if try container.decodeNil(forKey: .offset) {
+            offset = .null
+        } else {
+            offset = .value(try container.decode(Int.self, forKey: .offset))
+        }
+        if !container.contains(.limit) {
+            limit = .absent
+        } else if try container.decodeNil(forKey: .limit) {
+            limit = .null
+        } else {
+            limit = .value(try container.decode(Int.self, forKey: .limit))
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(processId, forKey: .processId)
-        try container.encode(chunk, forKey: .chunk)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        switch source {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .source)
+        case .value(let value): try container.encode(value, forKey: .source)
+        }
+        switch offset {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .offset)
+        case .value(let value): try container.encode(value, forKey: .offset)
+        }
+        switch limit {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .limit)
+        case .value(let value): try container.encode(value, forKey: .limit)
+        }
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct TerminalResizeParams: Codable, Sendable, Hashable {
+public struct SessionForeignListResult: Codable, Sendable, Hashable {
+    public var sessions: [ForeignSessionRow]?
+    public var nextOffset: Int?
+    public var host: String
+    public var unreadable: Int?
+
+    public init(sessions: [ForeignSessionRow]? = nil, nextOffset: Int? = nil, host: String, unreadable: Int? = nil) {
+        self.sessions = sessions
+        self.nextOffset = nextOffset
+        self.host = host
+        self.unreadable = unreadable
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessions = "sessions"
+        case nextOffset = "next_offset"
+        case host = "host"
+        case unreadable = "unreadable"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessions = try container.decodeIfPresent([ForeignSessionRow].self, forKey: .sessions)
+        nextOffset = try container.decodeIfPresent(Int.self, forKey: .nextOffset)
+        host = try container.decode(String.self, forKey: .host)
+        unreadable = try container.decodeIfPresent(Int.self, forKey: .unreadable)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(sessions, forKey: .sessions)
+        try container.encodeIfPresent(nextOffset, forKey: .nextOffset)
+        try container.encode(host, forKey: .host)
+        try container.encodeIfPresent(unreadable, forKey: .unreadable)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionForeignPreviewResult: Codable, Sendable, Hashable {
+    public var messages: [ForeignTurn]?
+    public var total: Int?
+    public var truncated: Bool?
+    public var alreadyImported: String?
+    public var cwd: String?
+
+    public init(messages: [ForeignTurn]? = nil, total: Int? = nil, truncated: Bool? = nil, alreadyImported: String? = nil, cwd: String? = nil) {
+        self.messages = messages
+        self.total = total
+        self.truncated = truncated
+        self.alreadyImported = alreadyImported
+        self.cwd = cwd
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case messages = "messages"
+        case total = "total"
+        case truncated = "truncated"
+        case alreadyImported = "already_imported"
+        case cwd = "cwd"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        messages = try container.decodeIfPresent([ForeignTurn].self, forKey: .messages)
+        total = try container.decodeIfPresent(Int.self, forKey: .total)
+        truncated = try container.decodeIfPresent(Bool.self, forKey: .truncated)
+        alreadyImported = try container.decodeIfPresent(String.self, forKey: .alreadyImported)
+        cwd = try container.decodeIfPresent(String.self, forKey: .cwd)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(messages, forKey: .messages)
+        try container.encodeIfPresent(total, forKey: .total)
+        try container.encodeIfPresent(truncated, forKey: .truncated)
+        try container.encodeIfPresent(alreadyImported, forKey: .alreadyImported)
+        try container.encodeIfPresent(cwd, forKey: .cwd)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionHistoryParams: Codable, Sendable, Hashable {
     public var sessionId: String
     public var profile: Patch<String>
-    public var cols: Patch<Int>
 
-    public init(sessionId: String, profile: Patch<String> = .absent, cols: Patch<Int> = .absent) {
+    public init(sessionId: String, profile: Patch<String> = .absent) {
         self.sessionId = sessionId
         self.profile = profile
-        self.cols = cols
     }
 
     private enum CodingKeys: String, CodingKey {
         case sessionId = "session_id"
         case profile = "profile"
-        case cols = "cols"
     }
 
     public init(from decoder: Decoder) throws {
@@ -1310,12 +1667,81 @@ public struct TerminalResizeParams: Codable, Sendable, Hashable {
         } else {
             profile = .value(try container.decode(String.self, forKey: .profile))
         }
-        if !container.contains(.cols) {
-            cols = .absent
-        } else if try container.decodeNil(forKey: .cols) {
-            cols = .null
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sessionId, forKey: .sessionId)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionHistoryResult: Codable, Sendable, Hashable {
+    public var count: Int
+    public var messages: [TranscriptMessage]
+
+    public init(count: Int, messages: [TranscriptMessage]) {
+        self.count = count
+        self.messages = messages
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case count = "count"
+        case messages = "messages"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        count = try container.decode(Int.self, forKey: .count)
+        messages = try container.decode([TranscriptMessage].self, forKey: .messages)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(count, forKey: .count)
+        try container.encode(messages, forKey: .messages)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionInterruptParams: Codable, Sendable, Hashable {
+    public var sessionId: String
+    public var profile: Patch<String>
+    public var expectedHostedTaskId: Patch<String>
+
+    public init(sessionId: String, profile: Patch<String> = .absent, expectedHostedTaskId: Patch<String> = .absent) {
+        self.sessionId = sessionId
+        self.profile = profile
+        self.expectedHostedTaskId = expectedHostedTaskId
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case profile = "profile"
+        case expectedHostedTaskId = "expected_hosted_task_id"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
         } else {
-            cols = .value(try container.decode(Int.self, forKey: .cols))
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        if !container.contains(.expectedHostedTaskId) {
+            expectedHostedTaskId = .absent
+        } else if try container.decodeNil(forKey: .expectedHostedTaskId) {
+            expectedHostedTaskId = .null
+        } else {
+            expectedHostedTaskId = .value(try container.decode(String.self, forKey: .expectedHostedTaskId))
         }
     }
 
@@ -1327,261 +1753,43 @@ public struct TerminalResizeParams: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .profile)
         case .value(let value): try container.encode(value, forKey: .profile)
         }
-        switch cols {
+        switch expectedHostedTaskId {
         case .absent: break
-        case .null: try container.encodeNil(forKey: .cols)
-        case .value(let value): try container.encode(value, forKey: .cols)
+        case .null: try container.encodeNil(forKey: .expectedHostedTaskId)
+        case .value(let value): try container.encode(value, forKey: .expectedHostedTaskId)
         }
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public struct TerminalResizeResult: Codable, Sendable, Hashable {
-    public var cols: Int
+public struct SessionInterruptResult: Codable, Sendable, Hashable {
+    public var status: InterruptStatus
+    public var interrupted: Bool?
+    public var turnIsolation: Bool?
 
-    public init(cols: Int) {
-        self.cols = cols
+    public init(status: InterruptStatus, interrupted: Bool? = nil, turnIsolation: Bool? = nil) {
+        self.status = status
+        self.interrupted = interrupted
+        self.turnIsolation = turnIsolation
     }
 
     private enum CodingKeys: String, CodingKey {
-        case cols = "cols"
+        case status = "status"
+        case interrupted = "interrupted"
+        case turnIsolation = "turn_isolation"
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        cols = try container.decode(Int.self, forKey: .cols)
+        status = try container.decode(InterruptStatus.self, forKey: .status)
+        interrupted = try container.decodeIfPresent(Bool.self, forKey: .interrupted)
+        turnIsolation = try container.decodeIfPresent(Bool.self, forKey: .turnIsolation)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(cols, forKey: .cols)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct TipShowPayload: Codable, Sendable, Hashable {
-    public var selector: String
-    public var text: String
-    public var title: String?
-    public var side: String?
-
-    public init(selector: String, text: String, title: String? = nil, side: String? = nil) {
-        self.selector = selector
-        self.text = text
-        self.title = title
-        self.side = side
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case selector = "selector"
-        case text = "text"
-        case title = "title"
-        case side = "side"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        selector = try container.decode(String.self, forKey: .selector)
-        text = try container.decode(String.self, forKey: .text)
-        title = try container.decodeIfPresent(String.self, forKey: .title)
-        side = try container.decodeIfPresent(String.self, forKey: .side)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(selector, forKey: .selector)
-        try container.encode(text, forKey: .text)
-        try container.encodeIfPresent(title, forKey: .title)
-        try container.encodeIfPresent(side, forKey: .side)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct TodoState: Codable, Sendable, Hashable {
-    public var todos: [[String: JSONValue]]
-    public var revision: Int
-
-    public init(todos: [[String: JSONValue]], revision: Int) {
-        self.todos = todos
-        self.revision = revision
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case todos = "todos"
-        case revision = "revision"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        todos = try container.decode([[String: JSONValue]].self, forKey: .todos)
-        revision = try container.decode(Int.self, forKey: .revision)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(todos, forKey: .todos)
-        try container.encode(revision, forKey: .revision)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct TodoUpdatedPayload: Codable, Sendable, Hashable {
-    public var todos: [JSONValue]
-    public var revision: Int
-
-    public init(todos: [JSONValue], revision: Int) {
-        self.todos = todos
-        self.revision = revision
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case todos = "todos"
-        case revision = "revision"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        todos = try container.decode([JSONValue].self, forKey: .todos)
-        revision = try container.decode(Int.self, forKey: .revision)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(todos, forKey: .todos)
-        try container.encode(revision, forKey: .revision)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ToolCompletePayload: Codable, Sendable, Hashable {
-    public var toolId: String
-    public var name: String
-    public var args: [String: JSONValue]?
-    public var durationS: Double?
-    public var result: JSONValue?
-    public var summary: String?
-    public var resultText: String?
-    public var inlineDiff: String?
-    public var todos: [JSONValue]?
-    public var revision: Int?
-
-    public init(toolId: String, name: String, args: [String: JSONValue]? = nil, durationS: Double? = nil, result: JSONValue? = nil, summary: String? = nil, resultText: String? = nil, inlineDiff: String? = nil, todos: [JSONValue]? = nil, revision: Int? = nil) {
-        self.toolId = toolId
-        self.name = name
-        self.args = args
-        self.durationS = durationS
-        self.result = result
-        self.summary = summary
-        self.resultText = resultText
-        self.inlineDiff = inlineDiff
-        self.todos = todos
-        self.revision = revision
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case toolId = "tool_id"
-        case name = "name"
-        case args = "args"
-        case durationS = "duration_s"
-        case result = "result"
-        case summary = "summary"
-        case resultText = "result_text"
-        case inlineDiff = "inline_diff"
-        case todos = "todos"
-        case revision = "revision"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        toolId = try container.decode(String.self, forKey: .toolId)
-        name = try container.decode(String.self, forKey: .name)
-        args = try container.decodeIfPresent([String: JSONValue].self, forKey: .args)
-        durationS = try container.decodeIfPresent(Double.self, forKey: .durationS)
-        result = try container.decodeIfPresent(JSONValue.self, forKey: .result)
-        summary = try container.decodeIfPresent(String.self, forKey: .summary)
-        resultText = try container.decodeIfPresent(String.self, forKey: .resultText)
-        inlineDiff = try container.decodeIfPresent(String.self, forKey: .inlineDiff)
-        todos = try container.decodeIfPresent([JSONValue].self, forKey: .todos)
-        revision = try container.decodeIfPresent(Int.self, forKey: .revision)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(toolId, forKey: .toolId)
-        try container.encode(name, forKey: .name)
-        try container.encodeIfPresent(args, forKey: .args)
-        try container.encodeIfPresent(durationS, forKey: .durationS)
-        try container.encodeIfPresent(result, forKey: .result)
-        try container.encodeIfPresent(summary, forKey: .summary)
-        try container.encodeIfPresent(resultText, forKey: .resultText)
-        try container.encodeIfPresent(inlineDiff, forKey: .inlineDiff)
-        try container.encodeIfPresent(todos, forKey: .todos)
-        try container.encodeIfPresent(revision, forKey: .revision)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ToolGeneratingPayload: Codable, Sendable, Hashable {
-    public var name: String
-
-    public init(name: String) {
-        self.name = name
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case name = "name"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        name = try container.decode(String.self, forKey: .name)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(name, forKey: .name)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ToolOutputRiskPayload: Codable, Sendable, Hashable {
-    public var toolId: String
-    public var name: String
-    public var risk: String
-    public var findings: [String]
-    public var redacted: Bool
-
-    public init(toolId: String, name: String, risk: String, findings: [String], redacted: Bool) {
-        self.toolId = toolId
-        self.name = name
-        self.risk = risk
-        self.findings = findings
-        self.redacted = redacted
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case toolId = "tool_id"
-        case name = "name"
-        case risk = "risk"
-        case findings = "findings"
-        case redacted = "redacted"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        toolId = try container.decode(String.self, forKey: .toolId)
-        name = try container.decode(String.self, forKey: .name)
-        risk = try container.decode(String.self, forKey: .risk)
-        findings = try container.decode([String].self, forKey: .findings)
-        redacted = try container.decode(Bool.self, forKey: .redacted)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(toolId, forKey: .toolId)
-        try container.encode(name, forKey: .name)
-        try container.encode(risk, forKey: .risk)
-        try container.encode(findings, forKey: .findings)
-        try container.encode(redacted, forKey: .redacted)
+        try container.encode(status, forKey: .status)
+        try container.encodeIfPresent(interrupted, forKey: .interrupted)
+        try container.encodeIfPresent(turnIsolation, forKey: .turnIsolation)
     }
 }

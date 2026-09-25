@@ -1,0 +1,1800 @@
+{
+  "events": [
+    {
+      "public": "agentTerminalOutput",
+      "wire": "agent.terminal.output"
+    },
+    {
+      "public": "backgroundComplete",
+      "wire": "background.complete"
+    },
+    {
+      "public": "billingStepUpVerification",
+      "wire": "billing.step_up.verification"
+    },
+    {
+      "public": "botRelayOutboxPending",
+      "wire": "bot_relay.outbox.pending"
+    },
+    {
+      "public": "browserControllerCancel",
+      "wire": "browser.controller.cancel"
+    },
+    {
+      "public": "browserControllerCommand",
+      "wire": "browser.controller.command"
+    },
+    {
+      "public": "browserProgress",
+      "wire": "browser.progress"
+    },
+    {
+      "public": "btwComplete",
+      "wire": "btw.complete"
+    },
+    {
+      "public": "connectionRequest",
+      "wire": "connection.request"
+    },
+    {
+      "public": "connectionUpdate",
+      "wire": "connection.update"
+    },
+    {
+      "public": "cronChanged",
+      "wire": "cron.changed"
+    },
+    {
+      "public": "displayInstallDone",
+      "wire": "display.install.done"
+    },
+    {
+      "public": "displayInstallLog",
+      "wire": "display.install.log"
+    },
+    {
+      "public": "displayLease",
+      "wire": "display.lease"
+    },
+    {
+      "public": "displayStatus",
+      "wire": "display.status"
+    },
+    {
+      "public": "error",
+      "wire": "error"
+    },
+    {
+      "public": "gatewayReady",
+      "wire": "gateway.ready"
+    },
+    {
+      "public": "layoutApply",
+      "wire": "layout.apply"
+    },
+    {
+      "public": "messageComplete",
+      "wire": "message.complete"
+    },
+    {
+      "public": "messageDelta",
+      "wire": "message.delta"
+    },
+    {
+      "public": "messageInterim",
+      "wire": "message.interim"
+    },
+    {
+      "public": "messageReaction",
+      "wire": "message.reaction"
+    },
+    {
+      "public": "messageStart",
+      "wire": "message.start"
+    },
+    {
+      "public": "moaAggregating",
+      "wire": "moa.aggregating"
+    },
+    {
+      "public": "moaPhase",
+      "wire": "moa.phase"
+    },
+    {
+      "public": "moaProgress",
+      "wire": "moa.progress"
+    },
+    {
+      "public": "moaReference",
+      "wire": "moa.reference"
+    },
+    {
+      "public": "notice",
+      "wire": "notice"
+    },
+    {
+      "public": "notificationClear",
+      "wire": "notification.clear"
+    },
+    {
+      "public": "notificationShow",
+      "wire": "notification.show"
+    },
+    {
+      "public": "pairingChanged",
+      "wire": "pairing.changed"
+    },
+    {
+      "public": "paneReveal",
+      "wire": "pane.reveal"
+    },
+    {
+      "public": "petChanged",
+      "wire": "pet.changed"
+    },
+    {
+      "public": "petGenerateProgress",
+      "wire": "pet.generate.progress"
+    },
+    {
+      "public": "petHatchProgress",
+      "wire": "pet.hatch.progress"
+    },
+    {
+      "public": "platformsChanged",
+      "wire": "platforms.changed"
+    },
+    {
+      "public": "previewClose",
+      "wire": "preview.close"
+    },
+    {
+      "public": "previewOpen",
+      "wire": "preview.open"
+    },
+    {
+      "public": "previewRestartComplete",
+      "wire": "preview.restart.complete"
+    },
+    {
+      "public": "previewRestartProgress",
+      "wire": "preview.restart.progress"
+    },
+    {
+      "public": "reaction",
+      "wire": "reaction"
+    },
+    {
+      "public": "reasoningAvailable",
+      "wire": "reasoning.available"
+    },
+    {
+      "public": "reasoningDelta",
+      "wire": "reasoning.delta"
+    },
+    {
+      "public": "requestCancel",
+      "wire": "request.cancel"
+    },
+    {
+      "public": "reviewSummary",
+      "wire": "review.summary"
+    },
+    {
+      "public": "sessionControlUpdate",
+      "wire": "session.control.update"
+    },
+    {
+      "public": "sessionInfo",
+      "wire": "session.info"
+    },
+    {
+      "public": "sessionReclaimed",
+      "wire": "session.reclaimed"
+    },
+    {
+      "public": "sessionResumeProgress",
+      "wire": "session.resume_progress"
+    },
+    {
+      "public": "sessionTitle",
+      "wire": "session.title"
+    },
+    {
+      "public": "sessionUsage",
+      "wire": "session.usage"
+    },
+    {
+      "public": "sessionsChanged",
+      "wire": "sessions.changed"
+    },
+    {
+      "public": "setupReady",
+      "wire": "setup.ready"
+    },
+    {
+      "public": "skinChanged",
+      "wire": "skin.changed"
+    },
+    {
+      "public": "statusUpdate",
+      "wire": "status.update"
+    },
+    {
+      "public": "subagentComplete",
+      "wire": "subagent.complete"
+    },
+    {
+      "public": "subagentProgress",
+      "wire": "subagent.progress"
+    },
+    {
+      "public": "subagentSpawnRequested",
+      "wire": "subagent.spawn_requested"
+    },
+    {
+      "public": "subagentStart",
+      "wire": "subagent.start"
+    },
+    {
+      "public": "subagentThinking",
+      "wire": "subagent.thinking"
+    },
+    {
+      "public": "subagentTool",
+      "wire": "subagent.tool"
+    },
+    {
+      "public": "terminalClose",
+      "wire": "terminal.close"
+    },
+    {
+      "public": "thinkingDelta",
+      "wire": "thinking.delta"
+    },
+    {
+      "public": "tipShow",
+      "wire": "tip.show"
+    },
+    {
+      "public": "todoUpdated",
+      "wire": "todo.updated"
+    },
+    {
+      "public": "toolComplete",
+      "wire": "tool.complete"
+    },
+    {
+      "public": "toolGenerating",
+      "wire": "tool.generating"
+    },
+    {
+      "public": "toolOutputRisk",
+      "wire": "tool.output_risk"
+    },
+    {
+      "public": "toolStart",
+      "wire": "tool.start"
+    },
+    {
+      "public": "voiceInterrupted",
+      "wire": "voice.interrupted"
+    },
+    {
+      "public": "voiceStatus",
+      "wire": "voice.status"
+    },
+    {
+      "public": "voiceTranscript",
+      "wire": "voice.transcript"
+    },
+    {
+      "public": "wakeDetected",
+      "wire": "wake.detected"
+    }
+  ],
+  "methods": [
+    {
+      "params": "AgentsListParams",
+      "public": "agents.list",
+      "result": "AgentsListResult",
+      "wire": "agents.list"
+    },
+    {
+      "params": "ApprovalPendingParams",
+      "public": "approval.pending",
+      "result": "ApprovalPendingResult",
+      "wire": "approval.pending"
+    },
+    {
+      "params": "ApprovalReceivedParams",
+      "public": "approval.received",
+      "result": "ApprovalReceivedResult",
+      "wire": "approval.received"
+    },
+    {
+      "params": "ApprovalRespondParams",
+      "public": "approval.respond",
+      "result": "ApprovalRespondResult",
+      "wire": "approval.respond"
+    },
+    {
+      "params": "BillingAutoReloadParams",
+      "public": "billing.autoReload",
+      "result": "BillingMutationResult",
+      "wire": "billing.auto_reload"
+    },
+    {
+      "params": "BillingChargeParams",
+      "public": "billing.charge",
+      "result": "BillingChargeResult",
+      "wire": "billing.charge"
+    },
+    {
+      "params": "BillingChargeStatusParams",
+      "public": "billing.chargeStatus",
+      "result": "BillingChargeStatusResult",
+      "wire": "billing.charge_status"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "billing.state",
+      "result": "BillingStateResult",
+      "wire": "billing.state"
+    },
+    {
+      "params": "BillingStepUpParams",
+      "public": "billing.stepUp",
+      "result": "BillingStepUpResult",
+      "wire": "billing.step_up"
+    },
+    {
+      "params": "BotRelayDeliverParams",
+      "public": "botRelay.deliver",
+      "result": "BotRelayDeliverResult",
+      "wire": "bot_relay.deliver"
+    },
+    {
+      "params": "BotRelayOutboxDrainParams",
+      "public": "botRelay.outboxDrain",
+      "result": "BotRelayOutboxDrainResult",
+      "wire": "bot_relay.outbox.drain"
+    },
+    {
+      "params": "BotRelayReplyParams",
+      "public": "botRelay.reply",
+      "result": "OkResult",
+      "wire": "bot_relay.reply"
+    },
+    {
+      "params": "BotRelayRosterSyncParams",
+      "public": "botRelay.rosterSync",
+      "result": "BotRelayRosterSyncResult",
+      "wire": "bot_relay.roster.sync"
+    },
+    {
+      "params": "BrowserControllerParams",
+      "public": "browser.controllerDetach",
+      "result": "BrowserControllerDetachResult",
+      "wire": "browser.controller.detach"
+    },
+    {
+      "params": "BrowserControllerParams",
+      "public": "browser.controllerHeartbeat",
+      "result": "OkResult",
+      "wire": "browser.controller.heartbeat"
+    },
+    {
+      "params": "BrowserControllerRegisterParams",
+      "public": "browser.controllerRegister",
+      "result": "BrowserControllerRegisterResult",
+      "wire": "browser.controller.register"
+    },
+    {
+      "params": "BrowserControllerResultParams",
+      "public": "browser.controllerResult",
+      "result": "BrowserControllerResultResult",
+      "wire": "browser.controller.result"
+    },
+    {
+      "params": "BrowserManageParams",
+      "public": "browser.manage",
+      "result": "BrowserManageResult",
+      "wire": "browser.manage"
+    },
+    {
+      "params": "ClarifyLockParams",
+      "public": "clarify.lock",
+      "result": "ClarifyLockResult",
+      "wire": "clarify.lock"
+    },
+    {
+      "params": "CliExecParams",
+      "public": "cli.exec",
+      "result": "CliExecResult",
+      "wire": "cli.exec"
+    },
+    {
+      "params": "ClientCapabilitiesParams",
+      "public": "client.capabilities",
+      "result": "ClientCapabilitiesResult",
+      "wire": "client.capabilities"
+    },
+    {
+      "params": "ClipboardPasteParams",
+      "public": "clipboard.paste",
+      "result": "AttachedImageResult",
+      "wire": "clipboard.paste"
+    },
+    {
+      "params": "CommandDispatchParams",
+      "public": "command.dispatch",
+      "result": "CommandDispatchResult",
+      "wire": "command.dispatch"
+    },
+    {
+      "params": "CommandResolveParams",
+      "public": "command.resolve",
+      "result": "CommandResolveResult",
+      "wire": "command.resolve"
+    },
+    {
+      "params": "CommandsCatalogParams",
+      "public": "commands.catalog",
+      "result": "CommandsCatalogResult",
+      "wire": "commands.catalog"
+    },
+    {
+      "params": "CompletePathParams",
+      "public": "complete.path",
+      "result": "CompletionItemsResult",
+      "wire": "complete.path"
+    },
+    {
+      "params": "CompleteSlashParams",
+      "public": "complete.slash",
+      "result": "CompleteSlashResult",
+      "wire": "complete.slash"
+    },
+    {
+      "params": "ConfigGetParams",
+      "public": "config.get",
+      "result": "ConfigGetResult",
+      "wire": "config.get"
+    },
+    {
+      "params": "ConfigSetParams",
+      "public": "config.set",
+      "result": "ConfigSetResult",
+      "wire": "config.set"
+    },
+    {
+      "params": "ConfigShowParams",
+      "public": "config.show",
+      "result": "ConfigShowResult",
+      "wire": "config.show"
+    },
+    {
+      "params": "ConnectionRespondParams",
+      "public": "connection.respond",
+      "result": "ConnectionRespondResult",
+      "wire": "connection.respond"
+    },
+    {
+      "params": "ConnectorAccountsParams",
+      "public": "connectors.accounts",
+      "result": "ConnectorAccountsResult",
+      "wire": "connectors.accounts"
+    },
+    {
+      "params": "ConnectorAccountsRemoveParams",
+      "public": "connectors.accountsRemove",
+      "result": "ConnectorAccountsRemoveResult",
+      "wire": "connectors.accounts.remove"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "connectors.catalog",
+      "result": "ConnectorsCatalogResult",
+      "wire": "connectors.catalog"
+    },
+    {
+      "params": "ConnectorsConnectParams",
+      "public": "connectors.connect",
+      "result": "ConnectorsConnectResult",
+      "wire": "connectors.connect"
+    },
+    {
+      "params": "ConnectorsListParams",
+      "public": "connectors.list",
+      "result": "ConnectorsListResult",
+      "wire": "connectors.list"
+    },
+    {
+      "params": "ConnectionOperationParams",
+      "public": "connectors.operationStatus",
+      "result": "ConnectionOperationStatus",
+      "wire": "connectors.operation.status"
+    },
+    {
+      "params": "ConnectionOperationParams",
+      "public": "connectors.operationWake",
+      "result": "ConnectionWakeResult",
+      "wire": "connectors.operation.wake"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "connectors.policyGet",
+      "result": "ConnectorPolicyGetResult",
+      "wire": "connectors.policy.get"
+    },
+    {
+      "params": "ConnectorPolicySetParams",
+      "public": "connectors.policySet",
+      "result": "ConnectorPolicySetResult",
+      "wire": "connectors.policy.set"
+    },
+    {
+      "params": "ConnectorToolsParams",
+      "public": "connectors.tools",
+      "result": "ConnectorToolsResult",
+      "wire": "connectors.tools"
+    },
+    {
+      "params": "CronManageParams",
+      "public": "cron.manage",
+      "result": "CronManageResult",
+      "wire": "cron.manage"
+    },
+    {
+      "params": "DelegationPauseParams",
+      "public": "delegation.pause",
+      "result": "DelegationPauseResult",
+      "wire": "delegation.pause"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "delegation.status",
+      "result": "DelegationStatusResult",
+      "wire": "delegation.status"
+    },
+    {
+      "params": "DiagnosticsShareNousParams",
+      "public": "diagnostics.shareNous",
+      "result": "DiagnosticsShareNousResult",
+      "wire": "diagnostics.share_nous"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "display.install",
+      "result": "DisplayInstallResult",
+      "wire": "display.install"
+    },
+    {
+      "params": "DisplayLeaseAcquireParams",
+      "public": "display.leaseAcquire",
+      "result": "DisplayLeaseResult",
+      "wire": "display.lease.acquire"
+    },
+    {
+      "params": "DisplayLeaseReleaseParams",
+      "public": "display.leaseRelease",
+      "result": "DisplayLeaseResult",
+      "wire": "display.lease.release"
+    },
+    {
+      "params": "DisplayObserveParams",
+      "public": "display.observe",
+      "result": "DisplayObserveResult",
+      "wire": "display.observe"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "display.start",
+      "result": "DisplayStatus",
+      "wire": "display.start"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "display.status",
+      "result": "DisplayStatus",
+      "wire": "display.status"
+    },
+    {
+      "params": "DisplayStopParams",
+      "public": "display.stop",
+      "result": "DisplayStopResult",
+      "wire": "display.stop"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "display.thumbnail",
+      "result": "DisplayThumbnailResult",
+      "wire": "display.thumbnail"
+    },
+    {
+      "params": "FileAttachParams",
+      "public": "file.attach",
+      "result": "FileAttachResult",
+      "wire": "file.attach"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "freeTier.ackNotice",
+      "result": "FreeTierAckNoticeResult",
+      "wire": "free_tier.ack_notice"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "freeTier.provision",
+      "result": "FreeTierProvisionResult",
+      "wire": "free_tier.provision"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "freeTier.status",
+      "result": "FreeTierStatusResult",
+      "wire": "free_tier.status"
+    },
+    {
+      "params": "PingParams",
+      "public": "gateway.capabilities",
+      "result": "GatewayCapabilitiesResult",
+      "wire": "gateway.capabilities"
+    },
+    {
+      "params": "GroupsApproveParams",
+      "public": "groups.approve",
+      "result": "GroupsApproveResult",
+      "wire": "groups.approve"
+    },
+    {
+      "params": "GroupsCapabilitiesParams",
+      "public": "groups.capabilities",
+      "result": "GroupsCapabilitiesResult",
+      "wire": "groups.capabilities"
+    },
+    {
+      "params": "GroupsCreateParams",
+      "public": "groups.create",
+      "result": "GroupsCreateResult",
+      "wire": "groups.create"
+    },
+    {
+      "params": "GroupsDemoteParams",
+      "public": "groups.demote",
+      "result": "GroupsDemoteResult",
+      "wire": "groups.demote"
+    },
+    {
+      "params": "GroupsDisbandParams",
+      "public": "groups.disband",
+      "result": "GroupsDisbandResult",
+      "wire": "groups.disband"
+    },
+    {
+      "params": "GroupsListParams",
+      "public": "groups.list",
+      "result": "GroupsListResult",
+      "wire": "groups.list"
+    },
+    {
+      "params": "GroupsLogParams",
+      "public": "groups.log",
+      "result": "GroupsLogResult",
+      "wire": "groups.log"
+    },
+    {
+      "params": "GroupsPeerInviteParams",
+      "public": "groups.peerInvite",
+      "result": "GroupsPeerInviteResult",
+      "wire": "groups.peer.invite"
+    },
+    {
+      "params": "GroupsPeerRegisterParams",
+      "public": "groups.peerRegister",
+      "result": "GroupsPeerRegisterResult",
+      "wire": "groups.peer.register"
+    },
+    {
+      "params": "GroupsPeerRevokeParams",
+      "public": "groups.peerRevoke",
+      "result": "GroupsPeerRevokeResult",
+      "wire": "groups.peer.revoke"
+    },
+    {
+      "params": "GroupsPromoteParams",
+      "public": "groups.promote",
+      "result": "GroupsPromoteResult",
+      "wire": "groups.promote"
+    },
+    {
+      "params": "GroupsRenameParams",
+      "public": "groups.rename",
+      "result": "GroupsRenameResult",
+      "wire": "groups.rename"
+    },
+    {
+      "params": "GroupsReplicaStateParams",
+      "public": "groups.replicaState",
+      "result": "GroupsReplicaStateResult",
+      "wire": "groups.replica_state"
+    },
+    {
+      "params": "GroupsReplicateParams",
+      "public": "groups.replicate",
+      "result": "GroupsReplicateResult",
+      "wire": "groups.replicate"
+    },
+    {
+      "params": "GroupsRetryParams",
+      "public": "groups.retry",
+      "result": "GroupsRetryResult",
+      "wire": "groups.retry"
+    },
+    {
+      "params": "GroupsSendParams",
+      "public": "groups.send",
+      "result": "GroupsSendResult",
+      "wire": "groups.send"
+    },
+    {
+      "params": "GroupsStateParams",
+      "public": "groups.state",
+      "result": "GroupsStateResult",
+      "wire": "groups.state"
+    },
+    {
+      "params": "GroupsStopParams",
+      "public": "groups.stop",
+      "result": "GroupsStopResult",
+      "wire": "groups.stop"
+    },
+    {
+      "params": "HandoffFailParams",
+      "public": "handoff.fail",
+      "result": "HandoffFailResult",
+      "wire": "handoff.fail"
+    },
+    {
+      "params": "HandoffRequestParams",
+      "public": "handoff.request",
+      "result": "HandoffRequestResult",
+      "wire": "handoff.request"
+    },
+    {
+      "params": "SessionParams",
+      "public": "handoff.state",
+      "result": "HandoffStateResult",
+      "wire": "handoff.state"
+    },
+    {
+      "params": "ImageAttachParams",
+      "public": "image.attach",
+      "result": "AttachedImageResult",
+      "wire": "image.attach"
+    },
+    {
+      "params": "ImageAttachBytesParams",
+      "public": "image.attachBytes",
+      "result": "AttachedImageResult",
+      "wire": "image.attach_bytes"
+    },
+    {
+      "params": "ImageDetachParams",
+      "public": "image.detach",
+      "result": "ImageDetachResult",
+      "wire": "image.detach"
+    },
+    {
+      "params": "ImageGenerateParams",
+      "public": "image.generate",
+      "result": "ImageGenerateResult",
+      "wire": "image.generate"
+    },
+    {
+      "params": "InputDetectDropParams",
+      "public": "input.detectDrop",
+      "result": "InputDetectDropResult",
+      "wire": "input.detect_drop"
+    },
+    {
+      "params": "InsightsGetParams",
+      "public": "insights.get",
+      "result": "InsightsGetResult",
+      "wire": "insights.get"
+    },
+    {
+      "params": "LearningNodeParams",
+      "public": "learning.delete",
+      "result": "LearningMutationResult",
+      "wire": "learning.delete"
+    },
+    {
+      "params": "LearningNodeParams",
+      "public": "learning.detail",
+      "result": "LearningDetailResult",
+      "wire": "learning.detail"
+    },
+    {
+      "params": "LearningEditParams",
+      "public": "learning.edit",
+      "result": "LearningMutationResult",
+      "wire": "learning.edit"
+    },
+    {
+      "params": "LearningFramesParams",
+      "public": "learning.frames",
+      "result": "LearningFramesResult",
+      "wire": "learning.frames"
+    },
+    {
+      "params": "LlmOneshotParams",
+      "public": "llm.oneshot",
+      "result": "LlmOneshotResult",
+      "wire": "llm.oneshot"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "mcp.catalog",
+      "result": "McpCatalogResult",
+      "wire": "mcp.catalog"
+    },
+    {
+      "params": "McpServersAddParams",
+      "public": "mcp.serversAdd",
+      "result": "McpServersAddResult",
+      "wire": "mcp.servers.add"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "mcp.serversList",
+      "result": "McpServersListResult",
+      "wire": "mcp.servers.list"
+    },
+    {
+      "params": "McpOauthCallbackParams",
+      "public": "mcp.serversOauthCallback",
+      "result": "McpOauthCallbackResult",
+      "wire": "mcp.servers.oauth.callback"
+    },
+    {
+      "params": "McpOauthFlowParams",
+      "public": "mcp.serversOauthCancel",
+      "result": "McpOauthCancelResult",
+      "wire": "mcp.servers.oauth.cancel"
+    },
+    {
+      "params": "McpOauthFlowParams",
+      "public": "mcp.serversOauthPoll",
+      "result": "McpOauthPollResult",
+      "wire": "mcp.servers.oauth.poll"
+    },
+    {
+      "params": "McpOauthStartParams",
+      "public": "mcp.serversOauthStart",
+      "result": "McpOauthStartResult",
+      "wire": "mcp.servers.oauth.start"
+    },
+    {
+      "params": "McpServerNameParams",
+      "public": "mcp.serversRemove",
+      "result": "McpServersRemoveResult",
+      "wire": "mcp.servers.remove"
+    },
+    {
+      "params": "McpServersSetApiKeyParams",
+      "public": "mcp.serversSetApiKey",
+      "result": "McpServersSetApiKeyResult",
+      "wire": "mcp.servers.set_api_key"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "mcp.serversStatus",
+      "result": "McpServersStatusResult",
+      "wire": "mcp.servers.status"
+    },
+    {
+      "params": "McpServerNameParams",
+      "public": "mcp.serversTest",
+      "result": "McpServersTestResult",
+      "wire": "mcp.servers.test"
+    },
+    {
+      "params": "MessageReactParams",
+      "public": "message.react",
+      "result": "MessageReactResult",
+      "wire": "message.react"
+    },
+    {
+      "params": "ModelDisconnectParams",
+      "public": "model.disconnect",
+      "result": "ModelDisconnectResult",
+      "wire": "model.disconnect"
+    },
+    {
+      "params": "ModelOptionsParams",
+      "public": "model.options",
+      "result": "ModelOptionsResult",
+      "wire": "model.options"
+    },
+    {
+      "params": "ModelSaveKeyParams",
+      "public": "model.saveKey",
+      "result": "ModelSaveKeyResult",
+      "wire": "model.save_key"
+    },
+    {
+      "params": "Params",
+      "public": "onboarding.ensureSetupProfile",
+      "result": "OnboardingEnsureSetupProfileResult",
+      "wire": "onboarding.ensure_setup_profile"
+    },
+    {
+      "params": "Params",
+      "public": "onboarding.resetSetupProfile",
+      "result": "OnboardingResetSetupProfileResult",
+      "wire": "onboarding.reset_setup_profile"
+    },
+    {
+      "params": "PasteCollapseParams",
+      "public": "paste.collapse",
+      "result": "PasteCollapseResult",
+      "wire": "paste.collapse"
+    },
+    {
+      "params": "PdfAttachParams",
+      "public": "pdf.attach",
+      "result": "PdfAttachResult",
+      "wire": "pdf.attach"
+    },
+    {
+      "params": "PetCancelParams",
+      "public": "pet.cancel",
+      "result": "PetCancelResult",
+      "wire": "pet.cancel"
+    },
+    {
+      "params": "PetCellsParams",
+      "public": "pet.cells",
+      "result": "PetCellsResult",
+      "wire": "pet.cells"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "pet.disable",
+      "result": "OkResult",
+      "wire": "pet.disable"
+    },
+    {
+      "params": "PetSlugParams",
+      "public": "pet.export",
+      "result": "PetExportResult",
+      "wire": "pet.export"
+    },
+    {
+      "params": "PetGalleryParams",
+      "public": "pet.gallery",
+      "result": "PetGalleryResult",
+      "wire": "pet.gallery"
+    },
+    {
+      "params": "PetGenerateParams",
+      "public": "pet.generate",
+      "result": "PetGenerateResult",
+      "wire": "pet.generate"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "pet.generateStatus",
+      "result": "PetGenerateStatusResult",
+      "wire": "pet.generate.status"
+    },
+    {
+      "params": "PetHatchParams",
+      "public": "pet.hatch",
+      "result": "PetHatchResult",
+      "wire": "pet.hatch"
+    },
+    {
+      "params": "PetInfoParams",
+      "public": "pet.info",
+      "result": "PetInfoResult",
+      "wire": "pet.info"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "pet.infoMeta",
+      "result": "PetInfoMetaResult",
+      "wire": "pet.info.meta"
+    },
+    {
+      "params": "PetSlugParams",
+      "public": "pet.remove",
+      "result": "PetSlugResult",
+      "wire": "pet.remove"
+    },
+    {
+      "params": "PetRenameParams",
+      "public": "pet.rename",
+      "result": "PetSlugResult",
+      "wire": "pet.rename"
+    },
+    {
+      "params": "PetScaleParams",
+      "public": "pet.scale",
+      "result": "PetScaleResult",
+      "wire": "pet.scale"
+    },
+    {
+      "params": "PetSlugParams",
+      "public": "pet.select",
+      "result": "PetSlugResult",
+      "wire": "pet.select"
+    },
+    {
+      "params": "PetThumbParams",
+      "public": "pet.thumb",
+      "result": "PetThumbResult",
+      "wire": "pet.thumb"
+    },
+    {
+      "params": "PingParams",
+      "public": "ping",
+      "result": "PingResult",
+      "wire": "ping"
+    },
+    {
+      "params": "PluginsListParams",
+      "public": "plugins.list",
+      "result": "PluginsListResult",
+      "wire": "plugins.list"
+    },
+    {
+      "params": "PluginsManageParams",
+      "public": "plugins.manage",
+      "result": "PluginsManageResult",
+      "wire": "plugins.manage"
+    },
+    {
+      "params": "PreviewRestartParams",
+      "public": "preview.restart",
+      "result": "TaskIdResult",
+      "wire": "preview.restart"
+    },
+    {
+      "params": "ProcessKillParams",
+      "public": "process.kill",
+      "result": "ProcessKillResult",
+      "wire": "process.kill"
+    },
+    {
+      "params": "ProcessListParams",
+      "public": "process.list",
+      "result": "ProcessListResult",
+      "wire": "process.list"
+    },
+    {
+      "params": "ProcessStopParams",
+      "public": "process.stop",
+      "result": "ProcessStopResult",
+      "wire": "process.stop"
+    },
+    {
+      "params": "ProfilesConfigureParams",
+      "public": "profiles.configure",
+      "result": "ProfilesConfigureResult",
+      "wire": "profiles.configure"
+    },
+    {
+      "params": "ProfilesCreateParams",
+      "public": "profiles.create",
+      "result": "ProfilesCreateResult",
+      "wire": "profiles.create"
+    },
+    {
+      "params": "ProfileNameParams",
+      "public": "profiles.describe",
+      "result": "ProfilesDescribeResult",
+      "wire": "profiles.describe"
+    },
+    {
+      "params": "ProfilesGetAssetParams",
+      "public": "profiles.getAsset",
+      "result": "ProfilesGetAssetResult",
+      "wire": "profiles.get_asset"
+    },
+    {
+      "params": "ProfilesListParams",
+      "public": "profiles.list",
+      "result": "ProfilesListResult",
+      "wire": "profiles.list"
+    },
+    {
+      "params": "ProfilesRememberOnboardingParams",
+      "public": "profiles.rememberOnboarding",
+      "result": "ProfilesRememberOnboardingResult",
+      "wire": "profiles.remember_onboarding"
+    },
+    {
+      "params": "ProfilesSetAssetParams",
+      "public": "profiles.setAsset",
+      "result": "ProfilesSetAssetResult",
+      "wire": "profiles.set_asset"
+    },
+    {
+      "params": "ProjectFactsParams",
+      "public": "project.facts",
+      "result": "ProjectFactsResult",
+      "wire": "project.facts"
+    },
+    {
+      "params": "ProjectsAddFolderParams",
+      "public": "projects.addFolder",
+      "result": "ProjectResult",
+      "wire": "projects.add_folder"
+    },
+    {
+      "params": "ProjectsArchiveParams",
+      "public": "projects.archive",
+      "result": "ProjectsPayload",
+      "wire": "projects.archive"
+    },
+    {
+      "params": "ProjectsCreateParams",
+      "public": "projects.create",
+      "result": "OptionalProjectResult",
+      "wire": "projects.create"
+    },
+    {
+      "params": "ProjectIdParams",
+      "public": "projects.delete",
+      "result": "ProjectsPayload",
+      "wire": "projects.delete"
+    },
+    {
+      "params": "ProjectsDiscoverReposParams",
+      "public": "projects.discoverRepos",
+      "result": "ProjectsDiscoverReposResult",
+      "wire": "projects.discover_repos"
+    },
+    {
+      "params": "ProjectsForCwdParams",
+      "public": "projects.forCwd",
+      "result": "ProjectsForCwdResult",
+      "wire": "projects.for_cwd"
+    },
+    {
+      "params": "ProjectIdParams",
+      "public": "projects.get",
+      "result": "ProjectResult",
+      "wire": "projects.get"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "projects.list",
+      "result": "ProjectsPayload",
+      "wire": "projects.list"
+    },
+    {
+      "params": "ProjectsProjectSessionsParams",
+      "public": "projects.projectSessions",
+      "result": "ProjectsProjectSessionsResult",
+      "wire": "projects.project_sessions"
+    },
+    {
+      "params": "ProjectsRecordReposParams",
+      "public": "projects.recordRepos",
+      "result": "ProjectsRecordReposResult",
+      "wire": "projects.record_repos"
+    },
+    {
+      "params": "ProjectFolderParams",
+      "public": "projects.removeFolder",
+      "result": "ProjectResult",
+      "wire": "projects.remove_folder"
+    },
+    {
+      "params": "ProjectsSetActiveParams",
+      "public": "projects.setActive",
+      "result": "ActiveIdResult",
+      "wire": "projects.set_active"
+    },
+    {
+      "params": "ProjectFolderParams",
+      "public": "projects.setPrimary",
+      "result": "ProjectResult",
+      "wire": "projects.set_primary"
+    },
+    {
+      "params": "ProjectsTreeParams",
+      "public": "projects.tree",
+      "result": "ProjectsTreeResult",
+      "wire": "projects.tree"
+    },
+    {
+      "params": "ProjectsUpdateParams",
+      "public": "projects.update",
+      "result": "ProjectResult",
+      "wire": "projects.update"
+    },
+    {
+      "params": "SideAgentParams",
+      "public": "prompt.background",
+      "result": "TaskIdResult",
+      "wire": "prompt.background"
+    },
+    {
+      "params": "SideAgentParams",
+      "public": "prompt.btw",
+      "result": "TaskIdResult",
+      "wire": "prompt.btw"
+    },
+    {
+      "params": "PromptSubmitParams",
+      "public": "prompt.submit",
+      "result": "PromptSubmitResult",
+      "wire": "prompt.submit"
+    },
+    {
+      "params": "ReloadEnvParams",
+      "public": "reload.env",
+      "result": "ReloadEnvResult",
+      "wire": "reload.env"
+    },
+    {
+      "params": "ReloadMcpParams",
+      "public": "reload.mcp",
+      "result": "ReloadMcpResult",
+      "wire": "reload.mcp"
+    },
+    {
+      "params": "RequestAnswerParams",
+      "public": "request.answer",
+      "result": "RequestAnswerResult",
+      "wire": "request.answer"
+    },
+    {
+      "params": "RollbackDiffParams",
+      "public": "rollback.diff",
+      "result": "RollbackDiffResult",
+      "wire": "rollback.diff"
+    },
+    {
+      "params": "RollbackListParams",
+      "public": "rollback.list",
+      "result": "RollbackListResult",
+      "wire": "rollback.list"
+    },
+    {
+      "params": "RollbackRestoreParams",
+      "public": "rollback.restore",
+      "result": "RollbackRestoreResult",
+      "wire": "rollback.restore"
+    },
+    {
+      "params": "SessionActivateParams",
+      "public": "session.activate",
+      "result": "SessionActivateResult",
+      "wire": "session.activate"
+    },
+    {
+      "params": "SessionActiveListParams",
+      "public": "session.activeList",
+      "result": "SessionActiveListResult",
+      "wire": "session.active_list"
+    },
+    {
+      "params": "SessionBranchParams",
+      "public": "session.branch",
+      "result": "SessionBranchResult",
+      "wire": "session.branch"
+    },
+    {
+      "params": "SessionBranchStoredParams",
+      "public": "session.branchStored",
+      "result": "SessionBranchStoredResult",
+      "wire": "session.branch_stored"
+    },
+    {
+      "params": "SessionBranchWholeParams",
+      "public": "session.branchWhole",
+      "result": "SessionBranchWholeResult",
+      "wire": "session.branch_whole"
+    },
+    {
+      "params": "SessionCloseParams",
+      "public": "session.close",
+      "result": "SessionCloseResult",
+      "wire": "session.close"
+    },
+    {
+      "params": "SessionCompressParams",
+      "public": "session.compress",
+      "result": "SessionCompressResult",
+      "wire": "session.compress"
+    },
+    {
+      "params": "SessionContextBreakdownParams",
+      "public": "session.contextBreakdown",
+      "result": "SessionContextBreakdownResult",
+      "wire": "session.context_breakdown"
+    },
+    {
+      "params": "SessionControlParams",
+      "public": "session.control",
+      "result": "SessionControlResult",
+      "wire": "session.control"
+    },
+    {
+      "params": "SessionControlReadParams",
+      "public": "session.controlRead",
+      "result": "SessionControlReadResult",
+      "wire": "session.control.read"
+    },
+    {
+      "params": "SessionCreateParams",
+      "public": "session.create",
+      "result": "SessionCreateResult",
+      "wire": "session.create"
+    },
+    {
+      "params": "SessionCwdSetParams",
+      "public": "session.cwdSet",
+      "result": "SessionCwdSetResult",
+      "wire": "session.cwd.set"
+    },
+    {
+      "params": "SessionDeleteParams",
+      "public": "session.delete",
+      "result": "SessionDeleteResult",
+      "wire": "session.delete"
+    },
+    {
+      "params": "SessionEventsSinceParams",
+      "public": "session.eventsSince",
+      "result": "SessionEventsSinceResult",
+      "wire": "session.events.since"
+    },
+    {
+      "params": "SessionEventsStatsParams",
+      "public": "session.eventsStats",
+      "result": "SessionEventsStatsResult",
+      "wire": "session.events.stats"
+    },
+    {
+      "params": "SessionForeignIdParams",
+      "public": "session.foreignImport",
+      "result": "SessionForeignImportResult",
+      "wire": "session.foreign.import"
+    },
+    {
+      "params": "SessionForeignListParams",
+      "public": "session.foreignList",
+      "result": "SessionForeignListResult",
+      "wire": "session.foreign.list"
+    },
+    {
+      "params": "SessionForeignIdParams",
+      "public": "session.foreignPreview",
+      "result": "SessionForeignPreviewResult",
+      "wire": "session.foreign.preview"
+    },
+    {
+      "params": "SessionHistoryParams",
+      "public": "session.history",
+      "result": "SessionHistoryResult",
+      "wire": "session.history"
+    },
+    {
+      "params": "SessionInterruptParams",
+      "public": "session.interrupt",
+      "result": "SessionInterruptResult",
+      "wire": "session.interrupt"
+    },
+    {
+      "params": "SessionListParams",
+      "public": "session.list",
+      "result": "SessionListResult",
+      "wire": "session.list"
+    },
+    {
+      "params": "SessionMostRecentParams",
+      "public": "session.mostRecent",
+      "result": "SessionMostRecentResult",
+      "wire": "session.most_recent"
+    },
+    {
+      "params": "SessionCorrectionParams",
+      "public": "session.redirect",
+      "result": "SessionCorrectionResult",
+      "wire": "session.redirect"
+    },
+    {
+      "params": "SessionResumeParams",
+      "public": "session.resume",
+      "result": "SessionResumeResult",
+      "wire": "session.resume"
+    },
+    {
+      "params": "SessionSaveParams",
+      "public": "session.save",
+      "result": "SessionSaveResult",
+      "wire": "session.save"
+    },
+    {
+      "params": "SessionSetHiddenParams",
+      "public": "session.setHidden",
+      "result": "SessionSetHiddenResult",
+      "wire": "session.set_hidden"
+    },
+    {
+      "params": "SessionStatusParams",
+      "public": "session.status",
+      "result": "SessionStatusResult",
+      "wire": "session.status"
+    },
+    {
+      "params": "SessionCorrectionParams",
+      "public": "session.steer",
+      "result": "SessionCorrectionResult",
+      "wire": "session.steer"
+    },
+    {
+      "params": "SessionTitleParams",
+      "public": "session.title",
+      "result": "SessionTitleResult",
+      "wire": "session.title"
+    },
+    {
+      "params": "SessionUndoParams",
+      "public": "session.undo",
+      "result": "SessionUndoResult",
+      "wire": "session.undo"
+    },
+    {
+      "params": "SessionUsageParams",
+      "public": "session.usage",
+      "result": "SessionUsageResult",
+      "wire": "session.usage"
+    },
+    {
+      "params": "SessionWorkspaceMoveParams",
+      "public": "session.workspaceMove",
+      "result": "SessionWorkspaceMoveResult",
+      "wire": "session.workspace.move"
+    },
+    {
+      "params": "SetupRuntimeCheckParams",
+      "public": "setup.runtimeCheck",
+      "result": "SetupRuntimeCheckResult",
+      "wire": "setup.runtime_check"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "setup.status",
+      "result": "SetupStatusResult",
+      "wire": "setup.status"
+    },
+    {
+      "params": "ShellExecParams",
+      "public": "shell.exec",
+      "result": "ShellExecResult",
+      "wire": "shell.exec"
+    },
+    {
+      "params": "SkillsManageParams",
+      "public": "skills.manage",
+      "result": "SkillsManageResult",
+      "wire": "skills.manage"
+    },
+    {
+      "params": "SkillsReloadParams",
+      "public": "skills.reload",
+      "result": "SkillsReloadResult",
+      "wire": "skills.reload"
+    },
+    {
+      "params": "SlashExecParams",
+      "public": "slash.exec",
+      "result": "SlashExecResult",
+      "wire": "slash.exec"
+    },
+    {
+      "params": "SpawnTreeListParams",
+      "public": "spawnTree.list",
+      "result": "SpawnTreeListResult",
+      "wire": "spawn_tree.list"
+    },
+    {
+      "params": "SpawnTreeLoadParams",
+      "public": "spawnTree.load",
+      "result": "SpawnTreeLoadResult",
+      "wire": "spawn_tree.load"
+    },
+    {
+      "params": "SpawnTreeSaveParams",
+      "public": "spawnTree.save",
+      "result": "SpawnTreeSaveResult",
+      "wire": "spawn_tree.save"
+    },
+    {
+      "params": "SubagentIdParams",
+      "public": "subagent.interrupt",
+      "result": "SubagentInterruptResult",
+      "wire": "subagent.interrupt"
+    },
+    {
+      "params": "SessionParams",
+      "public": "subagent.list",
+      "result": "SubagentListResult",
+      "wire": "subagent.list"
+    },
+    {
+      "params": "SubagentSteerParams",
+      "public": "subagent.steer",
+      "result": "SubagentSteerResult",
+      "wire": "subagent.steer"
+    },
+    {
+      "params": "SubagentIdParams",
+      "public": "subagent.tail",
+      "result": "SubagentTailResult",
+      "wire": "subagent.tail"
+    },
+    {
+      "params": "SubscriptionChangeParams",
+      "public": "subscription.change",
+      "result": "BillingPendingChangeResult",
+      "wire": "subscription.change"
+    },
+    {
+      "params": "SubscriptionPreviewParams",
+      "public": "subscription.preview",
+      "result": "SubscriptionPreviewResult",
+      "wire": "subscription.preview"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "subscription.resume",
+      "result": "BillingPendingChangeResult",
+      "wire": "subscription.resume"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "subscription.state",
+      "result": "SubscriptionStateResult",
+      "wire": "subscription.state"
+    },
+    {
+      "params": "SubscriptionUpgradeParams",
+      "public": "subscription.upgrade",
+      "result": "SubscriptionUpgradeResult",
+      "wire": "subscription.upgrade"
+    },
+    {
+      "params": "SystemBatteryParams",
+      "public": "system.battery",
+      "result": "SystemBatteryResult",
+      "wire": "system.battery"
+    },
+    {
+      "params": "TerminalResizeParams",
+      "public": "terminal.resize",
+      "result": "TerminalResizeResult",
+      "wire": "terminal.resize"
+    },
+    {
+      "params": "ToolsConfigureParams",
+      "public": "tools.configure",
+      "result": "ToolsConfigureResult",
+      "wire": "tools.configure"
+    },
+    {
+      "params": "_SessionScoped",
+      "public": "tools.list",
+      "result": "ToolsetsListResult",
+      "wire": "tools.list"
+    },
+    {
+      "params": "_SessionScoped",
+      "public": "tools.show",
+      "result": "ToolsShowResult",
+      "wire": "tools.show"
+    },
+    {
+      "params": "_SessionScoped",
+      "public": "toolsets.list",
+      "result": "ToolsetsListResult",
+      "wire": "toolsets.list"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "usage.bars",
+      "result": "UsageModel",
+      "wire": "usage.bars"
+    },
+    {
+      "params": "VaultAddParams",
+      "public": "vault.add",
+      "result": "VaultAddResult",
+      "wire": "vault.add"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "vault.list",
+      "result": "VaultListResult",
+      "wire": "vault.list"
+    },
+    {
+      "params": "VaultLockParams",
+      "public": "vault.lock",
+      "result": "VaultLockResult",
+      "wire": "vault.lock"
+    },
+    {
+      "params": "VaultRemoveParams",
+      "public": "vault.remove",
+      "result": "VaultRemoveResult",
+      "wire": "vault.remove"
+    },
+    {
+      "params": "VaultSourceSetParams",
+      "public": "vault.sourceSet",
+      "result": "VaultSourceSetResult",
+      "wire": "vault.source.set"
+    },
+    {
+      "params": "ProfileParams",
+      "public": "vault.sources",
+      "result": "VaultSourcesResult",
+      "wire": "vault.sources"
+    },
+    {
+      "params": "VaultUnlockParams",
+      "public": "vault.unlock",
+      "result": "VaultUnlockResult",
+      "wire": "vault.unlock"
+    },
+    {
+      "params": "VerificationStatusParams",
+      "public": "verification.status",
+      "result": "VerificationStatusResult",
+      "wire": "verification.status"
+    },
+    {
+      "params": "VoiceRecordParams",
+      "public": "voice.record",
+      "result": "VoiceRecordResult",
+      "wire": "voice.record"
+    },
+    {
+      "params": "VoiceToggleParams",
+      "public": "voice.toggle",
+      "result": "VoiceToggleResult",
+      "wire": "voice.toggle"
+    },
+    {
+      "params": "VoiceTtsParams",
+      "public": "voice.tts",
+      "result": "VoiceTtsResult",
+      "wire": "voice.tts"
+    },
+    {
+      "params": "WakeFeedParams",
+      "public": "wake.feed",
+      "result": "WakeFeedResult",
+      "wire": "wake.feed"
+    },
+    {
+      "params": "WakeControlParams",
+      "public": "wake.pause",
+      "result": "WakePauseResult",
+      "wire": "wake.pause"
+    },
+    {
+      "params": "WakeControlParams",
+      "public": "wake.resume",
+      "result": "WakeResumeResult",
+      "wire": "wake.resume"
+    },
+    {
+      "params": "WakeStartParams",
+      "public": "wake.start",
+      "result": "WakeStartResult",
+      "wire": "wake.start"
+    },
+    {
+      "params": "WakeStatusParams",
+      "public": "wake.status",
+      "result": "WakeStatusResult",
+      "wire": "wake.status"
+    },
+    {
+      "params": "WakeStopParams",
+      "public": "wake.stop",
+      "result": "WakeStopResult",
+      "wire": "wake.stop"
+    }
+  ],
+  "server_requests": [
+    {
+      "params": "ApprovalRequestParams",
+      "public": "approval",
+      "result": "ApprovalResult",
+      "wire": "approval"
+    },
+    {
+      "params": "ClarifyRequestParams",
+      "public": "clarify",
+      "result": "ClarifyResult",
+      "wire": "clarify"
+    },
+    {
+      "params": "DisplayInstallSudoParams",
+      "public": "displayInstallSudo",
+      "result": "ValueResult",
+      "wire": "display.install.sudo"
+    },
+    {
+      "params": "PreviewActRequestParams",
+      "public": "previewAct",
+      "result": "ValueResult",
+      "wire": "preview.act"
+    },
+    {
+      "params": "ReadRangeRequestParams",
+      "public": "previewRead",
+      "result": "ValueResult",
+      "wire": "preview.read"
+    },
+    {
+      "params": "SecretRequestParams",
+      "public": "secret",
+      "result": "ValueResult",
+      "wire": "secret"
+    },
+    {
+      "params": "SudoRequestParams",
+      "public": "sudo",
+      "result": "ValueResult",
+      "wire": "sudo"
+    },
+    {
+      "params": "ReadRangeRequestParams",
+      "public": "terminalRead",
+      "result": "ValueResult",
+      "wire": "terminal.read"
+    },
+    {
+      "params": "TourRequestParams",
+      "public": "tour",
+      "result": "ValueResult",
+      "wire": "tour"
+    },
+    {
+      "params": "VaultCodeRequestParams",
+      "public": "vaultCode",
+      "result": "ValueResult",
+      "wire": "vault.code"
+    },
+    {
+      "params": "VaultSaveLoginRequestParams",
+      "public": "vaultSaveLogin",
+      "result": "ValueResult",
+      "wire": "vault.save_login"
+    },
+    {
+      "params": "VaultUnlockRequestParams",
+      "public": "vaultUnlockPrompt",
+      "result": "ValueResult",
+      "wire": "vault.unlock_prompt"
+    },
+    {
+      "params": "EmptyRequestParams",
+      "public": "windowRead",
+      "result": "ValueResult",
+      "wire": "window.read"
+    }
+  ]
+}

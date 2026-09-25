@@ -1,0 +1,117 @@
+{
+  "commit": "f97608f178d1ffeca59860195ab7da295f7c8e5f",
+  "decode_kotlin": true,
+  "decode_swift": true,
+  "events": [
+    "gateway.ready",
+    "message.complete",
+    "message.delta",
+    "message.start",
+    "reasoning.available",
+    "session.info",
+    "session.title",
+    "session.usage",
+    "sessions.changed",
+    "thinking.delta",
+    "tool.complete",
+    "tool.generating",
+    "tool.start"
+  ],
+  "fixture": "fixtures/v0.21.5/liveness.jsonl",
+  "fixture_sha256": "5a1f6098c1f8e3c53f83aea216914bf6f7d656ac45bbaeaa7c9603be6e28c32e",
+  "live_gateway": {
+    "kotlin": {
+      "events": [
+        "gateway.ready",
+        "message.complete",
+        "message.delta",
+        "message.start",
+        "reasoning.available",
+        "session.info",
+        "session.title",
+        "sessions.changed",
+        "thinking.delta",
+        "tool.complete",
+        "tool.generating",
+        "tool.start"
+      ],
+      "methods": [
+        "client.capabilities",
+        "gateway.capabilities",
+        "ping",
+        "prompt.submit",
+        "session.activate",
+        "session.close",
+        "session.create",
+        "session.events.since",
+        "session.list",
+        "session.resume"
+      ],
+      "server_requests": [
+        "approval",
+        "clarify"
+      ]
+    },
+    "swift": {
+      "events": [
+        "gateway.ready",
+        "message.complete",
+        "message.delta",
+        "message.start",
+        "reasoning.available",
+        "session.info",
+        "session.title",
+        "sessions.changed",
+        "thinking.delta",
+        "tool.complete",
+        "tool.generating",
+        "tool.start"
+      ],
+      "methods": [
+        "client.capabilities",
+        "gateway.capabilities",
+        "ping",
+        "prompt.submit",
+        "session.activate",
+        "session.close",
+        "session.create",
+        "session.events.since",
+        "session.list",
+        "session.resume"
+      ],
+      "server_requests": [
+        "approval",
+        "clarify"
+      ]
+    }
+  },
+  "live_kotlin": true,
+  "live_rest": [
+    "GET /api/audio/voice-live/status",
+    "GET /api/profiles/active",
+    "POST /api/profiles/active",
+    "GET /api/sessions/empty/count"
+  ],
+  "live_swift": true,
+  "methods": [
+    "client.capabilities",
+    "gateway.capabilities",
+    "ping",
+    "prompt.submit",
+    "session.close",
+    "session.create",
+    "session.list"
+  ],
+  "ref": "v0.21.5",
+  "rest": [
+    "GET /api/audio/voice-live/status",
+    "GET /api/profiles/active",
+    "GET /api/sessions/empty/count",
+    "POST /api/profiles/active"
+  ],
+  "scenario": "liveness",
+  "server_requests": [
+    "approval",
+    "clarify"
+  ]
+}

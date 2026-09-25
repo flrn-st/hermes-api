@@ -7,14 +7,14 @@ plugins {
     `maven-publish`
 }
 
-group = "st.flrn.hermes"
+group = "hermes"
 // The release tracker bumps one version, in the JVM build.
 version = Regex("""^version = "([^"]+)"$""", RegexOption.MULTILINE)
     .find(file("../kotlin/build.gradle.kts").readText())?.groupValues?.get(1)
     ?: error("No version in ../kotlin/build.gradle.kts")
 
 android {
-    namespace = "st.flrn.hermes.api.android"
+    namespace = "hermes.api.android"
     compileSdk = 37
 
     defaultConfig {

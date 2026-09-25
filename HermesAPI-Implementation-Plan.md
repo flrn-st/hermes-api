@@ -13,7 +13,7 @@ published Hermes releases, with 100% API and test coverage. Written for an imple
 - **Working repo name:** `hermes-api` (may become an official NousResearch project — keep it
   generic, no Cadu-specific code, MIT licensed like Hermes).
 - **Module name on both platforms:** `HermesAPI` (Swift module), `hermes-api` (Kotlin artifact),
-  package `st.flrn.hermes.api` (interim; change if upstreamed).
+  package `hermes.api` (interim; change if upstreamed).
 - **First Hermes release to target:** `v0.21.4`, tag `v2026.9.21` (first contract-carrying release is `v0.21.3`, tag `v2026.9.14`).
 
 ---

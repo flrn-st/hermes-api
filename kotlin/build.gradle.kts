@@ -5,7 +5,7 @@ plugins {
     `maven-publish`
 }
 
-group = "st.flrn.hermes"
+group = "hermes"
 version = "0.21.5"
 
 repositories {
@@ -46,7 +46,7 @@ tasks.register<JavaExec>("smoke") {
     group = "verification"
     description = "Exercise the Kotlin gateway against a live tagged Hermes server"
     classpath = sourceSets.test.get().runtimeClasspath
-    mainClass = "st.flrn.hermes.api.LiveSmokeKt"
+    mainClass = "hermes.api.LiveSmokeKt"
 }
 
 publishing {

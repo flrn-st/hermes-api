@@ -49,7 +49,7 @@ try await gateway.connect()
 
 ### Android
 
-Depend on `st.flrn.hermes:hermes-api-android`, not the JVM artifact. It adds the
+Depend on `hermes:hermes-api-android`, not the JVM artifact. It adds the
 network, lifecycle and Logcat adapters.
 
 ```kotlin
@@ -94,7 +94,7 @@ rebinding them.
 Unit tests drive both runtimes through a fake Hermes: a scripted transport,
 network monitor and socket. They cover each row above deterministically
 (`swift/Tests/HermesAPITests/HermesGatewayTests.swift`,
-`kotlin/src/test/kotlin/st/flrn/hermes/api/HermesGatewayTest.kt`).
+`kotlin/src/test/kotlin/hermes/api/HermesGatewayTest.kt`).
 
 `make live CLIENTS=swift,kotlin,ios,android` runs the same live scenarios
 against the pinned Hermes release in four places: macOS, the JVM, an iPhone

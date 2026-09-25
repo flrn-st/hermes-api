@@ -107,7 +107,7 @@ public struct HermesGatewayConfiguration: Sendable {
         heartbeatInterval: Duration = .seconds(15),
         heartbeatDeadline: Duration = .seconds(45),
         resumesReclaimedSessions: Bool = true,
-        logger: Logger = Logger(subsystem: "st.flrn.hermes.api", category: "gateway")
+        logger: Logger = Logger(subsystem: "hermes.api", category: "gateway")
     ) {
         self.baseURL = baseURL
         self.auth = auth

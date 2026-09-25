@@ -34,7 +34,7 @@ public struct SystemNetworkMonitor: GatewayNetworkMonitor {
                 ))
             }
             continuation.onTermination = { _ in monitor.cancel() }
-            monitor.start(queue: DispatchQueue(label: "st.flrn.hermes.api.network-path"))
+            monitor.start(queue: DispatchQueue(label: "hermes.api.network-path"))
         }
     }
 }

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "st.flrn.hermes"
-version = "2026.921.0"
+version = "0.21.4"
 
 repositories {
     mavenCentral()
@@ -31,6 +31,11 @@ kotlin {
 
 java {
     withSourcesJar()
+}
+
+// Live scenarios shared with the Android instrumented test in ../android.
+sourceSets.test {
+    kotlin.srcDir("src/live/kotlin")
 }
 
 tasks.test {

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from tools.fetch_spec import ROOT
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 
 def _strict(schema: dict, components: dict, visited: set[str] | None = None) -> bool:
@@ -99,28 +99,33 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
                 set(evidence["events"]) | set(evidence["rest"]))
     if recorded != declared:
         raise ValueError("Coverage evidence does not match recorded frame names")
-    if (not set(evidence["live_methods"]) <= set(evidence["methods"]) or
-            not set(evidence["live_events"]) <= set(evidence["events"]) or
-            not set(evidence["live_rest"]) <= set(evidence["rest"]) or
-            not set(evidence["live_server_requests"]) <= set(evidence["server_requests"])):
-        raise ValueError("Live evidence includes an unrecorded contract item")
+    if not set(evidence["live_rest"]) <= set(evidence["rest"]):
+        raise ValueError("Live evidence includes an unrecorded REST operation")
+    # Gateway live credit is what each client's scenarios exercised, measured on the wire.
+    report_key = {"gateway_method": "methods", "event": "events", "server_request": "server_requests"}
+    known = {(entry["kind"], entry["name"]) for entry in entries}
+    live_gateway = evidence["live_gateway"]
+    for platform in ("swift", "kotlin"):
+        for kind, key in report_key.items():
+            unknown = {name for name in live_gateway[platform][key] if (kind, name) not in known}
+            if unknown:
+                raise ValueError(f"{platform} live evidence names unknown {kind} items: {sorted(unknown)}")
     for entry in entries:
-        if ((entry["kind"] == "gateway_method" and entry["name"] in evidence["methods"]) or
-                (entry["kind"] == "event" and entry["name"] in evidence["events"]) or
-                (entry["kind"] == "server_request" and entry["name"] in evidence["server_requests"]) or
-                (entry["kind"] == "rest" and entry["name"] in evidence["rest"])):
-            entry["fixture"] = True
-            entry["decode"] = evidence["decode_swift"] and evidence["decode_kotlin"]
-            live = ((entry["kind"] == "gateway_method" and entry["name"] in evidence["live_methods"]) or
-                    (entry["kind"] == "event" and entry["name"] in evidence["live_events"]) or
-                    (entry["kind"] == "server_request" and entry["name"] in evidence["live_server_requests"]) or
-                    (entry["kind"] == "rest" and entry["name"] in evidence["live_rest"]))
+        if entry["kind"] in report_key:
+            key = report_key[entry["kind"]]
+            entry["fixture"] = entry["name"] in evidence[key]
+            entry["live_swift"] = entry["name"] in live_gateway["swift"][key]
+            entry["live_kotlin"] = entry["name"] in live_gateway["kotlin"][key]
+        else:
+            entry["fixture"] = entry["name"] in evidence["rest"]
+            live = entry["name"] in evidence["live_rest"]
             entry["live_swift"] = live and evidence["live_swift"]
             entry["live_kotlin"] = live and evidence["live_kotlin"]
+        entry["decode"] = entry["fixture"] and evidence["decode_swift"] and evidence["decode_kotlin"]
 
 
 def report(ref: str, root: Path = ROOT) -> dict:
-    ref = require_release_tag(ref)
+    ref = require_release(ref)
     source = root / "spec/out" / ref
     contract = json.loads((source / "openrpc.json").read_text())
     symbols = json.loads((source / "gateway-symbols.json").read_text())

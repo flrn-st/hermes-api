@@ -1,11 +1,16 @@
 import json
 
+import pytest
+
 from tools.coverage import report
 from tools.fetch_spec import ROOT
+from tools.ref_policy import current_release
+
+CURRENT = current_release()
 
 
 def test_coverage_accounts_for_every_tagged_operation() -> None:
-    data = report("v2026.9.21")
+    data = report(CURRENT)
     assert data["total"] == 634
     assert data["summary"]["gateway_method"]["total"] == 219
     assert data["summary"]["server_request"]["total"] == 12
@@ -17,12 +22,29 @@ def test_coverage_accounts_for_every_tagged_operation() -> None:
     assert data["summary"]["rest"]["fixture"] >= 4
     prompt = next(item for item in data["entries"] if item["name"] == "prompt.submit")
     assert prompt["typed"] and prompt["complete"]
-    symbols = json.loads((ROOT / "spec/out/v2026.9.21/generated-rest-symbols.json").read_text())
+    # Reconnect exercises these live, but no recorded scenario calls them, so they lack fixture credit.
+    activate = next(item for item in data["entries"] if item["name"] == "session.activate")
+    assert activate["live_swift"] and activate["live_kotlin"] and not activate["fixture"]
+    symbols = json.loads((ROOT / f"spec/out/{CURRENT}/generated-rest-symbols.json").read_text())
     assert data["summary"]["rest"]["generated"] == len(symbols)
 
 
+def test_live_gateway_evidence_must_name_contract_items(tmp_path) -> None:
+    import shutil
+
+    ref = CURRENT
+    for relative in (f"spec/out/{ref}", f"fixtures/{ref}", "coverage/evidence"):
+        shutil.copytree(ROOT / relative, tmp_path / relative)
+    evidence_path = tmp_path / f"coverage/evidence/{ref}.json"
+    evidence = json.loads(evidence_path.read_text())
+    evidence["live_gateway"]["swift"]["methods"].append("session.invented")
+    evidence_path.write_text(json.dumps(evidence))
+    with pytest.raises(ValueError, match="unknown gateway_method"):
+        report(ref, tmp_path)
+
+
 def test_recorded_system_prompt_is_redacted() -> None:
-    fixture = ROOT / "fixtures/v2026.9.21/liveness.jsonl"
+    fixture = ROOT / f"fixtures/{CURRENT}/liveness.jsonl"
     records = [json.loads(line) for line in fixture.read_text(encoding="utf-8").splitlines()]
     protected = [record for record in records if "params.payload.system_prompt" in record.get("redacted_fields", [])]
     assert protected

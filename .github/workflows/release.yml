@@ -12,7 +12,12 @@ permissions:
   packages: write
 
 jobs:
+  # Every platform check, including the iOS simulator and Android emulator live scenarios.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   publish:
+    needs: ci
     runs-on: macos-15
     env:
       GITHUB_TOKEN: ${{ github.token }}
@@ -53,6 +58,7 @@ jobs:
             fi
           else
             (cd kotlin && ./gradlew publishHermesAPIPublicationToGitHubPackagesRepository)
+            (cd android && ./gradlew publishHermesAPIAndroidPublicationToGitHubPackagesRepository)
             git tag "$release"
             git push origin "$release"
           fi

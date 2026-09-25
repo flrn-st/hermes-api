@@ -1,6 +1,8 @@
 REF ?= $(shell cat spec/current-release.txt)
+# Live clients: swift (macOS), kotlin (JVM), ios (simulator), android (connected emulator).
+CLIENTS ?= swift,kotlin
 
-.PHONY: gen check-gen rest check-rest live live-ticket record coverage test
+.PHONY: gen check-gen rest check-rest live live-ticket record coverage test android apple
 
 gen:
 	uv run --locked python -m tools.fetch_spec --ref $(REF)
@@ -24,7 +26,7 @@ check-gen:
 	uv run --locked python -m tools.gen_rest_api --ref $(REF) --check
 
 live:
-	uv run --locked python -m harness.live --ref $(REF)
+	uv run --locked python -m harness.live --ref $(REF) --clients $(CLIENTS)
 
 record:
 	uv run --locked python -m harness.live --ref $(REF) --record
@@ -35,6 +37,17 @@ test:
 	swift build
 	swift test --no-parallel
 	cd kotlin && ./gradlew check
+
+# Compile the Kotlin library for Android and lint it against minSdk; needs ANDROID_HOME.
+android:
+	cd android && ./gradlew assembleDebug assembleDebugAndroidTest lintDebug
+
+# Build the Swift library for iOS and iPadOS devices and simulators; `swift build` covers macOS.
+apple:
+	for platform in iOS 'iOS Simulator'; do \
+		xcodebuild build -quiet -scheme HermesAPI -destination "generic/platform=$$platform" \
+			-derivedDataPath .build/xcode || exit 1; \
+	done
 
 coverage:
 	uv run --locked python -m tools.coverage --ref $(REF)

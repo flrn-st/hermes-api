@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -15,6 +16,10 @@ APPROVAL_PROMPT = "Try the fixture cleanup command and report whether it was app
 APPROVAL_TARGET = Path("/tmp/hermes-api-fixture-approval-target")
 APPROVAL_COMMAND = f"rm -rf {APPROVAL_TARGET}"
 APPROVAL_REPLY = "HermesAPI approval denied as expected."
+RECONNECT_PROMPT = "Stream the HermesAPI reconnect fixture slowly."
+RECONNECT_CHUNKS = [f"part{index:02d} " for index in range(1, 17)]
+RECONNECT_REPLY = "".join(RECONNECT_CHUNKS).strip()
+RECONNECT_CHUNK_DELAY = 0.25
 
 
 class StubLLM:
@@ -32,6 +37,26 @@ class StubLLM:
                 self.send_header("Content-Length", str(len(payload)))
                 self.end_headers()
                 self.wfile.write(payload)
+
+            def _stream_slowly(self, model: str, usage: dict) -> None:
+                """Spread the reply over seconds so a client can lose its socket mid-turn."""
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                for index, text in enumerate(RECONNECT_CHUNKS):
+                    delta = {"role": "assistant", "content": text} if index == 0 else {"content": text}
+                    chunk = {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,
+                             "model": model, "choices": [{"index": 0, "delta": delta, "finish_reason": None}]}
+                    self.wfile.write(("data: " + json.dumps(chunk) + "\n\n").encode())
+                    self.wfile.flush()
+                    time.sleep(RECONNECT_CHUNK_DELAY)
+                final = {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,
+                         "model": model, "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+                         "usage": usage}
+                self.wfile.write(("data: " + json.dumps(final) + "\n\ndata: [DONE]\n\n").encode())
+                self.wfile.flush()
+                self.close_connection = True
 
             def do_GET(self) -> None:
                 if self.path != "/v1/models":
@@ -80,6 +105,9 @@ class StubLLM:
                             "model": model, "choices": [{"index": 0, "message": message,
                                                         "finish_reason": "tool_calls"}], "usage": usage,
                         }).encode())
+                    return
+                if RECONNECT_PROMPT in latest_user and request.get("stream"):
+                    self._stream_slowly(model, usage)
                     return
                 reply = CLARIFY_REPLY if clarify_turn else APPROVAL_REPLY if approval_turn else REPLY
                 if request.get("stream"):

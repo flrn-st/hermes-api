@@ -1,167 +1,26 @@
 import Foundation
 import HermesAPI
+import HermesAPILiveScenarios
 
 @main
 struct HermesAPICLI {
     static func main() async throws {
         let args = Array(CommandLine.arguments.dropFirst())
-        guard args.count == 3, args[0] == "smoke", args[1] == "--url",
-              let url = URL(string: args[2]) else {
-            throw CLIError.usage
+        guard args.count == 3, args[0] == "smoke", args[1] == "--url" else {
+            throw LiveScenarioError.usage
         }
-        let environment = ProcessInfo.processInfo.environment
-        let auth: any HermesAuth
-        if let ticket = environment["HERMES_LIVE_TICKET"], !ticket.isEmpty {
-            auth = StaticTicketAuth(ticket: ticket)
-        } else if let token = environment["HERMES_LIVE_TOKEN"], !token.isEmpty {
-            auth = LocalTokenAuth(token: token)
-        } else {
-            throw CLIError.usage
-        }
-        let gateway = HermesGateway(configuration: .init(baseURL: url, auth: auth))
-        await gateway.setServerRequestHandler { request in
-            switch request {
-            case .clarify(let params):
-                guard case .value(let questions) = params.questions,
-                      questions.count == 1,
-                      questions[0].question == "Which release channel?" else {
-                    throw CLIError.unexpectedServerRequest
-                }
-                return .clarify(ClarifyResult(answers: [questions[0].qid: "Stable"]))
-            case .approval(let params):
-                guard params.command == "rm -rf /tmp/hermes-api-fixture-approval-target" else {
-                    throw CLIError.unexpectedServerRequest
-                }
-                return .approval(ApprovalResult(choice: .deny))
-            default:
-                throw CLIError.unexpectedServerRequest
-            }
-        }
+        var values = ProcessInfo.processInfo.environment
+        values["HERMES_LIVE_URL"] = args[2]
         do {
-            try await gateway.connect()
-            let result = try await gateway.ping(PingParams())
-            guard result.pong else { throw CLIError.pingFailed }
-            _ = try await gateway.gateway.capabilities(PingParams())
-            if environment["HERMES_LIVE_LIFECYCLE"] == "1" {
-                let session = try await gateway.session.create(.init(
-                    cwd: .value("/tmp"), title: .value("HermesAPI live session"),
-                    closeOnDisconnect: true))
-                let submission = try await gateway.prompt.submit(.init(
-                    sessionId: session.sessionId,
-                    text: .string("Reply with a short greeting.")))
-                guard submission.status != nil else { throw CLIError.turnFailed }
-                let reply = try await waitForFixtureReply(
-                    events: gateway.events, sessionID: session.sessionId,
-                    expected: "HermesAPI fixture reply.", expectedTool: nil)
-                guard reply == "HermesAPI fixture reply." else { throw CLIError.turnFailed }
-                let clarification = try await gateway.prompt.submit(.init(
-                    sessionId: session.sessionId,
-                    text: .string("Ask which release channel to use for HermesAPI.")))
-                guard clarification.status != nil else { throw CLIError.turnFailed }
-                let clarifiedReply = try await waitForFixtureReply(
-                    events: gateway.events, sessionID: session.sessionId,
-                    expected: "HermesAPI stable release selected.", expectedTool: "clarify")
-                guard clarifiedReply == "HermesAPI stable release selected." else { throw CLIError.turnFailed }
-                let approval = try await gateway.prompt.submit(.init(
-                    sessionId: session.sessionId,
-                    text: .string("Try the fixture cleanup command and report whether it was approved.")))
-                guard approval.status != nil else { throw CLIError.turnFailed }
-                let deniedReply = try await waitForFixtureReply(
-                    events: gateway.events, sessionID: session.sessionId,
-                    expected: "HermesAPI approval denied as expected.", expectedTool: "terminal")
-                guard deniedReply == "HermesAPI approval denied as expected." else { throw CLIError.turnFailed }
-                _ = try await gateway.session.list(.init())
-                let closed = try await gateway.session.close(.init(sessionId: session.sessionId))
-                guard closed.closed else { throw CLIError.sessionCloseFailed }
-                guard let token = environment["HERMES_LIVE_TOKEN"] else { throw CLIError.usage }
-                let rest = HermesREST(configuration: .init(
-                    baseURL: url, headers: { ["X-Hermes-Session-Token": token] }))
-                let voice = try await rest.audio.voiceLiveStatus(profile: "default")
-                guard voice.ok, voice.mode == "chained", !voice.model.isEmpty, !voice.voice.isEmpty else {
-                    throw CLIError.invalidRESTVoice
-                }
-                let profile = try await rest.profiles.active()
-                guard profile.active == "default", profile.current == "default" else {
-                    throw CLIError.invalidRESTProfile
-                }
-                let selected = try await rest.profiles.setActive(body: .init(name: "default"))
-                guard selected.ok, selected.active == "default" else { throw CLIError.invalidRESTProfile }
-                let count = try await rest.sessions.emptyCount(profile: "default")
-                guard count.count >= 0 else { throw CLIError.invalidRESTCount }
-            }
-            FileHandle.standardOutput.write(Data("Hermes \(HermesAPI.hermesRelease) gateway ping passed\n".utf8))
-            await gateway.disconnect()
+            try await LiveScenarios.run(LiveScenarioEnvironment(values))
         } catch {
-            await gateway.disconnect()
-            throw error
+            FileHandle.standardError.write(Data("Live scenario failed: \(error)\n".utf8))
+            exit(1)
         }
-    }
-
-    private static func waitForFixtureReply(
-        events: AsyncStream<GatewayEvent>, sessionID: String, expected: String, expectedTool: String?
-    ) async throws -> String {
-        try await withThrowingTaskGroup(of: String.self) { group in
-            group.addTask {
-                var sawStart = false
-                var sawToolStart = false
-                var sawToolComplete = false
-                var streamed = ""
-                for await event in events where event.sessionID == sessionID {
-                    switch event.payload {
-                    case .messageStart:
-                        sawStart = true
-                    case .toolStart(let payload) where payload.name == expectedTool:
-                        sawToolStart = true
-                    case .toolComplete(let payload) where payload.name == expectedTool:
-                        if expectedTool == "terminal" {
-                            guard case .object(let result)? = payload.result,
-                                  result["status"] == .string("blocked"),
-                                  result["exit_code"] == .integer(-1) else { throw CLIError.turnFailed }
-                        }
-                        sawToolComplete = true
-                    case .messageDelta(let payload):
-                        streamed += payload.text
-                    case .messageComplete(let payload):
-                        if case .string(let text)? = payload.text,
-                           sawStart, text == expected,
-                           streamed.trimmingCharacters(in: .whitespacesAndNewlines) == text,
-                           (expectedTool == nil || (sawToolStart && sawToolComplete)) { return text }
-                        throw CLIError.turnFailed
-                    case .error:
-                        throw CLIError.turnFailed
-                    default:
-                        continue
-                    }
-                }
-                throw CLIError.turnFailed
-            }
-            group.addTask {
-                try await Task.sleep(for: .seconds(30))
-                throw CLIError.turnTimedOut
-            }
-            defer { group.cancelAll() }
-            guard let first = try await group.next() else { throw CLIError.turnFailed }
-            return first
-        }
+        FileHandle.standardOutput.write(Data("Hermes \(HermesAPI.hermesRelease) gateway live scenarios passed\n".utf8))
     }
 }
 
-private struct StaticTicketAuth: HermesAuth {
-    let ticket: String
-
-    func credential(baseURL: URL, http: any HTTPTransport) async throws -> GatewayCredential {
-        .ticket(ticket, headers: [:])
-    }
-}
-
-private enum CLIError: Error {
-    case usage
-    case pingFailed
-    case sessionCloseFailed
-    case turnFailed
-    case turnTimedOut
-    case invalidRESTCount
-    case invalidRESTProfile
-    case invalidRESTVoice
-    case unexpectedServerRequest
+private extension LiveScenarioError {
+    static var usage: LiveScenarioError { LiveScenarioError("usage: hermes-api-cli smoke --url <dashboard URL>") }
 }

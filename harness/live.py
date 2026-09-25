@@ -201,6 +201,8 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
             if xcode.is_dir():
                 env["DEVELOPER_DIR"] = str(xcode)
         log_path = Path(home) / "server.log"
+        if os.environ.get("DEBUG_RST1_DIR"):  # [DEBUG-rst1]
+            env["PYTHONPATH"] = os.environ["DEBUG_RST1_DIR"]  # [DEBUG-rst1] sitecustomize: SIGUSR1 stack dumps
         server = HermesServer(repo, python, port, token, env, log_path)
         proxy: FaultProxy | None = None
         control: ControlServer | None = None
@@ -284,6 +286,8 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                 proxy.close()
             server.stop()
             stub.close()
+            if os.environ.get("DEBUG_RST1_DIR"):  # [DEBUG-rst1]
+                shutil.copy(log_path, Path(os.environ["DEBUG_RST1_DIR"]) / "server.log")  # [DEBUG-rst1]
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)

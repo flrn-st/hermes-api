@@ -65,15 +65,18 @@ jobs:
           /tmp/actionlint/actionlint .github/workflows/*.yml
       - name: Audit pinned release schema
         run: |
-          uv run --locked python -m tools.schema_audit --ref "$(cat spec/current-release.txt)"
-          git diff --exit-code -- spec/out/$(cat spec/current-release.txt)/schema-audit.json
+          ref="$(cat spec/current-release.txt)"
+          uv run --locked python -m tools.schema_audit --ref "$ref"
+          git diff --exit-code -- "spec/out/$ref/schema-audit.json"
       - name: Check committed generated sources
         run: make check-gen
       - name: Check reviewed REST overlays
         run: |
           make rest
           make check-rest
-          git diff --exit-code -- spec/out/$(cat spec/current-release.txt)/openapi.raw.json spec/out/$(cat spec/current-release.txt)/openapi.json spec/out/$(cat spec/current-release.txt)/rest-hashes.json spec/out/$(cat spec/current-release.txt)/rest-meta.json
+          ref="$(cat spec/current-release.txt)"
+          git diff --exit-code -- "spec/out/$ref/openapi.raw.json" "spec/out/$ref/openapi.json" \
+            "spec/out/$ref/rest-hashes.json" "spec/out/$ref/rest-meta.json"
       - name: Report contract coverage
         run: |
           make coverage

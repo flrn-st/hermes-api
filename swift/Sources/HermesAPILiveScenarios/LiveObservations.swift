@@ -42,12 +42,17 @@ private actor ObservedConnection: GatewayConnection {
     }
 
     func send(_ frame: Data) async throws {
-        try await inner.send(frame)
-        guard case .object(let fields)? = try? JSONDecoder().decode(JSONValue.self, from: frame) else { return }
+        guard case .object(let fields)? = try? JSONDecoder().decode(JSONValue.self, from: frame) else {
+            try await inner.send(frame)
+            return
+        }
+        // Record a call before sending it: Hermes can answer before the send returns.
         if case .string(let method)? = fields["method"], case .integer(let id)? = fields["id"] {
             calls[id] = method
-        } else if case .string(let id)? = fields["id"], fields["result"] != nil,
-                  let method = requests.removeValue(forKey: id) {
+        }
+        try await inner.send(frame)
+        if case .string(let id)? = fields["id"], fields["method"] == nil, fields["result"] != nil,
+           let method = requests.removeValue(forKey: id) {
             await observations.serverRequest(method)
         }
     }

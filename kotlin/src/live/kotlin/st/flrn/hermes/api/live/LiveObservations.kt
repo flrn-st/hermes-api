@@ -61,13 +61,13 @@ private class ObservedConnection(
     private val requests = mutableMapOf<String, String>()
 
     override suspend fun send(text: String) {
+        val fields = parse(text)
+        val method = (fields?.get("method") as? JsonPrimitive)?.takeIf { it.isString }?.content
+        val id = fields?.get("id") as? JsonPrimitive
+        // Record a call before sending it: Hermes can answer before the send returns.
+        if (method != null && id != null && !id.isString) id.intOrNull?.let { synchronized(calls) { calls[it] = method } }
         delegate.send(text)
-        val fields = parse(text) ?: return
-        val method = (fields["method"] as? JsonPrimitive)?.takeIf { it.isString }?.content
-        val id = fields["id"] as? JsonPrimitive ?: return
-        if (method != null && !id.isString) {
-            id.intOrNull?.let { synchronized(calls) { calls[it] = method } }
-        } else if (method == null && id.isString && fields["result"] != null) {
+        if (method == null && id != null && id.isString && fields["result"] != null) {
             synchronized(requests) { requests.remove(id.content) }?.let(observations::serverRequest)
         }
     }

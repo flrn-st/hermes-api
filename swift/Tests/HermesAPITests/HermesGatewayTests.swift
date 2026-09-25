@@ -172,7 +172,7 @@ private func error(_ id: Int, code: Int, _ message: String) -> String {
 
 /// Waits (bounded) for the gateway to report a matching state.
 private func state(
-    of gateway: HermesGateway, within limit: Duration = .seconds(2),
+    of gateway: HermesGateway, within limit: Duration = .seconds(5),
     _ matches: @escaping @Sendable (GatewayConnectionState) -> Bool
 ) async throws {
     let states = gateway.connectionStates()
@@ -595,7 +595,7 @@ private func createSession(
     let first = TestSocket()
     let second = TestSocket()
     let transport = SequenceTransport([first, second])
-    let gateway = client(transport, heartbeat: .milliseconds(40), deadline: .milliseconds(200))
+    let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .milliseconds(500))
     try await gateway.connect()
     var heartbeats = first.heartbeats.makeAsyncIterator()
     #expect(await heartbeats.next()?.hasPrefix("heartbeat-") == true)

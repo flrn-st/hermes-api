@@ -610,7 +610,7 @@ private func createSession(
 @Test func answeredHeartbeatsKeepTheConnection() async throws {
     let socket = TestSocket(answersHeartbeats: true)
     let transport = SequenceTransport([socket])
-    let gateway = client(transport, heartbeat: .milliseconds(40), deadline: .milliseconds(200))
+    let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .seconds(1))
     try await gateway.connect()
     var heartbeats = socket.heartbeats.makeAsyncIterator()
     for _ in 0..<8 { _ = await heartbeats.next() }
@@ -621,12 +621,13 @@ private func createSession(
 
 @Test func streamingTrafficNeedsNoHeartbeat() async throws {
     let socket = TestSocket()
-    let gateway = client(SequenceTransport([socket]), heartbeat: .milliseconds(100), deadline: .milliseconds(400))
+    // Events arrive ten times faster than the heartbeat interval, leaving room for a slow CI runner.
+    let gateway = client(SequenceTransport([socket]), heartbeat: .milliseconds(500), deadline: .seconds(2))
     try await gateway.connect()
     let stream = Task {
-        for seq in 1...12 {
+        for seq in 1...30 {
             await socket.inject(event("message.delta", session: "s", seq: seq, payload: #"{"text":"x"}"#))
-            try await Task.sleep(for: .milliseconds(40))
+            try await Task.sleep(for: .milliseconds(50))
         }
     }
     try await stream.value

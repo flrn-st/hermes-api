@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # Workflows pin actions to commit SHAs; one weekly PR moves them all together.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    ignore:
+      # v6 moves caching into a proprietary component under separate license terms.
+      - dependency-name: 'gradle/actions*'
+        versions: ['>= 6']

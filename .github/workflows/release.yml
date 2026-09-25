@@ -16,9 +16,11 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yml
 
+  # CI above already built and tested this commit on every platform; publishing needs no macOS.
   publish:
     needs: ci
-    runs-on: macos-15
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       GITHUB_TOKEN: ${{ github.token }}
     steps:
@@ -34,15 +36,6 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Validate generated contracts
-        run: |
-          make check-gen
-          make check-rest
-          uv run --locked pytest
-          uv run --locked ruff check tools harness
-          swift test --no-parallel
-          (cd kotlin && ./gradlew check)
-          make live
       - name: Enforce complete tagged coverage
         run: |
           make coverage

@@ -56,8 +56,14 @@ jobs:
       - name: Check for an existing update PR
         id: existing
         run: |
-          if [ "$(gh pr list --state open --head "hermes/$REF" --json number --jq 'length')" != 0 ]; then
+          head=$(gh pr list --state open --head "hermes/$REF" --json headRefOid --jq '.[0].headRefOid // empty')
+          if [ -n "$head" ]; then
             echo 'skip=true' >> "$GITHUB_OUTPUT"
+            # PRs opened with the workflow token start no CI of their own; a lost dispatch would leave
+            # the PR without the required ci-ok check.
+            if [ "$(gh run list --workflow ci.yml --commit "$head" --json databaseId --jq 'length')" = 0 ]; then
+              gh workflow run ci.yml --ref "hermes/$REF"
+            fi
           fi
       - name: Generate tagged release update
         if: steps.existing.outputs.skip != 'true'

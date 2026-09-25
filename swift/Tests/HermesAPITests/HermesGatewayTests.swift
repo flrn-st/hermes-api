@@ -637,11 +637,13 @@ private func createSession(
 
 @Test func streamingTrafficNeedsNoHeartbeat() async throws {
     let socket = TestSocket()
-    // Events arrive ten times faster than the heartbeat interval, leaving room for a slow CI runner.
-    let gateway = client(SequenceTransport([socket]), heartbeat: .milliseconds(500), deadline: .seconds(2))
+    // Events arrive forty times faster than the heartbeat interval and span two of its checks. The gateway
+    // runs on the real clock, so the margin must outlast a loaded runner stalling the stream: at 500 ms
+    // an oversubscribed machine already paused it long enough to earn a legitimate heartbeat.
+    let gateway = client(SequenceTransport([socket]), heartbeat: .seconds(2), deadline: .seconds(6))
     try await gateway.connect()
     let stream = Task {
-        for seq in 1...30 {
+        for seq in 1...100 {
             await socket.inject(event("message.delta", session: "s", seq: seq, payload: #"{"text":"x"}"#))
             try await Task.sleep(for: .milliseconds(50))
         }

@@ -106,7 +106,7 @@ jobs:
           script: make live CLIENTS=android
       - name: '[DEBUG-rst1] Failed Android tests'
         if: failure()
-        run: grep -rho '<testcase[^>]*>\s*<failure[^>]*message="[^"]*"' android/build/outputs/androidTest-results || true
+        run: grep -rh -A3 "<failure" android/build/outputs/androidTest-results || true
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

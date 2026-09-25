@@ -33,8 +33,13 @@ def _free_port() -> int:
         return int(listener.getsockname()[1])
 
 
+# A loaded CI runner starts Hermes in over ten seconds. With the stop's 15 s, a restart still answers
+# within the clients' 120 s control timeout.
+STARTUP_TIMEOUT = 90
+
+
 def _await_status(url: str, token: str, server: subprocess.Popen[bytes]) -> None:
-    deadline = time.monotonic() + 30
+    deadline = time.monotonic() + STARTUP_TIMEOUT
     request = urllib.request.Request(url + "/api/status", headers={"X-Hermes-Session-Token": token})
     while time.monotonic() < deadline:
         if server.poll() is not None:
@@ -104,11 +109,8 @@ class HermesServer:
         self.process = None
 
     def restart(self) -> None:
-        began = time.monotonic()  # [DEBUG-rst1]
         self.stop()
-        stopped = time.monotonic()  # [DEBUG-rst1]
         self.start()
-        print(f"[DEBUG-rst1] restart stop {stopped - began:.1f}s start {time.monotonic() - stopped:.1f}s", flush=True)  # [DEBUG-rst1]
 
 
 def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,
@@ -122,7 +124,9 @@ def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,
         runner = {**env, "TEST_RUNNER_HERMES_LIVE_SCENARIOS": "1"}
         for name in ("HERMES_LIVE_URL", "HERMES_LIVE_TOKEN", "HERMES_LIVE_LIFECYCLE", "HERMES_LIVE_CONTROL"):
             runner["TEST_RUNNER_" + name] = env[name]
-        # The whole suite runs in the simulator: the unit tests as well as the live scenarios.
+        # The whole suite runs in the simulator: the unit tests as well as the live scenarios. Serially,
+        # as `swift test --no-parallel` runs it on macOS: in parallel the timing-sensitive gateway tests
+        # and the live scenario starve each other on a CI runner.
         # Not quiet: a failing scenario reports its reason only in the test output.
         return ["xcodebuild", "test", "-scheme", "HermesAPI-Package",
                 "-destination", _simulator_destination(client, env), "-derivedDataPath", str(ROOT / ".build" / "xcode"),
@@ -136,7 +140,8 @@ def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,
         arguments = [f"-Pandroid.testInstrumentationRunnerArguments.{name}={env[variable]}" for name, variable in (
             ("hermesUrl", "HERMES_LIVE_URL"), ("hermesToken", "HERMES_LIVE_TOKEN"),
             ("hermesLifecycle", "HERMES_LIVE_LIFECYCLE"), ("hermesControl", "HERMES_LIVE_CONTROL"))]
-        return [str(ROOT / "android" / "gradlew"), "connectedDebugAndroidTest", "--quiet", *arguments], \
+        # Not quiet: Gradle names a failing instrumented test only in its normal output.
+        return [str(ROOT / "android" / "gradlew"), "connectedDebugAndroidTest", *arguments], \
             ROOT / "android", env
     raise ValueError(f"Unknown client {client}")
 

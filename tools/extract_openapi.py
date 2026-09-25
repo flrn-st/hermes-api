@@ -38,8 +38,11 @@ def extract(ref: str, source_repo: Path | None = None) -> dict[str, object]:
     if _run(["git", "status", "--porcelain", "--untracked-files=no"], repo):
         raise ValueError("Tagged Hermes checkout has modified tracked files")
 
-    _run(["uv", "sync", "--frozen", "--extra", "web", "--no-dev", "--python", "3.12"], repo)
+    _run(["uv", "sync", "--frozen", "--extra", "web", "--no-dev", "--python", "3.12", "--compile-bytecode"], repo)
     python = repo / ".venv" / "bin" / "python"
+    # Uncompiled imports cost the live harness seconds on every cold server start and first turn, and on
+    # a loaded CI runner long enough for clients to give up; the bytecode is gitignored upstream.
+    _run([str(python), "-m", "compileall", "-q", "-j", "0", "-x", r"/\.venv/", "."], repo)
     output = ROOT / "spec" / "out" / ref
     with tempfile.TemporaryDirectory(prefix="hermes-openapi-") as isolated_home:
         env = os.environ.copy()

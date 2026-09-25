@@ -9,6 +9,7 @@ import socket
 import struct
 import threading
 import time
+import traceback
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -154,9 +155,8 @@ class ControlServer:
                         self.send_error(404)
                         return
                 except Exception as error:  # noqa: BLE001 - the client scenario reports the failure
-                    import sys, traceback  # [DEBUG-rst1]
-                    print(f"[DEBUG-rst1] control {url.path} failed: {error!r}", file=sys.stderr, flush=True)  # [DEBUG-rst1]
-                    traceback.print_exc()  # [DEBUG-rst1]
+                    # Clients only learn that the call failed; the harness log keeps why.
+                    traceback.print_exc()
                     self.send_error(500, str(error))
                     return
                 self.send_response(204)

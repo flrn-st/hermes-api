@@ -28,6 +28,9 @@ public struct DashboardTicketAuth: HermesAuth {
         request.httpMethod = "POST"
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         let (data, response) = try await http.send(request)
+        if response.statusCode == 401 || response.statusCode == 403 {
+            throw HermesGatewayError.authenticationFailed("WebSocket ticket request returned HTTP \(response.statusCode)")
+        }
         guard (200..<300).contains(response.statusCode) else {
             throw HermesGatewayError.transport("WebSocket ticket request returned HTTP \(response.statusCode)")
         }

@@ -2,7 +2,6 @@ package st.flrn.hermes.api.runtime
 
 import java.net.URI
 import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.request
@@ -67,7 +66,7 @@ public class HermesREST(
     ): Result {
         if (!path.startsWith("/api/")) throw HermesRESTException.Transport("Invalid REST path")
         val suffix = query.toSortedMap().entries.joinToString("&") { (name, value) ->
-            "${URLEncoder.encode(name, StandardCharsets.UTF_8)}=${URLEncoder.encode(value, StandardCharsets.UTF_8)}"
+            "${URLEncoder.encode(name, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
         }
         val base = configuration.baseURI.resolve(path)
         val uri = if (suffix.isEmpty()) base else URI("$base?$suffix")

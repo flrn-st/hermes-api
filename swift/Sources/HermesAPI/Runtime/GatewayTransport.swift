@@ -4,7 +4,6 @@ import Foundation
 public protocol GatewayConnection: Sendable {
     func send(_ frame: Data) async throws
     func receive() async throws -> Data
-    func ping() async throws
     func close() async
 }
 
@@ -34,8 +33,13 @@ public struct URLSessionHTTPTransport: HTTPTransport {
 
 public struct URLSessionGatewayTransport: GatewayTransport {
     public let session: URLSession
+    /// URLSession's default of 1 MiB would fail every reconnect that replays or resumes a long session.
+    public let maximumMessageSize: Int
 
-    public init(session: URLSession = .shared) { self.session = session }
+    public init(session: URLSession = .shared, maximumMessageSize: Int = 64 << 20) {
+        self.session = session
+        self.maximumMessageSize = maximumMessageSize
+    }
 
     public func connect(url: URL, headers: [String: String], subprotocols: [String]) async throws -> any GatewayConnection {
         var request = URLRequest(url: url)
@@ -44,6 +48,7 @@ public struct URLSessionGatewayTransport: GatewayTransport {
             request.setValue(subprotocols.joined(separator: ", "), forHTTPHeaderField: "Sec-WebSocket-Protocol")
         }
         let task = session.webSocketTask(with: request)
+        task.maximumMessageSize = maximumMessageSize
         task.resume()
         return URLSessionGatewayConnection(task: task)
     }
@@ -58,27 +63,39 @@ private actor URLSessionGatewayConnection: GatewayConnection {
         guard let text = String(data: frame, encoding: .utf8) else {
             throw HermesGatewayError.transport("Outgoing frame is not UTF-8")
         }
-        try await task.send(.string(text))
+        do {
+            try await task.send(.string(text))
+        } catch {
+            throw failure(error)
+        }
     }
 
     func receive() async throws -> Data {
-        switch try await task.receive() {
+        let message: URLSessionWebSocketTask.Message
+        do {
+            message = try await task.receive()
+        } catch {
+            throw failure(error)
+        }
+        switch message {
         case .string(let text): return Data(text.utf8)
         case .data(let data): return data
         @unknown default: throw HermesGatewayError.transport("Unsupported WebSocket message")
         }
     }
 
-    func ping() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            task.sendPing { error in
-                if let error { continuation.resume(throwing: error) }
-                else { continuation.resume() }
-            }
-        }
-    }
-
     func close() {
         task.cancel(with: .normalClosure, reason: nil)
+    }
+
+    /// Hermes rejects a bad credential before the upgrade, which URLSession reports as the HTTP status.
+    private func failure(_ error: any Error) -> HermesGatewayError {
+        if let status = (task.response as? HTTPURLResponse)?.statusCode, status == 401 || status == 403 {
+            return .authenticationFailed("WebSocket upgrade returned HTTP \(status)")
+        }
+        if task.closeCode != .invalid {
+            return .transport("WebSocket closed with code \(task.closeCode.rawValue)")
+        }
+        return .transport(error.localizedDescription)
     }
 }

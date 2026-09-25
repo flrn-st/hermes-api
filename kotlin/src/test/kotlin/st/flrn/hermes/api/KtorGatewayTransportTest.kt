@@ -4,9 +4,12 @@ import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
 import java.net.URI
 import kotlinx.coroutines.runBlocking
+import st.flrn.hermes.api.runtime.HermesGatewayException
 import st.flrn.hermes.api.runtime.KtorGatewayTransport
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 
 class KtorGatewayTransportTest {
     @Test
@@ -32,6 +35,40 @@ class KtorGatewayTransportTest {
         } finally {
             transport.close()
             server.stop(0)
+        }
+    }
+
+    @Test
+    fun rejectedUpgradeIsAnAuthenticationFailure() = runBlocking<Unit> {
+        // Hermes closes an unauthenticated socket before accepting it, which uvicorn sends as HTTP 403.
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/api/ws") { exchange ->
+            exchange.sendResponseHeaders(403, -1)
+            exchange.close()
+        }
+        server.start()
+        val transport = KtorGatewayTransport()
+        try {
+            val error = assertFailsWith<HermesGatewayException> {
+                transport.connect(URI("ws://127.0.0.1:${server.address.port}/api/ws?token=wrong"), emptyMap(), emptyList())
+            }
+            assertIs<HermesGatewayException.AuthenticationFailed>(error, error.message)
+        } finally {
+            transport.close()
+            server.stop(0)
+        }
+    }
+
+    @Test
+    fun unreachableServerIsATransportFailure() = runBlocking<Unit> {
+        val transport = KtorGatewayTransport()
+        try {
+            val error = assertFailsWith<HermesGatewayException> {
+                transport.connect(URI("ws://127.0.0.1:9/api/ws"), emptyMap(), emptyList())
+            }
+            assertIs<HermesGatewayException.Transport>(error, error.message)
+        } finally {
+            transport.close()
         }
     }
 }

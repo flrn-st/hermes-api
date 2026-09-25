@@ -19,6 +19,9 @@ public class DashboardTicketAuth(private val headers: suspend () -> Map<String, 
     override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential {
         val currentHeaders = headers()
         val (status, body) = http.post(baseURI.resolve("/api/auth/ws-ticket"), currentHeaders)
+        if (status == 401 || status == 403) {
+            throw HermesGatewayException.AuthenticationFailed("WebSocket ticket request returned HTTP $status")
+        }
         if (status !in 200..299) throw HermesGatewayException.Transport("WebSocket ticket request returned HTTP $status")
         val ticket = Json.parseToJsonElement(body).jsonObject["ticket"]?.jsonPrimitive?.content
             ?: throw HermesGatewayException.Protocol("Ticket response has no ticket")

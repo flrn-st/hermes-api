@@ -14,7 +14,7 @@ published Hermes releases, with 100% API and test coverage. Written for an imple
   generic, no Cadu-specific code, MIT licensed like Hermes).
 - **Module name on both platforms:** `HermesAPI` (Swift module), `hermes-api` (Kotlin artifact),
   package `st.flrn.hermes.api` (interim; change if upstreamed).
-- **First Hermes ref to target:** tag `v2026.9.21` (first contract-carrying release is `v2026.9.14`).
+- **First Hermes release to target:** `v0.21.4`, tag `v2026.9.21` (first contract-carrying release is `v0.21.3`, tag `v2026.9.14`).
 
 ---
 
@@ -116,7 +116,7 @@ Wire envelopes (from `tui_gateway/server.py`, `tui_gateway/server_requests.py`):
 | Generated code | **Committed** (`Generated/` dirs), never hand-edited, no SwiftPM build plugins. |
 | Swift | Swift 6 language mode, strict concurrency complete, **no third-party dependencies** (Foundation + URLSession only). Platforms: iOS 17, macOS 14, watchOS 10, tvOS 17, visionOS 1. Library code is **not** MainActor-isolated. Swift Testing for tests. |
 | Kotlin | Kotlin 2.x, JVM library (JVM 17 bytecode; Android minSdk 26), kotlinx.serialization, kotlinx.coroutines (Flow), Ktor client (core + websockets; OkHttp engine by default, engine injectable). kotlin.test + JUnit 5 + kotlinx-coroutines-test + Turbine. Explicit API mode on. |
-| Versioning | `YYYY.MDD.R` — Hermes `v2026.9.21` → `2026.921.0`; our revisions bump `R`. Same version string for SwiftPM tag and Maven. Branch builds on `hermes/<ref>` branches. |
+| Versioning | The Hermes version itself: Hermes Agent `v0.21.4` (released as tag `v2026.9.21`) → HermesAPI `0.21.4`. Same version string for SwiftPM tag and Maven. `spec/refs.yaml` maps each version to its tag. |
 | Fixtures | Git LFS (SwiftPM consumers don't fetch LFS objects). |
 | REST schema gaps | OpenAPI Overlay 1.0 files in `spec/overlay/rest/`. |
 | CI | GitHub Actions with path filters. |
@@ -305,7 +305,7 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 
 - Create repo, layout, `CLAUDE.md`, toolchains (Swift, Gradle wrapper, Python via `uv`), CI skeleton
   with path filters, Git LFS for `fixtures/`.
-- `spec/refs.yaml` with `v2026.9.21` only.
+- `spec/refs.yaml` with `v0.21.4: v2026.9.21` only.
 - Spikes (write findings to `docs/findings.md`):
   1. Dashboard auth + WebSocket ticket flow at the target ref (read `hermes_cli/web_server.py`,
      `tui_gateway/ws.py`; compare with this app's `HermesAgent/Gateway/GatewayClient.swift`).
@@ -338,14 +338,14 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 - Section 7 harness, stub LLM, recorder, scenarios covering at least: session lifecycle, prompt
   turn with deltas, tool start/complete, approval accept/deny, clarify, request cancel, subagent,
   reconnect + replay, errors.
-- **Exit:** `make live REF=v2026.9.21` records fixtures and runs live tests for both clients.
+- **Exit:** `make live REF=v0.21.4` records fixtures and runs live tests for both clients.
 
 ### Phase 4 — Coverage to 100% (gateway)
 
 - Implement `tools/coverage.py` and the CI gate.
 - Expand scenarios/seed data until every method, server request and event is live-covered or
   explicitly exempted by a human.
-- **Exit:** gateway coverage 100% for `v2026.9.21`.
+- **Exit:** gateway coverage 100% for `v0.21.4`.
 
 ### Phase 5 — REST
 
@@ -361,7 +361,7 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
   `HTTPTransport`. Streaming/binary endpoints (upload-stream, download) may be hand-written in
   `Runtime/` but still count toward coverage and need tests.
 - Harness scenarios + fixtures for REST; same coverage gate.
-- **Exit:** REST coverage 100% (or human exemptions) for `v2026.9.21`.
+- **Exit:** REST coverage 100% (or human exemptions) for `v0.21.4`.
 
 ### Phase 6 — Version matrix and release automation
 

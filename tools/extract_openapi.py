@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from tools.fetch_spec import ROOT, UPSTREAM
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release, upstream_tag
 
 
 def _run(args: list[str], cwd: Path, env: dict[str, str] | None = None) -> str:
@@ -21,17 +21,18 @@ def _run(args: list[str], cwd: Path, env: dict[str, str] | None = None) -> str:
 
 
 def extract(ref: str, source_repo: Path | None = None) -> dict[str, object]:
-    ref = require_release_tag(ref)
+    ref = require_release(ref)
     expected = json.loads((ROOT / "spec" / "out" / ref / "meta.json").read_text(encoding="utf-8"))
     if expected["ref"] != ref:
         raise ValueError("Pinned contract metadata has a different ref")
+    tag = upstream_tag(ref)
     repo = source_repo or ROOT / "spec" / ".upstream-rest" / ref
     if source_repo is None and not (repo / ".git").exists():
         repo.parent.mkdir(parents=True, exist_ok=True)
-        _run(["git", "clone", "--quiet", "--filter=blob:none", "--depth=1", "--branch", ref,
+        _run(["git", "clone", "--quiet", "--filter=blob:none", "--depth=1", "--branch", tag,
               UPSTREAM, str(repo)], ROOT)
     commit = _run(["git", "rev-parse", "HEAD"], repo)
-    tag_commit = _run(["git", "rev-parse", f"refs/tags/{ref}^{{commit}}"], repo)
+    tag_commit = _run(["git", "rev-parse", f"refs/tags/{tag}^{{commit}}"], repo)
     if commit != tag_commit or commit != expected["commit"]:
         raise ValueError(f"Checkout is not the pinned {ref} commit")
     if _run(["git", "status", "--porcelain", "--untracked-files=no"], repo):

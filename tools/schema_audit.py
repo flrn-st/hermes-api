@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 ROOT = Path(__file__).resolve().parents[1]
 _META = {"title", "description", "default"}
@@ -128,7 +128,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ref", required=True)
     args = parser.parse_args()
-    ref = require_release_tag(args.ref)
+    ref = require_release(args.ref)
     path = ROOT / "spec" / "out" / ref
     contract = json.loads((path / "openrpc.json").read_text(encoding="utf-8"))
     counts = audit_contract(contract)

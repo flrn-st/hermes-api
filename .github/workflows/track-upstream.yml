@@ -15,12 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ref: ${{ steps.tag.outputs.ref }}
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
       - uses: astral-sh/setup-uv@v6
-      - name: Detect newest stable tag
+      - name: Detect newest released Hermes version
         id: tag
         run: uv run --locked python -m tools.track_upstream --github-output "$GITHUB_OUTPUT"
 
@@ -30,6 +31,7 @@ jobs:
     runs-on: macos-15
     env:
       REF: ${{ needs.detect.outputs.ref }}
+      TAG: ${{ needs.detect.outputs.tag }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +56,7 @@ jobs:
           previous=$(cat spec/current-release.txt)
           echo "PREVIOUS_REF=$previous" >> "$GITHUB_ENV"
           git switch -c "hermes/$REF"
-          uv run --locked python -m tools.track_upstream --adopt "$REF"
+          uv run --locked python -m tools.track_upstream --adopt "$REF" --tag "$TAG"
           uv run --locked python -m tools.fetch_spec --ref "$REF"
           mkdir -p "reports/$REF"
           if ! uv run --locked python -m tools.schema_audit --ref "$REF" > "reports/$REF/schema-audit.log" 2>&1; then
@@ -93,10 +95,11 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m "Track Hermes $REF release contracts"
-          git push origin "hermes/$REF"
+          git commit -m "Track Hermes $REF ($TAG) release contracts"
+          # The bot owns this branch; a rerun after a failed PR step replaces its earlier generation.
+          git push --force origin "hermes/$REF"
           {
-            printf '## Hermes %s\n\n' "$REF"
+            printf '## Hermes %s (tag %s)\n\n' "$REF" "$TAG"
             printf 'Generated from the published stable tag. Review any stale REST overlays before merging.\n\n'
             cat "reports/$REF/openrpc.md"
             printf '\n## REST breaking changes\n\n'

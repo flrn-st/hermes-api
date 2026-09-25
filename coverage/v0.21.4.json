@@ -1,5 +1,5 @@
 {
-  "complete": 14,
+  "complete": 18,
   "entries": [
     {
       "complete": false,
@@ -1624,8 +1624,8 @@
       "fixture": false,
       "generated": true,
       "kind": "gateway_method",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "session.activate",
       "typed": false
     },
@@ -1745,8 +1745,8 @@
       "fixture": false,
       "generated": true,
       "kind": "gateway_method",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "session.events.since",
       "typed": false
     },
@@ -1855,8 +1855,8 @@
       "fixture": false,
       "generated": true,
       "kind": "gateway_method",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "session.resume",
       "typed": false
     },
@@ -2950,13 +2950,13 @@
       "typed": true
     },
     {
-      "complete": false,
+      "complete": true,
       "decode": true,
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "reasoning.available",
       "typed": true
     },
@@ -3010,8 +3010,8 @@
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "session.info",
       "typed": false
     },
@@ -3038,13 +3038,13 @@
       "typed": true
     },
     {
-      "complete": false,
+      "complete": true,
       "decode": true,
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "session.title",
       "typed": true
     },
@@ -3065,8 +3065,8 @@
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "sessions.changed",
       "typed": false
     },
@@ -3181,13 +3181,13 @@
       "typed": true
     },
     {
-      "complete": false,
+      "complete": true,
       "decode": true,
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "thinking.delta",
       "typed": true
     },
@@ -3225,13 +3225,13 @@
       "typed": false
     },
     {
-      "complete": false,
+      "complete": true,
       "decode": true,
       "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "tool.generating",
       "typed": true
     },
@@ -7310,14 +7310,14 @@
       "typed": false
     }
   ],
-  "ref": "v2026.9.21",
+  "ref": "v0.21.4",
   "summary": {
     "event": {
-      "complete": 2,
+      "complete": 6,
       "decode": 13,
       "fixture": 13,
       "generated": 69,
-      "live_both": 6,
+      "live_both": 12,
       "total": 69,
       "typed": 48
     },
@@ -7326,7 +7326,7 @@
       "decode": 7,
       "fixture": 7,
       "generated": 219,
-      "live_both": 7,
+      "live_both": 10,
       "total": 219,
       "typed": 159
     },

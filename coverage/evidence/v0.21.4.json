@@ -17,35 +17,80 @@
     "tool.generating",
     "tool.start"
   ],
-  "fixture": "fixtures/v2026.9.21/liveness.jsonl",
-  "fixture_sha256": "8042f219b04b84707710e9bb406b97066b0c64be2189f50ad775b67d898e58ce",
-  "live_events": [
-    "gateway.ready",
-    "message.start",
-    "message.delta",
-    "message.complete",
-    "tool.start",
-    "tool.complete"
-  ],
+  "fixture": "fixtures/v0.21.4/liveness.jsonl",
+  "fixture_sha256": "c96eeea07587b48d2e32b983524beb0d48612249f1a8572114c369b67ecc88ba",
+  "live_gateway": {
+    "kotlin": {
+      "events": [
+        "gateway.ready",
+        "message.complete",
+        "message.delta",
+        "message.start",
+        "reasoning.available",
+        "session.info",
+        "session.title",
+        "sessions.changed",
+        "thinking.delta",
+        "tool.complete",
+        "tool.generating",
+        "tool.start"
+      ],
+      "methods": [
+        "client.capabilities",
+        "gateway.capabilities",
+        "ping",
+        "prompt.submit",
+        "session.activate",
+        "session.close",
+        "session.create",
+        "session.events.since",
+        "session.list",
+        "session.resume"
+      ],
+      "server_requests": [
+        "approval",
+        "clarify"
+      ]
+    },
+    "swift": {
+      "events": [
+        "gateway.ready",
+        "message.complete",
+        "message.delta",
+        "message.start",
+        "reasoning.available",
+        "session.info",
+        "session.title",
+        "sessions.changed",
+        "thinking.delta",
+        "tool.complete",
+        "tool.generating",
+        "tool.start"
+      ],
+      "methods": [
+        "client.capabilities",
+        "gateway.capabilities",
+        "ping",
+        "prompt.submit",
+        "session.activate",
+        "session.close",
+        "session.create",
+        "session.events.since",
+        "session.list",
+        "session.resume"
+      ],
+      "server_requests": [
+        "approval",
+        "clarify"
+      ]
+    }
+  },
   "live_kotlin": true,
-  "live_methods": [
-    "client.capabilities",
-    "ping",
-    "gateway.capabilities",
-    "session.create",
-    "prompt.submit",
-    "session.list",
-    "session.close"
-  ],
   "live_rest": [
     "GET /api/audio/voice-live/status",
     "GET /api/profiles/active",
     "POST /api/profiles/active",
     "GET /api/sessions/empty/count"
-  ],
-  "live_server_requests": [
-    "clarify",
-    "approval"
   ],
   "live_swift": true,
   "methods": [
@@ -57,7 +102,7 @@
     "session.create",
     "session.list"
   ],
-  "ref": "v2026.9.21",
+  "ref": "v0.21.4",
   "rest": [
     "GET /api/audio/voice-live/status",
     "GET /api/profiles/active",

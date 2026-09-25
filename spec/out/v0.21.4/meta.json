@@ -5,7 +5,8 @@
   "method_count": 219,
   "notification_count": 69,
   "openrpc_sha256": "358b160cd3e9420111fa6f97e4c08d27b648ff802738f79712fe1e92fbd3556f",
-  "ref": "v2026.9.21",
+  "ref": "v0.21.4",
   "schema_count": 624,
-  "server_request_count": 12
+  "server_request_count": 12,
+  "tag": "v2026.9.21"
 }

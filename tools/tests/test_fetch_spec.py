@@ -35,17 +35,22 @@ def test_extract_pins_exact_tag_and_refuses_retarget(tmp_path: Path) -> None:
     git(repo, "tag", "v2026.9.21")
 
     output = tmp_path / "out"
-    meta = extract("v2026.9.21", repo, output)
+    meta = extract("v0.21.4", repo, output, "v2026.9.21")
     assert meta["commit"] == git(repo, "rev-parse", "HEAD")
+    assert meta["tag"] == "v2026.9.21"
     assert meta["desktop_contract"] == 7
     assert meta["method_count"] == 1
     assert json.loads((output / "meta.json").read_text()) == meta
-    assert extract("v2026.9.21", repo, output) == meta
+    assert extract("v0.21.4", repo, output, "v2026.9.21") == meta
 
-    git(repo, "tag", "-f", "v2026.9.21", "HEAD~0")
-    (repo / PYPROJECT_PATH).write_text('[project]\nversion = "0.22.0"\n')
+    # A tag that names a different Hermes version is refused.
+    with pytest.raises(ValueError, match="not v0.21.5"):
+        extract("v0.21.5", repo, tmp_path / "other", "v2026.9.21")
+
+    # Moving the tag to another commit is refused.
+    (repo / SERVER_PATH).write_text("DESKTOP_BACKEND_CONTRACT = 8\n")
     git(repo, "add", ".")
     git(repo, "commit", "-qm", "retarget")
     git(repo, "tag", "-f", "v2026.9.21")
     with pytest.raises(ValueError, match="changed commit"):
-        extract("v2026.9.21", repo, output)
+        extract("v0.21.4", repo, output, "v2026.9.21")

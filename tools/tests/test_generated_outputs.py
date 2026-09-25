@@ -3,6 +3,9 @@ from pathlib import Path
 
 from tools.gen_gateway_api import generate as generate_api
 from tools.gen_gateway_models import generate as generate_models
+from tools.ref_policy import current_release
+
+CURRENT = current_release()
 
 
 def test_committed_generated_sources_match_pinned_contract() -> None:
@@ -12,7 +15,7 @@ def test_committed_generated_sources_match_pinned_contract() -> None:
 
 
 def test_public_symbol_manifest_covers_every_gateway_item() -> None:
-    manifest = json.loads(Path("spec/out/v2026.9.21/gateway-symbols.json").read_text())
+    manifest = json.loads(Path(f"spec/out/{CURRENT}/gateway-symbols.json").read_text())
     assert len(manifest["methods"]) == 219
     assert len(manifest["events"]) == 69
     assert len(manifest["server_requests"]) == 12

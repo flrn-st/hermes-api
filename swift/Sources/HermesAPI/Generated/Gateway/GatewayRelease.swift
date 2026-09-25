@@ -2,8 +2,10 @@
 
 /// Release identity and protocol compatibility of this generated gateway contract.
 public enum HermesGatewayContract {
-    public static let release = "v2026.9.21"
+    public static let release = "v0.21.4"
     public static let upstreamVersion = "0.21.4"
+    /// The upstream git tag of this release.
+    public static let upstreamTag = "v2026.9.21"
     public static let desktopContract = 7
     public static let supportedContractRange: ClosedRange<Int> = 7...7
 }

@@ -14,7 +14,7 @@ from pathlib import Path
 from harness.live import _free_port
 from tools.extract_openapi import extract
 from tools.fetch_spec import ROOT
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 
 def _await_listener(port: int, server: subprocess.Popen[bytes]) -> None:
@@ -31,7 +31,7 @@ def _await_listener(port: int, server: subprocess.Popen[bytes]) -> None:
 
 
 def run(ref: str, source_repo: Path | None = None) -> None:
-    ref = require_release_tag(ref)
+    ref = require_release(ref)
     extract(ref, source_repo)
     repo = source_repo or ROOT / "spec/.upstream-rest" / ref
     python = repo / ".venv/bin/python"

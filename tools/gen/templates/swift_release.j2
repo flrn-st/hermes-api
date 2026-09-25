@@ -4,6 +4,8 @@
 public enum HermesGatewayContract {
     public static let release = {{ ref_literal }}
     public static let upstreamVersion = {{ version_literal }}
+    /// The upstream git tag of this release.
+    public static let upstreamTag = {{ tag_literal }}
     public static let desktopContract = {{ desktop_contract }}
     public static let supportedContractRange: ClosedRange<Int> = {{ desktop_contract }}...{{ desktop_contract }}
 }

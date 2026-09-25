@@ -18,7 +18,7 @@ from tools.gen_gateway_models import (
     _swift,
 )
 from tools.naming import camel, checked_method_symbols, pascal
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 
 def _ref(schema: dict[str, object]) -> str:
@@ -87,7 +87,7 @@ def _views(contract: dict[str, object]) -> tuple[dict[str, object], dict[str, ob
 
 
 def generate(ref: str, *, check: bool = False) -> int:
-    require_release_tag(ref)
+    require_release(ref)
     contract = json.loads((ROOT / "spec" / "out" / ref / "openrpc.json").read_text())
     meta = json.loads((ROOT / "spec" / "out" / ref / "meta.json").read_text())
     methods, events = _views(contract)
@@ -100,9 +100,11 @@ def generate(ref: str, *, check: bool = False) -> int:
         KOTLIN_OUT / "GatewayEvents.kt": env.get_template("kotlin_events.j2").render(**events),
         SWIFT_OUT / "GatewayRelease.swift": env.get_template("swift_release.j2").render(
             ref_literal=_literal(meta["ref"]), version_literal=_literal(meta["hermes_version"]),
+            tag_literal=_literal(meta["tag"]),
             desktop_contract=meta["desktop_contract"]),
         KOTLIN_OUT / "GatewayRelease.kt": env.get_template("kotlin_release.j2").render(
             ref_literal=_literal(meta["ref"]), version_literal=_literal(meta["hermes_version"]),
+            tag_literal=_literal(meta["tag"]),
             desktop_contract=meta["desktop_contract"]),
     }
     manifest = {

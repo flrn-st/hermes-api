@@ -1,5 +1,7 @@
-# Stable, published Hermes release tags only. Development branches are intentionally excluded.
+# Stable, published Hermes releases by version, each with the upstream release tag it was built from.
+# The tag's pyproject.toml must state that version. Release candidates, canaries and development
+# branches are intentionally excluded.
 upstream: NousResearch/hermes-agent
-minimum_contract_tag: v2026.9.14
+minimum_contract_version: v0.21.3
 releases:
-  - v2026.9.21
+  v0.21.4: v2026.9.21

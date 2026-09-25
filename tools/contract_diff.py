@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from tools.fetch_spec import ROOT
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 
 def _fingerprint(value: object) -> str:
@@ -35,8 +35,8 @@ def _lines(label: str, old: dict, new: dict) -> list[str]:
 
 
 def render(previous: str, current: str, root: Path = ROOT) -> str:
-    previous = require_release_tag(previous)
-    current = require_release_tag(current)
+    previous = require_release(previous)
+    current = require_release(current)
     old = json.loads((root / "spec/out" / previous / "openrpc.json").read_text())
     new = json.loads((root / "spec/out" / current / "openrpc.json").read_text())
     lines = [f"## OpenRPC contract: {previous} → {current}", ""]

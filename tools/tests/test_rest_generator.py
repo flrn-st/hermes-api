@@ -9,10 +9,13 @@ import pytest
 
 from tools.fetch_spec import ROOT
 from tools.gen_rest_api import _typed_operations, generate
+from tools.ref_policy import current_release
+
+CURRENT = current_release()
 
 
 def test_tagged_rest_symbols_are_generated() -> None:
-    document = json.loads((ROOT / "spec/out/v2026.9.21/openapi.json").read_text())
+    document = json.loads((ROOT / f"spec/out/{CURRENT}/openapi.json").read_text())
     operations = _typed_operations(document)
     assert [(op.namespace, op.name, op.type_name) for op in operations] == [
         ("audio", "voiceLiveStatus", "AudioVoiceLiveStatusResponse"),
@@ -35,7 +38,7 @@ def test_tagged_rest_symbols_are_generated() -> None:
 
 
 def test_generator_rejects_unhandled_request_shape() -> None:
-    document = json.loads((ROOT / "spec/out/v2026.9.21/openapi.json").read_text())
+    document = json.loads((ROOT / f"spec/out/{CURRENT}/openapi.json").read_text())
     document = deepcopy(document)
     document["paths"]["/api/auth/me"]["get"]["parameters"] = [{"name": "profile"}]
     with pytest.raises(ValueError, match="does not yet support"):
@@ -43,7 +46,7 @@ def test_generator_rejects_unhandled_request_shape() -> None:
 
 
 def test_generator_rejects_unmodelled_request_constraint() -> None:
-    document = json.loads((ROOT / "spec/out/v2026.9.21/openapi.json").read_text())
+    document = json.loads((ROOT / f"spec/out/{CURRENT}/openapi.json").read_text())
     document = deepcopy(document)
     document["components"]["schemas"]["ProfileActiveUpdate"]["properties"]["name"]["minLength"] = 2
     with pytest.raises(ValueError, match="Unsupported REST request field"):

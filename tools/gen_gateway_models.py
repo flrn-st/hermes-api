@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from tools.gen.schema_ir import EnumDecl, Field, ObjectDecl, SchemaGraph, UnionDecl, UnionVariant
 from tools.naming import camel, pascal
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = Path(__file__).resolve().parent / "gen" / "templates"
@@ -177,7 +177,7 @@ def _render(graph: SchemaGraph) -> tuple[dict[Path, str], list[str]]:
 
 
 def generate(ref: str, *, check: bool = False) -> int:
-    require_release_tag(ref)
+    require_release(ref)
     contract = json.loads((ROOT / "spec" / "out" / ref / "openrpc.json").read_text())
     graph = SchemaGraph(contract)
     outputs, symbols = _render(graph)

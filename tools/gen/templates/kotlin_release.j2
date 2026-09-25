@@ -5,6 +5,8 @@ package st.flrn.hermes.api.generated.gateway
 public object HermesGatewayContract {
     public const val release: String = {{ ref_literal }}
     public const val upstreamVersion: String = {{ version_literal }}
+    /** The upstream git tag of this release. */
+    public const val upstreamTag: String = {{ tag_literal }}
     public const val desktopContract: Int = {{ desktop_contract }}
     public val supportedContractRange: IntRange = {{ desktop_contract }}..{{ desktop_contract }}
 }

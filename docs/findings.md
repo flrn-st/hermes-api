@@ -1,4 +1,4 @@
-# Verification at Hermes `v2026.9.21`
+# Verification at Hermes `v0.21.4` (tag `v2026.9.21`)
 
 The source examined is the immutable annotated tag `v2026.9.21`, commit
 `d337b736aa1e8ebecfab043842d13e4a2d2f48a3`. The plan's earlier counts
@@ -130,7 +130,7 @@ field. It requires method results and event payloads to have complete types.
 
 A scan of static `/api/*` paths in `hermes-ios` main at `aa0a14d` found 60
 paths in `HermesHTTPClient*.swift`; 57 exist in the tagged OpenAPI document.
-Three app calls have no route at `v2026.9.21`:
+Three app calls have no route at `v0.21.4`:
 
 - `GET /api/dashboard/runtime`
 - `GET /api/actions/gateway-restart/status`

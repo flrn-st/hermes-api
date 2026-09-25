@@ -4,6 +4,9 @@ from pathlib import Path
 import pytest
 
 from tools.naming import camel, checked_method_symbols, method_symbol, pascal
+from tools.ref_policy import current_release
+
+CURRENT = current_release()
 
 
 def test_shared_method_naming() -> None:
@@ -23,6 +26,6 @@ def test_rejects_collisions_and_invalid_names() -> None:
 
 
 def test_target_contract_has_unique_method_names() -> None:
-    contract = json.loads(Path("spec/out/v2026.9.21/openrpc.json").read_text())
+    contract = json.loads(Path(f"spec/out/{CURRENT}/openrpc.json").read_text())
     methods = checked_method_symbols(item["name"] for item in contract["methods"])
     assert len(methods) == 219

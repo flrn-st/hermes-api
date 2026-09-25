@@ -10,11 +10,11 @@ from pathlib import Path
 import yaml
 
 from tools.fetch_spec import ROOT
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 
 def apply(ref: str, *, check: bool = False, root: Path = ROOT) -> dict[str, int]:
-    ref = require_release_tag(ref)
+    ref = require_release(ref)
     output = root / "spec" / "out" / ref
     document = json.loads((output / "openapi.raw.json").read_text(encoding="utf-8"))
     hashes = json.loads((output / "rest-hashes.json").read_text(encoding="utf-8"))

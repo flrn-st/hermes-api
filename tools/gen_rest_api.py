@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from tools.fetch_spec import ROOT
 from tools.naming import camel, pascal
-from tools.ref_policy import require_release_tag
+from tools.ref_policy import require_release
 
 SWIFT_OUT = ROOT / "swift/Sources/HermesAPI/Generated/REST"
 KOTLIN_OUT = ROOT / "kotlin/src/main/kotlin/st/flrn/hermes/api/generated/rest"
@@ -283,7 +283,7 @@ def _kotlin_methods(ops: list[Operation]) -> str:
 
 
 def generate(ref: str, *, check: bool = False) -> int:
-    ref = require_release_tag(ref)
+    ref = require_release(ref)
     document = json.loads((ROOT / "spec/out" / ref / "openapi.json").read_text(encoding="utf-8"))
     ops = _typed_operations(document)
     outputs = {

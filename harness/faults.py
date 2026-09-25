@@ -154,6 +154,9 @@ class ControlServer:
                         self.send_error(404)
                         return
                 except Exception as error:  # noqa: BLE001 - the client scenario reports the failure
+                    import sys, traceback  # [DEBUG-rst1]
+                    print(f"[DEBUG-rst1] control {url.path} failed: {error!r}", file=sys.stderr, flush=True)  # [DEBUG-rst1]
+                    traceback.print_exc()  # [DEBUG-rst1]
                     self.send_error(500, str(error))
                     return
                 self.send_response(204)

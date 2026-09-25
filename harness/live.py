@@ -104,8 +104,11 @@ class HermesServer:
         self.process = None
 
     def restart(self) -> None:
+        began = time.monotonic()  # [DEBUG-rst1]
         self.stop()
+        stopped = time.monotonic()  # [DEBUG-rst1]
         self.start()
+        print(f"[DEBUG-rst1] restart stop {stopped - began:.1f}s start {time.monotonic() - stopped:.1f}s", flush=True)  # [DEBUG-rst1]
 
 
 def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,

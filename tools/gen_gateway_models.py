@@ -68,7 +68,20 @@ def _field_view(field: Field) -> dict[str, object]:
     else:
         decode = f"input[{wire}]?.takeUnless {{ it is JsonNull }}?.let {{ json.decodeFromJsonElement<{base}>(it) }}"
         encode = f"value.{name}?.let {{ output[{wire}] = json.encodeToJsonElement(it) }}"
+    # Keep a pattern from closing a Kotlin block comment.
+    doc = field.constraints.replace("*/", "*\\/") if field.constraints else None
+    check = None
+    if field.const is not None and not field.patch:
+        doc = f"Always `{field.const}`; decoding any other value fails."
+        optional = field.type.nullable or not field.required
+        check = {
+            "swift": f"{_swift(field.name)} == {'nil || ' + _swift(field.name) + ' == ' if optional else ''}{field.const}",
+            "kotlin": f"{name} == {'null || ' + name + ' == ' if optional else ''}{field.const}L",
+            "message": f"{field.wire_name} must be {field.const}",
+        }
     return {
+        "doc": doc,
+        "check": check,
         "swift_name": _swift(field.name),
         "kotlin_name": name,
         "wire_literal": wire,
@@ -78,17 +91,22 @@ def _field_view(field: Field) -> dict[str, object]:
         "required": field.required,
         "nullable": field.type.nullable,
         "patch": field.patch,
-        "swift_init_default": ".absent" if field.patch else ("nil" if not field.required else None),
-        "kotlin_init_default": "Patch.Absent" if field.patch else ("null" if not field.required else None),
+        "swift_init_default": ".absent" if field.patch else ("nil" if not field.required else
+                                                            (str(field.const) if field.const is not None else None)),
+        "kotlin_init_default": "Patch.Absent" if field.patch else ("null" if not field.required else
+                                                                   (str(field.const) if field.const is not None else None)),
         "decode_expression": decode,
         "encode_statement": encode,
     }
 
 
 def _object_view(model: ObjectDecl) -> dict[str, object]:
+    fields = [_field_view(field) for field in model.fields]
     return {
         "name": model.name,
-        "fields": [_field_view(field) for field in model.fields],
+        "fields": fields,
+        "checks": [dict(field["check"], swift_name=field["swift_name"]) for field in fields if field["check"]],
+        "always_null": ", ".join(f"`{name}`" for name in model.always_null),
         "open": model.open,
         "custom": model.open or any(field.patch for field in model.fields),
     }

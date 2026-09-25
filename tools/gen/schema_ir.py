@@ -23,6 +23,10 @@ class Field:
     type: TypeRef
     required: bool
     patch: bool
+    # Human-readable value constraints (pattern, length, item count), for the generated doc comment.
+    constraints: str | None = None
+    # An integer the field always holds; decoding any other value fails.
+    const: int | None = None
 
 
 @dataclass(frozen=True)
@@ -30,6 +34,8 @@ class ObjectDecl:
     name: str
     fields: tuple[Field, ...]
     open: bool
+    # Wire names of properties that are always null (Hermes redacts them); they carry no value.
+    always_null: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -104,14 +110,24 @@ class SchemaGraph:
             props = schema.get("properties", {})
             required = set(schema.get("required", []))
             fields: list[Field] = []
+            always_null: list[str] = []
             for wire_name, value in props.items():
+                if value.get("type") == "null" and not set(value) - {"type", "title", "description", "default"}:
+                    if wire_name in required:
+                        raise ValueError(f"Required always-null property {name}.{wire_name}")
+                    always_null.append(wire_name)
+                    continue
+                value, const = _without_integer_const(value)
                 typ = self.resolve(value, f"{name}{pascal(wire_name)}")
                 fields.append(Field(
                     name=camel(wire_name), wire_name=wire_name, type=typ,
                     required=wire_name in required,
                     patch=(wire_name not in required and typ.nullable and name in self.param_reachable),
+                    constraints=_constraints(value), const=const,
                 ))
-            self.objects[name] = ObjectDecl(name, tuple(fields), schema.get("additionalProperties") is True)
+            self.objects[name] = ObjectDecl(
+                name, tuple(fields), schema.get("additionalProperties") is True, tuple(always_null)
+            )
         elif schema.get("type") == "string" and "enum" in schema:
             self.enums[name] = EnumDecl(name, tuple(schema["enum"]), False)
         else:
@@ -134,6 +150,9 @@ class SchemaGraph:
             return TypeRef(name, name)
 
         kind = schema.get("type")
+        if kind == "integer" and "const" in schema:
+            # Only object fields model integer constants; anywhere else would silently lose the check.
+            raise ValueError(f"Unsupported integer const outside an object field: {name}")
         if kind == "string" and ("enum" in schema or "const" in schema):
             values = tuple(schema.get("enum", [schema.get("const")]))
             self.enums[name] = EnumDecl(name, values, "const" in schema)
@@ -204,3 +223,58 @@ class SchemaGraph:
             name, tuple(members), discriminator["propertyName"] if discriminator else None,
             tuple(mapping),
         )
+
+
+
+
+def _constraints(schema: dict[str, Any]) -> str | None:
+    """Describe the value constraints of a (nullable) string or array field, if any."""
+    variants = [item for item in schema.get("anyOf", [schema]) if item.get("type") != "null"]
+    if len(variants) != 1:
+        return None
+    value = variants[0]
+    sentences: list[str] = []
+    if value.get("type") == "array":
+        bounds = _bounds(value.get("minItems"), value.get("maxItems"), "item")
+        if bounds:
+            sentences.append(f"Must have {bounds}.")
+        items = value.get("items")
+        if isinstance(items, dict) and items.get("type") == "string" and (rules := _string_rules(items)):
+            sentences.append(f"Each value must {rules}.")
+    elif value.get("type") == "string" and (rules := _string_rules(value)):
+        sentences.append(f"Must {rules}.")
+    return " ".join(sentences) or None
+
+
+def _string_rules(schema: dict[str, Any]) -> str:
+    rules = [f"match `{schema['pattern']}`"] if "pattern" in schema else []
+    if bounds := _bounds(schema.get("minLength"), schema.get("maxLength"), "character"):
+        rules.append(f"have {bounds}")
+    return " and ".join(rules)
+
+
+def _bounds(low: int | None, high: int | None, unit: str) -> str:
+    def count(value: int) -> str:
+        return f"{value} {unit}{'' if value == 1 else 's'}"
+    if low is not None and high is not None:
+        return f"{low} to {count(high)}"
+    if low is not None:
+        return f"at least {count(low)}"
+    if high is not None:
+        return f"at most {count(high)}"
+    return ""
+
+
+def _without_integer_const(schema: dict[str, Any]) -> tuple[dict[str, Any], int | None]:
+    """Split an integer ``const`` (directly or under a nullable anyOf) from a field schema."""
+    def strip(item: dict[str, Any]) -> tuple[dict[str, Any], int | None]:
+        if item.get("type") == "integer" and "const" in item:
+            return {key: value for key, value in item.items() if key != "const"}, item["const"]
+        return item, None
+    if "anyOf" in schema:
+        variants = [strip(item) for item in schema["anyOf"]]
+        consts = [const for _, const in variants if const is not None]
+        if not consts:
+            return schema, None
+        return {**schema, "anyOf": [item for item, _ in variants]}, consts[0]
+    return strip(schema)

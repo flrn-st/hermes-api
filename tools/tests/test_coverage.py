@@ -11,11 +11,17 @@ CURRENT = current_release()
 
 def test_coverage_accounts_for_every_tagged_operation() -> None:
     data = report(CURRENT)
-    assert data["total"] == 634
-    assert data["summary"]["gateway_method"]["total"] == 219
-    assert data["summary"]["server_request"]["total"] == 12
-    assert data["summary"]["event"]["total"] == 69
-    assert data["summary"]["rest"]["total"] == 334
+    contract = json.loads((ROOT / f"spec/out/{CURRENT}/openrpc.json").read_text())
+    openapi = json.loads((ROOT / f"spec/out/{CURRENT}/openapi.json").read_text())
+    expected = {
+        "gateway_method": len(contract["methods"]),
+        "server_request": len(contract["x-server-requests"]),
+        "event": len(contract["x-notifications"]),
+        "rest": sum(len(operations) for operations in openapi["paths"].values()),
+    }
+    # Every tagged operation is accounted for, whatever the release.
+    assert {kind: data["summary"][kind]["total"] for kind in expected} == expected
+    assert data["total"] == sum(expected.values())
     assert data["complete"] >= 14
     assert data["summary"]["gateway_method"]["fixture"] >= 6
     assert data["summary"]["server_request"]["complete"] >= 2

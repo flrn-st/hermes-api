@@ -94,6 +94,9 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Only the current release's pinned data is used; git history keeps the previous one.
+          git rm -r -q --ignore-unmatch "spec/out/$PREVIOUS_REF" "fixtures/$PREVIOUS_REF" \
+            "coverage/evidence/$PREVIOUS_REF.json" "coverage/$PREVIOUS_REF.json" "coverage/$PREVIOUS_REF.md"
           git add -A
           git commit -m "Track Hermes $REF ($TAG) release contracts"
           # The bot owns this branch; a rerun after a failed PR step replaces its earlier generation.

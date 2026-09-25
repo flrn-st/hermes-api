@@ -8,6 +8,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import st.flrn.hermes.api.generated.gateway.ApprovalChoice
 import st.flrn.hermes.api.generated.gateway.BrowserControllerResultParams
 import st.flrn.hermes.api.generated.gateway.ChangeSignalPayload
+import st.flrn.hermes.api.generated.gateway.ConnectorPolicyEffectiveAllow
 import st.flrn.hermes.api.generated.gateway.GoalSnapshotWaitBarrier
 import st.flrn.hermes.api.generated.gateway.SessionMostRecentResult
 import st.flrn.hermes.api.generated.gateway.WaitBarrierTargetTarget
@@ -65,5 +66,15 @@ class GeneratedModelTest {
         assertIs<WaitBarrierTargetTarget.LongValue>(barrier.value.target)
         val choice = json.decodeFromString<ApprovalChoice>("\"future\"")
         assertEquals(ApprovalChoice.Unknown("future"), choice)
+    }
+
+    @Test
+    fun integerConstantsDecodeOnlyTheirValue() {
+        fun policy(version: Int) =
+            """{"version":$version,"revision":"r","issued_at_ms":1,"mode":"allow","connectors":[],"tools":{}}"""
+        assertEquals(1L, Json.decodeFromString(ConnectorPolicyEffectiveAllow.serializer(), policy(1)).version)
+        assertFailsWith<IllegalArgumentException> {
+            Json.decodeFromString(ConnectorPolicyEffectiveAllow.serializer(), policy(2))
+        }
     }
 }

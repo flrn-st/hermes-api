@@ -1,4 +1,4 @@
-/** Generated from the Hermes gateway contract. Do not edit. */
+/** Generated from the Hermes gateway contract. Do not edit.{% if model.always_null %} Omits {{ model.always_null }}, which Hermes always sends as null.{% endif %} */
 {% if model.custom %}
 @Serializable(with = {{ model.name }}.Serializer::class)
 {% else %}
@@ -7,6 +7,9 @@
 {% if model.fields or model.open %}
 public data class {{ model.name }}(
 {% for field in model.fields %}
+{% if field.doc %}
+    /** {{ field.doc }} */
+{% endif %}
 {% if not model.custom %}
     @SerialName({{ field.wire_literal }})
 {% endif %}
@@ -19,8 +22,14 @@ public data class {{ model.name }}(
 {% else %}
 public class {{ model.name }}
 {% endif %}
-{% if model.custom %}
+{% if model.custom or model.checks %}
 {
+{% for check in model.checks %}
+    init {
+        require({{ check.kotlin }}) { "{{ check.message }}" }
+    }
+{% endfor %}
+{% if model.custom %}
     public object Serializer : KSerializer<{{ model.name }}> {
         override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
@@ -68,5 +77,6 @@ public class {{ model.name }}
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
+{% endif %}
 }
 {% endif %}

@@ -16,7 +16,9 @@ def test_committed_generated_sources_match_pinned_contract() -> None:
 
 def test_public_symbol_manifest_covers_every_gateway_item() -> None:
     manifest = json.loads(Path(f"spec/out/{CURRENT}/gateway-symbols.json").read_text())
-    assert len(manifest["methods"]) == 219
-    assert len(manifest["events"]) == 69
-    assert len(manifest["server_requests"]) == 12
+    contract = json.loads(Path(f"spec/out/{CURRENT}/openrpc.json").read_text())
+    assert [item["wire"] for item in manifest["methods"]] == [item["name"] for item in contract["methods"]]
+    assert [item["wire"] for item in manifest["events"]] == [item["name"] for item in contract["x-notifications"]]
+    assert [item["wire"] for item in manifest["server_requests"]] == [
+        item["name"] for item in contract["x-server-requests"]]
     assert next(item for item in manifest["methods"] if item["wire"] == "session.events.since")["public"] == "session.eventsSince"

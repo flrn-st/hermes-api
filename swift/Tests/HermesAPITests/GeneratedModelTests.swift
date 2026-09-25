@@ -45,3 +45,13 @@ import Testing
     let choice = try JSONDecoder().decode(ApprovalChoice.self, from: Data(#""future""#.utf8))
     #expect(choice == .unknown("future"))
 }
+
+@Test func integerConstantsDecodeOnlyTheirValue() throws {
+    func policy(version: Int) -> Data {
+        Data(#"{"version":\#(version),"revision":"r","issued_at_ms":1,"mode":"allow","connectors":[],"tools":{}}"#.utf8)
+    }
+    #expect(try JSONDecoder().decode(ConnectorPolicyEffectiveAllow.self, from: policy(version: 1)).version == 1)
+    #expect(throws: DecodingError.self) {
+        try JSONDecoder().decode(ConnectorPolicyEffectiveAllow.self, from: policy(version: 2))
+    }
+}

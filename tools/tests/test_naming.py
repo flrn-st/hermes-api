@@ -28,4 +28,4 @@ def test_rejects_collisions_and_invalid_names() -> None:
 def test_target_contract_has_unique_method_names() -> None:
     contract = json.loads(Path(f"spec/out/{CURRENT}/openrpc.json").read_text())
     methods = checked_method_symbols(item["name"] for item in contract["methods"])
-    assert len(methods) == 219
+    assert len(methods) == len(contract["methods"])

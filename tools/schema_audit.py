@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,18 @@ from tools.ref_policy import require_release
 ROOT = Path(__file__).resolve().parents[1]
 _META = {"title", "description", "default"}
 _TYPES = {"string", "integer", "number", "boolean", "null", "array", "object"}
+# Value constraints narrow which values are valid, not their shape: generated types stay strings and
+# lists, the constraint is documented on the field, and Hermes validates the params it receives.
+_STRING_CONSTRAINTS = {"pattern", "minLength", "maxLength"}
+_ARRAY_CONSTRAINTS = {"minItems", "maxItems"}
+
+
+def _check_counts(schema: dict[str, Any], names: set[str], path: str, counts: Counter[str]) -> None:
+    for name in sorted(names & set(schema)):
+        value = schema[name]
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ValueError(f"{path}: {name} must be a non-negative integer")
+        counts[name] += 1
 
 
 def audit_contract(contract: dict[str, Any]) -> dict[str, int]:
@@ -94,21 +107,37 @@ def audit_contract(contract: dict[str, Any]) -> dict[str, int]:
             for name, value in properties.items():
                 visit(value, f"{path}/properties/{name}")
         elif kind == "array":
-            allowed.add("items")
+            allowed |= {"items"} | _ARRAY_CONSTRAINTS
             if "items" not in schema:
                 raise ValueError(f"{path}: array without items")
+            _check_counts(schema, _ARRAY_CONSTRAINTS, path, counts)
             counts["array"] += 1
             visit(schema["items"], f"{path}/items")
         else:
-            allowed |= {"enum", "const"}
+            allowed |= {"enum", "const"} | _STRING_CONSTRAINTS
+            if _STRING_CONSTRAINTS & keys and kind != "string":
+                raise ValueError(f"{path}: {sorted(_STRING_CONSTRAINTS & keys)} only apply to strings")
+            if "pattern" in schema:
+                if not isinstance(schema["pattern"], str):
+                    raise ValueError(f"{path}: pattern must be a string")
+                try:
+                    re.compile(schema["pattern"])
+                except re.error as error:
+                    raise ValueError(f"{path}: invalid pattern: {error}") from error
+                counts["pattern"] += 1
+            _check_counts(schema, _STRING_CONSTRAINTS - {"pattern"}, path, counts)
             if "enum" in schema:
                 if kind != "string" or not isinstance(schema["enum"], list):
                     raise ValueError(f"{path}: unsupported enum")
                 counts["enum"] += 1
             if "const" in schema:
-                if kind != "string" or not isinstance(schema["const"], str):
+                value = schema["const"]
+                if kind == "string" and isinstance(value, str):
+                    counts["const"] += 1
+                elif kind == "integer" and isinstance(value, int) and not isinstance(value, bool):
+                    counts["integer_const"] += 1
+                else:
                     raise ValueError(f"{path}: unsupported const")
-                counts["const"] += 1
             counts[kind] += 1
         if extra := keys - allowed:
             raise ValueError(f"{path}: unsupported schema keys {sorted(extra)}")

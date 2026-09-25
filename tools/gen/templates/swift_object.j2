@@ -1,6 +1,12 @@
 /// Generated from the Hermes gateway contract. Do not edit.
+{% if model.always_null %}
+/// Omits {{ model.always_null }}, which Hermes always sends as null.
+{% endif %}
 public struct {{ model.name }}: Codable, Sendable, Hashable {
 {% for field in model.fields %}
+{% if field.doc %}
+    /// {{ field.doc }}
+{% endif %}
     public var {{ field.swift_name }}: {{ field.swift_type }}
 {% endfor %}
 {% if model.open %}
@@ -45,6 +51,12 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
 {% else %}
         {{ field.swift_name }} = try container.decodeIfPresent({{ field.base_swift }}.self, forKey: .{{ field.swift_name }})
 {% endif %}
+{% endfor %}
+{% for check in model.checks %}
+        guard {{ check.swift }} else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .{{ check.swift_name }}, in: container, debugDescription: "{{ check.message }}")
+        }
 {% endfor %}
 {% if model.open %}
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)

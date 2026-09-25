@@ -231,8 +231,8 @@ private func createSession(
     var sent = socket.sent.makeAsyncIterator()
     let request = Task { try await gateway.call("contract", params: PingParams(), as: PingResult.self) }
     let (_, id) = try sentCall(try #require(await sent.next()))
-    await socket.inject(result(id, #"{"info":{"desktop_contract":8}}"#))
-    await #expect(throws: HermesGatewayError.incompatibleServer(8)) { try await request.value }
+    await socket.inject(result(id, #"{"info":{"desktop_contract":9999}}"#))
+    await #expect(throws: HermesGatewayError.incompatibleServer(9999)) { try await request.value }
     await gateway.disconnect()
 }
 

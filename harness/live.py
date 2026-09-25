@@ -126,7 +126,7 @@ def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,
         # Not quiet: a failing scenario reports its reason only in the test output.
         return ["xcodebuild", "test", "-scheme", "HermesAPI-Package",
                 "-destination", _simulator_destination(client, env), "-derivedDataPath", str(ROOT / ".build" / "xcode"),
-                "-only-testing:HermesAPITests"], ROOT, runner
+                "-only-testing:HermesAPITests", "-parallel-testing-enabled", "NO"], ROOT, runner
     if client == "android":
         adb = shutil.which("adb") or str(Path(env.get("ANDROID_HOME", "")) / "platform-tools" / "adb")
         # The emulator reaches the proxy and control endpoint on its own loopback.

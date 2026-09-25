@@ -74,7 +74,7 @@ gateway.connect()
 | Socket drops | Reconnects with full-jitter backoff (0–250 ms at first, up to 30 s). Rebinds every session it created, replays missed events in order without duplicates, and delivers open server requests again. |
 | Network changes (Wi‑Fi ↔ cellular) | Reconnects at once instead of waiting for the old socket to time out. |
 | No network | Stops retrying and reports `waitingForNetwork`. Reconnects as soon as a network appears. Nothing polls meanwhile. |
-| Silent dead socket (half-open TCP, NAT timeout) | Sends `gateway.ping` after 15 s without inbound traffic. Any inbound frame counts as proof of life, so a streaming turn needs no pings. Reconnects after 45 s of silence. These match Hermes' own clients. |
+| Silent dead socket (half-open TCP, NAT timeout) | Sends `gateway.ping` after 15 s without inbound traffic. Any inbound frame counts as proof of life, so a streaming turn needs no pings. Reconnects after 45 s of silence, and only once a ping has gone unanswered, so a pause (a suspended app) never drops a healthy socket unasked. These match Hermes' own clients. |
 | App goes to the background | `enterBackground()` lets a streaming turn finish (up to 25 s; on iOS inside `performExpiringActivity`), then closes the socket. No heartbeat or retry runs in the background. Hermes keeps running turns alive. |
 | App returns | `enterForeground()` reconnects and replays what was missed. |
 | Hermes reclaimed a session (it does so 20 s after its socket closes, and on restart) | Resumes it from storage with `session.resume`. The session continues under a new runtime id, reported as `.resumed(previousSessionID:sessionID:storedSessionID:)`. |

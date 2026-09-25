@@ -607,6 +607,22 @@ private func createSession(
     await gateway.disconnect()
 }
 
+@Test func silenceAloneNeverDropsASocketWithoutAPing() async throws {
+    // A deadline shorter than the interval makes the first check see the silence of a long pause
+    // (a suspended app, a stalled runner). The gateway must still ping before it gives up.
+    let first = TestSocket()
+    let second = TestSocket()
+    let transport = SequenceTransport([first, second])
+    let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .milliseconds(50))
+    try await gateway.connect()
+    var heartbeats = first.heartbeats.makeAsyncIterator()
+    #expect(await heartbeats.next()?.hasPrefix("heartbeat-") == true)
+    try await state(of: gateway, isReconnecting)
+    try await state(of: gateway) { $0 == .connected }
+    #expect(await transport.attempts == 2)
+    await gateway.disconnect()
+}
+
 @Test func answeredHeartbeatsKeepTheConnection() async throws {
     let socket = TestSocket(answersHeartbeats: true)
     let transport = SequenceTransport([socket])

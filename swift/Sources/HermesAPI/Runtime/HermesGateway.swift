@@ -521,13 +521,20 @@ public actor HermesGateway: GatewayCalling {
     }
 
     /// Any inbound frame proves the socket alive, so a streaming turn needs no pings. After
-    /// `heartbeatInterval` of silence the gateway pings; after `heartbeatDeadline` it reconnects.
+    /// `heartbeatInterval` of silence the gateway pings; after `heartbeatDeadline` of silence, and only
+    /// once a ping has gone unanswered, it reconnects.
     private func heartbeatLoop(_ socket: any GatewayConnection, generation current: Int) async {
+        // When the last ping went out while the socket was silent.
+        var probedAt: ContinuousClock.Instant?
         while !Task.isCancelled && current == generation {
             do { try await Task.sleep(for: configuration.heartbeatInterval) } catch { return }
             guard current == generation else { return }
-            let silence = ContinuousClock.now - lastInbound
-            if silence >= configuration.heartbeatDeadline {
+            let now = ContinuousClock.now
+            let silence = now - lastInbound
+            // Silence alone proves nothing after the app or runtime was paused: the socket counts as dead
+            // only once a ping sent after the last inbound frame has gone unanswered for a full interval.
+            if silence >= configuration.heartbeatDeadline, let probedAt, probedAt > lastInbound,
+               now - probedAt >= configuration.heartbeatInterval {
                 await connectionLost(.transport("No frame from Hermes for \(silence)"), generation: current)
                 return
             }
@@ -536,6 +543,7 @@ public actor HermesGateway: GatewayCalling {
             do {
                 let frame = OutgoingHeartbeat(id: "heartbeat-\(heartbeatSequence)", method: heartbeatMethod)
                 try await socket.send(JSONEncoder().encode(frame))
+                probedAt = now
             } catch {
                 await connectionLost(Self.gatewayError(error), generation: current)
                 return

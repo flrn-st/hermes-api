@@ -263,7 +263,7 @@ public actor HermesGateway: GatewayCalling {
                 throw HermesGatewayError.transport("Connection ended during handshake")
             }
             if hasConnected, !(await recoverSessions(socket: socket, generation: current)) {
-                throw HermesGatewayError.transport("Session replay failed; reconnecting to replay the gap")
+                throw HermesGatewayError.transport("Session recovery failed; reconnecting to recover it")
             }
             guard current == generation, activeSocket != nil else {
                 throw HermesGatewayError.transport("Connection ended during session recovery")
@@ -272,6 +272,8 @@ public actor HermesGateway: GatewayCalling {
             ready = true
             configuration.logger.info("Gateway connected")
             publish(.connected)
+            // The handshake and session recovery just proved the socket alive, however long they took.
+            lastInbound = configuration.clock.now()
             heartbeatTask = Task { await self.heartbeatLoop(socket, generation: current) }
         } catch {
             let failure = Self.gatewayError(error)
@@ -749,14 +751,14 @@ public actor HermesGateway: GatewayCalling {
         case retryLater
     }
 
-    /// False when a session's gap could not be replayed: the connection must be retried, because delivering
-    /// the live events held meanwhile would move that session's watermark past the gap for good.
+    /// False when a session could not be rebound or its gap replayed: the connection must be retried, because
+    /// delivering the live events held meanwhile would move that session's watermark past the gap for good.
     private func recoverSessions(socket: any GatewayConnection, generation current: Int) async -> Bool {
-        var replayed = true
+        var recovered = true
         defer {
             let remaining = replayHold.sorted(by: { $0.key < $1.key })
             replayHold.removeAll()
-            if replayed {
+            if recovered {
                 for (_, held) in remaining {
                     for event in held { handleEvent(.object(event), replayed: false) }
                 }
@@ -772,11 +774,13 @@ public actor HermesGateway: GatewayCalling {
                 switch await rebind(sessionID) {
                 case .bound:
                     guard await replay(sessionID, socket: socket, generation: current) else {
-                        replayed = false
+                        recovered = false
                         return false
                     }
                 case .gone(let reason): await resume(sessionID, session: session, reason: reason)
-                case .retryLater: break
+                case .retryLater:
+                    recovered = false
+                    return false
                 }
             }
             releaseHeldEvents(for: sessionID)

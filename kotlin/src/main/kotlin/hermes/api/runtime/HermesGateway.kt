@@ -262,7 +262,7 @@ public class HermesGateway(
                 configuration.connectTimeoutMillis, waitsForConnection = false)
             if (socket !== connection) throw HermesGatewayException.Transport("Connection ended during handshake")
             if (hasConnected && !recoverSessions(connection, current)) {
-                throw HermesGatewayException.Transport("Session replay failed; reconnecting to replay the gap")
+                throw HermesGatewayException.Transport("Session recovery failed; reconnecting to recover it")
             }
             if (socket !== connection) throw HermesGatewayException.Transport("Connection ended during session recovery")
             hasConnected = true
@@ -658,10 +658,10 @@ public class HermesGateway(
         lastSequence.keys.forEach { lastSequence[it] = 0 }
     }
 
-    /** False when a session's gap could not be replayed: the connection must be retried, because delivering
-     *  the live events held meanwhile would move that session's watermark past the gap for good. */
+    /** False when a session could not be rebound or its gap replayed: the connection must be retried, because
+     *  delivering the live events held meanwhile would move that session's watermark past the gap for good. */
     private suspend fun recoverSessions(connection: GatewayConnection, current: Int): Boolean {
-        var replayed = true
+        var recovered = true
         try {
             for (sessionId in trackedSessionIds().sorted()) {
                 if (current != generation) return true
@@ -672,11 +672,14 @@ public class HermesGateway(
                 } else {
                     when (val outcome = rebind(sessionId)) {
                         Rebind.Bound -> if (!replay(sessionId, connection, current)) {
-                            replayed = false
+                            recovered = false
                             return false
                         }
                         is Rebind.Gone -> resume(sessionId, session, outcome.reason)
-                        Rebind.RetryLater -> Unit
+                        Rebind.RetryLater -> {
+                            recovered = false
+                            return false
+                        }
                     }
                 }
                 releaseHeldEvents(sessionId)
@@ -684,7 +687,7 @@ public class HermesGateway(
         } finally {
             val remaining = replayHold.entries.sortedBy { it.key }.flatMap { it.value.toList() }
             replayHold.clear()
-            if (replayed) remaining.forEach { handleEvent(it, false) }
+            if (recovered) remaining.forEach { handleEvent(it, false) }
         }
         return true
     }

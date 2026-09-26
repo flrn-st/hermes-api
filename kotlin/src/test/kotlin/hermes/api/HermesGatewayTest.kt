@@ -442,6 +442,34 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun failedRebindReconnectsInsteadOfSkippingTheGap() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val third = FakeSocket()
+        val gateway = client(sockets(first, second, third))
+        val received = backgroundScope.async { gateway.events.take(3).toList() }
+        gateway.connect()
+        first.inbound.send(event("message.start", "s", 1))
+        delay(100)
+        first.sever()
+        val activate = second.sent()
+        second.inbound.send(event("message.start", "s", 3))
+        // Hermes cannot rebind the session yet. Carrying on would deliver seq 3 without ever replaying seq 2.
+        second.inbound.send(error(activate, -32000, "busy"))
+        val reactivate = third.sent()
+        assertEquals("session.activate", reactivate.method())
+        third.inbound.send(result(reactivate, """{"session_id":"s"}"""))
+        val replay = third.sent()
+        assertEquals("session.events.since", replay.method())
+        assertEquals("1", replay["params"]?.jsonObject?.get("last_seen")?.jsonPrimitive?.content)
+        third.inbound.send(result(replay, """{"events":[{"type":"message.start","session_id":"s","seq":2,"payload":{}},{"type":"message.start","session_id":"s","seq":3,"payload":{}}],"latest_seq":3,"truncated":false,"count":2,"epoch":"same","open_requests":[]}"""))
+        val events = withTimeout(3_000) { received.await() }
+        assertEquals(listOf(1L, 2L, 3L), events.map { it.seq })
+        assertEquals(listOf(false, true, true), events.map { it.replayed })
+        gateway.disconnect()
+    }
+
+    @Test
     fun reconnectRebindsCreatedSessionsWithoutEvents() = runTest {
         val first = FakeSocket()
         val second = FakeSocket()

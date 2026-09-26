@@ -527,13 +527,17 @@ public actor HermesGateway: GatewayCalling {
         // When the last ping went out while the socket was silent.
         var probedAt: Duration?
         while !Task.isCancelled && current == generation {
+            let due = configuration.clock.now() + configuration.heartbeatInterval
             do { try await configuration.clock.sleep(configuration.heartbeatInterval) } catch { return }
             guard current == generation else { return }
             let now = configuration.clock.now()
             let silence = now - lastInbound
+            // Waking a whole interval late means the app or runtime was paused, and the answer to the last
+            // ping may be waiting unread: the check starts over with a fresh ping instead.
+            let paused = now - due >= configuration.heartbeatInterval
             // Silence alone proves nothing after the app or runtime was paused: the socket counts as dead
             // only once a ping sent after the last inbound frame has gone unanswered for a full interval.
-            if silence >= configuration.heartbeatDeadline, let probedAt, probedAt > lastInbound,
+            if !paused, silence >= configuration.heartbeatDeadline, let probedAt, probedAt > lastInbound,
                now - probedAt >= configuration.heartbeatInterval {
                 await connectionLost(.transport("No frame from Hermes for \(silence)"), generation: current)
                 return

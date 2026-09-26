@@ -85,7 +85,7 @@ public enum LiveScenarios {
             }
         }
         do {
-            try await gateway.connect()
+            try await withDeadline(.seconds(60), "the gateway to connect") { try await gateway.connect() }
             let result = try await gateway.ping(PingParams())
             guard result.pong else { throw LiveScenarioError("Gateway ping returned false") }
             _ = try await gateway.gateway.capabilities(PingParams())
@@ -177,7 +177,7 @@ public enum LiveScenarios {
         }
         defer { stateTask.cancel() }
         do {
-            try await gateway.connect()
+            try await withDeadline(.seconds(60), "the gateway to connect") { try await gateway.connect() }
             let session = try await gateway.session.create(.init(
                 cwd: .value("/tmp"), title: .value("HermesAPI reconnect session"), closeOnDisconnect: false))
 
@@ -390,13 +390,15 @@ private struct StaticTicketAuth: HermesAuth {
     }
 }
 
+/// The limit counts one-second ticks of running time: a CI runner that freezes for a minute spends one
+/// tick, while a scenario that really hangs still runs out.
 private func withDeadline<T: Sendable>(
     _ limit: Duration, _ waitingFor: String, _ operation: @escaping @Sendable () async throws -> T
 ) async throws -> T {
     try await withThrowingTaskGroup(of: T.self) { group in
         group.addTask { try await operation() }
         group.addTask {
-            try await Task.sleep(for: limit)
+            for _ in 0..<Int((limit / .seconds(1)).rounded(.up)) { try await Task.sleep(for: .seconds(1)) }
             throw LiveScenarioError("Timed out waiting for \(waitingFor)")
         }
         defer { group.cancelAll() }

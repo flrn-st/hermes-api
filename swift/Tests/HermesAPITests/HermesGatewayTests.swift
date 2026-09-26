@@ -697,6 +697,32 @@ private func createSession(
     await gateway.disconnect()
 }
 
+// The manual clock makes a regression wait instead of time out; the limit turns that into a failure.
+@Test(.timeLimit(.minutes(1))) func aPauseDuringAProbeStartsTheCheckOver() async throws {
+    // A runtime paused after a ping (a suspended app, a stalled runner) wakes with the answer possibly
+    // still unread. The gateway must probe again rather than count the pause as silence.
+    let socket = TestSocket()
+    let clock = ManualClock()
+    let transport = SequenceTransport([socket])
+    let gateway = client(transport, heartbeat: .seconds(1), deadline: .seconds(3), clock: clock)
+    try await gateway.connect()
+    await clock.sleeping()
+    var heartbeats = socket.heartbeats.makeAsyncIterator()
+    clock.advance(by: .seconds(1))
+    await clock.sleeping()
+    #expect(await heartbeats.next() == "heartbeat-1")
+    clock.advance(by: .seconds(60))
+    await clock.sleeping()
+    #expect(await heartbeats.next() == "heartbeat-2")
+    await socket.inject(#"{"jsonrpc":"2.0","id":"heartbeat-2","result":{"ok":true}}"#)
+    await socket.drained()
+    clock.advance(by: .seconds(1))
+    await clock.sleeping()
+    #expect(gateway.connectionState == .connected)
+    #expect(await transport.attempts == 1)
+    await gateway.disconnect()
+}
+
 @Test func answeredHeartbeatsKeepTheConnection() async throws {
     let socket = TestSocket(answersHeartbeats: true)
     let transport = SequenceTransport([socket])

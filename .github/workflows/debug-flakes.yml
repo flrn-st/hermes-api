@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [macos-15, macos-26]
-        copy: [1, 2, 3]
+        image: [macos-26]
+        copy: [1, 2, 3, 4, 5]
     runs-on: ${{ matrix.image }}
     timeout-minutes: 45
     steps:

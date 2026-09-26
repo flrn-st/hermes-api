@@ -41,7 +41,8 @@ jobs:
               fd = os.open(probe, os.O_WRONLY | os.O_CREAT | os.O_APPEND); os.write(fd, b"x" * 4096); os.fsync(fd); os.close(fd)
               done = time.monotonic(); late, write = woke - began - 1, done - woke
               if late > 0.5 or write > 0.5 or done - last > 30:
-                  print(f"[DEBUG-rst1] {time.strftime("%H:%M:%S")} probe wake_late={late:.2f}s write_fsync={write:.2f}s", flush=True); last = done
+                  stamp = time.strftime("%H:%M:%S")
+                  print(f"[DEBUG-rst1] {stamp} probe wake_late={late:.2f}s write_fsync={write:.2f}s", flush=True); last = done
           ' &
           make live CLIENTS=ios
       - if: always()

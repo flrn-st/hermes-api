@@ -328,7 +328,8 @@ private class FaultControl(private val base: URI) {
         try {
             connection.requestMethod = "POST"
             connection.connectTimeout = 10_000
-            connection.readTimeout = 120_000
+            // A restart stops, starts and warms Hermes; the harness bounds that below this.
+            connection.readTimeout = 300_000
             if (json != null) {
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/json")

@@ -33,9 +33,11 @@ def _free_port() -> int:
         return int(listener.getsockname()[1])
 
 
-# A loaded CI runner starts Hermes in over ten seconds. With the stop's 15 s, a restart still answers
-# within the clients' 120 s control timeout.
+# A loaded CI runner starts Hermes in over ten seconds and needs about a minute for its first turn.
+# With the stop's 15 s, a restart that starts and warms Hermes still answers within the clients' 300 s
+# control timeout.
 STARTUP_TIMEOUT = 90
+WARM_TIMEOUT = 180
 
 
 def _await_status(url: str, token: str, server: subprocess.Popen[bytes]) -> None:
@@ -82,10 +84,12 @@ def _simulator_destination(client: str, env: dict[str, str]) -> str:
 class HermesServer:
     """The tagged dashboard process on a fixed port, restartable in place."""
 
-    def __init__(self, repo: Path, python: Path, port: int, token: str, env: dict[str, str], log_path: Path) -> None:
+    def __init__(self, repo: Path, python: Path, port: int, token: str, env: dict[str, str], log_path: Path,
+                 *, warm: bool) -> None:
         self.repo, self.python, self.port, self.token, self.env = repo, python, port, token, env
         self.url = f"http://127.0.0.1:{port}"
         self.log_path = log_path
+        self.warm = warm
         self.process: subprocess.Popen[bytes] | None = None
 
     def start(self) -> None:
@@ -96,6 +100,10 @@ class HermesServer:
                 cwd=self.repo, env=self.env, stdout=log, stderr=subprocess.STDOUT,
             )
         _await_status(self.url, self.token, self.process)
+        if self.warm:
+            # Clients' turn deadlines should measure the client, not Hermes' one-time first-turn cost.
+            subprocess.run([str(self.python), str(ROOT / "harness/warm.py"), "--url", self.url, "--token", self.token],
+                           cwd=self.repo, env=self.env, check=True, timeout=WARM_TIMEOUT)
 
     def stop(self) -> None:
         if self.process is None:
@@ -203,8 +211,8 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
         log_path = Path(home) / "server.log"
         if os.environ.get("DEBUG_RST1_DIR"):  # [DEBUG-rst1]
             log_path = Path(os.environ["DEBUG_RST1_DIR"]) / "server.log"  # [DEBUG-rst1] survives a cancelled job
-            env["PYTHONPATH"] = os.environ["DEBUG_RST1_DIR"]  # [DEBUG-rst1] sitecustomize: periodic stack dumps
-        server = HermesServer(repo, python, port, token, env, log_path)
+        # Recording keeps the server cold: a warm-up session would appear in the recorded frames.
+        server = HermesServer(repo, python, port, token, env, log_path, warm=not record)
         proxy: FaultProxy | None = None
         control: ControlServer | None = None
         try:

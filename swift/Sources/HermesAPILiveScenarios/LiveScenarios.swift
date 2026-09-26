@@ -336,7 +336,8 @@ struct FaultControl: Sendable {
         else { throw LiveScenarioError("Invalid control URL") }
         components.queryItems = query.isEmpty ? nil : query
         guard let url = components.url else { throw LiveScenarioError("Invalid control URL") }
-        var request = URLRequest(url: url, timeoutInterval: 120)
+        // A restart stops, starts and warms Hermes; the harness bounds that below this.
+        var request = URLRequest(url: url, timeoutInterval: 300)
         request.httpMethod = "POST"
         if let body {
             request.httpBody = body

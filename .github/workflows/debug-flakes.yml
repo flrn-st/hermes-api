@@ -24,9 +24,16 @@ jobs:
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
+      # [DEBUG-rst1] Hermes' SQLite fsyncs every transaction; on this runner's disk an fsync can take seconds.
+      - name: Put Hermes' home on a RAM disk
+        run: |
+          device=$(hdiutil attach -nomount ram://1048576 | tr -d '[:space:]')
+          diskutil erasevolume APFS hermes-live "$device" || sudo diskutil erasevolume APFS hermes-live "$device"
+          mkdir -p /Volumes/hermes-live/tmp /Volumes/hermes-live/rst1
       - name: Run the test suite and live scenarios in the iOS simulator
         env:
-          DEBUG_RST1_DIR: ${{ runner.temp }}/rst1
+          DEBUG_RST1_DIR: /Volumes/hermes-live/rst1
+          HERMES_LIVE_TMPDIR: /Volumes/hermes-live/tmp
         run: |
           mkdir -p "$DEBUG_RST1_DIR"
           xcodebuild -version
@@ -45,6 +52,8 @@ jobs:
                   print(f"[DEBUG-rst1] {stamp} probe wake_late={late:.2f}s write_fsync={write:.2f}s", flush=True); last = done
           ' &
           make live CLIENTS=ios
+      - if: always()
+        run: mkdir -p "${{ runner.temp }}/rst1" && cp -R /Volumes/hermes-live/rst1/. "${{ runner.temp }}/rst1/" || true
       - if: always()
         uses: actions/upload-artifact@v4
         with:

@@ -183,7 +183,8 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
         raise RuntimeError(f"Approval fixture target must be absent: {APPROVAL_TARGET}")
     repo = source_repo or ROOT / "spec" / ".upstream-rest" / ref
     python = repo / ".venv" / "bin" / "python"
-    with tempfile.TemporaryDirectory(prefix="hermes-api-live-") as home:
+    # HERMES_LIVE_TMPDIR puts Hermes' home, and with it its SQLite state, somewhere with fast fsync.
+    with tempfile.TemporaryDirectory(prefix="hermes-api-live-", dir=os.environ.get("HERMES_LIVE_TMPDIR")) as home:
         stub = StubLLM()
         (Path(home) / "config.yaml").write_text(
             f"model:\n  default: {MODEL}\n  provider: custom\n"

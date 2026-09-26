@@ -741,17 +741,25 @@ private func createSession(
     await gateway.disconnect()
 }
 
-@Test func silenceAloneNeverDropsASocketWithoutAPing() async throws {
+// The manual clock makes a regression wait instead of time out; the limit turns that into a failure.
+@Test(.timeLimit(.minutes(1))) func silenceAloneNeverDropsASocketWithoutAPing() async throws {
     // A deadline shorter than the interval makes the first check see the silence of a long pause
     // (a suspended app, a stalled runner). The gateway must still ping before it gives up.
     let first = TestSocket()
     let second = TestSocket()
+    let clock = ManualClock()
     let transport = SequenceTransport([first, second])
-    let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .milliseconds(50))
+    let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .milliseconds(50), clock: clock)
     try await gateway.connect()
+    await clock.sleeping()
     var heartbeats = first.heartbeats.makeAsyncIterator()
+    clock.advance(by: .milliseconds(100))
+    await clock.sleeping()
     #expect(await heartbeats.next()?.hasPrefix("heartbeat-") == true)
-    try await state(of: gateway, isReconnecting)
+    #expect(gateway.connectionState == .connected)
+    // The ping goes unanswered for a full interval: now the socket counts as dead.
+    clock.advance(by: .milliseconds(100))
+    await clock.sleeping()
     try await state(of: gateway) { $0 == .connected }
     #expect(await transport.attempts == 2)
     await gateway.disconnect()

@@ -534,10 +534,10 @@ public actor HermesGateway: GatewayCalling {
             guard current == generation else { return }
             let now = configuration.clock.now()
             let silence = now - lastInbound
-            // Waking later than the whole deadline means the app or runtime was paused, and the answer to the
-            // last ping may be waiting unread: the check starts over with a fresh ping instead. Ordinary
-            // scheduling delays stay well short of the deadline, so a dead socket is still detected.
-            let paused = now - due >= configuration.heartbeatDeadline
+            // Waking later than a whole interval and the whole deadline means the app or runtime was paused, and
+            // the answer to the last ping may be waiting unread: the check starts over with a fresh ping instead.
+            // Ordinary scheduling delays stay well short of both, so a dead socket is still detected.
+            let paused = now - due >= max(configuration.heartbeatInterval, configuration.heartbeatDeadline)
             // Silence alone proves nothing after the app or runtime was paused: the socket counts as dead
             // only once a ping sent after the last inbound frame has gone unanswered for a full interval.
             if !paused, silence >= configuration.heartbeatDeadline, let probedAt, probedAt > lastInbound,

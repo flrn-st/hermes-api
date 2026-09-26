@@ -29,6 +29,17 @@ jobs:
           DEBUG_RST1_DIR: ${{ runner.temp }}/rst1
         run: |
           mkdir -p "$DEBUG_RST1_DIR"
+          # Hermes dumps every thread's stack every 5 s from a C watchdog thread (no signals), after a
+          # timestamp line from a Python thread: a missing timestamp means the interpreter itself stalled.
+          cat > "$DEBUG_RST1_DIR/sitecustomize.py" <<'EOF'
+          import faulthandler, sys, threading, time
+          faulthandler.dump_traceback_later(5, repeat=True, file=sys.stderr)
+          def _tick():
+              while True:
+                  print(time.strftime("[DEBUG-rst1] tick %H:%M:%S"), file=sys.stderr, flush=True)
+                  time.sleep(5)
+          threading.Thread(target=_tick, daemon=True).start()
+          EOF
           xcodebuild -version
           # Every second: how late the probe woke (CPU stall) and how long a 4 KB write + fsync took
           # (disk stall). Reported through the job log, not the disk, and only when over 0.5 s.

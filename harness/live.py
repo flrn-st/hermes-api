@@ -203,6 +203,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
         log_path = Path(home) / "server.log"
         if os.environ.get("DEBUG_RST1_DIR"):  # [DEBUG-rst1]
             log_path = Path(os.environ["DEBUG_RST1_DIR"]) / "server.log"  # [DEBUG-rst1] survives a cancelled job
+            env["PYTHONPATH"] = os.environ["DEBUG_RST1_DIR"]  # [DEBUG-rst1] sitecustomize: periodic stack dumps
         server = HermesServer(repo, python, port, token, env, log_path)
         proxy: FaultProxy | None = None
         control: ControlServer | None = None

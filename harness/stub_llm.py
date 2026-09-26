@@ -31,6 +31,13 @@ class StubLLM:
             def log_message(self, _format: str, *_args: object) -> None:
                 pass
 
+            def handle_one_request(self) -> None:  # [DEBUG-rst1]
+                import sys  # [DEBUG-rst1]
+                began = time.monotonic()  # [DEBUG-rst1]
+                super().handle_one_request()  # [DEBUG-rst1]
+                if getattr(self, "path", None):  # [DEBUG-rst1]
+                    print(f"[DEBUG-rst1] {time.strftime('%H:%M:%S')} stub {getattr(self, 'command', '?')} {self.path} took {time.monotonic() - began:.1f}s", file=sys.stderr, flush=True)  # [DEBUG-rst1]
+
             def _answer(self, content_type: str, payload: bytes) -> None:
                 self.send_response(200)
                 self.send_header("Content-Type", content_type)

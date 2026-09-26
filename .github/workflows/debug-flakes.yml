@@ -30,8 +30,19 @@ jobs:
         run: |
           mkdir -p "$DEBUG_RST1_DIR"
           xcodebuild -version
-          # A timestamp every 5 s: a gap means the whole runner stalled.
-          ( while true; do date -u +%H:%M:%S; sleep 5; done >> "$DEBUG_RST1_DIR/ticks.log" ) &
+          # Every second: how late the probe woke (CPU stall) and how long a 4 KB write + fsync took
+          # (disk stall). Reported through the job log, not the disk, and only when over 0.5 s.
+          python3 -u -c '
+          import os, time
+          probe = os.path.join(os.environ["RUNNER_TEMP"], "disk-probe")
+          last = 0.0
+          while True:
+              began = time.monotonic(); time.sleep(1); woke = time.monotonic()
+              fd = os.open(probe, os.O_WRONLY | os.O_CREAT | os.O_APPEND); os.write(fd, b"x" * 4096); os.fsync(fd); os.close(fd)
+              done = time.monotonic(); late, write = woke - began - 1, done - woke
+              if late > 0.5 or write > 0.5 or done - last > 30:
+                  print(f"[DEBUG-rst1] {time.strftime("%H:%M:%S")} probe wake_late={late:.2f}s write_fsync={write:.2f}s", flush=True); last = done
+          ' &
           make live CLIENTS=ios
       - if: always()
         uses: actions/upload-artifact@v4

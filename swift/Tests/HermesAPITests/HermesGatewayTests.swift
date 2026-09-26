@@ -547,6 +547,37 @@ private func createSession(
     await gateway.disconnect()
 }
 
+@Test func failedReplayReconnectsInsteadOfSkippingTheGap() async throws {
+    let first = TestSocket()
+    let second = TestSocket()
+    let third = TestSocket()
+    let gateway = client(SequenceTransport([first, second, third]))
+    try await gateway.connect()
+    var events = gateway.events().makeAsyncIterator()
+    await first.inject(event("message.start", session: "s", seq: 1))
+    #expect(await events.next()?.seq == 1)
+    var sent = second.sent.makeAsyncIterator()
+    await first.sever()
+    let (_, activateID) = try sentCall(try #require(await sent.next()))
+    await second.inject(event("message.start", session: "s", seq: 3))
+    await second.inject(result(activateID, #"{"session_id":"s"}"#))
+    let (_, replayID) = try sentCall(try #require(await sent.next()))
+    // A busy backend fails the replay. Delivering the held seq 3 now would move past the gap for good.
+    var retried = third.sent.makeAsyncIterator()
+    await second.inject(error(replayID, code: -32000, "busy"))
+    let (reactivate, reactivateID) = try sentCall(try #require(await retried.next()))
+    #expect(reactivate == "session.activate")
+    await third.inject(result(reactivateID, #"{"session_id":"s"}"#))
+    let replayFrame = try #require(await retried.next())
+    let (method, retryID) = try sentCall(replayFrame)
+    #expect(method == "session.events.since")
+    #expect(try sentParams(replayFrame)["last_seen"] as? Int == 1)
+    await third.inject(result(retryID, #"{"events":[{"type":"message.start","session_id":"s","seq":2,"payload":{}},{"type":"message.start","session_id":"s","seq":3,"payload":{}}],"latest_seq":3,"truncated":false,"count":2,"epoch":"same","open_requests":[]}"#))
+    #expect(await events.next()?.seq == 2)
+    #expect(await events.next()?.seq == 3)
+    await gateway.disconnect()
+}
+
 @Test func reconnectRebindsCreatedSessionsWithoutEvents() async throws {
     let first = TestSocket()
     let second = TestSocket()

@@ -261,7 +261,9 @@ public class HermesGateway(
                 ClientCapabilitiesParams.serializer(), ClientCapabilitiesResult.serializer(),
                 configuration.connectTimeoutMillis, waitsForConnection = false)
             if (socket !== connection) throw HermesGatewayException.Transport("Connection ended during handshake")
-            if (hasConnected) recoverSessions(connection, current)
+            if (hasConnected && !recoverSessions(connection, current)) {
+                throw HermesGatewayException.Transport("Session replay failed; reconnecting to replay the gap")
+            }
             if (socket !== connection) throw HermesGatewayException.Transport("Connection ended during session recovery")
             hasConnected = true
             ready = true
@@ -656,17 +658,23 @@ public class HermesGateway(
         lastSequence.keys.forEach { lastSequence[it] = 0 }
     }
 
-    private suspend fun recoverSessions(connection: GatewayConnection, current: Int) {
+    /** False when a session's gap could not be replayed: the connection must be retried, because delivering
+     *  the live events held meanwhile would move that session's watermark past the gap for good. */
+    private suspend fun recoverSessions(connection: GatewayConnection, current: Int): Boolean {
+        var replayed = true
         try {
             for (sessionId in trackedSessionIds().sorted()) {
-                if (current != generation) return
+                if (current != generation) return true
                 val session = sessions[sessionId] ?: TrackedSession()
                 if (session.closeOnDisconnect) {
                     forgetSession(sessionId)
                     mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, "Closed on disconnect"))
                 } else {
                     when (val outcome = rebind(sessionId)) {
-                        Rebind.Bound -> replay(sessionId, connection, current)
+                        Rebind.Bound -> if (!replay(sessionId, connection, current)) {
+                            replayed = false
+                            return false
+                        }
                         is Rebind.Gone -> resume(sessionId, session, outcome.reason)
                         Rebind.RetryLater -> Unit
                     }
@@ -676,8 +684,9 @@ public class HermesGateway(
         } finally {
             val remaining = replayHold.entries.sortedBy { it.key }.flatMap { it.value.toList() }
             replayHold.clear()
-            remaining.forEach { handleEvent(it, false) }
+            if (replayed) remaining.forEach { handleEvent(it, false) }
         }
+        return true
     }
 
     /** Rebinding cancels Hermes' orphan reap and routes the session's live events to this socket. */
@@ -735,7 +744,7 @@ public class HermesGateway(
         }
     }
 
-    private suspend fun replay(sessionId: String, connection: GatewayConnection, current: Int) {
+    private suspend fun replay(sessionId: String, connection: GatewayConnection, current: Int): Boolean {
         try {
             val result = call("session.events.since",
                 SessionEventsSinceParams(sessionId, lastSeen = Patch.Value(lastSequence[sessionId] ?: 0L)),
@@ -753,10 +762,12 @@ public class HermesGateway(
             result.openRequests.forEach {
                 handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current)
             }
+            return true
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
-            // Keep the watermark; the next reconnect replays the gap.
+            // Keep the watermark; the retried connection replays the gap.
+            return false
         }
     }
 

@@ -412,6 +412,36 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun failedReplayReconnectsInsteadOfSkippingTheGap() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val third = FakeSocket()
+        val gateway = client(sockets(first, second, third))
+        val received = backgroundScope.async { gateway.events.take(3).toList() }
+        gateway.connect()
+        first.inbound.send(event("message.start", "s", 1))
+        delay(100)
+        first.sever()
+        val activate = second.sent()
+        second.inbound.send(event("message.start", "s", 3))
+        second.inbound.send(result(activate, """{"session_id":"s"}"""))
+        val replay = second.sent()
+        // A busy backend fails the replay. Delivering the held seq 3 now would move past the gap for good.
+        second.inbound.send(error(replay, -32000, "busy"))
+        val reactivate = third.sent()
+        assertEquals("session.activate", reactivate.method())
+        third.inbound.send(result(reactivate, """{"session_id":"s"}"""))
+        val retried = third.sent()
+        assertEquals("session.events.since", retried.method())
+        assertEquals("1", retried["params"]?.jsonObject?.get("last_seen")?.jsonPrimitive?.content)
+        third.inbound.send(result(retried, """{"events":[{"type":"message.start","session_id":"s","seq":2,"payload":{}},{"type":"message.start","session_id":"s","seq":3,"payload":{}}],"latest_seq":3,"truncated":false,"count":2,"epoch":"same","open_requests":[]}"""))
+        val events = withTimeout(3_000) { received.await() }
+        assertEquals(listOf(1L, 2L, 3L), events.map { it.seq })
+        assertEquals(listOf(false, true, true), events.map { it.replayed })
+        gateway.disconnect()
+    }
+
+    @Test
     fun reconnectRebindsCreatedSessionsWithoutEvents() = runTest {
         val first = FakeSocket()
         val second = FakeSocket()

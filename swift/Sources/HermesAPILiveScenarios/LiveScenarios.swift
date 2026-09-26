@@ -148,7 +148,8 @@ public enum LiveScenarios {
     }
 
     /// Loses the socket mid-stream, silently, and with a question open, then resumes the session after a
-    /// server restart. The heartbeat is shortened so a stalled socket is detected within seconds.
+    /// server restart. The heartbeat is shortened so a stalled socket is detected within seconds, but not so
+    /// far that a CI runner's multi-second disk stalls in Hermes read as a dead socket.
     static func reconnect(
         _ environment: LiveScenarioEnvironment, faults: FaultControl, observations: LiveObservations
     ) async throws {
@@ -156,7 +157,7 @@ public enum LiveScenarios {
             baseURL: environment.url, auth: environment.auth,
             transport: ObservingTransport(inner: URLSessionGatewayTransport(), observations: observations),
             reconnectDelay: { _ in .milliseconds(250) },
-            heartbeatInterval: .seconds(1), heartbeatDeadline: .seconds(4)))
+            heartbeatInterval: .seconds(2), heartbeatDeadline: .seconds(8)))
         let clarifications = Counter()
         await gateway.setServerRequestHandler { request in
             guard case .clarify(let params) = request,

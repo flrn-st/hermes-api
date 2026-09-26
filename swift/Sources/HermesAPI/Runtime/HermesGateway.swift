@@ -262,8 +262,8 @@ public actor HermesGateway: GatewayCalling {
             guard current == generation, activeSocket != nil else {
                 throw HermesGatewayError.transport("Connection ended during handshake")
             }
-            if hasConnected {
-                await recoverSessions(socket: socket, generation: current)
+            if hasConnected, !(await recoverSessions(socket: socket, generation: current)) {
+                throw HermesGatewayError.transport("Session replay failed; reconnecting to replay the gap")
             }
             guard current == generation, activeSocket != nil else {
                 throw HermesGatewayError.transport("Connection ended during session recovery")
@@ -532,9 +532,10 @@ public actor HermesGateway: GatewayCalling {
             guard current == generation else { return }
             let now = configuration.clock.now()
             let silence = now - lastInbound
-            // Waking a whole interval late means the app or runtime was paused, and the answer to the last
-            // ping may be waiting unread: the check starts over with a fresh ping instead.
-            let paused = now - due >= configuration.heartbeatInterval
+            // Waking later than the whole deadline means the app or runtime was paused, and the answer to the
+            // last ping may be waiting unread: the check starts over with a fresh ping instead. Ordinary
+            // scheduling delays stay well short of the deadline, so a dead socket is still detected.
+            let paused = now - due >= configuration.heartbeatDeadline
             // Silence alone proves nothing after the app or runtime was paused: the socket counts as dead
             // only once a ping sent after the last inbound frame has gone unanswered for a full interval.
             if !paused, silence >= configuration.heartbeatDeadline, let probedAt, probedAt > lastInbound,
@@ -748,29 +749,39 @@ public actor HermesGateway: GatewayCalling {
         case retryLater
     }
 
-    private func recoverSessions(socket: any GatewayConnection, generation current: Int) async {
+    /// False when a session's gap could not be replayed: the connection must be retried, because delivering
+    /// the live events held meanwhile would move that session's watermark past the gap for good.
+    private func recoverSessions(socket: any GatewayConnection, generation current: Int) async -> Bool {
+        var replayed = true
         defer {
             let remaining = replayHold.sorted(by: { $0.key < $1.key })
             replayHold.removeAll()
-            for (_, held) in remaining {
-                for event in held { handleEvent(.object(event), replayed: false) }
+            if replayed {
+                for (_, held) in remaining {
+                    for event in held { handleEvent(.object(event), replayed: false) }
+                }
             }
         }
         for sessionID in trackedSessionIDs.sorted() {
-            guard current == generation else { return }
+            guard current == generation else { return true }
             let session = sessions[sessionID] ?? TrackedSession()
             if session.closeOnDisconnect {
                 forgetSession(sessionID)
                 recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: "Closed on disconnect"))
             } else {
                 switch await rebind(sessionID) {
-                case .bound: await replay(sessionID, socket: socket, generation: current)
+                case .bound:
+                    guard await replay(sessionID, socket: socket, generation: current) else {
+                        replayed = false
+                        return false
+                    }
                 case .gone(let reason): await resume(sessionID, session: session, reason: reason)
                 case .retryLater: break
                 }
             }
             releaseHeldEvents(for: sessionID)
         }
+        return true
     }
 
     /// Rebinding cancels Hermes' orphan reap and routes the session's live events to this socket.
@@ -826,7 +837,7 @@ public actor HermesGateway: GatewayCalling {
         }
     }
 
-    private func replay(_ sessionID: String, socket: any GatewayConnection, generation current: Int) async {
+    private func replay(_ sessionID: String, socket: any GatewayConnection, generation current: Int) async -> Bool {
         do {
             let result: SessionEventsSinceResult = try await call(
                 "session.events.since",
@@ -848,8 +859,10 @@ public actor HermesGateway: GatewayCalling {
                     socket: socket, generation: current
                 )
             }
+            return true
         } catch {
-            // Keep the watermark; the next reconnect replays the gap.
+            // Keep the watermark; the retried connection replays the gap.
+            return false
         }
     }
 

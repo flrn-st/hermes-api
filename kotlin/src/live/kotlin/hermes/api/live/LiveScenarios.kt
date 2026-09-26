@@ -179,7 +179,7 @@ public object LiveScenarios {
         val transport = ObservingTransport(ktor, observations)
         val gateway = HermesGateway(HermesGatewayConfiguration(
             environment.url, environment.auth, transport, httpTransport = ktor, reconnectDelayMillis = { 250 },
-            heartbeatIntervalMillis = 1_000, heartbeatDeadlineMillis = 4_000,
+            heartbeatIntervalMillis = 2_000, heartbeatDeadlineMillis = 8_000,
             networkMonitor = environment.networkMonitor, logger = environment.logger,
         ))
         suspend fun awaitReconnect(after: Int) {

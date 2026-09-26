@@ -216,7 +216,8 @@ public object LiveScenarios {
             // server reaps the session, which the next turn on the same session then proves.
             val reconnectsBeforeStall = transport.reconnects
             faults.blackhole()
-            deadline(20_000, "the heartbeat to replace a silently stalled socket") { awaitReconnect(reconnectsBeforeStall) }
+            // Detection takes up to about ten seconds at this heartbeat; recovery calls may take ten more.
+            deadline(30_000, "the heartbeat to replace a silently stalled socket") { awaitReconnect(reconnectsBeforeStall) }
 
             val clarified = runTurn(gateway, session.sessionId, Fixture.CLARIFY_PROMPT, "clarify")
             clarified.expectReply(Fixture.CLARIFY_REPLY)

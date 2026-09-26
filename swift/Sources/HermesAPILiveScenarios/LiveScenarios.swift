@@ -196,7 +196,8 @@ public enum LiveScenarios {
             // server reaps the session, which the next turn on the same session then proves.
             let reconnectsBeforeStall = await states.reconnects()
             try await faults.blackhole()
-            try await withDeadline(.seconds(20), "the heartbeat to replace a silently stalled socket") {
+            // Detection takes up to about ten seconds at this heartbeat; recovery calls may take ten more.
+            try await withDeadline(.seconds(30), "the heartbeat to replace a silently stalled socket") {
                 while await states.reconnects() <= reconnectsBeforeStall {
                     try await Task.sleep(for: .milliseconds(100))
                 }

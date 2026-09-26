@@ -13,8 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        copy: [1, 2, 3, 4, 5]
-    runs-on: macos-26
+        image: [macos-15, macos-26]
+        copy: [1, 2, 3]
+    runs-on: ${{ matrix.image }}
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -28,29 +29,12 @@ jobs:
           DEBUG_RST1_DIR: ${{ runner.temp }}/rst1
         run: |
           mkdir -p "$DEBUG_RST1_DIR"
-          cat > "$DEBUG_RST1_DIR/sitecustomize.py" <<'EOF'
-          import faulthandler, signal, sys
-          faulthandler.register(signal.SIGUSR1, file=sys.stderr, all_threads=True)
-          EOF
-          # Dump every Hermes thread's stack every 5 s while the suite runs.
-          ( while true; do pkill -USR1 -f 'uvicorn hermes_cli.web_server' || true; sleep 5; done ) &
-          # CPU (second sample: the first always reads 0%), memory pressure and swap every 5 s.
-          ( while true; do
-              { date -u +%H:%M:%S
-                top -l 2 -s 1 -n 8 -o cpu -stats pid,command,cpu,mem | tail -9
-                memory_pressure -Q | tail -1
-                sysctl -n vm.swapusage; } >> "$DEBUG_RST1_DIR/top.log"
-              sleep 4
-            done ) &
-          ( while true; do pgrep -fl 'uvicorn hermes_cli.web_server' >/dev/null && echo "$(date -u +%H:%M:%S) hermes alive" || echo "$(date -u +%H:%M:%S) hermes GONE"; sleep 5; done >> "$DEBUG_RST1_DIR/alive.log" ) &
+          xcodebuild -version
+          # A timestamp every 5 s: a gap means the whole runner stalled.
+          ( while true; do date -u +%H:%M:%S; sleep 5; done >> "$DEBUG_RST1_DIR/ticks.log" ) &
           make live CLIENTS=ios
-      - name: '[DEBUG-rst1] Kernel memory kills'
-        if: always()
-        run: |
-          log show --last 90m --predicate 'eventMessage CONTAINS[c] "jetsam" OR eventMessage CONTAINS[c] "memorystatus_kill" OR eventMessage CONTAINS[c] "killed" AND process == "kernel"' --style compact 2>/dev/null | grep -iE "python|jetsam|memorystatus" | tail -40 > "${{ runner.temp }}/rst1/kills.log" || true
-          wc -l "${{ runner.temp }}/rst1/kills.log"
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rst1-${{ matrix.copy }}
+          name: rst1-${{ matrix.image }}-${{ matrix.copy }}
           path: ${{ runner.temp }}/rst1

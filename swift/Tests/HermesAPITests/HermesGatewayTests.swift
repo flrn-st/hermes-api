@@ -1,5 +1,6 @@
 import Foundation
-import HermesAPI
+@testable import HermesAPI
+import os
 import Testing
 
 // MARK: - Fakes
@@ -73,6 +74,11 @@ private actor TestSocket: GatewayConnection {
         if !waiters.isEmpty { waiters.removeFirst().resume(returning: frame) } else { incoming.append(frame) }
     }
 
+    /// Returns once the gateway has handled every injected frame and waits for the next one.
+    func drained() async {
+        while (!incoming.isEmpty || waiters.isEmpty) && !Task.isCancelled { await Task.yield() }
+    }
+
     /// Hermes (or the network) ends the socket.
     func sever(_ error: HermesGatewayError = .transport("closed")) {
         failure = error
@@ -85,6 +91,71 @@ private actor TestSocket: GatewayConnection {
         sever()
         sentContinuation.finish()
         heartbeatContinuation.finish()
+    }
+}
+
+/// Heartbeat time that moves only when a test advances it.
+private final class ManualClock: Sendable {
+    private struct Sleeper {
+        let id: Int
+        let deadline: Duration
+        let wake: CheckedContinuation<Void, any Error>
+    }
+
+    private struct State {
+        var elapsed = Duration.zero
+        var nextID = 0
+        var sleepers: [Sleeper] = []
+        var cancelled: Set<Int> = []
+    }
+
+    private let state = OSAllocatedUnfairLock(initialState: State())
+
+    var gatewayClock: GatewayClock {
+        GatewayClock(now: { self.state.withLock { $0.elapsed } }, sleep: { try await self.sleep(for: $0) })
+    }
+
+    /// Moves time forward and wakes every sleeper whose deadline has passed.
+    func advance(by duration: Duration) {
+        let due = state.withLock { state in
+            state.elapsed += duration
+            let due = state.sleepers.filter { $0.deadline <= state.elapsed }
+            state.sleepers.removeAll { $0.deadline <= state.elapsed }
+            return due
+        }
+        for sleeper in due { sleeper.wake.resume() }
+    }
+
+    /// Returns once something sleeps on this clock: the heartbeat has finished its check and waits again.
+    func sleeping() async {
+        while state.withLock({ $0.sleepers.isEmpty }) && !Task.isCancelled { await Task.yield() }
+    }
+
+    private func sleep(for duration: Duration) async throws {
+        let id = state.withLock { state in
+            state.nextID += 1
+            return state.nextID
+        }
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (wake: CheckedContinuation<Void, any Error>) in
+                let cancelled = state.withLock { state in
+                    // Cancelled before it could sleep: onCancel found nothing to wake.
+                    guard !state.cancelled.contains(id) else { return true }
+                    state.sleepers.append(Sleeper(id: id, deadline: state.elapsed + duration, wake: wake))
+                    return false
+                }
+                if cancelled { wake.resume(throwing: CancellationError()) }
+            }
+        } onCancel: {
+            let sleeper = state.withLock { state in
+                guard let index = state.sleepers.firstIndex(where: { $0.id == id }) else {
+                    state.cancelled.insert(id)
+                    return Sleeper?.none
+                }
+                return state.sleepers.remove(at: index)
+            }
+            sleeper?.wake.resume(throwing: CancellationError())
+        }
     }
 }
 
@@ -137,13 +208,16 @@ private let offline = GatewayNetworkPath(isAvailable: false, interface: nil)
 
 private func client(
     _ transport: SequenceTransport, timeout: Duration = .seconds(1), monitor: TestNetworkMonitor? = nil,
-    reconnectDelay: Duration = .zero, heartbeat: Duration = .seconds(60), deadline: Duration = .seconds(120)
+    reconnectDelay: Duration = .zero, heartbeat: Duration = .seconds(60), deadline: Duration = .seconds(120),
+    clock: ManualClock? = nil
 ) -> HermesGateway {
-    HermesGateway(configuration: .init(
+    var configuration = HermesGatewayConfiguration(
         baseURL: URL(string: "https://example.test")!, auth: TestAuth(), transport: transport,
         networkMonitor: monitor, requestTimeout: timeout, reconnectDelay: { _ in reconnectDelay },
         heartbeatInterval: heartbeat, heartbeatDeadline: deadline
-    ))
+    )
+    if let clock { configuration.clock = clock.gatewayClock }
+    return HermesGateway(configuration: configuration)
 }
 
 private func client(socket: TestSocket, timeout: Duration = .seconds(1)) -> HermesGateway {
@@ -635,20 +709,20 @@ private func createSession(
     await gateway.disconnect()
 }
 
-@Test func streamingTrafficNeedsNoHeartbeat() async throws {
+// The manual clock makes a regression wait instead of time out; the limit turns that into a failure.
+@Test(.timeLimit(.minutes(1))) func streamingTrafficNeedsNoHeartbeat() async throws {
     let socket = TestSocket()
-    // Events arrive forty times faster than the heartbeat interval and span two of its checks. The gateway
-    // runs on the real clock, so the margin must outlast a loaded runner stalling the stream: at 500 ms
-    // an oversubscribed machine already paused it long enough to earn a legitimate heartbeat.
-    let gateway = client(SequenceTransport([socket]), heartbeat: .seconds(2), deadline: .seconds(6))
+    let clock = ManualClock()
+    let gateway = client(SequenceTransport([socket]), heartbeat: .seconds(1), deadline: .seconds(3), clock: clock)
     try await gateway.connect()
-    let stream = Task {
-        for seq in 1...100 {
-            await socket.inject(event("message.delta", session: "s", seq: seq, payload: #"{"text":"x"}"#))
-            try await Task.sleep(for: .milliseconds(50))
-        }
+    await clock.sleeping()
+    // A frame every 400 ms across four heartbeat checks: the gateway never sees an interval of silence.
+    for seq in 1...12 {
+        await socket.inject(event("message.delta", session: "s", seq: seq, payload: #"{"text":"x"}"#))
+        await socket.drained()
+        clock.advance(by: .milliseconds(400))
+        await clock.sleeping()
     }
-    try await stream.value
     await socket.close()
     var heartbeats = socket.heartbeats.makeAsyncIterator()
     #expect(await heartbeats.next() == nil)

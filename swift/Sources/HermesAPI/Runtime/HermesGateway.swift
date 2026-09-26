@@ -74,7 +74,7 @@ public actor HermesGateway: GatewayCalling {
     private var networkKnown = false
     private var networkAvailable = true
     private var networkInterface: String?
-    private var lastInbound = ContinuousClock.now
+    private var lastInbound = Duration.zero
     private var heartbeatMethod = "gateway.ping"
     private var heartbeatSequence = 0
 
@@ -249,7 +249,7 @@ public actor HermesGateway: GatewayCalling {
                 throw HermesGatewayError.cancelled
             }
             activeSocket = socket
-            lastInbound = .now
+            lastInbound = configuration.clock.now()
             if hasConnected {
                 replayHold = Dictionary(uniqueKeysWithValues: trackedSessionIDs.map { ($0, []) })
             }
@@ -511,7 +511,7 @@ public actor HermesGateway: GatewayCalling {
             while !Task.isCancelled {
                 let frame = try await socket.receive()
                 guard current == generation else { return }
-                lastInbound = .now
+                lastInbound = configuration.clock.now()
                 await handleFrame(frame, socket: socket, generation: current)
             }
         } catch {
@@ -525,11 +525,11 @@ public actor HermesGateway: GatewayCalling {
     /// once a ping has gone unanswered, it reconnects.
     private func heartbeatLoop(_ socket: any GatewayConnection, generation current: Int) async {
         // When the last ping went out while the socket was silent.
-        var probedAt: ContinuousClock.Instant?
+        var probedAt: Duration?
         while !Task.isCancelled && current == generation {
-            do { try await Task.sleep(for: configuration.heartbeatInterval) } catch { return }
+            do { try await configuration.clock.sleep(configuration.heartbeatInterval) } catch { return }
             guard current == generation else { return }
-            let now = ContinuousClock.now
+            let now = configuration.clock.now()
             let silence = now - lastInbound
             // Silence alone proves nothing after the app or runtime was paused: the socket counts as dead
             // only once a ping sent after the last inbound frame has gone unanswered for a full interval.

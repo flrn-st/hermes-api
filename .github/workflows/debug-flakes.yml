@@ -34,8 +34,21 @@ jobs:
           EOF
           # Dump every Hermes thread's stack every 5 s while the suite runs.
           ( while true; do pkill -USR1 -f 'uvicorn hermes_cli.web_server' || true; sleep 5; done ) &
-          ( while true; do date -u +%H:%M:%S >> "$DEBUG_RST1_DIR/top.log"; top -l 1 -n 8 -o cpu -stats pid,command,cpu | tail -9 >> "$DEBUG_RST1_DIR/top.log"; sleep 5; done ) &
+          # CPU (second sample: the first always reads 0%), memory pressure and swap every 5 s.
+          ( while true; do
+              { date -u +%H:%M:%S
+                top -l 2 -s 1 -n 8 -o cpu -stats pid,command,cpu,mem | tail -9
+                memory_pressure -Q | tail -1
+                sysctl -n vm.swapusage; } >> "$DEBUG_RST1_DIR/top.log"
+              sleep 4
+            done ) &
+          ( while true; do pgrep -fl 'uvicorn hermes_cli.web_server' >/dev/null && echo "$(date -u +%H:%M:%S) hermes alive" || echo "$(date -u +%H:%M:%S) hermes GONE"; sleep 5; done >> "$DEBUG_RST1_DIR/alive.log" ) &
           make live CLIENTS=ios
+      - name: '[DEBUG-rst1] Kernel memory kills'
+        if: always()
+        run: |
+          log show --last 90m --predicate 'eventMessage CONTAINS[c] "jetsam" OR eventMessage CONTAINS[c] "memorystatus_kill" OR eventMessage CONTAINS[c] "killed" AND process == "kernel"' --style compact 2>/dev/null | grep -iE "python|jetsam|memorystatus" | tail -40 > "${{ runner.temp }}/rst1/kills.log" || true
+          wc -l "${{ runner.temp }}/rst1/kills.log"
       - if: always()
         uses: actions/upload-artifact@v4
         with:

@@ -90,6 +90,8 @@ public struct HermesGatewayConfiguration: Sendable {
     /// Resume sessions Hermes reclaimed while this client was disconnected. See `GatewaySessionRecovery`.
     public let resumesReclaimedSessions: Bool
     public let logger: Logger
+    /// The heartbeat's time source; tests substitute a clock they advance by hand.
+    var clock = GatewayClock.continuous()
 
     public init(
         baseURL: URL,
@@ -121,5 +123,19 @@ public struct HermesGatewayConfiguration: Sendable {
         self.heartbeatDeadline = heartbeatDeadline
         self.resumesReclaimedSessions = resumesReclaimedSessions
         self.logger = logger
+    }
+}
+
+/// Elapsed time since an arbitrary origin, and sleeping on the same timeline. The heartbeat reads time only
+/// through this, so a test can decide exactly when a liveness check runs instead of depending on how
+/// promptly a loaded machine schedules it.
+struct GatewayClock: Sendable {
+    let now: @Sendable () -> Duration
+    let sleep: @Sendable (Duration) async throws -> Void
+
+    /// The system's continuous clock, which keeps counting while the device sleeps.
+    static func continuous() -> GatewayClock {
+        let origin = ContinuousClock.now
+        return GatewayClock(now: { ContinuousClock.now - origin }, sleep: { try await Task.sleep(for: $0) })
     }
 }

@@ -17,6 +17,11 @@ from urllib.parse import parse_qs, urlparse
 REPORT_KINDS = ("methods", "events", "server_requests")
 
 
+def _dbg(message: str) -> None:  # [DEBUG-rst1]
+    import sys  # [DEBUG-rst1]
+    print(f"[DEBUG-rst1] {time.strftime('%H:%M:%S')}.{int(time.time() * 1000) % 1000:03d} proxy {message}", file=sys.stderr, flush=True)  # [DEBUG-rst1]
+
+
 def _reset(sock: socket.socket) -> None:
     """Close with RST, as a dropped network path looks to the peer."""
     try:
@@ -55,30 +60,43 @@ class FaultProxy:
             with self._lock:
                 refusing = time.monotonic() < self._refuse_until
             if refusing:
+                _dbg("refused a client during a drop hold")  # [DEBUG-rst1]
                 _reset(client)
                 continue
             try:
                 upstream = socket.create_connection(("127.0.0.1", self.upstream_port), timeout=5)
                 upstream.settimeout(None)
-            except OSError:
+            except OSError as error:
+                _dbg(f"upstream connect failed: {error!r}")  # [DEBUG-rst1]
                 _reset(client)
                 continue
             pair = (client, upstream)
+            _dbg(f"pair {client.getpeername()[1]}->{upstream.getsockname()[1]} open")  # [DEBUG-rst1]
             with self._lock:
                 self._pairs.add(pair)
             for source, target in ((client, upstream), (upstream, client)):
                 threading.Thread(target=self._pump, args=(source, target, pair), daemon=True).start()
 
     def _pump(self, source: socket.socket, target: socket.socket, pair: tuple[socket.socket, socket.socket]) -> None:
+        direction = "down" if source is pair[1] else "up"  # [DEBUG-rst1]
+        port = pair[0].getpeername()[1] if direction == "up" else pair[1].getsockname()[1]  # [DEBUG-rst1]
+        total = 0  # [DEBUG-rst1]
         try:
             while data := source.recv(65536):
                 with self._lock:
                     stalled = pair in self._stalled
                 if not stalled:
+                    began = time.monotonic()  # [DEBUG-rst1]
                     target.sendall(data)
-        except OSError:
-            pass
+                    if time.monotonic() - began > 1:  # [DEBUG-rst1]
+                        _dbg(f"{direction} {port} sendall of {len(data)} bytes took {time.monotonic() - began:.1f}s")  # [DEBUG-rst1]
+                if total == 0:  # [DEBUG-rst1]
+                    _dbg(f"{direction} {port} first {len(data)} bytes{' (stalled)' if stalled else ''}")  # [DEBUG-rst1]
+                total += len(data)  # [DEBUG-rst1]
+        except OSError as error:
+            _dbg(f"{direction} {port} error {error!r}")  # [DEBUG-rst1]
         finally:
+            _dbg(f"{direction} {port} ended after {total} bytes")  # [DEBUG-rst1]
             with self._lock:
                 owned = pair in self._pairs
                 self._pairs.discard(pair)

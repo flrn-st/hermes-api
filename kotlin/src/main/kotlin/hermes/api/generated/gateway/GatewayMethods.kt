@@ -69,667 +69,2484 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
     public val verification: VerificationMethods = VerificationMethods(caller)
     public val voice: VoiceMethods = VoiceMethods(caller)
     public val wake: WakeMethods = WakeMethods(caller)
+    /**
+     * Cheapest liveness probe; answered on the WS reader thread even while every agent is mid-turn.
+     */
     public suspend fun ping(params: PingParams): PingResult =
         caller.call("ping", params, serializer<PingParams>(), serializer<PingResult>())
 }
 
 public class AgentsMethods(private val caller: GatewayCaller) {
+    /**
+     * Registry-wide background process summary for ``/agents``.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5033 unsupported
+     */
     public suspend fun list(params: AgentsListParams): AgentsListResult =
         caller.call("agents.list", params, serializer<AgentsListParams>(), serializer<AgentsListResult>())
 }
 
 public class ApprovalMethods(private val caller: GatewayCaller) {
+    /**
+     * Replay the approvals still waiting on this session (reconnect / polling).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5004 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun pending(params: ApprovalPendingParams): ApprovalPendingResult =
         caller.call("approval.pending", params, serializer<ApprovalPendingParams>(), serializer<ApprovalPendingResult>())
+    /**
+     * Tell the backend the card is on screen, so its timeout clock starts.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4006 invalidRequest: "request_id required"
+     * - 5004 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun received(params: ApprovalReceivedParams): ApprovalReceivedResult =
         caller.call("approval.received", params, serializer<ApprovalReceivedParams>(), serializer<ApprovalReceivedResult>())
+    /**
+     * Deliver the user's decision on a dangerous command (falls back to durable identity on a stale sid).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5004 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun respond(params: ApprovalRespondParams): ApprovalRespondResult =
         caller.call("approval.respond", params, serializer<ApprovalRespondParams>(), serializer<ApprovalRespondResult>())
 }
 
 public class BillingMethods(private val caller: GatewayCaller) {
+    /**
+     * Enable/disable auto top-up with its threshold and reload amount (billing:manage).
+     */
     public suspend fun autoReload(params: BillingAutoReloadParams): BillingMutationResult =
         caller.call("billing.auto_reload", params, serializer<BillingAutoReloadParams>(), serializer<BillingMutationResult>())
+    /**
+     * Start a one-off top-up charge (billing:manage, idempotent).
+     */
     public suspend fun charge(params: BillingChargeParams): BillingChargeResult =
         caller.call("billing.charge", params, serializer<BillingChargeParams>(), serializer<BillingChargeResult>())
+    /**
+     * Poll one charge by id.
+     */
     public suspend fun chargeStatus(params: BillingChargeStatusParams): BillingChargeStatusResult =
         caller.call("billing.charge_status", params, serializer<BillingChargeStatusParams>(), serializer<BillingChargeStatusResult>())
+    /**
+     * Read-only billing view (no scope); the Nous free tier is answered locally without a portal call.
+     */
     public suspend fun state(params: ProfileParams): BillingStateResult =
         caller.call("billing.state", params, serializer<ProfileParams>(), serializer<BillingStateResult>())
+    /**
+     * Run the billing:manage device flow; the URL/code arrive via billing.step_up.verification.
+     */
     public suspend fun stepUp(params: BillingStepUpParams): BillingStepUpResult =
         caller.call("billing.step_up", params, serializer<BillingStepUpParams>(), serializer<BillingStepUpResult>())
 }
 
 public class BotRelayMethods(private val caller: GatewayCaller) {
+    /**
+     * Deliver a relayed DM into a Bot Chat on this gateway and return the one-turn reply (blocking).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4090 invalidRequest: "profile and message required"
+     * - 4091 invalidRequest: "message too long"
+     * - 4092 notFound: "no profile '{…}' on this gateway"
+     * - 5092 serverError: "delivery turn failed: {…}"
+     * - 5093 serverError: "delivery turn timed out"
+     * - 5094 serverError
+     * - 5096 busy
+     */
     public suspend fun deliver(params: BotRelayDeliverParams): BotRelayDeliverResult =
         caller.call("bot_relay.deliver", params, serializer<BotRelayDeliverParams>(), serializer<BotRelayDeliverResult>())
+    /**
+     * Atomically claim every pending cross-connection envelope queued on this gateway.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5091 serverError
+     */
     public suspend fun outboxDrain(params: BotRelayOutboxDrainParams): BotRelayOutboxDrainResult =
         caller.call("bot_relay.outbox.drain", params, serializer<BotRelayOutboxDrainParams>(), serializer<BotRelayOutboxDrainResult>())
+    /**
+     * Write a relayed reply and/or typed error for an envelope so the sender-side waiter resolves.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4093 invalidRequest: "id required"
+     * - 4094 invalidRequest
+     * - 5095 invalidRequest
+     */
     public suspend fun reply(params: BotRelayReplyParams): OkResult =
         caller.call("bot_relay.reply", params, serializer<BotRelayReplyParams>(), serializer<OkResult>())
+    /**
+     * Replace this gateway's view of agents on other connections; answers the accepted row count.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5090 serverError
+     */
     public suspend fun rosterSync(params: BotRelayRosterSyncParams): BotRelayRosterSyncResult =
         caller.call("bot_relay.roster.sync", params, serializer<BotRelayRosterSyncParams>(), serializer<BotRelayRosterSyncResult>())
 }
 
 public class BrowserMethods(private val caller: GatewayCaller) {
+    /**
+     * Hard-detach only the controller owned by this authenticated transport.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4403 forbidden: "authenticated controller identity required", "controller is not owned by this transport", "session is not owned by this transport"
+     */
     public suspend fun controllerDetach(params: BrowserControllerParams): BrowserControllerDetachResult =
         caller.call("browser.controller.detach", params, serializer<BrowserControllerParams>(), serializer<BrowserControllerDetachResult>())
+    /**
+     * Acknowledge a heartbeat only for this transport's own attached controller.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4403 forbidden: "authenticated controller identity required", "controller is not owned by this transport", "session is not owned by this transport"; notFound: "no controller registered for this session"
+     */
     public suspend fun controllerHeartbeat(params: BrowserControllerParams): OkResult =
         caller.call("browser.controller.heartbeat", params, serializer<BrowserControllerParams>(), serializer<OkResult>())
+    /**
+     * Attach this connection as the browser controller for one session; fails closed (4403).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4403 forbidden: "browser.controller.register requires an authenticated non-internal identity", "browser.extension_control.enabled is not set", "controller is not owned by this transport", "session is not owned by this transport"; invalidRequest: "controller_id, browser_profile_id, and server session profile are required", "no permitted controller capabilities requested"; notFound: "no controller registered for this session"; unsupported: "unsupported browser-control protocol version; expected {…}"
+     */
     public suspend fun controllerRegister(params: BrowserControllerRegisterParams): BrowserControllerRegisterResult =
         caller.call("browser.controller.register", params, serializer<BrowserControllerRegisterParams>(), serializer<BrowserControllerRegisterResult>())
+    /**
+     * Deliver one command result to the broker; accepted is false for unknown or settled command ids.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4403 forbidden: "authenticated controller identity required", "controller is not owned by this transport", "session is not owned by this transport"; invalidRequest: "command_id required"; notFound: "no controller registered for this session"
+     */
     public suspend fun controllerResult(params: BrowserControllerResultParams): BrowserControllerResultResult =
         caller.call("browser.controller.result", params, serializer<BrowserControllerResultParams>(), serializer<BrowserControllerResultResult>())
+    /**
+     * Inspect, attach to, or drop the CDP browser the tools use; ``messages`` narrate a connect.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4015 invalidRequest: "browser url must be a string, got {…}", "invalid port in browser url: {…}", "missing host in browser url: {…}", "unknown action: {…}", …
+     * - 5031 unavailable: "could not reach browser CDP at {…}", "could not reach browser CDP at {…}: {…}"
+     */
     public suspend fun manage(params: BrowserManageParams): BrowserManageResult =
         caller.call("browser.manage", params, serializer<BrowserManageParams>(), serializer<BrowserManageResult>())
 }
 
 public class ClarifyMethods(private val caller: GatewayCaller) {
+    /**
+     * Lock one answer of a batch clarify request (editable until every question is locked).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4002 invalidRequest: "request_id and question_id required"
+     * - 5000 serverError
+     * - 5019 serverError: "compute-host clarify lock failed: {…}", "compute-host clarify lock returned an invalid response"
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun lock(params: ClarifyLockParams): ClarifyLockResult =
         caller.call("clarify.lock", params, serializer<ClarifyLockParams>(), serializer<ClarifyLockResult>())
 }
 
 public class CliMethods(private val caller: GatewayCaller) {
+    /**
+     * Run ``hermes <argv>`` non-interactively and capture its output; ``blocked`` explains a refusal.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4003 invalidRequest: "argv must be list[str]"
+     * - 5017 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun exec(params: CliExecParams): CliExecResult =
         caller.call("cli.exec", params, serializer<CliExecParams>(), serializer<CliExecResult>())
 }
 
 public class ClientMethods(private val caller: GatewayCaller) {
+    /**
+     * What the calling client handles, sent once per connection (after gateway.ready); returns the server→client request methods this backend may send.
+     */
     public suspend fun capabilities(params: ClientCapabilitiesParams): ClientCapabilitiesResult =
         caller.call("client.capabilities", params, serializer<ClientCapabilitiesParams>(), serializer<ClientCapabilitiesResult>())
 }
 
 public class ClipboardMethods(private val caller: GatewayCaller) {
+    /**
+     * Save the host clipboard image into the session and queue it for the next turn.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5027 unavailable: "clipboard unavailable: {…}"
+     */
     public suspend fun paste(params: ClipboardPasteParams): AttachedImageResult =
         caller.call("clipboard.paste", params, serializer<ClipboardPasteParams>(), serializer<AttachedImageResult>())
 }
 
 public class CommandMethods(private val caller: GatewayCaller) {
+    /**
+     * Run a quick/plugin/bundle/skill/built-in slash command and answer a structured directive.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4018 invalidRequest: "not a quick/plugin/bundle/skill command: {…}"
+     */
     public suspend fun dispatch(params: CommandDispatchParams): CommandDispatchResult =
         caller.call("command.dispatch", params, serializer<CommandDispatchParams>(), serializer<CommandDispatchResult>())
+    /**
+     * Canonical registry command for a name or alias.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4011 notFound: "unknown command: {…}"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5012 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun resolve(params: CommandResolveParams): CommandResolveResult =
         caller.call("command.resolve", params, serializer<CommandResolveParams>(), serializer<CommandResolveResult>())
 }
 
 public class CommandsMethods(private val caller: GatewayCaller) {
+    /**
+     * Categorized slash metadata (registry, quick, plugin, skill) for completion menus.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5020 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun catalog(params: CommandsCatalogParams): CommandsCatalogResult =
         caller.call("commands.catalog", params, serializer<CommandsCatalogParams>(), serializer<CommandsCatalogResult>())
 }
 
 public class CompleteMethods(private val caller: GatewayCaller) {
+    /**
+     * Path / @-reference completions for the composer (files, folders, profiles, plugin providers).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5021 serverError
+     */
     public suspend fun path(params: CompletePathParams): CompletionItemsResult =
         caller.call("complete.path", params, serializer<CompletePathParams>(), serializer<CompletionItemsResult>())
+    /**
+     * Ranked slash-command / skill completions for a ``/`` token.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5020 serverError
+     */
     public suspend fun slash(params: CompleteSlashParams): CompleteSlashResult =
         caller.call("complete.slash", params, serializer<CompleteSlashParams>(), serializer<CompleteSlashResult>())
 }
 
 public class ConfigMethods(private val caller: GatewayCaller) {
+    /**
+     * Read one normalised config value (or the whole effective config) the way the UIs render it.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4002 invalidRequest: "unknown config key: {…}"
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun get(params: ConfigGetParams): ConfigGetResult =
         caller.call("config.get", params, serializer<ConfigGetParams>(), serializer<ConfigGetResult>())
+    /**
+     * Change one config key (persisted or session-scoped) and read back the normalised value.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4002 invalidRequest: "unknown config key: {…}"
+     */
     public suspend fun set(params: ConfigSetParams): ConfigSetResult =
         caller.call("config.set", params, serializer<ConfigSetParams>(), serializer<ConfigSetResult>())
+    /**
+     * Masked, display-ready config summary (model / agent / environment rows).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5030 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun show(params: ConfigShowParams): ConfigShowResult =
         caller.call("config.show", params, serializer<ConfigShowParams>(), serializer<ConfigShowResult>())
 }
 
 public class ConnectionMethods(private val caller: GatewayCaller) {
+    /**
+     * Per-target outcomes from the card, and an optional Continue.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "Connector parameters are invalid."
+     * - 4001 notFound: "session not found or not owned by this transport"
+     * - 4002 invalidRequest: "Connection answer is invalid."
+     * - 4004 notFound: "No open operation with that op_id."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 5033 unsupported: "Connectors must be managed on the session's compute host."
+     * - 5034 serverError: "Connector request failed. Try again explicitly."
+     */
     public suspend fun respond(params: ConnectionRespondParams): ConnectionRespondResult =
         caller.call("connection.respond", params, serializer<ConnectionRespondParams>(), serializer<ConnectionRespondResult>())
 }
 
 public class ConnectorsMethods(private val caller: GatewayCaller) {
+    /**
+     * The scoped member's hosted connector accounts, optionally filtered by connector slug.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "connector must be a slug."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 4090 conflict: "Select an organization to manage connector rules."
+     * - 5034 unavailable: "Connector accounts are unavailable."
+     */
     public suspend fun accounts(params: ConnectorAccountsParams): ConnectorAccountsResult =
         caller.call("connectors.accounts", params, serializer<ConnectorAccountsParams>(), serializer<ConnectorAccountsResult>())
+    /**
+     * Remove one hosted connector account owned by the scoped member.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "Connection id is invalid.", "connection_id is required."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 4041 notFound: "Connector account not found."
+     * - 4090 conflict: "Select an organization to manage connector rules."
+     * - 5034 unavailable: "Connector accounts are unavailable."
+     */
     public suspend fun accountsRemove(params: ConnectorAccountsRemoveParams): ConnectorAccountsRemoveResult =
         caller.call("connectors.accounts.remove", params, serializer<ConnectorAccountsRemoveParams>(), serializer<ConnectorAccountsRemoveResult>())
+    /**
+     * The hosted connector catalog available to the scoped member.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 4090 conflict: "Select an organization to manage connector rules."
+     * - 5034 unavailable: "Connector catalog is unavailable."
+     */
     public suspend fun catalog(params: ProfileParams): ConnectorsCatalogResult =
         caller.call("connectors.catalog", params, serializer<ProfileParams>(), serializer<ConnectorsCatalogResult>())
+    /**
+     * Start or re-initiate authorization for named connectors on a session or account operation.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "Connector parameters are invalid.", "One target kind per request."
+     * - 4001 conflict: "session ownership changed"; notFound: "session not found or not owned by this transport"
+     * - 4002 conflict: "Reopen the stored link.", "The operation has settled.", "The target cannot be run again.", "This target cannot be run again."
+     * - 4004 notFound: "No open connection operation for this session.", "No such target on the open operation."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available in this session.", "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 5033 unsupported: "Connectors must be managed on the session's compute host."
+     * - 5034 serverError: "Connector request failed. Try again explicitly.", "Connector service returned an invalid response.", "Connector service returned no authorization results."
+     */
     public suspend fun connect(params: ConnectorsConnectParams): ConnectorsConnectResult =
         caller.call("connectors.connect", params, serializer<ConnectorsConnectParams>(), serializer<ConnectorsConnectResult>())
+    /**
+     * Connector catalog + connection state for one session or profile account owner.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "Connector parameters are invalid.", "One target kind per request."
+     * - 4001 conflict: "session ownership changed"; notFound: "session not found or not owned by this transport"
+     * - 4002 conflict: "Reopen the stored link.", "The operation has settled.", "The target cannot be run again.", "This target cannot be run again."
+     * - 4004 notFound: "No open connection operation for this session.", "No such target on the open operation."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available in this session.", "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 5033 unsupported: "Connectors must be managed on the session's compute host."
+     * - 5034 serverError: "Connector request failed. Try again explicitly.", "Connector service returned an invalid response.", "Connector service returned no authorization results."
+     */
     public suspend fun list(params: ConnectorsListParams): ConnectorsListResult =
         caller.call("connectors.list", params, serializer<ConnectorsListParams>(), serializer<ConnectorsListResult>())
+    /**
+     * The current snapshot of one open session or account operation.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "Connector parameters are invalid."
+     * - 4001 notFound: "session not found or not owned by this transport"
+     * - 4004 notFound: "No open operation with that op_id."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 5033 unsupported: "Connectors must be managed on the session's compute host."
+     * - 5034 serverError: "Connector request failed. Try again explicitly."
+     */
     public suspend fun operationStatus(params: ConnectionOperationParams): ConnectionOperationStatus =
         caller.call("connectors.operation.status", params, serializer<ConnectionOperationParams>(), serializer<ConnectionOperationStatus>())
+    /**
+     * The browser leg came back (hermes://connections/done): read the accounts now, not at the next tick.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "Connector parameters are invalid."
+     * - 4001 notFound: "session not found or not owned by this transport"
+     * - 4004 notFound: "No open operation with that op_id."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 5033 unsupported: "Connectors must be managed on the session's compute host."
+     * - 5034 serverError: "Connector request failed. Try again explicitly."
+     */
     public suspend fun operationWake(params: ConnectionOperationParams): ConnectionWakeResult =
         caller.call("connectors.operation.wake", params, serializer<ConnectionOperationParams>(), serializer<ConnectionWakeResult>())
+    /**
+     * Policy layers for the scoped member, from organization to member scope.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 4090 conflict: "Select an organization to manage connector rules."
+     * - 5034 unavailable: "Connector policy is unavailable."
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun policyGet(params: ProfileParams): ConnectorPolicyGetResult =
         caller.call("connectors.policy.get", params, serializer<ProfileParams>(), serializer<ConnectorPolicyGetResult>())
+    /**
+     * Apply one scoped member connector or tool-list policy change.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "Connector parameters are invalid.", "Connector policy change is invalid."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 4090 conflict: "Select an organization to manage connector rules."
+     * - 5034 unavailable: "Connector policy is unavailable."
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun policySet(params: ConnectorPolicySetParams): ConnectorPolicySetResult =
         caller.call("connectors.policy.set", params, serializer<ConnectorPolicySetParams>(), serializer<ConnectorPolicySetResult>())
+    /**
+     * The scoped profile's cached or current tool list for one connector.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "slug and refresh are required parameters"
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 4041 notFound: "Connector not found."
+     * - 4090 conflict: "Select an organization to manage connector rules."
+     * - 5034 unavailable: "Connector tools are unavailable."
+     */
     public suspend fun tools(params: ConnectorToolsParams): ConnectorToolsResult =
         caller.call("connectors.tools", params, serializer<ConnectorToolsParams>(), serializer<ConnectorToolsResult>())
 }
 
 public class CronMethods(private val caller: GatewayCaller) {
+    /**
+     * List/add/remove/pause/resume cron jobs in the (optionally profile-scoped) cron store.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4016 invalidRequest: "unknown cron action: {…}"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5023 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun manage(params: CronManageParams): CronManageResult =
         caller.call("cron.manage", params, serializer<CronManageParams>(), serializer<CronManageResult>())
 }
 
 public class DelegationMethods(private val caller: GatewayCaller) {
+    /**
+     * Block/unblock NEW spawns globally (active children keep running); returns the new state.
+     */
     public suspend fun pause(params: DelegationPauseParams): DelegationPauseResult =
         caller.call("delegation.pause", params, serializer<DelegationPauseParams>(), serializer<DelegationPauseResult>())
+    /**
+     * Running subagent tree plus the spawn pause flag and limits.
+     */
     public suspend fun status(params: ProfileParams): DelegationStatusResult =
         caller.call("delegation.status", params, serializer<ProfileParams>(), serializer<DelegationStatusResult>())
 }
 
 public class DiagnosticsMethods(private val caller: GatewayCaller) {
+    /**
+     * Upload a force-redacted debug bundle to Nous-internal diagnostics storage.
+     */
     public suspend fun shareNous(params: DiagnosticsShareNousParams): DiagnosticsShareNousResult =
         caller.call("diagnostics.share_nous", params, serializer<DiagnosticsShareNousParams>(), serializer<DiagnosticsShareNousResult>())
 }
 
 public class DisplayMethods(private val caller: GatewayCaller) {
+    /**
+     * Run the distro package install on the gateway host; progress streams as display.install.log/.done.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 unsupported: "Bot Desktop runs on Linux gateway hosts only", "no supported package manager (apt-get, dnf, pacman) on this host"
+     */
     public suspend fun install(params: ProfileParams): DisplayInstallResult =
         caller.call("display.install", params, serializer<ProfileParams>(), serializer<DisplayInstallResult>())
+    /**
+     * Take over: the human named by a viewer id this connection minted controls the screen.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 forbidden: "viewer_id was not minted for this connection; call display.observe first"; invalidRequest: "viewer_id required"
+     */
     public suspend fun leaseAcquire(params: DisplayLeaseAcquireParams): DisplayLeaseResult =
         caller.call("display.lease.acquire", params, serializer<DisplayLeaseAcquireParams>(), serializer<DisplayLeaseResult>())
+    /**
+     * Hand back. Without a viewer id the release is refused while a human holds unless force.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 forbidden: "viewer_id was not minted for this connection; call display.observe first"; invalidRequest: "viewer_id required to release another viewer's lease (or pass force: true)"
+     */
     public suspend fun leaseRelease(params: DisplayLeaseReleaseParams): DisplayLeaseResult =
         caller.call("display.lease.release", params, serializer<DisplayLeaseReleaseParams>(), serializer<DisplayLeaseResult>())
+    /**
+     * Mint a single-use ticket for /api/display/ws and the server-minted viewer id for this connection.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 conflict: "this profile's Bot Desktop is not running; call display.start first"
+     */
     public suspend fun observe(params: DisplayObserveParams): DisplayObserveResult =
         caller.call("display.observe", params, serializer<DisplayObserveParams>(), serializer<DisplayObserveResult>())
+    /**
+     * Start this profile's Xvnc + Xfce (idempotent); blocks until the display is published.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 serverError
+     */
     public suspend fun start(params: ProfileParams): DisplayStatus =
         caller.call("display.start", params, serializer<ProfileParams>(), serializer<DisplayStatus>())
+    /**
+     * Runtime + lease snapshot for this profile's screen.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 serverError
+     */
     public suspend fun status(params: ProfileParams): DisplayStatus =
         caller.call("display.status", params, serializer<ProfileParams>(), serializer<DisplayStatus>())
+    /**
+     * Stop the screen. Refused (5300, code viewer_mismatch) while a human holds unless force.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 conflict: "a human holds this screen; pass force: true to stop it anyway"
+     */
     public suspend fun stop(params: DisplayStopParams): DisplayStopResult =
         caller.call("display.stop", params, serializer<DisplayStopParams>(), serializer<DisplayStopResult>())
+    /**
+     * One JPEG grab of the bot's screen; read-only, never changes the lease.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 serverError
+     */
     public suspend fun thumbnail(params: ProfileParams): DisplayThumbnailResult =
         caller.call("display.thumbnail", params, serializer<ProfileParams>(), serializer<DisplayThumbnailResult>())
 }
 
 public class FileMethods(private val caller: GatewayCaller) {
+    /**
+     * Stage a non-image file into the session workspace and hand back its @file: ref.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4015 invalidRequest: "path or data_url required"
+     * - 5028 serverError
+     */
     public suspend fun attach(params: FileAttachParams): FileAttachResult =
         caller.call("file.attach", params, serializer<FileAttachParams>(), serializer<FileAttachResult>())
 }
 
 public class FreeTierMethods(private val caller: GatewayCaller) {
+    /**
+     * Mark the one-time availability notice as shown on the free-tier identity.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5091 serverError
+     */
     public suspend fun ackNotice(params: ProfileParams): FreeTierAckNoticeResult =
         caller.call("free_tier.ack_notice", params, serializer<ProfileParams>(), serializer<FreeTierAckNoticeResult>())
+    /**
+     * Explicit retry of the free-tier identity mint when the boot bootstrap could not create it.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5092 serverError
+     */
     public suspend fun provision(params: ProfileParams): FreeTierProvisionResult =
         caller.call("free_tier.provision", params, serializer<ProfileParams>(), serializer<FreeTierProvisionResult>())
+    /**
+     * Pure read of the focused profile's free-tier identity state (no network, no side effects).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5090 serverError
+     */
     public suspend fun status(params: ProfileParams): FreeTierStatusResult =
         caller.call("free_tier.status", params, serializer<ProfileParams>(), serializer<FreeTierStatusResult>())
 }
 
 public class GatewayMethods(private val caller: GatewayCaller) {
+    /**
+     * What THIS build enforces (a client withholds a feature unless advertised).
+     */
     public suspend fun capabilities(params: PingParams): GatewayCapabilitiesResult =
         caller.call("gateway.capabilities", params, serializer<PingParams>(), serializer<GatewayCapabilitiesResult>())
 }
 
 public class GroupsMethods(private val caller: GatewayCaller) {
+    /**
+     * Resolve one exact pending approval raised by a local or peer room member.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4115 unavailable: "hosted room driver is unavailable"
+     * - 5119 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun approve(params: GroupsApproveParams): GroupsApproveResult =
         caller.call("groups.approve", params, serializer<GroupsApproveParams>(), serializer<GroupsApproveResult>())
+    /**
+     * Describe the hosted-room protocol implemented by this gateway.
+     */
     public suspend fun capabilities(params: GroupsCapabilitiesParams): GroupsCapabilitiesResult =
         caller.call("groups.capabilities", params, serializer<GroupsCapabilitiesParams>(), serializer<GroupsCapabilitiesResult>())
+    /**
+     * Create a hosted room idempotently; authority is this gateway's stable install identity.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4110 invalidRequest
+     * - 4123 unavailable: "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+     * - 5111 serverError
+     */
     public suspend fun create(params: GroupsCreateParams): GroupsCreateResult =
         caller.call("groups.create", params, serializer<GroupsCreateParams>(), serializer<GroupsCreateResult>())
+    /**
+     * Fence this gateway's stale room authority against a proven newer epoch.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4119 invalidRequest
+     * - 5119 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun demote(params: GroupsDemoteParams): GroupsDemoteResult =
         caller.call("groups.demote", params, serializer<GroupsDemoteParams>(), serializer<GroupsDemoteResult>())
+    /**
+     * Permanently tombstone a hosted room id after stopping its work and revoking peer routes.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4113 invalidRequest
+     * - 4123 unavailable: "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+     * - 5114 serverError
+     */
     public suspend fun disband(params: GroupsDisbandParams): GroupsDisbandResult =
         caller.call("groups.disband", params, serializer<GroupsDisbandParams>(), serializer<GroupsDisbandResult>())
+    /**
+     * List rooms hosted by this gateway, most recently changed first.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5110 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun list(params: GroupsListParams): GroupsListResult =
         caller.call("groups.list", params, serializer<GroupsListParams>(), serializer<GroupsListResult>())
+    /**
+     * A monotonic room-log delta after since_seq, bounded by count and page bytes.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4112 invalidRequest
+     * - 5113 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun log(params: GroupsLogParams): GroupsLogResult =
         caller.call("groups.log", params, serializer<GroupsLogParams>(), serializer<GroupsLogResult>())
+    /**
+     * Mint one target-issued room/profile grant for a prospective room home.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4120 invalidRequest
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun peerInvite(params: GroupsPeerInviteParams): GroupsPeerInviteResult =
         caller.call("groups.peer.invite", params, serializer<GroupsPeerInviteParams>(), serializer<GroupsPeerInviteResult>())
+    /**
+     * Register and probe one scoped peer route on the room home.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4121 unavailable: "hosted room driver is unavailable"
+     * - 5120 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun peerRegister(params: GroupsPeerRegisterParams): GroupsPeerRegisterResult =
         caller.call("groups.peer.register", params, serializer<GroupsPeerRegisterParams>(), serializer<GroupsPeerRegisterResult>())
+    /**
+     * Revoke one target-issued grant using its exact profile scope.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4122 unsupported
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun peerRevoke(params: GroupsPeerRevokeParams): GroupsPeerRevokeResult =
         caller.call("groups.peer.revoke", params, serializer<GroupsPeerRevokeParams>(), serializer<GroupsPeerRevokeResult>())
+    /**
+     * Continue a replicated room on this gateway at epoch + 1; requires confirm=true.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4118 conflict: "promotion requires confirm=true acknowledging the previous authority can no longer commit"
+     * - 5118 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun promote(params: GroupsPromoteParams): GroupsPromoteResult =
         caller.call("groups.promote", params, serializer<GroupsPromoteParams>(), serializer<GroupsPromoteResult>())
+    /**
+     * Rename one hosted room atomically with its replay event.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4117 invalidRequest
+     * - 5117 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun rename(params: GroupsRenameParams): GroupsRenameResult =
         caller.call("groups.rename", params, serializer<GroupsRenameParams>(), serializer<GroupsRenameResult>())
+    /**
+     * The local replica's coverage and authority lineage for one room.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4117 invalidRequest
+     * - 5117 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun replicaState(params: GroupsReplicaStateParams): GroupsReplicaStateResult =
         caller.call("groups.replica_state", params, serializer<GroupsReplicaStateParams>(), serializer<GroupsReplicaStateResult>())
+    /**
+     * Persist one authority-stamped replay page into the local replica store; idempotent.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4116 invalidRequest
+     * - 5116 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun replicate(params: GroupsReplicateParams): GroupsReplicateResult =
         caller.call("groups.replicate", params, serializer<GroupsReplicateParams>(), serializer<GroupsReplicateResult>())
+    /**
+     * Retry one indeterminate room task after explicit user confirmation.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4115 unavailable: "hosted room driver is unavailable"
+     * - 5118 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun retry(params: GroupsRetryParams): GroupsRetryResult =
         caller.call("groups.retry", params, serializer<GroupsRetryParams>(), serializer<GroupsRetryResult>())
+    /**
+     * Append one inert message.user event idempotently; the actor is server-owned.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4111 invalidRequest
+     * - 4123 unavailable: "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+     * - 5112 serverError
+     */
     public suspend fun send(params: GroupsSendParams): GroupsSendResult =
         caller.call("groups.send", params, serializer<GroupsSendParams>(), serializer<GroupsSendResult>())
+    /**
+     * One hosted room's replay cursor and fenced authority state, plus live driver status.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4114 invalidRequest
+     * - 5115 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun state(params: GroupsStateParams): GroupsStateResult =
         caller.call("groups.state", params, serializer<GroupsStateParams>(), serializer<GroupsStateResult>())
+    /**
+     * Durably cancel queued or running work for one hosted room.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4115 unavailable: "hosted room driver is unavailable"
+     * - 5116 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun stop(params: GroupsStopParams): GroupsStopResult =
         caller.call("groups.stop", params, serializer<GroupsStopParams>(), serializer<GroupsStopResult>())
 }
 
 public class HandoffMethods(private val caller: GatewayCaller) {
+    /**
+     * Fail a not-yet-claimed handoff (client poll timeout); CAS against the watcher.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun fail(params: HandoffFailParams): HandoffFailResult =
         caller.call("handoff.fail", params, serializer<HandoffFailParams>(), serializer<HandoffFailResult>())
+    /**
+     * Queue a handoff to a messaging platform's home channel; the gateway watcher claims it.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4009 busy: "session busy — wait for the current turn to finish, then retry the handoff"
+     * - 4023 invalidRequest: "platform required"
+     * - 4024 invalidRequest: "unknown platform '{…}'"
+     * - 4025 conflict: "platform '{…}' is not configured/enabled in the gateway"
+     * - 4026 conflict: "no home channel configured for {…} — set one with /sethome on the destination chat first"
+     * - 4027 busy: "session is already in flight for handoff — wait for it to settle, then retry"
+     * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+     * - 5021 serverError: "could not load gateway config: {…}"
+     */
     public suspend fun request(params: HandoffRequestParams): HandoffRequestResult =
         caller.call("handoff.request", params, serializer<HandoffRequestParams>(), serializer<HandoffRequestResult>())
+    /**
+     * Poll the handoff row for this session.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun state(params: SessionParams): HandoffStateResult =
         caller.call("handoff.state", params, serializer<SessionParams>(), serializer<HandoffStateResult>())
 }
 
 public class ImageMethods(private val caller: GatewayCaller) {
+    /**
+     * Queue a gateway-visible image file for the next turn.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4015 invalidRequest: "path required"
+     * - 4016 invalidRequest: "unsupported image: {…}"; notFound: "image not found: {…}"
+     * - 5027 serverError
+     */
     public suspend fun attach(params: ImageAttachParams): AttachedImageResult =
         caller.call("image.attach", params, serializer<ImageAttachParams>(), serializer<AttachedImageResult>())
+    /**
+     * Queue an image uploaded as base64 (remote client); reply mirrors image.attach.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4015 invalidRequest: "content_base64 required"
+     * - 4016 invalidRequest: "unsupported image extension: {…}"
+     * - 4017 invalidRequest: "data is not valid base64", "image is empty"
+     * - 4018 invalidRequest: "{…} too large ({…} bytes; cap is {…} MB)"
+     * - 5027 serverError: "write failed: {…}"
+     */
     public suspend fun attachBytes(params: ImageAttachBytesParams): AttachedImageResult =
         caller.call("image.attach_bytes", params, serializer<ImageAttachBytesParams>(), serializer<AttachedImageResult>())
+    /**
+     * Drop a queued image before the turn is sent.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4015 invalidRequest: "path required"
+     */
     public suspend fun detach(params: ImageDetachParams): ImageDetachResult =
         caller.call("image.detach", params, serializer<ImageDetachParams>(), serializer<ImageDetachResult>())
+    /**
+     * Generate an image through the tool's provider dispatcher and hand the renderer a data URL.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4071 invalidRequest: "prompt required"
+     * - 5071 serverError
+     */
     public suspend fun generate(params: ImageGenerateParams): ImageGenerateResult =
         caller.call("image.generate", params, serializer<ImageGenerateParams>(), serializer<ImageGenerateResult>())
 }
 
 public class InputMethods(private val caller: GatewayCaller) {
+    /**
+     * Recognise a terminal file drop pasted into the composer and turn it into an attachment.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5027 serverError
+     */
     public suspend fun detectDrop(params: InputDetectDropParams): InputDetectDropResult =
         caller.call("input.detect_drop", params, serializer<InputDetectDropParams>(), serializer<InputDetectDropResult>())
 }
 
 public class InsightsMethods(private val caller: GatewayCaller) {
+    /**
+     * Session/message counts over the last ``days`` for the (optionally scoped) profile store.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5017 unavailable: "Session storage is unavailable: {…}. {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun get(params: InsightsGetParams): InsightsGetResult =
         caller.call("insights.get", params, serializer<InsightsGetParams>(), serializer<InsightsGetResult>())
 }
 
 public class LearningMethods(private val caller: GatewayCaller) {
+    /**
+     * Archive a skill (restorable via curator) or remove a memory chunk.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5000 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun delete(params: LearningNodeParams): LearningMutationResult =
         caller.call("learning.delete", params, serializer<LearningNodeParams>(), serializer<LearningMutationResult>())
+    /**
+     * Node content (SKILL.md or memory chunk) for an edit prefill.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5000 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun detail(params: LearningNodeParams): LearningDetailResult =
         caller.call("learning.detail", params, serializer<LearningNodeParams>(), serializer<LearningDetailResult>())
+    /**
+     * Rewrite a node's content (SKILL.md or memory chunk).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5000 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun edit(params: LearningEditParams): LearningMutationResult =
         caller.call("learning.edit", params, serializer<LearningEditParams>(), serializer<LearningMutationResult>())
+    /**
+     * Pre-render the /journey timeline (frames + legend/summary) so the TUI walks it locally.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5000 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun frames(params: LearningFramesParams): LearningFramesResult =
         caller.call("learning.frames", params, serializer<LearningFramesParams>(), serializer<LearningFramesResult>())
 }
 
 public class LlmMethods(private val caller: GatewayCaller) {
+    /**
+     * Stateless one-shot LLM completion (titles, ideas) on the session's or the task backend.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4030 invalidRequest: "llm.oneshot requires a template or instructions/input"
+     * - 4031 unsupported
+     * - 4032 forbidden
+     * - 5030 serverError: "one-shot generation failed: {…}"
+     */
     public suspend fun oneshot(params: LlmOneshotParams): LlmOneshotResult =
         caller.call("llm.oneshot", params, serializer<LlmOneshotParams>(), serializer<LlmOneshotResult>())
 }
 
 public class McpMethods(private val caller: GatewayCaller) {
+    /**
+     * Curated MCP presets with per-profile installed/enabled state and the env keys each needs.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun catalog(params: ProfileParams): McpCatalogResult =
         caller.call("mcp.catalog", params, serializer<ProfileParams>(), serializer<McpCatalogResult>())
+    /**
+     * Add a server to the profile's config from a catalog preset and/or an explicit config.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 invalidRequest: "server '{…}' rejected: suspicious command/args configuration"; notFound: "session not found"
+     * - 4063 invalidRequest: "config must specify a 'url' (http) or 'command' (stdio), or a valid 'preset'", "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 4090 conflict: "server '{…}' already exists", "server '{…}' is provided by plugin '{…}' and cannot be modified"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversAdd(params: McpServersAddParams): McpServersAddResult =
         caller.call("mcp.servers.add", params, serializer<McpServersAddParams>(), serializer<McpServersAddResult>())
+    /**
+     * Configured MCP servers for the (scoped) profile, secrets redacted to env-key names.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversList(params: ProfileParams): McpServersListResult =
         caller.call("mcp.servers.list", params, serializer<ProfileParams>(), serializer<McpServersListResult>())
+    /**
+     * Relay a client-captured redirect into a client_redirect_uri flow.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversOauthCallback(params: McpOauthCallbackParams): McpOauthCallbackResult =
         caller.call("mcp.servers.oauth.callback", params, serializer<McpOauthCallbackParams>(), serializer<McpOauthCallbackResult>())
+    /**
+     * Cancel a flow owned by the resolved profile, waking its callback worker.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversOauthCancel(params: McpOauthFlowParams): McpOauthCancelResult =
         caller.call("mcp.servers.oauth.cancel", params, serializer<McpOauthFlowParams>(), serializer<McpOauthCancelResult>())
+    /**
+     * Poll a flow; approved persists tokens for the profile and returns the probed tools.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversOauthPoll(params: McpOauthFlowParams): McpOauthPollResult =
         caller.call("mcp.servers.oauth.poll", params, serializer<McpOauthFlowParams>(), serializer<McpOauthPollResult>())
+    /**
+     * Begin a PKCE OAuth flow; the client opens auth_url and polls mcp.servers.oauth.poll.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"; unsupported: "stdio servers authenticate via env keys, not OAuth", "this server uses header/API-key auth, not OAuth"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+     * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversOauthStart(params: McpOauthStartParams): McpOauthStartResult =
         caller.call("mcp.servers.oauth.start", params, serializer<McpOauthStartParams>(), serializer<McpOauthStartResult>())
+    /**
+     * Drop a server from the profile's config.yaml.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+     * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversRemove(params: McpServerNameParams): McpServersRemoveResult =
         caller.call("mcp.servers.remove", params, serializer<McpServerNameParams>(), serializer<McpServersRemoveResult>())
+    /**
+     * Store a credential in the profile's .env and reference it from the server config (header or env).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 invalidRequest: "malformed server config"; notFound: "session not found"
+     * - 4063 invalidRequest: "value is not a valid credential", "{…} required"
+     * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+     * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversSetApiKey(params: McpServersSetApiKeyParams): McpServersSetApiKeyResult =
         caller.call("mcp.servers.set_api_key", params, serializer<McpServersSetApiKeyParams>(), serializer<McpServersSetApiKeyResult>())
+    /**
+     * Cached runtime state per configured server; never connects, probes, or starts auth.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversStatus(params: ProfileParams): McpServersStatusResult =
         caller.call("mcp.servers.status", params, serializer<ProfileParams>(), serializer<McpServersStatusResult>())
+    /**
+     * Connect, list tools, disconnect — an OAuth server with no token on disk is reported as not ok.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun serversTest(params: McpServerNameParams): McpServersTestResult =
         caller.call("mcp.servers.test", params, serializer<McpServerNameParams>(), serializer<McpServersTestResult>())
 }
 
 public class MessageMethods(private val caller: GatewayCaller) {
+    /**
+     * Set/clear one author's emoji reaction on a message; returns the row's full reaction list.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4023 invalidRequest: "row_id or newest_role required"
+     * - 4024 invalidRequest: "emoji must be a non-empty string or null"
+     * - 4025 invalidRequest: "author must be 'user' or 'agent'"
+     * - 4040 notFound: "message not found in this session", "no message to react to yet"
+     * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun react(params: MessageReactParams): MessageReactResult =
         caller.call("message.react", params, serializer<MessageReactParams>(), serializer<MessageReactResult>())
 }
 
 public class ModelMethods(private val caller: GatewayCaller) {
+    /**
+     * Remove every credential (env keys and OAuth state) for a provider.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 invalidRequest: "slug is required"
+     * - 4005 notFound: "no credentials found for {…}"
+     * - 5035 unavailable
+     */
     public suspend fun disconnect(params: ModelDisconnectParams): ModelDisconnectResult =
         caller.call("model.disconnect", params, serializer<ModelDisconnectParams>(), serializer<ModelDisconnectResult>())
+    /**
+     * Provider/model inventory for the picker, layered over the session's live provider when given.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5033 unsupported
+     */
     public suspend fun options(params: ModelOptionsParams): ModelOptionsResult =
         caller.call("model.options", params, serializer<ModelOptionsParams>(), serializer<ModelOptionsResult>())
+    /**
+     * Save an API key for a provider and return its refreshed inventory row.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 invalidRequest: "slug and api_key are required"
+     * - 4002 invalidRequest: "unknown provider: {…}"
+     * - 4003 conflict: "{…} uses {…} auth — run `hermes model` to configure"
+     * - 4004 conflict: "no env var defined for {…}"
+     * - 4006 forbidden: "managed install — credentials are read-only"
+     * - 5034 unavailable
+     */
     public suspend fun saveKey(params: ModelSaveKeyParams): ModelSaveKeyResult =
         caller.call("model.save_key", params, serializer<ModelSaveKeyParams>(), serializer<ModelSaveKeyResult>())
 }
 
 public class OnboardingMethods(private val caller: GatewayCaller) {
+    /**
+     * Create-or-read the backend-owned setup profile; the backend picks the name and finds it by role.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5073 serverError
+     */
     public suspend fun ensureSetupProfile(params: Params): OnboardingEnsureSetupProfileResult =
         caller.call("onboarding.ensure_setup_profile", params, serializer<Params>(), serializer<OnboardingEnsureSetupProfileResult>())
+    /**
+     * Restore the setup profile to its created state in place (soul, memories, skills, sessions).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4072 notFound: "no setup profile to reset"
+     * - 5074 serverError
+     */
     public suspend fun resetSetupProfile(params: Params): OnboardingResetSetupProfileResult =
         caller.call("onboarding.reset_setup_profile", params, serializer<Params>(), serializer<OnboardingResetSetupProfileResult>())
 }
 
 public class PasteMethods(private val caller: GatewayCaller) {
+    /**
+     * Spill a large paste to a file and hand back the inline placeholder.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "empty paste"
+     */
     public suspend fun collapse(params: PasteCollapseParams): PasteCollapseResult =
         caller.call("paste.collapse", params, serializer<PasteCollapseParams>(), serializer<PasteCollapseResult>())
 }
 
 public class PdfMethods(private val caller: GatewayCaller) {
+    /**
+     * Render a PDF's pages to PNG and queue them as images for the next turn.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4015 invalidRequest: "first_page must be >= 1", "first_page/last_page must be integers", "last_page must be >= first_page", "path or content_base64 required"
+     * - 4016 invalidRequest: "not a PDF: {…}"; notFound: "PDF not found: {…}"
+     * - 4017 invalidRequest: "data is not valid base64", "decoded PDF is empty", "payload is not a PDF (missing %PDF- magic bytes)"
+     * - 4018 invalidRequest: "PDF too large; cap is {…} MB", "{…} too large ({…} bytes; cap is {…} MB)"
+     * - 4019 invalidRequest: "page range exceeds cap of {…} pages per attach call"
+     * - 5028 serverError: "pdftoppm failed: {…}", "pdftoppm produced no pages (corrupt PDF?)", "pdftoppm timed out (>120s)"; unsupported: "pdftoppm not installed (poppler-utils package required)"
+     */
     public suspend fun attach(params: PdfAttachParams): PdfAttachResult =
         caller.call("pdf.attach", params, serializer<PdfAttachParams>(), serializer<PdfAttachResult>())
 }
 
 public class PetMethods(private val caller: GatewayCaller) {
+    /**
+     * Stop an in-flight pet generate/hatch by token (idempotent).
+     */
     public suspend fun cancel(params: PetCancelParams): PetCancelResult =
         caller.call("pet.cancel", params, serializer<PetCancelParams>(), serializer<PetCancelResult>())
+    /**
+     * Half-block cell frames (or a kitty placement) for one pet state.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun cells(params: PetCellsParams): PetCellsResult =
         caller.call("pet.cells", params, serializer<PetCellsParams>(), serializer<PetCellsResult>())
+    /**
+     * Turn the pet display off from the desktop picker.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun disable(params: ProfileParams): OkResult =
         caller.call("pet.disable", params, serializer<ProfileParams>(), serializer<OkResult>())
+    /**
+     * Export an installed pet as a re-importable .zip.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun export(params: PetSlugParams): PetExportResult =
         caller.call("pet.export", params, serializer<PetSlugParams>(), serializer<PetExportResult>())
+    /**
+     * Petdex gallery + local install state (installed-only offline); localOnly skips the remote manifest.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun gallery(params: PetGalleryParams): PetGalleryResult =
         caller.call("pet.gallery", params, serializer<PetGalleryParams>(), serializer<PetGalleryResult>())
+    /**
+     * Candidate base looks for a new pet (draft step); drafts also stream via pet.generate.progress.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing prompt", "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun generate(params: PetGenerateParams): PetGenerateResult =
         caller.call("pet.generate", params, serializer<PetGenerateParams>(), serializer<PetGenerateResult>())
+    /**
+     * Whether pet generation is possible (a reference-capable image backend) and which providers.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun generateStatus(params: ProfileParams): PetGenerateStatusResult =
         caller.call("pet.generate.status", params, serializer<ProfileParams>(), serializer<PetGenerateStatusResult>())
+    /**
+     * Turn a base draft into a full spritesheet pet; progress streams via pet.hatch.progress.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"; conflict: "draft expired — generate again"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun hatch(params: PetHatchParams): PetHatchResult =
         caller.call("pet.hatch", params, serializer<PetHatchParams>(), serializer<PetHatchResult>())
+    /**
+     * Active pet for sprite renderers: spritesheet (base64) + frame geometry + state-row taxonomy.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun info(params: PetInfoParams): PetInfoResult =
         caller.call("pet.info", params, serializer<PetInfoParams>(), serializer<PetInfoResult>())
+    /**
+     * Cheap active-pet metadata used to avoid full payload refreshes.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun infoMeta(params: ProfileParams): PetInfoMetaResult =
         caller.call("pet.info.meta", params, serializer<ProfileParams>(), serializer<PetInfoMetaResult>())
+    /**
+     * Uninstall a pet (delete its directory); if it was active, turn the display off.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun remove(params: PetSlugParams): PetSlugResult =
         caller.call("pet.remove", params, serializer<PetSlugParams>(), serializer<PetSlugResult>())
+    /**
+     * Rename a pet's display name + realign its slug/dir; follows the active slug in config.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing name", "missing slug"
+     * - 5031 serverError: "pet.rename failed", "{…} failed: {…}"
+     */
     public suspend fun rename(params: PetRenameParams): PetSlugResult =
         caller.call("pet.rename", params, serializer<PetRenameParams>(), serializer<PetSlugResult>())
+    /**
+     * Persist display.pet.scale (clamped to engine bounds) from the desktop slider.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun scale(params: PetScaleParams): PetScaleResult =
         caller.call("pet.scale", params, serializer<PetScaleParams>(), serializer<PetScaleResult>())
+    /**
+     * Adopt a pet: install (if needed) + activate; writes display.pet.* to config.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "could not adopt '{…}': {…}", "{…} failed: {…}"
+     */
     public suspend fun select(params: PetSlugParams): PetSlugResult =
         caller.call("pet.select", params, serializer<PetSlugParams>(), serializer<PetSlugResult>())
+    /**
+     * Idle-frame PNG data URI for the picker (desktop CSP breaks CDN <img>).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "missing slug"
+     * - 5031 serverError: "{…} failed: {…}"
+     */
     public suspend fun thumb(params: PetThumbParams): PetThumbResult =
         caller.call("pet.thumb", params, serializer<PetThumbParams>(), serializer<PetThumbResult>())
 }
 
 public class PluginsMethods(private val caller: GatewayCaller) {
+    /**
+     * Loaded plugin manager entries (legacy flat view); the Plugins Hub uses plugins.manage list.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun list(params: PluginsListParams): PluginsListResult =
         caller.call("plugins.list", params, serializer<PluginsListParams>(), serializer<PluginsListResult>())
+    /**
+     * Plugins Hub backend: list installed plugins, toggle, git-install, re-pin a catalog install, or remove a user install.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4017 invalidRequest: "unknown {…} action: {…}"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5026 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun manage(params: PluginsManageParams): PluginsManageResult =
         caller.call("plugins.manage", params, serializer<PluginsManageParams>(), serializer<PluginsManageResult>())
 }
 
 public class PreviewMethods(private val caller: GatewayCaller) {
+    /**
+     * Spawn a hidden agent that brings the desktop preview's dev server back up.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4012 invalidRequest: "url required"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5035 unavailable: "backend is retiring; reconnect to continue"
+     */
     public suspend fun restart(params: PreviewRestartParams): TaskIdResult =
         caller.call("preview.restart", params, serializer<PreviewRestartParams>(), serializer<TaskIdResult>())
 }
 
 public class ProcessMethods(private val caller: GatewayCaller) {
+    /**
+     * Kill one background process the caller's session owns and return its output snapshot.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4012 invalidRequest: "process_id required"
+     * - 4044 notFound: "no such process: {…}"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5010 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun kill(params: ProcessKillParams): ProcessKillResult =
         caller.call("process.kill", params, serializer<ProcessKillParams>(), serializer<ProcessKillResult>())
+    /**
+     * Background processes owned by the caller's session (desktop status stack poll).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5010 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun list(params: ProcessListParams): ProcessListResult =
         caller.call("process.list", params, serializer<ProcessListParams>(), serializer<ProcessListResult>())
+    /**
+     * Kill every background process in the registry (``/stop``), answering the count killed.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5010 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun stop(params: ProcessStopParams): ProcessStopResult =
         caller.call("process.stop", params, serializer<ProcessStopParams>(), serializer<ProcessStopResult>())
 }
 
 public class ProfilesMethods(private val caller: GatewayCaller) {
+    /**
+     * Editor Save: apply any subset of a profile's sections and report each one.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4063 invalidRequest: "name required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5064 serverError
+     */
     public suspend fun configure(params: ProfilesConfigureParams): ProfilesConfigureResult =
         caller.call("profiles.configure", params, serializer<ProfilesConfigureParams>(), serializer<ProfilesConfigureResult>())
+    /**
+     * Create a profile (ws twin of POST /api/profiles), mirroring launch credentials by default.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4061 invalidRequest: "name required"
+     * - 4062 conflict
+     * - 5062 serverError
+     */
     public suspend fun create(params: ProfilesCreateParams): ProfilesCreateResult =
         caller.call("profiles.create", params, serializer<ProfilesCreateParams>(), serializer<ProfilesCreateResult>())
+    /**
+     * Everything the profile editor shows: soul, model pin, skills, toolsets, MCP servers.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4063 invalidRequest: "name required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5063 serverError
+     */
     public suspend fun describe(params: ProfileNameParams): ProfilesDescribeResult =
         caller.call("profiles.describe", params, serializer<ProfileNameParams>(), serializer<ProfilesDescribeResult>())
+    /**
+     * A profile asset as a data URL.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4063 invalidRequest: "name required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5066 serverError
+     */
     public suspend fun getAsset(params: ProfilesGetAssetParams): ProfilesGetAssetResult =
         caller.call("profiles.get_asset", params, serializer<ProfilesGetAssetParams>(), serializer<ProfilesGetAssetResult>())
+    /**
+     * Roster of profiles with previews so a client paints without N follow-up calls.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     */
     public suspend fun list(params: ProfilesListParams): ProfilesListResult =
         caller.call("profiles.list", params, serializer<ProfilesListParams>(), serializer<ProfilesListResult>())
+    /**
+     * Write the onboarding facts into the default profile's user memory and confirm they landed.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5067 serverError
+     */
     public suspend fun rememberOnboarding(params: ProfilesRememberOnboardingParams): ProfilesRememberOnboardingResult =
         caller.call("profiles.remember_onboarding", params, serializer<ProfilesRememberOnboardingParams>(), serializer<ProfilesRememberOnboardingResult>())
+    /**
+     * Store or clear a profile asset (avatar) atomically.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4063 invalidRequest: "name required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 4066 invalidRequest: "unknown asset '{…}' (supported: avatar)"
+     * - 4067 invalidRequest: "data required (data URL or base64)"
+     * - 4068 invalidRequest: "data is not valid base64"
+     * - 4069 invalidRequest: "asset too large ({…} bytes; max 2MB)"
+     * - 4070 invalidRequest: "unsupported image format (PNG/JPEG/WebP only)"
+     * - 5065 serverError
+     */
     public suspend fun setAsset(params: ProfilesSetAssetParams): ProfilesSetAssetResult =
         caller.call("profiles.set_asset", params, serializer<ProfilesSetAssetParams>(), serializer<ProfilesSetAssetResult>())
 }
 
 public class ProjectMethods(private val caller: GatewayCaller) {
+    /**
+     * Structured project facts for a cwd so UIs don't re-sniff the workspace.
+     */
     public suspend fun facts(params: ProjectFactsParams): ProjectFactsResult =
         caller.call("project.facts", params, serializer<ProjectFactsParams>(), serializer<ProjectFactsResult>())
 }
 
 public class ProjectsMethods(private val caller: GatewayCaller) {
+    /**
+     * Attach a folder to a project (optionally as its primary path).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun addFolder(params: ProjectsAddFolderParams): ProjectResult =
         caller.call("projects.add_folder", params, serializer<ProjectsAddFolderParams>(), serializer<ProjectResult>())
+    /**
+     * Archive (or with ``restore`` un-archive) a project; answers the full listing.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun archive(params: ProjectsArchiveParams): ProjectsPayload =
         caller.call("projects.archive", params, serializer<ProjectsArchiveParams>(), serializer<ProjectsPayload>())
+    /**
+     * Create a project from a name + folders; duplicate primary paths are refused (5063).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun create(params: ProjectsCreateParams): OptionalProjectResult =
         caller.call("projects.create", params, serializer<ProjectsCreateParams>(), serializer<OptionalProjectResult>())
+    /**
+     * Delete a project and its folders; answers the full listing.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun delete(params: ProjectIdParams): ProjectsPayload =
         caller.call("projects.delete", params, serializer<ProjectIdParams>(), serializer<ProjectsPayload>())
+    /**
+     * Repos for the desktop overview: scanned-from-disk (cached) ∪ session-derived.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     */
     public suspend fun discoverRepos(params: ProjectsDiscoverReposParams): ProjectsDiscoverReposResult =
         caller.call("projects.discover_repos", params, serializer<ProjectsDiscoverReposParams>(), serializer<ProjectsDiscoverReposResult>())
+    /**
+     * Which project (if any) owns a directory, plus the resolved cwd and its git branch.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun forCwd(params: ProjectsForCwdParams): ProjectsForCwdResult =
         caller.call("projects.for_cwd", params, serializer<ProjectsForCwdParams>(), serializer<ProjectsForCwdResult>())
+    /**
+     * One stored project with its folders.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun get(params: ProjectIdParams): ProjectResult =
         caller.call("projects.get", params, serializer<ProjectIdParams>(), serializer<ProjectResult>())
+    /**
+     * Every project of the profile (archived included) plus which one is active.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun list(params: ProfileParams): ProjectsPayload =
         caller.call("projects.list", params, serializer<ProfileParams>(), serializer<ProjectsPayload>())
+    /**
+     * Fully hydrated lanes for one project, from the same grouping as projects.tree.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5063 invalidRequest: "project_id required"
+     */
     public suspend fun projectSessions(params: ProjectsProjectSessionsParams): ProjectsProjectSessionsResult =
         caller.call("projects.project_sessions", params, serializer<ProjectsProjectSessionsParams>(), serializer<ProjectsProjectSessionsResult>())
+    /**
+     * Persist repo roots found by the client's (desktop-side) scan; return the merged list.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     */
     public suspend fun recordRepos(params: ProjectsRecordReposParams): ProjectsRecordReposResult =
         caller.call("projects.record_repos", params, serializer<ProjectsRecordReposParams>(), serializer<ProjectsRecordReposResult>())
+    /**
+     * Detach a folder from a project.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun removeFolder(params: ProjectFolderParams): ProjectResult =
         caller.call("projects.remove_folder", params, serializer<ProjectFolderParams>(), serializer<ProjectResult>())
+    /**
+     * Switch (or clear) the active project for the profile.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun setActive(params: ProjectsSetActiveParams): ActiveIdResult =
         caller.call("projects.set_active", params, serializer<ProjectsSetActiveParams>(), serializer<ActiveIdResult>())
+    /**
+     * Make one attached folder the project's primary path.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun setPrimary(params: ProjectFolderParams): ProjectResult =
         caller.call("projects.set_primary", params, serializer<ProjectFolderParams>(), serializer<ProjectResult>())
+    /**
+     * Project → repo → lane overview with counts and a few preview sessions per project.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     */
     public suspend fun tree(params: ProjectsTreeParams): ProjectsTreeResult =
         caller.call("projects.tree", params, serializer<ProjectsTreeParams>(), serializer<ProjectsTreeResult>())
+    /**
+     * Patch a project's display fields; answers the refreshed project.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5061 serverError
+     * - 5062 notFound: "no such project"
+     * - 5063 serverError
+     */
     public suspend fun update(params: ProjectsUpdateParams): ProjectResult =
         caller.call("projects.update", params, serializer<ProjectsUpdateParams>(), serializer<ProjectResult>())
 }
 
 public class PromptMethods(private val caller: GatewayCaller) {
+    /**
+     * Run a task on a fresh agent in the background; the answer arrives as background.complete.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4012 invalidRequest: "text required"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5035 unavailable: "backend is retiring; reconnect to continue"
+     */
     public suspend fun background(params: SideAgentParams): TaskIdResult =
         caller.call("prompt.background", params, serializer<SideAgentParams>(), serializer<TaskIdResult>())
+    /**
+     * Side question over a snapshot of the live conversation; the answer arrives as btw.complete.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4012 invalidRequest: "text required"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5035 unavailable: "backend is retiring; reconnect to continue"
+     */
     public suspend fun btw(params: SideAgentParams): TaskIdResult =
         caller.call("prompt.btw", params, serializer<SideAgentParams>(), serializer<TaskIdResult>())
+    /**
+     * Send a user turn to a live session; busy sessions queue / steer / redirect instead of refusing.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4004 invalidRequest: "confirm_truncate requires truncate_before_user_ordinal, truncate_before_message_id, or truncate_before_row_id", "ordinal-only truncation is unsafe for durable session history; include truncate_before_row_id", "{…} must be an integer"
+     * - 4007 notFound: "session no longer live; retry resume"
+     * - 4009 busy: "session busy", "session disconnect interrupt settling", "subagent still running — wait for it to finish"
+     * - 4018 conflict: "target user message is no longer in session history"
+     * - 4028 conflict: "truncation would erase the entire session transcript; resubmit with confirm_empty_truncate=true if this is intended"
+     * - 4029 invalidRequest: "truncation parameters require confirm_truncate=true; an ordinary prompt.submit must not drop session history (update your Hermes client if a rewind was intended)"
+     * - 4030 conflict: "truncate_before_user_ordinal ({…}) does not match {…} target turn ({…})"
+     * - 4090 conflict
+     * - 4091 busy: "hosted room member session is busy"
+     * - 4120 invalidRequest: "hosted room turns require a bot_room session"; forbidden: "invalid hosted room turn proof"
+     * - 4121 unsupported: "hosted room turns do not support isolated compute workers yet"
+     * - 4122 unsupported: "This room is managed by {…}. Update Hermes Desktop to continue it."
+     * - 4124 invalidRequest: "turn author is stamped by the gateway, never by a client"
+     * - 5008 serverError: "failed to persist history truncation: {…}"
+     * - 5019 serverError: "compute-host dispatch failed: {…}"
+     * - 5032 busy: "agent initialization timed out after {…}s — your message was not sent; retry once the session is ready"
+     * - 5035 unavailable: "backend is retiring; reconnect to continue"
+     * - 5070 serverError: "Session storage could not be written, so this message was not saved: the disk is full. Free some disk space, then send your message again."
+     * - 5071 serverError: "Session storage could not be written, so this message was not saved. Cause: {…}. {…} Then send your message again."
+     * - 5072 unavailable: "Session storage is unavailable, so this message was not saved. Cause: {…}. {…} Then send your message again."
+     * - 5122 unavailable: "Could not verify this group. Try again after the gateway recovers."
+     */
     public suspend fun submit(params: PromptSubmitParams): PromptSubmitResult =
         caller.call("prompt.submit", params, serializer<PromptSubmitParams>(), serializer<PromptSubmitResult>())
 }
 
 public class ReloadMethods(private val caller: GatewayCaller) {
+    /**
+     * Re-read ~/.hermes/.env (CLI /reload parity); built agents keep their pool until /new.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5015 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun env(params: ReloadEnvParams): ReloadEnvResult =
         caller.call("reload.env", params, serializer<ReloadEnvParams>(), serializer<ReloadEnvResult>())
+    /**
+     * Tear down and rediscover MCP servers for every live session (prompt cache is invalidated).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5015 serverError
+     * - 5019 serverError: "compute-host reload_mcp failed: {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun mcp(params: ReloadMcpParams): ReloadMcpResult =
         caller.call("reload.mcp", params, serializer<ReloadMcpParams>(), serializer<ReloadMcpResult>())
 }
 
 public class RequestMethods(private val caller: GatewayCaller) {
+    /**
+     * Answer an open server→client request from a client that never received the frame.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4002 invalidRequest: "id and an object result required"
+     */
     public suspend fun answer(params: RequestAnswerParams): RequestAnswerResult =
         caller.call("request.answer", params, serializer<RequestAnswerParams>(), serializer<RequestAnswerResult>())
 }
 
 public class RollbackMethods(private val caller: GatewayCaller) {
+    /**
+     * Diff between a checkpoint and the working tree, with an ANSI rendering sized to the TUI.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4014 invalidRequest: "hash required"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5022 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun diff(params: RollbackDiffParams): RollbackDiffResult =
         caller.call("rollback.diff", params, serializer<RollbackDiffParams>(), serializer<RollbackDiffResult>())
+    /**
+     * Checkpoints for the session's cwd; ``enabled: false`` when checkpointing is off.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5020 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun list(params: RollbackListParams): RollbackListResult =
         caller.call("rollback.list", params, serializer<RollbackListParams>(), serializer<RollbackListResult>())
+    /**
+     * Restore the working tree (or one file) to a checkpoint by hash or 1-based index.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4009 busy
+     * - 4014 invalidRequest: "hash required"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5021 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun restore(params: RollbackRestoreParams): RollbackRestoreResult =
         caller.call("rollback.restore", params, serializer<RollbackRestoreParams>(), serializer<RollbackRestoreResult>())
 }
 
 public class SessionMethods(private val caller: GatewayCaller) {
+    /**
+     * Attach the frontend to a live session without closing the previously focused one.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4007 notFound: "session no longer live; retry resume"
+     * - 4009 busy: "session disconnect interrupt settling"
+     */
     public suspend fun activate(params: SessionActivateParams): SessionActivateResult =
         caller.call("session.activate", params, serializer<SessionActivateParams>(), serializer<SessionActivateResult>())
+    /**
+     * Live sessions in this process, insertion order (not a DB browser).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5036 serverError: "could not enumerate active sessions: {…}"
+     */
     public suspend fun activeList(params: SessionActiveListParams): SessionActiveListResult =
         caller.call("session.active_list", params, serializer<SessionActiveListParams>(), serializer<SessionActiveListResult>())
+    /**
+     * Fork a live session into a new stored child that shares the parent's history so far.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4008 conflict: "nothing to branch — send a message first"
+     * - 5000 serverError: "agent init failed on branch: {…}"
+     * - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun branch(params: SessionBranchParams): SessionBranchResult =
         caller.call("session.branch", params, serializer<SessionBranchParams>(), serializer<SessionBranchResult>())
+    /**
+     * Whole-session branch of a stored parent: the owning backend reads and copies the transcript, which never crosses the wire (a separate method so an older gateway fails loudly, not with an empty branch).
+     *
+     * Hermes' handler can answer with these errors:
+     * - -32602 invalidRequest
+     * - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+     * - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun branchStored(params: SessionBranchStoredParams): SessionBranchStoredResult =
         caller.call("session.branch_stored", params, serializer<SessionBranchStoredParams>(), serializer<SessionBranchStoredResult>())
+    /**
+     * session.branch of the whole history without echoing the copied transcript back.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4008 conflict: "nothing to branch — send a message first"
+     * - 5000 serverError: "agent init failed on branch: {…}"
+     * - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun branchWhole(params: SessionBranchWholeParams): SessionBranchWholeResult =
         caller.call("session.branch_whole", params, serializer<SessionBranchWholeParams>(), serializer<SessionBranchWholeResult>())
+    /**
+     * Tear down a live session (its stored row stays resumable).
+     */
     public suspend fun close(params: SessionCloseParams): SessionCloseResult =
         caller.call("session.close", params, serializer<SessionCloseParams>(), serializer<SessionCloseResult>())
+    /**
+     * Manual /compress of an idle session, optionally focused on a topic.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4009 busy
+     * - 5005 serverError
+     * - 5019 serverError: "compute-host compress failed: {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun compress(params: SessionCompressParams): SessionCompressResult =
         caller.call("session.compress", params, serializer<SessionCompressParams>(), serializer<SessionCompressResult>())
+    /**
+     * Cursor-style split of the context window by category.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5000 serverError: "Could not compute context breakdown: {…}"
+     */
     public suspend fun contextBreakdown(params: SessionContextBreakdownParams): SessionContextBreakdownResult =
         caller.call("session.context_breakdown", params, serializer<SessionContextBreakdownParams>(), serializer<SessionContextBreakdownResult>())
+    /**
+     * Run one allowlisted goal / loop / subgoal / heartbeat action and return the exact resulting snapshot.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 conflict: "session has no stored key"; notFound: "session not found"
+     * - 4004 invalidRequest: "action is required", "args must be an object", "subgoal index must be >= 1", "subgoal index must be an integer", …; forbidden: "gate actions are not allowed through session.control"
+     * - 5031 serverError: "dispatch failed: {…}", "session.control snapshot failed: {…}"; unavailable: "command.dispatch unavailable"
+     */
     public suspend fun control(params: SessionControlParams): SessionControlResult =
         caller.call("session.control", params, serializer<SessionControlParams>(), serializer<SessionControlResult>())
+    /**
+     * Stable, allowlisted snapshot of one live session's goal / loop / heartbeat state.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 conflict: "session has no stored key"; notFound: "session not found"
+     * - 5031 serverError: "session.control.read failed: {…}"
+     */
     public suspend fun controlRead(params: SessionControlReadParams): SessionControlReadResult =
         caller.call("session.control.read", params, serializer<SessionControlReadParams>(), serializer<SessionControlReadResult>())
+    /**
+     * Mint a live session (agent builds after the reply); a DB row appears on the first prompt unless seeded.
+     *
+     * Hermes' handler can answer with these errors:
+     * - -32602 invalidRequest
+     * - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+     * - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun create(params: SessionCreateParams): SessionCreateResult =
         caller.call("session.create", params, serializer<SessionCreateParams>(), serializer<SessionCreateResult>())
+    /**
+     * Change a live, idle session's working directory.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4009 busy: "session busy"
+     * - 4016 invalidRequest: "cwd required"
+     * - 4017 invalidRequest
+     */
     public suspend fun cwdSet(params: SessionCwdSetParams): SessionCwdSetResult =
         caller.call("session.cwd.set", params, serializer<SessionCwdSetParams>(), serializer<SessionCwdSetResult>())
+    /**
+     * Delete a stored session + transcripts; refused while it is live here.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4006 invalidRequest: "session_id required"
+     * - 4007 notFound: "session not found"
+     * - 4023 conflict: "cannot delete an active session"
+     * - 5036 serverError: "could not enumerate active sessions: {…}", "delete failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun delete(params: SessionDeleteParams): SessionDeleteResult =
         caller.call("session.delete", params, serializer<SessionDeleteParams>(), serializer<SessionDeleteResult>())
+    /**
+     * Replay events after a seq watermark on WS reconnect; truncated means refetch state.
+     *
+     * Hermes' handler can answer with these errors:
+     * - -32602 invalidRequest: "invalid params: last_seen must be an integer"
+     */
     public suspend fun eventsSince(params: SessionEventsSinceParams): SessionEventsSinceResult =
         caller.call("session.events.since", params, serializer<SessionEventsSinceParams>(), serializer<SessionEventsSinceResult>())
+    /**
+     * Replay-buffer occupancy telemetry (ops/debug).
+     */
     public suspend fun eventsStats(params: SessionEventsStatsParams): SessionEventsStatsResult =
         caller.call("session.events.stats", params, serializer<SessionEventsStatsParams>(), serializer<SessionEventsStatsResult>())
+    /**
+     * Import a foreign session into this profile's history (idempotent per origin).
+     *
+     * Hermes' handler can answer with these errors:
+     * - -32602 invalidRequest
+     * - -32000 serverError: "Could not read this session on the backend"; unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun foreignImport(params: SessionForeignIdParams): SessionForeignImportResult =
         caller.call("session.foreign.import", params, serializer<SessionForeignIdParams>(), serializer<SessionForeignImportResult>())
+    /**
+     * One page of Claude Code / Codex sessions found on the serving backend.
+     *
+     * Hermes' handler can answer with these errors:
+     * - -32602 invalidRequest
+     * - -32000 serverError: "Could not read session folders on this backend"
+     */
     public suspend fun foreignList(params: SessionForeignListParams): SessionForeignListResult =
         caller.call("session.foreign.list", params, serializer<SessionForeignListParams>(), serializer<SessionForeignListResult>())
+    /**
+     * Preview a foreign session's tail before importing it.
+     *
+     * Hermes' handler can answer with these errors:
+     * - -32602 invalidRequest
+     * - -32000 serverError: "Could not read this session on the backend"; unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun foreignPreview(params: SessionForeignIdParams): SessionForeignPreviewResult =
         caller.call("session.foreign.preview", params, serializer<SessionForeignIdParams>(), serializer<SessionForeignPreviewResult>())
+    /**
+     * The durable display transcript (ancestors included, row ids attached).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     */
     public suspend fun history(params: SessionHistoryParams): SessionHistoryResult =
         caller.call("session.history", params, serializer<SessionHistoryParams>(), serializer<SessionHistoryResult>())
+    /**
+     * Stop the running turn (and streaming TTS); retires the crash-recovery marker.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5019 serverError: "compute-host interrupt failed: {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun interrupt(params: SessionInterruptParams): SessionInterruptResult =
         caller.call("session.interrupt", params, serializer<SessionInterruptParams>(), serializer<SessionInterruptResult>())
+    /**
+     * Human-facing stored sessions, most recent first (sub-agent / kanban sources denied).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5006 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun list(params: SessionListParams): SessionListResult =
         caller.call("session.list", params, serializer<SessionListParams>(), serializer<SessionListResult>())
+    /**
+     * Most recent human-facing session; errors fold into a null session_id.
+     */
     public suspend fun mostRecent(params: SessionMostRecentParams): SessionMostRecentResult =
         caller.call("session.most_recent", params, serializer<SessionMostRecentParams>(), serializer<SessionMostRecentResult>())
+    /**
+     * Redirect the active turn (queued for the next turn while the agent is still building).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4002 invalidRequest: "text is required"
+     * - 4010 unsupported: "agent does not support active-turn redirect"
+     * - 5000 serverError: "{…} failed: {…}"
+     */
     public suspend fun redirect(params: SessionCorrectionParams): SessionCorrectionResult =
         caller.call("session.redirect", params, serializer<SessionCorrectionParams>(), serializer<SessionCorrectionResult>())
+    /**
+     * Attach to a stored session: reuse it if live here, else lazy / deferred / cold / eager rebuild.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4006 invalidRequest: "session_id required"
+     * - 4007 notFound: "session no longer live; retry resume", "session not found"
+     * - 4009 busy: "session disconnect interrupt settling"
+     * - 4130 conflict
+     * - 5000 unavailable: "Session storage is unavailable: {…}. {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun resume(params: SessionResumeParams): SessionResumeResult =
         caller.call("session.resume", params, serializer<SessionResumeParams>(), serializer<SessionResumeResult>())
+    /**
+     * Export the transcript to ~/.hermes/sessions/saved (classic /save).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5011 serverError: "compute-host session save failed: {…}", "compute-host session save returned an invalid response", "failed to create save directory {…}: {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun save(params: SessionSaveParams): SessionSaveResult =
         caller.call("session.save", params, serializer<SessionSaveParams>(), serializer<SessionSaveResult>())
+    /**
+     * Set/clear hidden (out of the default list, still resumable by its owner) on a session + lineage.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun setHidden(params: SessionSetHiddenParams): SessionSetHiddenResult =
         caller.call("session.set_hidden", params, serializer<SessionSetHiddenParams>(), serializer<SessionSetHiddenResult>())
+    /**
+     * Rendered /status text for the session.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     */
     public suspend fun status(params: SessionStatusParams): SessionStatusResult =
         caller.call("session.status", params, serializer<SessionStatusParams>(), serializer<SessionStatusResult>())
+    /**
+     * Inject text into the next tool result without interrupting the turn.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4002 invalidRequest: "text is required"
+     * - 4010 unsupported: "agent does not support steer"
+     * - 5000 serverError: "{…} failed: {…}"
+     */
     public suspend fun steer(params: SessionCorrectionParams): SessionCorrectionResult =
         caller.call("session.steer", params, serializer<SessionCorrectionParams>(), serializer<SessionCorrectionResult>())
+    /**
+     * Read or set a live session's title; a title set before the row exists is queued.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4021 invalidRequest: "title required"
+     * - 4022 invalidRequest
+     * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun title(params: SessionTitleParams): SessionTitleResult =
         caller.call("session.title", params, serializer<SessionTitleParams>(), serializer<SessionTitleResult>())
+    /**
+     * Drop the last user turn (and everything after it) from an idle session.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4009 busy
+     * - 5008 serverError: "undo: {…}"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun undo(params: SessionUndoParams): SessionUndoResult =
         caller.call("session.undo", params, serializer<SessionUndoParams>(), serializer<SessionUndoResult>())
+    /**
+     * Token / context / cost counters for the session (+ Nous credit lines when available).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     */
     public suspend fun usage(params: SessionUsageParams): SessionUsageResult =
         caller.call("session.usage", params, serializer<SessionUsageParams>(), serializer<SessionUsageResult>())
+    /**
+     * Re-home a stored session's workspace; git identity is replaced and a live agent follows.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4007 notFound: "session not found"; invalidRequest: "session_key required"
+     * - 4016 invalidRequest: "cwd required"
+     * - 4017 notFound: "working directory does not exist: {…}"
+     * - 5007 serverError: "move failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
+     */
     public suspend fun workspaceMove(params: SessionWorkspaceMoveParams): SessionWorkspaceMoveResult =
         caller.call("session.workspace.move", params, serializer<SessionWorkspaceMoveParams>(), serializer<SessionWorkspaceMoveResult>())
 }
 
 public class SetupMethods(private val caller: GatewayCaller) {
+    /**
+     * Strict provider check through the same runtime resolution the agent uses on session creation.
+     */
     public suspend fun runtimeCheck(params: SetupRuntimeCheckParams): SetupRuntimeCheckResult =
         caller.call("setup.runtime_check", params, serializer<SetupRuntimeCheckParams>(), serializer<SetupRuntimeCheckResult>())
+    /**
+     * Loose provider check: is ANY provider auth state discoverable for the (launch or named) profile.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5016 serverError
+     */
     public suspend fun status(params: ProfileParams): SetupStatusResult =
         caller.call("setup.status", params, serializer<ProfileParams>(), serializer<SetupStatusResult>())
 }
 
 public class ShellMethods(private val caller: GatewayCaller) {
+    /**
+     * Run a safe (non-dangerous) shell command captured for ``!cmd`` / inline substitution.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4004 invalidRequest: "empty command"
+     * - 4005 forbidden: "blocked (hardline): {…}. Use the agent for dangerous commands.", "blocked: {…}. Use the agent for dangerous commands."
+     * - 5001 unavailable: "shell.exec unavailable: approval safety module not importable"
+     * - 5003 serverError
+     * - codes relayed unchanged from a compute host, plugin or connector service
+     */
     public suspend fun exec(params: ShellExecParams): ShellExecResult =
         caller.call("shell.exec", params, serializer<ShellExecParams>(), serializer<ShellExecResult>())
 }
 
 public class SkillsMethods(private val caller: GatewayCaller) {
+    /**
+     * Skills hub backend: list the profile's skills or search / browse / inspect / install from the hub.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4017 invalidRequest: "unknown {…} action: {…}"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5024 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun manage(params: SkillsManageParams): SkillsManageResult =
         caller.call("skills.manage", params, serializer<SkillsManageParams>(), serializer<SkillsManageResult>())
+    /**
+     * Re-scan skill dirs; the pre-rendered ``output`` is what /reload-skills prints.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5025 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun reload(params: SkillsReloadParams): SkillsReloadResult =
         caller.call("skills.reload", params, serializer<SkillsReloadParams>(), serializer<SkillsReloadResult>())
 }
 
 public class SlashMethods(private val caller: GatewayCaller) {
+    /**
+     * Execute a slash command against the session's slash worker (or a live/plugin shortcut).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4004 invalidRequest: "empty command"
+     * - 4018 invalidRequest: "skill command: use command.dispatch for /{…}", "snapshot restore mutates live config/state; use command.dispatch for /snapshot restore"
+     * - 5030 serverError: "slash worker start failed: {…}"
+     */
     public suspend fun exec(params: SlashExecParams): SlashExecResult =
         caller.call("slash.exec", params, serializer<SlashExecParams>(), serializer<SlashExecResult>())
 }
 
 public class SpawnTreeMethods(private val caller: GatewayCaller) {
+    /**
+     * Saved spawn-tree snapshots, newest first.
+     */
     public suspend fun list(params: SpawnTreeListParams): SpawnTreeListResult =
         caller.call("spawn_tree.list", params, serializer<SpawnTreeListParams>(), serializer<SpawnTreeListResult>())
+    /**
+     * Read one saved spawn-tree snapshot (path must be under the spawn-trees root).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "path required"
+     * - 4030 forbidden: "path outside spawn-trees root: {…}"
+     * - 5000 serverError: "spawn_tree.load failed: snapshot is not a JSON object", "spawn_tree.load failed: {…}"
+     */
     public suspend fun load(params: SpawnTreeLoadParams): SpawnTreeLoadResult =
         caller.call("spawn_tree.load", params, serializer<SpawnTreeLoadParams>(), serializer<SpawnTreeLoadResult>())
+    /**
+     * Persist a finished delegation tree snapshot under the session's spawn-trees dir.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "subagents list required"
+     * - 5000 serverError: "spawn_tree.save failed: {…}"
+     */
     public suspend fun save(params: SpawnTreeSaveParams): SpawnTreeSaveResult =
         caller.call("spawn_tree.save", params, serializer<SpawnTreeSaveParams>(), serializer<SpawnTreeSaveResult>())
 }
 
 public class SubagentMethods(private val caller: GatewayCaller) {
+    /**
+     * Hard-interrupt one owned child; ``found`` is false when it already finished.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "subagent_id required"
+     * - 4001 notFound: "session not found or not owned by this transport"
+     */
     public suspend fun interrupt(params: SubagentIdParams): SubagentInterruptResult =
         caller.call("subagent.interrupt", params, serializer<SubagentIdParams>(), serializer<SubagentInterruptResult>())
+    /**
+     * Live children owned by this session (other sessions' children never leak).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found or not owned by this transport"
+     */
     public suspend fun list(params: SessionParams): SubagentListResult =
         caller.call("subagent.list", params, serializer<SessionParams>(), serializer<SubagentListResult>())
+    /**
+     * Queue steering text into a live delegated child owned by this session.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "subagent_id required"
+     * - 4001 notFound: "session not found"
+     * - 4002 invalidRequest: "text is required"
+     */
     public suspend fun steer(params: SubagentSteerParams): SubagentSteerResult =
         caller.call("subagent.steer", params, serializer<SubagentSteerParams>(), serializer<SubagentSteerResult>())
+    /**
+     * Last 16KB of an owned child's live transcript.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "subagent_id required"
+     * - 4001 notFound: "session not found or not owned by this transport"
+     */
     public suspend fun tail(params: SubagentIdParams): SubagentTailResult =
         caller.call("subagent.tail", params, serializer<SubagentIdParams>(), serializer<SubagentTailResult>())
 }
 
 public class SubscriptionMethods(private val caller: GatewayCaller) {
+    /**
+     * Schedule a downgrade / same-price change or a period-end cancellation.
+     */
     public suspend fun change(params: SubscriptionChangeParams): BillingPendingChangeResult =
         caller.call("subscription.change", params, serializer<SubscriptionChangeParams>(), serializer<BillingPendingChangeResult>())
+    /**
+     * Chargeless quote of what a plan change would do (billing:manage).
+     */
     public suspend fun preview(params: SubscriptionPreviewParams): SubscriptionPreviewResult =
         caller.call("subscription.preview", params, serializer<SubscriptionPreviewParams>(), serializer<SubscriptionPreviewResult>())
+    /**
+     * Clear a scheduled downgrade / cancellation (re-enables recurring spend).
+     */
     public suspend fun resume(params: ProfileParams): BillingPendingChangeResult =
         caller.call("subscription.resume", params, serializer<ProfileParams>(), serializer<BillingPendingChangeResult>())
+    /**
+     * Current plan, tier catalog and usage for the picker; fail-open when logged out.
+     */
     public suspend fun state(params: ProfileParams): SubscriptionStateResult =
         caller.call("subscription.state", params, serializer<ProfileParams>(), serializer<SubscriptionStateResult>())
+    /**
+     * Prorate, charge and flip the plan (billing:manage, idempotent).
+     */
     public suspend fun upgrade(params: SubscriptionUpgradeParams): SubscriptionUpgradeResult =
         caller.call("subscription.upgrade", params, serializer<SubscriptionUpgradeParams>(), serializer<SubscriptionUpgradeResult>())
 }
 
 public class SystemMethods(private val caller: GatewayCaller) {
+    /**
+     * Host battery for the status bar; always resolves, ``available: false`` when unreadable.
+     */
     public suspend fun battery(params: SystemBatteryParams): SystemBatteryResult =
         caller.call("system.battery", params, serializer<SystemBatteryParams>(), serializer<SystemBatteryResult>())
 }
 
 public class TerminalMethods(private val caller: GatewayCaller) {
+    /**
+     * Record the client's column width for server-side rendering.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     */
     public suspend fun resize(params: TerminalResizeParams): TerminalResizeResult =
         caller.call("terminal.resize", params, serializer<TerminalResizeParams>(), serializer<TerminalResizeResult>())
 }
 
 public class ToolsMethods(private val caller: GatewayCaller) {
+    /**
+     * Persist a toolset / MCP enable-disable change and rebuild the session agent so it takes effect now.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4017 invalidRequest: "unknown tools action: {…}"
+     * - 4018 invalidRequest: "names required"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5035 unavailable
+     */
     public suspend fun configure(params: ToolsConfigureParams): ToolsConfigureResult =
         caller.call("tools.configure", params, serializer<ToolsConfigureParams>(), serializer<ToolsConfigureResult>())
+    /**
+     * Every toolset with its resolved tool names, flagged against the session's (or config's) enabled set.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5031 serverError
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun list(params: _SessionScoped): ToolsetsListResult =
         caller.call("tools.list", params, serializer<_SessionScoped>(), serializer<ToolsetsListResult>())
+    /**
+     * The /tools listing grouped by toolset, including tools deferred behind the tool_search bridge.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5034 unavailable
+     */
     public suspend fun show(params: _SessionScoped): ToolsShowResult =
         caller.call("tools.show", params, serializer<_SessionScoped>(), serializer<ToolsShowResult>())
 }
 
 public class ToolsetsMethods(private val caller: GatewayCaller) {
+    /**
+     * Toolset summaries (no tool names) for the desktop Toolsets tab.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4063 invalidRequest: "{…} required"
+     * - 4064 notFound: "profile '{…}' not found"
+     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     */
     public suspend fun list(params: _SessionScoped): ToolsetsListResult =
         caller.call("toolsets.list", params, serializer<_SessionScoped>(), serializer<ToolsetsListResult>())
 }
 
 public class UsageMethods(private val caller: GatewayCaller) {
+    /**
+     * Two-bar dollar usage view shared by /usage, /topup and /subscription; fail-open to unavailable.
+     */
     public suspend fun bars(params: ProfileParams): UsageModel =
         caller.call("usage.bars", params, serializer<ProfileParams>(), serializer<UsageModel>())
 }
 
 public class VaultMethods(private val caller: GatewayCaller) {
+    /**
+     * Add a login / payment / address item to the local vault.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5095 invalidRequest: "secret payload is required"
+     */
     public suspend fun add(params: VaultAddParams): VaultAddResult =
         caller.call("vault.add", params, serializer<VaultAddParams>(), serializer<VaultAddResult>())
+    /**
+     * Metadata-only listing across the local vault and every unlocked password manager.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5095 invalidRequest
+     */
     public suspend fun list(params: ProfileParams): VaultListResult =
         caller.call("vault.list", params, serializer<ProfileParams>(), serializer<VaultListResult>())
+    /**
+     * Forget a manager's session token (every manager when no name is given).
+     */
     public suspend fun lock(params: VaultLockParams): VaultLockResult =
         caller.call("vault.lock", params, serializer<VaultLockParams>(), serializer<VaultLockResult>())
+    /**
+     * Remove a local vault item by id.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5095 invalidRequest: "id is required"
+     */
     public suspend fun remove(params: VaultRemoveParams): VaultRemoveResult =
         caller.call("vault.remove", params, serializer<VaultRemoveParams>(), serializer<VaultRemoveResult>())
+    /**
+     * Enable or disable an external password manager (disabling also locks it).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5095 invalidRequest: "unknown vault source: {…}"
+     */
     public suspend fun sourceSet(params: VaultSourceSetParams): VaultSourceSetResult =
         caller.call("vault.source.set", params, serializer<VaultSourceSetParams>(), serializer<VaultSourceSetResult>())
+    /**
+     * Status of every login source (local vault + detected password managers).
+     */
     public suspend fun sources(params: ProfileParams): VaultSourcesResult =
         caller.call("vault.sources", params, serializer<ProfileParams>(), serializer<VaultSourcesResult>())
+    /**
+     * Unlock a password manager for this session with its master password.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5095 invalidRequest: "master password is required"; conflict: "{…} is not an enabled password manager"
+     */
     public suspend fun unlock(params: VaultUnlockParams): VaultUnlockResult =
         caller.call("vault.unlock", params, serializer<VaultUnlockParams>(), serializer<VaultUnlockResult>())
 }
 
 public class VerificationMethods(private val caller: GatewayCaller) {
+    /**
+     * Best known verification evidence for a cwd/session; read-only, never runs checks.
+     */
     public suspend fun status(params: VerificationStatusParams): VerificationStatusResult =
         caller.call("verification.status", params, serializer<VerificationStatusParams>(), serializer<VerificationStatusResult>())
 }
 
 public class VoiceMethods(private val caller: GatewayCaller) {
+    /**
+     * VAD-bounded push-to-talk; the transcript arrives as a voice.transcript event.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4015 conflict: "voice mode is off — enable with /voice on"
+     * - 4019 invalidRequest: "unknown voice action: {…}"
+     * - 5025 unsupported: "voice module not available — install audio dependencies"
+     */
     public suspend fun record(params: VoiceRecordParams): VoiceRecordResult =
         caller.call("voice.record", params, serializer<VoiceRecordParams>(), serializer<VoiceRecordResult>())
+    /**
+     * /voice parity: report, flip voice mode on/off, or toggle speech output.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4013 invalidRequest: "unknown voice action: {…}"
+     */
     public suspend fun toggle(params: VoiceToggleParams): VoiceToggleResult =
         caller.call("voice.toggle", params, serializer<VoiceToggleParams>(), serializer<VoiceToggleResult>())
+    /**
+     * Speak text through the backend TTS engine (barge-in aware).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4020 invalidRequest: "text required"
+     * - 5026 serverError
+     */
     public suspend fun tts(params: VoiceTtsParams): VoiceTtsResult =
         caller.call("voice.tts", params, serializer<VoiceTtsParams>(), serializer<VoiceTtsResult>())
 }
 
 public class WakeMethods(private val caller: GatewayCaller) {
+    /**
+     * Push client-captured PCM into the armed detector (mic-less remote backends).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 invalidRequest: "invalid base64 pcm: {…}", "pcm frame too large", "wake.feed only accepts 16 kHz PCM", "wake.feed requires base64 pcm"
+     * - 5026 serverError
+     */
     public suspend fun feed(params: WakeFeedParams): WakeFeedResult =
         caller.call("wake.feed", params, serializer<WakeFeedParams>(), serializer<WakeFeedResult>())
+    /**
+     * Release the mic (e.g. while the desktop's browser captures audio).
+     */
     public suspend fun pause(params: WakeControlParams): WakePauseResult =
         caller.call("wake.pause", params, serializer<WakeControlParams>(), serializer<WakePauseResult>())
+    /**
+     * Reclaim the mic after a pause; no-op if the listener isn't armed.
+     */
     public suspend fun resume(params: WakeControlParams): WakeResumeResult =
         caller.call("wake.resume", params, serializer<WakeControlParams>(), serializer<WakeResumeResult>())
+    /**
+     * Arm the wake-word listener for the calling surface; refusals explain why.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5026 unsupported: "wake module unavailable: {…}"
+     */
     public suspend fun start(params: WakeStartParams): WakeStartResult =
         caller.call("wake.start", params, serializer<WakeStartParams>(), serializer<WakeStartResult>())
+    /**
+     * Everything a client needs to draw the wake-word state and decide whether to (re)arm.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5026 serverError
+     */
     public suspend fun status(params: WakeStatusParams): WakeStatusResult =
         caller.call("wake.status", params, serializer<WakeStatusParams>(), serializer<WakeStatusResult>())
+    /**
+     * Stop this surface's listener; persist also writes wake_word.enabled: false.
+     */
     public suspend fun stop(params: WakeStopParams): WakeStopResult =
         caller.call("wake.stop", params, serializer<WakeStopParams>(), serializer<WakeStopResult>())
 }

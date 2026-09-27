@@ -281,6 +281,23 @@ class HermesGatewayTest {
         gateway.disconnect()
     }
 
+    @Test
+    fun genericFailureWithTheRetiringCodeKeepsTheConnection() = runTest {
+        val socket = FakeSocket()
+        val transport = sockets(socket)
+        val gateway = client(transport)
+        gateway.connect()
+        val call = async { runCatching { gateway.methods.ping(PingParams()) } }
+        // tools.configure answers 5035 for its own failures too; only the retiring message means Hermes is leaving.
+        socket.inbound.send(error(socket.sent(), 5035, "could not write the toolset config"))
+        assertIs<HermesGatewayException.RPC>(call.await().exceptionOrNull())
+        val ping = async { gateway.methods.ping(PingParams()) }
+        socket.inbound.send(result(socket.sent(), """{"pong":true}"""))
+        assertTrue(ping.await().pong)
+        assertFalse(socket.isClosed)
+        gateway.disconnect()
+    }
+
     // Authentication
 
     @Test

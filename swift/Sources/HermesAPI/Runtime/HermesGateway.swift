@@ -502,9 +502,9 @@ public actor HermesGateway: GatewayCalling {
             }
             trackSession(method: method, params: params, result: result)
             return decoded
-        } catch HermesGatewayError.rpc(HermesGatewayErrorCode.backendRetiring, let message, let data) {
+        } catch let error as HermesGatewayError where error.known == .backendRetiring {
             await connectionLost(.transport("Hermes backend is retiring"), generation: current)
-            throw HermesGatewayError.rpc(code: HermesGatewayErrorCode.backendRetiring, message: message, data: data)
+            throw error
         } catch let loss as ConnectionLoss {
             throw loss
         } catch HermesGatewayError.transport(let message) where generation != current {
@@ -835,11 +835,10 @@ public actor HermesGateway: GatewayCalling {
                     as: JSONValue.self, timeout: Self.recoveryTimeout, waitsForConnection: false
                 )
                 return .bound
-            } catch HermesGatewayError.rpc(HermesGatewayErrorCode.sessionSettling, _, _) where attempt < 3 {
+            } catch let error as HermesGatewayError where error.known == .sessionSettling {
+                guard attempt < 3 else { return .settling }
                 // Hermes is still settling the disconnect interrupt.
                 try? await Task.sleep(for: .milliseconds(500 * attempt))
-            } catch HermesGatewayError.rpc(HermesGatewayErrorCode.sessionSettling, _, _) {
-                return .settling
             } catch HermesGatewayError.rpc(_, let message, _) {
                 // Not found, not live, unavailable, or refused otherwise: this runtime id is no longer ours.
                 return .gone(message)

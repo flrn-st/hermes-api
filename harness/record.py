@@ -236,7 +236,7 @@ def record_rest(calls: list[dict], document: dict, base: str, token: str | None,
 
 
 async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Path | None = None,
-                 gated_url: str | None = None) -> None:
+                 gated_url: str | None = None, gateway_scenario: Path | None = None) -> None:
     definition = yaml.safe_load(scenario.read_text(encoding="utf-8"))
     if not isinstance(definition, dict) or not isinstance(definition.get("calls"), list):
         raise TypeError("Invalid scenario")
@@ -318,6 +318,33 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
             expected_request = call.get("wait_for_server_request")
             if expected_request and expected_request not in seen_requests:
                 raise ValueError(f"Expected server request {expected_request} was not received")
+        gateway_calls = (json.loads(gateway_scenario.read_text(encoding="utf-8"))["calls"]
+                         if gateway_scenario else [])
+        # Names the scenario creates carry a per-run value, so every client can run it against one server.
+        values: dict[str, object] = {"@unique": f"record{int(time.time())}"}
+        for number, call in enumerate(gateway_calls, 1):
+            identifier = len(calls) + number
+            seen_events.clear()
+            method = call["method"]
+            contract = METHODS[method]
+            params = contract.params.model_validate(_substitute(call.get("params", {}), values)).model_dump(
+                exclude_unset=True)
+            await socket.send(json.dumps({"jsonrpc": "2.0", "id": identifier, "method": method, "params": params}))
+            frame = await receive(identifier)
+            if "error" in frame:
+                raise ValueError(f"Gateway scenario call {number} {method} returned {frame['error']}")
+            contract.result.model_validate(frame["result"])
+            for name, pointer in call.get("capture", {}).items():
+                values[name] = _capture(frame["result"], pointer)
+            redacted, redactions = _redact_host(frame)
+            entries.append({"kind": "response", "name": method, "frame": redacted,
+                            **({"redactions": redactions} if redactions else {})})
+            if wait_for := call.get("wait"):
+                deadline = time.monotonic() + 60
+                while wait_for not in seen_events:
+                    if time.monotonic() > deadline:
+                        raise TimeoutError(f"Gateway scenario call {number} {method} never saw {wait_for}")
+                    await receive()
     document = json.loads(openapi.read_text(encoding="utf-8"))
     rest = yaml.safe_load(rest_scenario.read_text(encoding="utf-8")) if rest_scenario else {}
     entries.extend(await asyncio.to_thread(
@@ -338,8 +365,10 @@ def main() -> None:
     parser.add_argument("--openapi", type=Path, required=True)
     parser.add_argument("--rest-scenario", type=Path)
     parser.add_argument("--gated-url", help="a second tagged server behind the dashboard auth gate")
+    parser.add_argument("--gateway-scenario", type=Path, help="scenarios/gateway.yaml with harness values resolved")
     args = parser.parse_args()
-    asyncio.run(record(args.scenario, args.output, args.openapi, args.rest_scenario, args.gated_url))
+    asyncio.run(record(args.scenario, args.output, args.openapi, args.rest_scenario, args.gated_url,
+                       args.gateway_scenario))
 
 
 if __name__ == "__main__":

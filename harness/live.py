@@ -29,11 +29,13 @@ from tools.fetch_spec import ROOT
 from tools.ref_policy import require_release
 
 REST_SCENARIO = ROOT / "scenarios" / "rest.yaml"
+GATEWAY_SCENARIO = ROOT / "scenarios" / "gateway.yaml"
 
 
 def _rest_scenario(home: Path) -> dict:
     """The REST scenario with its harness values resolved: ``${@home}`` is the isolated Hermes home
-    and ``${@repo}`` a scratch git repository in it with one commit."""
+    and ``${@repo}`` a scratch git repository in it with one commit. ``${@unique}`` is left for each
+    run to fill in."""
     repo = home / "scenario-repo"
     repo.mkdir()
     identity = {"GIT_AUTHOR_NAME": "HermesAPI", "GIT_AUTHOR_EMAIL": "hermes-api@example.invalid",
@@ -58,7 +60,8 @@ def _rest_scenario(home: Path) -> dict:
             return {key: resolve(item) for key, item in value.items()}
         return value
 
-    return resolve(yaml.safe_load(REST_SCENARIO.read_text(encoding="utf-8")))
+    return {**resolve(yaml.safe_load(REST_SCENARIO.read_text(encoding="utf-8"))),
+            "gateway": resolve(yaml.safe_load(GATEWAY_SCENARIO.read_text(encoding="utf-8")))}
 
 
 def _free_port() -> int:
@@ -292,10 +295,12 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
             rest_scenario = _rest_scenario(Path(home))
             resolved_scenario = Path(home) / "rest-scenario.json"
             resolved_scenario.write_text(json.dumps(rest_scenario), encoding="utf-8")
+            resolved_gateway = Path(home) / "gateway-scenario.json"
+            resolved_gateway.write_text(json.dumps(rest_scenario["gateway"]), encoding="utf-8")
             control = ControlServer(proxy, server.restart, {
                 "calls": rest_scenario["calls"],
                 "gated": {"url": gated.url, "calls": rest_scenario["gated_calls"]},
-            })
+            }, gateway_scenario=rest_scenario["gateway"])
             env["HERMES_LIVE_URL"] = f"http://127.0.0.1:{proxy.port}"
             env["HERMES_LIVE_CONTROL"] = control.url
             if record:
@@ -303,6 +308,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                     [str(python), str(ROOT / "harness/record.py"),
                      "--scenario", str(ROOT / "scenarios/liveness.yaml"),
                      "--rest-scenario", str(resolved_scenario), "--gated-url", gated.url,
+                     "--gateway-scenario", str(resolved_gateway),
                      "--output", str(ROOT / "fixtures" / ref / "liveness.jsonl"),
                      "--openapi", str(ROOT / "spec/out" / ref / "openapi.json")],
                     cwd=repo, env={**env, "HERMES_LIVE_URL": server.url}, check=True,

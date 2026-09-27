@@ -1,0 +1,146 @@
+# Gateway methods every client runs through its generated method table, and the recorder records.
+#
+# Each call names a method, its params, dotted `capture` paths into the result, and optionally an event to
+# `wait` for when the method's work completes later. `${@home}` is the isolated Hermes home, `${@repo}` a
+# scratch git repository in it, and `${@unique}` a value each run fills in, so every client can run the
+# scenario against the same server. Methods that act on the host outside the isolated home (installs,
+# the screen, clipboard, microphone, password managers, foreign agents' sessions), need external
+# accounts or networks, or need a hosted-room worker are not called here.
+name: gateway
+calls:
+# Read-only views of the isolated home.
+- {method: agents.list}
+- {method: commands.catalog}
+- {method: command.resolve, params: {name: help}}
+- {method: complete.slash, params: {text: /he}}
+- {method: complete.path, params: {word: "${@repo}/R"}}
+- {method: config.get, params: {key: provider}}
+- {method: config.get, params: {key: full}}
+- {method: config.show}
+- {method: delegation.status}
+- {method: display.status}
+- {method: free_tier.status}
+- {method: groups.capabilities}
+- {method: groups.list}
+- {method: insights.get, params: {days: 7}}
+- {method: learning.frames}
+- {method: learning.detail}
+- {method: mcp.catalog}
+- {method: mcp.servers.list}
+- {method: mcp.servers.status}
+- {method: model.options}
+- {method: pet.gallery, params: {localOnly: true}}
+- {method: pet.generate.status}
+- {method: pet.info}
+- {method: pet.info.meta}
+- {method: plugins.list}
+- {method: plugins.manage, params: {action: list}}
+- {method: profiles.list}
+- {method: profiles.describe, params: {name: default}}
+- {method: project.facts, params: {cwd: "${@repo}"}}
+- {method: projects.for_cwd, params: {cwd: "${@repo}"}}
+- {method: projects.list}
+- {method: projects.tree}
+- {method: session.active_list}
+- {method: session.events.stats}
+- {method: session.most_recent}
+- {method: setup.status}
+- {method: setup.runtime_check}
+- {method: skills.manage, params: {action: list}}
+- {method: spawn_tree.list}
+- {method: system.battery}
+- {method: tools.list}
+- {method: tools.show}
+- {method: toolsets.list}
+- {method: verification.status, params: {cwd: "${@repo}"}}
+- {method: wake.status}
+# Configuration, restored where a later run would notice.
+- {method: config.set, params: {key: details_mode, value: collapsed}}
+- {method: tools.configure, params: {action: disable, names: [web]}}
+- {method: tools.configure, params: {action: enable, names: [web]}}
+- {method: delegation.pause, params: {paused: true}}
+- {method: delegation.pause, params: {paused: false}}
+- {method: pet.scale, params: {scale: 1.0}}
+- {method: pet.disable}
+- {method: skills.reload}
+- {method: reload.mcp}
+- {method: reload.env}
+- {method: process.stop}
+- {method: paste.collapse, params: {text: "A pasted note\nover two lines"}}
+- {method: llm.oneshot, params: {instructions: Name this chat., input: Hello there}}
+- {method: mcp.servers.add, params: {name: "probe-${@unique}", config: {command: /usr/bin/true, enabled: false}}}
+- {method: mcp.servers.set_api_key, params: {name: "probe-${@unique}", value: not-a-real-key}}
+- {method: mcp.servers.remove, params: {name: "probe-${@unique}"}}
+- {method: cron.manage, params: {action: list}}
+- {method: cron.manage, params: {action: add, name: "probe-${@unique}", schedule: every 1h, prompt: Say hello.}}
+- {method: cron.manage, params: {action: pause, name: "probe-${@unique}"}}
+- {method: cron.manage, params: {action: resume, name: "probe-${@unique}"}}
+- {method: cron.manage, params: {action: remove, name: "probe-${@unique}"}}
+- {method: spawn_tree.save, params: {subagents: [{id: probe, goal: Probe}]}, capture: {tree: path}}
+- {method: spawn_tree.load, params: {path: "${tree}"}}
+# Profiles and projects.
+- {method: onboarding.ensure_setup_profile}
+- {method: onboarding.reset_setup_profile}
+- {method: profiles.create, params: {name: "probe-${@unique}", description: Scenario profile}}
+- {method: profiles.configure, params: {name: "probe-${@unique}", soul: You are a scenario profile.}}
+- {method: profiles.set_asset, params: {name: "probe-${@unique}", asset: avatar, data: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="}}
+- {method: profiles.get_asset, params: {name: "probe-${@unique}", asset: avatar}}
+- {method: profiles.set_asset, params: {name: "probe-${@unique}", asset: avatar, clear: true}}
+- {method: profiles.remember_onboarding, params: {answers: {name: Scenario}}}
+- {method: projects.create, params: {name: "Scenario ${@unique}", folders: ["${@repo}"]}, capture: {project: project.id}}
+- {method: projects.get, params: {id: "${project}"}}
+- {method: projects.update, params: {id: "${project}", name: "Scenario ${@unique} renamed"}}
+- {method: projects.set_active, params: {id: "${project}"}}
+- {method: projects.project_sessions, params: {project_id: "${project}"}}
+- {method: projects.record_repos, params: {repos: ["${@repo}"]}}
+- {method: projects.archive, params: {id: "${project}"}}
+- {method: projects.archive, params: {id: "${project}", restore: true}}
+- {method: projects.set_active}
+- {method: projects.delete, params: {id: "${project}"}}
+# A session through its lifecycle, on the stub model.
+- {method: session.create, params: {title: "Scenario ${@unique}", cwd: "${@repo}", close_on_disconnect: false}, capture: {session: session_id, stored: stored_session_id}}
+- {method: prompt.submit, params: {session_id: "${session}", text: Reply with a short greeting.}, wait: message.complete}
+- {method: session.history, params: {session_id: "${session}"}}
+- {method: session.status, params: {session_id: "${session}"}}
+- {method: session.usage, params: {session_id: "${session}"}}
+- {method: session.context_breakdown, params: {session_id: "${session}"}}
+- {method: session.control.read, params: {session_id: "${session}"}}
+- {method: session.events.since, params: {session_id: "${session}", last_seen: 0}}
+- {method: session.activate, params: {session_id: "${session}", omit_messages: true}}
+- {method: session.title, params: {session_id: "${session}", title: "Scenario ${@unique} renamed"}}
+- {method: session.set_hidden, params: {session_id: "${session}", hidden: false}}
+- {method: terminal.resize, params: {session_id: "${session}", cols: 100}}
+- {method: approval.pending, params: {session_id: "${session}"}}
+- {method: process.list, params: {session_id: "${session}"}}
+- {method: rollback.list, params: {session_id: "${session}"}}
+- {method: subagent.list, params: {session_id: "${session}"}}
+- {method: handoff.state, params: {session_id: "${session}"}}
+- {method: message.react, params: {session_id: "${session}", newest_role: assistant, emoji: "👍"}}
+- {method: slash.exec, params: {session_id: "${session}", command: /goal Finish the scenario}}
+- {method: session.control, params: {session_id: "${session}", action: goal.pause}}
+- {method: session.control, params: {session_id: "${session}", action: subgoal.add, args: {text: Check the fixture}}}
+- {method: session.control, params: {session_id: "${session}", action: subgoal.clear}}
+- {method: session.control, params: {session_id: "${session}", action: goal.clear}}
+- {method: session.save, params: {session_id: "${session}"}}
+- {method: session.cwd.set, params: {session_id: "${session}", cwd: "${@repo}"}}
+- {method: input.detect_drop, params: {session_id: "${session}", text: "${@repo}/README.md"}}
+- {method: file.attach, params: {session_id: "${session}", path: "${@repo}/README.md"}}
+- {method: image.attach_bytes, params: {session_id: "${session}", filename: dot.png, content_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="}, capture: {image: path}}
+- {method: image.detach, params: {session_id: "${session}", path: "${image}"}}
+- {method: slash.exec, params: {session_id: "${session}", command: /help}}
+- {method: prompt.btw, params: {session_id: "${session}", text: "What is two plus two?"}, wait: btw.complete}
+- {method: prompt.background, params: {session_id: "${session}", text: Say hello.}, wait: background.complete}
+- {method: session.branch, params: {session_id: "${session}", name: "Scenario branch ${@unique}"}, capture: {branch: session_id}}
+- {method: session.close, params: {session_id: "${branch}"}}
+- {method: session.branch_whole, params: {session_id: "${session}"}, capture: {whole: session_id}}
+- {method: session.close, params: {session_id: "${whole}"}}
+- {method: session.branch_stored, params: {parent_session_id: "${stored}"}, capture: {copy: session_id}}
+- {method: session.close, params: {session_id: "${copy}"}}
+- {method: session.compress, params: {session_id: "${session}"}}
+- {method: session.undo, params: {session_id: "${session}"}}
+- {method: session.interrupt, params: {session_id: "${session}"}}
+- {method: session.close, params: {session_id: "${session}"}}
+- {method: session.resume, params: {session_id: "${stored}", omit_messages: true}, capture: {resumed: session_id}}
+- {method: session.close, params: {session_id: "${resumed}"}}
+- {method: session.delete, params: {session_id: "${stored}"}}
+- {method: session.list}

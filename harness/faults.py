@@ -216,16 +216,18 @@ class ControlServer:
     """``POST /drop?hold_ms=N`` severs client sockets, ``POST /blackhole`` stalls them silently,
     ``POST /conditions?profile=NAME`` shapes traffic with a network profile (see ``PROFILES``),
     ``POST /restart`` replaces the server process, ``POST /report`` receives the JSON summary of
-    what a passing client run exercised on the wire, ``GET /rest-scenario`` serves the REST calls
-    every client runs through its generated operations, and ``GET /stress`` describes the stress
+    what a passing client run exercised on the wire, ``GET /rest-scenario`` and ``GET /gateway-scenario``
+    serve the REST and gateway calls every client runs through its generated operations, and
+    ``GET /stress`` describes the stress
     dataset while ``POST /metrics`` receives a stress run's timings in milliseconds."""
 
     def __init__(self, proxy: FaultProxy, restart: Callable[[], None], rest_scenario: dict | None = None,
-                 stress: dict | None = None) -> None:
+                 stress: dict | None = None, gateway_scenario: dict | None = None) -> None:
         self.restarts = 0
         self.report: dict[str, list[str]] | None = None
         self.metrics: dict[str, float] | None = None
         documents = {"/rest-scenario": json.dumps(rest_scenario or {"calls": []}).encode("utf-8"),
+                     "/gateway-scenario": json.dumps(gateway_scenario or {"calls": []}).encode("utf-8"),
                      "/stress": json.dumps(stress or {}).encode("utf-8")}
         owner = self
 

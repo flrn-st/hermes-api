@@ -15,7 +15,8 @@ public sealed class HermesGatewayException(message: String) : Exception(message)
     /** Hermes reported a desktop contract below [HermesGatewayConfiguration.minimumContract]. */
     public class IncompatibleServer(public val contract: Int) : HermesGatewayException("Unsupported desktop contract $contract")
     /** The dashboard rejected the credential: HTTP 401 or 403 from the ticket request or the WebSocket
-     *  upgrade. Hermes also answers 403 for a disallowed origin or a disabled chat, so retrying cannot help. */
+     *  upgrade, and [HermesAuth.renew] could not replace it. Hermes also answers 403 for a disallowed origin
+     *  or a disabled chat, so retrying the same credential cannot help. */
     public class AuthenticationFailed(message: String) : HermesGatewayException(message)
 
     /** Failures a reconnect cannot fix. The gateway stops retrying and reports [GatewayConnectionState.Failed]. */

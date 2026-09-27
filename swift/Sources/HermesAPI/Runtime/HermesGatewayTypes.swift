@@ -11,7 +11,8 @@ public enum HermesGatewayError: Error, Sendable, Equatable {
     /// Hermes reported a desktop contract below `HermesGatewayConfiguration.minimumContract`.
     case incompatibleServer(Int)
     /// The dashboard rejected the credential: HTTP 401 or 403 from the ticket request or the WebSocket
-    /// upgrade. Hermes also answers 403 for a disallowed origin or a disabled chat, so retrying cannot help.
+    /// upgrade, and `HermesAuth.renew(after:)` could not replace it. Hermes also answers 403 for a
+    /// disallowed origin or a disabled chat, so retrying the same credential cannot help.
     case authenticationFailed(String)
 
     /// Failures a reconnect cannot fix. The gateway stops retrying and reports `.failed`.

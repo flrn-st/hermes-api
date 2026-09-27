@@ -473,6 +473,41 @@ private actor AddressBook {
     #expect(await transport.attempts == 1)
 }
 
+/// A credential that renews on every rejection, counting the renewals.
+private actor RenewingAuth: HermesAuth {
+    private(set) var renewals = 0
+
+    nonisolated func credential(baseURL: URL, http: any HTTPTransport) async throws -> GatewayCredential {
+        .ticket("test-ticket", headers: [:])
+    }
+
+    func renew(after failure: HermesGatewayError) -> Bool {
+        renewals += 1
+        return true
+    }
+}
+
+@Test func aRenewedCredentialRetriesTheRejectedAttempt() async throws {
+    let rejected = HermesGatewayError.authenticationFailed("WebSocket upgrade returned HTTP 401")
+    let transport = SequenceTransport([.failure(rejected), .socket(TestSocket())])
+    let auth = RenewingAuth()
+    let gateway = client(transport, reconnectDelay: .seconds(60), auth: auth)
+    try await gateway.connect()
+    #expect(await transport.attempts == 2)
+    #expect(await auth.renewals == 1)
+    await gateway.disconnect()
+}
+
+@Test func aCredentialRenewsOncePerAttempt() async throws {
+    let rejected = HermesGatewayError.authenticationFailed("WebSocket upgrade returned HTTP 403")
+    let transport = SequenceTransport([.failure(rejected), .failure(rejected)])
+    let auth = RenewingAuth()
+    let gateway = client(transport, auth: auth)
+    await #expect(throws: rejected) { try await gateway.connect() }
+    #expect(await transport.attempts == 2)
+    #expect(await auth.renewals == 1)
+}
+
 @Test func authenticationFailureDuringReconnectStopsRetrying() async throws {
     let first = TestSocket()
     let rejected = HermesGatewayError.authenticationFailed("WebSocket upgrade returned HTTP 403")

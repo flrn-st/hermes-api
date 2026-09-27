@@ -13,6 +13,12 @@ public sealed interface GatewayCredential {
 /** A new credential is requested on each connection, including reconnects. */
 public interface HermesAuth {
     public suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential
+
+    /** Called once per connection attempt after Hermes rejected its credential: the ticket request or the
+     *  WebSocket upgrade answered 401 or 403. Sign in again or refresh a token (or wait for another caller
+     *  doing so) and return `true` to retry the attempt with a new credential; `false` makes the rejection
+     *  final. */
+    public suspend fun renew(failure: HermesGatewayException.AuthenticationFailed): Boolean = false
 }
 
 public class DashboardTicketAuth(private val headers: suspend () -> Map<String, String>) : HermesAuth, HermesRESTAuth {

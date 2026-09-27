@@ -114,13 +114,13 @@ jobs:
           git diff --exit-code -- "spec/out/$ref/schema-audit.json"
       - name: Check committed generated sources
         run: make check-gen
-      - name: Check reviewed REST overlays
+      - name: Check reviewed REST overlays and gateway errors
         run: |
           make rest
           make check-rest
           ref="$(cat spec/current-release.txt)"
           git diff --exit-code -- "spec/out/$ref/openapi.raw.json" "spec/out/$ref/openapi.json" \
-            "spec/out/$ref/rest-hashes.json" "spec/out/$ref/rest-meta.json"
+            "spec/out/$ref/rest-hashes.json" "spec/out/$ref/rest-meta.json" "spec/out/$ref/gateway-errors.json"
       - name: Report contract coverage
         run: |
           make coverage

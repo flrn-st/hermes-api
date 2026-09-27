@@ -20,7 +20,8 @@ def _run(args: list[str], cwd: Path, env: dict[str, str] | None = None) -> str:
     return result.stdout.strip()
 
 
-def extract(ref: str, source_repo: Path | None = None) -> dict[str, object]:
+def prepare(ref: str, source_repo: Path | None = None) -> tuple[Path, Path, str]:
+    """The pinned tag's checkout with its Python environment: ``(repo, python, commit)``."""
     ref = require_release(ref)
     expected = json.loads((ROOT / "spec" / "out" / ref / "meta.json").read_text(encoding="utf-8"))
     if expected["ref"] != ref:
@@ -39,7 +40,12 @@ def extract(ref: str, source_repo: Path | None = None) -> dict[str, object]:
         raise ValueError("Tagged Hermes checkout has modified tracked files")
 
     _run(["uv", "sync", "--frozen", "--extra", "web", "--no-dev", "--python", "3.12"], repo)
-    python = repo / ".venv" / "bin" / "python"
+    return repo, repo / ".venv" / "bin" / "python", commit
+
+
+def extract(ref: str, source_repo: Path | None = None) -> dict[str, object]:
+    ref = require_release(ref)
+    repo, python, commit = prepare(ref, source_repo)
     output = ROOT / "spec" / "out" / ref
     with tempfile.TemporaryDirectory(prefix="hermes-openapi-") as isolated_home:
         env = os.environ.copy()

@@ -1,0 +1,6916 @@
+{
+  "commit": "f97608f178d1ffeca59860195ab7da295f7c8e5f",
+  "common": [
+    {
+      "code": -32700,
+      "messages": [
+        "parse error"
+      ],
+      "sites": [
+        "tui_gateway/entry.py:320",
+        "tui_gateway/ws.py:348"
+      ]
+    },
+    {
+      "code": -32603,
+      "messages": [
+        "internal error",
+        "response serialization error: {\u2026}"
+      ],
+      "sites": [
+        "tui_gateway/transport.py:94",
+        "tui_gateway/ws.py:365"
+      ]
+    },
+    {
+      "code": -32602,
+      "messages": [
+        "invalid params: expected an object"
+      ],
+      "sites": [
+        "tui_gateway/server.py:859"
+      ]
+    },
+    {
+      "code": -32601,
+      "messages": [
+        "unknown method: {\u2026} \u2014 the client and the Hermes backend are out of sync (different versions); run `hermes update` and restart both"
+      ],
+      "sites": [
+        "tui_gateway/rpc_dispatch.py:23"
+      ]
+    },
+    {
+      "code": -32600,
+      "messages": [
+        "invalid request: expected an object",
+        "invalid request: method must be a non-empty string"
+      ],
+      "sites": [
+        "tui_gateway/server.py:853",
+        "tui_gateway/server.py:856"
+      ]
+    },
+    {
+      "code": -32000,
+      "messages": [
+        "handler error: {\u2026}"
+      ],
+      "sites": [
+        "tui_gateway/entry.py:337"
+      ]
+    },
+    {
+      "code": 4000,
+      "messages": [],
+      "sites": [
+        "tui_gateway/rpc_dispatch.py:31"
+      ]
+    },
+    {
+      "code": 4064,
+      "messages": [],
+      "sites": [
+        "tui_gateway/rpc_dispatch.py:36"
+      ]
+    },
+    {
+      "code": 5035,
+      "messages": [
+        "backend is retiring; reconnect to continue"
+      ],
+      "sites": [
+        "tui_gateway/rpc_dispatch.py:13"
+      ]
+    }
+  ],
+  "methods": {
+    "agents.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      },
+      {
+        "code": 5033,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      }
+    ],
+    "approval.pending": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5004,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1186"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "approval.received": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4006,
+        "messages": [
+          "request_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1204"
+        ]
+      },
+      {
+        "code": 5004,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1186"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "approval.respond": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5004,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1186"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "billing.auto_reload": [],
+    "billing.charge": [],
+    "billing.charge_status": [],
+    "billing.state": [],
+    "billing.step_up": [],
+    "bot_relay.deliver": [
+      {
+        "code": 4090,
+        "messages": [
+          "profile and message required"
+        ],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:85"
+        ]
+      },
+      {
+        "code": 4091,
+        "messages": [
+          "message too long"
+        ],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:90"
+        ]
+      },
+      {
+        "code": 4092,
+        "messages": [
+          "no profile '{\u2026}' on this gateway"
+        ],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:96"
+        ]
+      },
+      {
+        "code": 5092,
+        "messages": [
+          "delivery turn failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:163",
+          "tui_gateway/methods_bot_relay.py:214"
+        ]
+      },
+      {
+        "code": 5093,
+        "messages": [
+          "delivery turn timed out"
+        ],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:227"
+        ]
+      },
+      {
+        "code": 5094,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:230"
+        ]
+      },
+      {
+        "code": 5096,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:230"
+        ]
+      }
+    ],
+    "bot_relay.outbox.drain": [
+      {
+        "code": 5091,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:72"
+        ]
+      }
+    ],
+    "bot_relay.reply": [
+      {
+        "code": 4093,
+        "messages": [
+          "id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:239"
+        ]
+      },
+      {
+        "code": 4094,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:246"
+        ]
+      },
+      {
+        "code": 5095,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:248"
+        ]
+      }
+    ],
+    "bot_relay.roster.sync": [
+      {
+        "code": 5090,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_bot_relay.py:61"
+        ]
+      }
+    ],
+    "browser.controller.detach": [
+      {
+        "code": 4403,
+        "messages": [
+          "authenticated controller identity required",
+          "controller is not owned by this transport",
+          "session is not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_browser_control.py:104",
+          "tui_gateway/methods_browser_control.py:113",
+          "tui_gateway/methods_browser_control.py:121",
+          "tui_gateway/methods_browser_control.py:125"
+        ]
+      }
+    ],
+    "browser.controller.heartbeat": [
+      {
+        "code": 4403,
+        "messages": [
+          "authenticated controller identity required",
+          "controller is not owned by this transport",
+          "no controller registered for this session",
+          "session is not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_browser_control.py:104",
+          "tui_gateway/methods_browser_control.py:113",
+          "tui_gateway/methods_browser_control.py:121",
+          "tui_gateway/methods_browser_control.py:125"
+        ]
+      }
+    ],
+    "browser.controller.register": [
+      {
+        "code": 4403,
+        "messages": [
+          "browser.controller.register requires an authenticated non-internal identity",
+          "browser.extension_control.enabled is not set",
+          "controller is not owned by this transport",
+          "controller_id, browser_profile_id, and server session profile are required",
+          "no controller registered for this session",
+          "no permitted controller capabilities requested",
+          "session is not owned by this transport",
+          "unsupported browser-control protocol version; expected {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_browser_control.py:104",
+          "tui_gateway/methods_browser_control.py:113",
+          "tui_gateway/methods_browser_control.py:121",
+          "tui_gateway/methods_browser_control.py:125",
+          "tui_gateway/methods_browser_control.py:138",
+          "tui_gateway/methods_browser_control.py:142",
+          "tui_gateway/methods_browser_control.py:162",
+          "tui_gateway/methods_browser_control.py:170"
+        ]
+      }
+    ],
+    "browser.controller.result": [
+      {
+        "code": 4403,
+        "messages": [
+          "authenticated controller identity required",
+          "command_id required",
+          "controller is not owned by this transport",
+          "no controller registered for this session",
+          "session is not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_browser_control.py:104",
+          "tui_gateway/methods_browser_control.py:113",
+          "tui_gateway/methods_browser_control.py:121",
+          "tui_gateway/methods_browser_control.py:125",
+          "tui_gateway/methods_browser_control.py:191"
+        ]
+      }
+    ],
+    "browser.manage": [
+      {
+        "code": 4015,
+        "messages": [
+          "browser url must be a string, got {\u2026}",
+          "invalid port in browser url: {\u2026}",
+          "missing host in browser url: {\u2026}",
+          "unknown action: {\u2026}",
+          "unsupported browser url: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_browser.py:103",
+          "tui_gateway/methods_browser.py:114",
+          "tui_gateway/methods_browser.py:116",
+          "tui_gateway/methods_browser.py:120",
+          "tui_gateway/methods_tools.py:1096"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "could not reach browser CDP at {\u2026}",
+          "could not reach browser CDP at {\u2026}: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_browser.py:135",
+          "tui_gateway/methods_browser.py:144",
+          "tui_gateway/methods_browser.py:155"
+        ]
+      }
+    ],
+    "clarify.lock": [
+      {
+        "code": 4002,
+        "messages": [
+          "request_id and question_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1146",
+          "tui_gateway/methods_prompt.py:1155"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [],
+        "sites": [
+          "tui_gateway/compute_host_bridge.py:209"
+        ]
+      },
+      {
+        "code": 5019,
+        "messages": [
+          "compute-host clarify lock failed: {\u2026}",
+          "compute-host clarify lock returned an invalid response"
+        ],
+        "sites": [
+          "tui_gateway/compute_host_bridge.py:201",
+          "tui_gateway/compute_host_bridge.py:203",
+          "tui_gateway/compute_host_bridge.py:206"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/compute_host_bridge.py:209"
+        ]
+      }
+    ],
+    "cli.exec": [
+      {
+        "code": 4003,
+        "messages": [
+          "argv must be list[str]"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:524"
+        ]
+      },
+      {
+        "code": 5017,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_tools.py:208"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_tools.py:206"
+        ]
+      }
+    ],
+    "client.capabilities": [],
+    "clipboard.paste": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5027,
+        "messages": [
+          "clipboard unavailable: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:720"
+        ]
+      }
+    ],
+    "command.dispatch": [
+      {
+        "code": 4018,
+        "messages": [
+          "not a quick/plugin/bundle/skill command: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:934"
+        ]
+      }
+    ],
+    "command.resolve": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4011,
+        "messages": [
+          "unknown command: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:543"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5012,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "commands.catalog": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5020,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "complete.path": [
+      {
+        "code": 5021,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_complete.py:35"
+        ]
+      }
+    ],
+    "complete.slash": [
+      {
+        "code": 5020,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_complete.py:35"
+        ]
+      }
+    ],
+    "config.get": [
+      {
+        "code": 4002,
+        "messages": [
+          "unknown config key: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_config.py:238"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_config.py:244"
+        ]
+      }
+    ],
+    "config.set": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "unknown config key: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_config_set.py:495"
+        ]
+      }
+    ],
+    "config.show": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5030,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "connection.respond": [
+      {
+        "code": 4000,
+        "messages": [
+          "Connector parameters are invalid."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "Connection answer is invalid."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "No open operation with that op_id."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5033,
+        "messages": [
+          "Connectors must be managed on the session's compute host."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector request failed. Try again explicitly."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.accounts": [
+      {
+        "code": 4000,
+        "messages": [
+          "connector must be a slug."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "Select an organization to manage connector rules."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector accounts are unavailable."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.accounts.remove": [
+      {
+        "code": 4000,
+        "messages": [
+          "Connection id is invalid.",
+          "connection_id is required."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4041,
+        "messages": [
+          "Connector account not found."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "Select an organization to manage connector rules."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector accounts are unavailable."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.catalog": [
+      {
+        "code": 4000,
+        "messages": [
+          ""
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "Select an organization to manage connector rules."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector catalog is unavailable."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.connect": [
+      {
+        "code": 4000,
+        "messages": [
+          "Connector parameters are invalid.",
+          "One target kind per request."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport",
+          "session ownership changed"
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "Reopen the stored link.",
+          "The operation has settled.",
+          "The target cannot be run again.",
+          "This target cannot be run again."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "No open connection operation for this session.",
+          "No such target on the open operation."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available in this session.",
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5033,
+        "messages": [
+          "Connectors must be managed on the session's compute host."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector request failed. Try again explicitly.",
+          "Connector service returned an invalid response.",
+          "Connector service returned no authorization results."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.list": [
+      {
+        "code": 4000,
+        "messages": [
+          "Connector parameters are invalid.",
+          "One target kind per request."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport",
+          "session ownership changed"
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "Reopen the stored link.",
+          "The operation has settled.",
+          "The target cannot be run again.",
+          "This target cannot be run again."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "No open connection operation for this session.",
+          "No such target on the open operation."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available in this session.",
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5033,
+        "messages": [
+          "Connectors must be managed on the session's compute host."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector request failed. Try again explicitly.",
+          "Connector service returned an invalid response.",
+          "Connector service returned no authorization results."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.operation.status": [
+      {
+        "code": 4000,
+        "messages": [
+          "Connector parameters are invalid."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "No open operation with that op_id."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5033,
+        "messages": [
+          "Connectors must be managed on the session's compute host."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector request failed. Try again explicitly."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.operation.wake": [
+      {
+        "code": 4000,
+        "messages": [
+          "Connector parameters are invalid."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "No open operation with that op_id."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5033,
+        "messages": [
+          "Connectors must be managed on the session's compute host."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector request failed. Try again explicitly."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.policy.get": [
+      {
+        "code": 4000,
+        "messages": [
+          ""
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "Select an organization to manage connector rules."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector policy is unavailable."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.policy.set": [
+      {
+        "code": 4000,
+        "messages": [
+          "Connector parameters are invalid.",
+          "Connector policy change is invalid."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "Select an organization to manage connector rules."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector policy is unavailable."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "connectors.tools": [
+      {
+        "code": 4000,
+        "messages": [
+          "slug and refresh are required parameters"
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "Connector access is not permitted for this account.",
+          "This account cannot manage connectors for this organization."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [
+          "Connectors are not available."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [
+          "Sign in to use connectors."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4041,
+        "messages": [
+          "Connector not found."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "Select an organization to manage connector rules."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "Connector tools are unavailable."
+        ],
+        "sites": [
+          "tui_gateway/methods_connectors.py:20"
+        ]
+      }
+    ],
+    "cron.manage": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4016,
+        "messages": [
+          "unknown cron action: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1211"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5023,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "delegation.pause": [],
+    "delegation.status": [],
+    "diagnostics.share_nous": [],
+    "display.install": [
+      {
+        "code": 5300,
+        "messages": [
+          "Bot Desktop runs on Linux gateway hosts only",
+          "no supported package manager (apt-get, dnf, pacman) on this host"
+        ],
+        "sites": [
+          "tui_gateway/methods_display.py:178",
+          "tui_gateway/methods_display.py:180",
+          "tui_gateway/methods_display.py:210"
+        ]
+      }
+    ],
+    "display.lease.acquire": [
+      {
+        "code": 5300,
+        "messages": [
+          "viewer_id required",
+          "viewer_id was not minted for this connection; call display.observe first"
+        ],
+        "sites": [
+          "tui_gateway/methods_display.py:145",
+          "tui_gateway/methods_display.py:221"
+        ]
+      }
+    ],
+    "display.lease.release": [
+      {
+        "code": 5300,
+        "messages": [
+          "viewer_id required to release another viewer's lease (or pass force: true)",
+          "viewer_id was not minted for this connection; call display.observe first"
+        ],
+        "sites": [
+          "tui_gateway/methods_display.py:145",
+          "tui_gateway/methods_display.py:240"
+        ]
+      }
+    ],
+    "display.observe": [
+      {
+        "code": 5300,
+        "messages": [
+          "this profile's Bot Desktop is not running; call display.start first"
+        ],
+        "sites": [
+          "tui_gateway/methods_display.py:160",
+          "tui_gateway/methods_display.py:167"
+        ]
+      }
+    ],
+    "display.start": [
+      {
+        "code": 5300,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_display.py:90"
+        ]
+      }
+    ],
+    "display.status": [
+      {
+        "code": 5300,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_display.py:57"
+        ]
+      }
+    ],
+    "display.stop": [
+      {
+        "code": 5300,
+        "messages": [
+          "a human holds this screen; pass force: true to stop it anyway"
+        ],
+        "sites": [
+          "tui_gateway/methods_display.py:103",
+          "tui_gateway/methods_display.py:109"
+        ]
+      }
+    ],
+    "display.thumbnail": [
+      {
+        "code": 5300,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_display.py:78"
+        ]
+      }
+    ],
+    "file.attach": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4015,
+        "messages": [
+          "path or data_url required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:910"
+        ]
+      },
+      {
+        "code": 5028,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_prompt.py:920"
+        ]
+      }
+    ],
+    "free_tier.ack_notice": [
+      {
+        "code": 5091,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_free_tier.py:88"
+        ]
+      }
+    ],
+    "free_tier.provision": [
+      {
+        "code": 5092,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_free_tier.py:76"
+        ]
+      }
+    ],
+    "free_tier.status": [
+      {
+        "code": 5090,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_free_tier.py:44"
+        ]
+      }
+    ],
+    "gateway.capabilities": [],
+    "groups.approve": [
+      {
+        "code": 4115,
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      },
+      {
+        "code": 5119,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      }
+    ],
+    "groups.capabilities": [],
+    "groups.create": [
+      {
+        "code": 4110,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 4123,
+        "messages": [
+          "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      },
+      {
+        "code": 5111,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      }
+    ],
+    "groups.demote": [
+      {
+        "code": 4119,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 5119,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      }
+    ],
+    "groups.disband": [
+      {
+        "code": 4113,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 4123,
+        "messages": [
+          "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      },
+      {
+        "code": 5114,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      }
+    ],
+    "groups.list": [
+      {
+        "code": 5110,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199",
+          "tui_gateway/methods_groups.py:209"
+        ]
+      }
+    ],
+    "groups.log": [
+      {
+        "code": 4112,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 5113,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      }
+    ],
+    "groups.peer.invite": [
+      {
+        "code": 4120,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199",
+          "tui_gateway/methods_groups.py:209"
+        ]
+      }
+    ],
+    "groups.peer.register": [
+      {
+        "code": 4121,
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      },
+      {
+        "code": 5120,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      }
+    ],
+    "groups.peer.revoke": [
+      {
+        "code": 4122,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199",
+          "tui_gateway/methods_groups.py:209"
+        ]
+      }
+    ],
+    "groups.promote": [
+      {
+        "code": 4118,
+        "messages": [
+          "promotion requires confirm=true acknowledging the previous authority can no longer commit"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:209",
+          "tui_gateway/methods_groups.py:512"
+        ]
+      },
+      {
+        "code": 5118,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      }
+    ],
+    "groups.rename": [
+      {
+        "code": 4117,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 5117,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      }
+    ],
+    "groups.replica_state": [
+      {
+        "code": 4117,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 5117,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      }
+    ],
+    "groups.replicate": [
+      {
+        "code": 4116,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 5116,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      }
+    ],
+    "groups.retry": [
+      {
+        "code": 4115,
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      },
+      {
+        "code": 5118,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      }
+    ],
+    "groups.send": [
+      {
+        "code": 4111,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 4123,
+        "messages": [
+          "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      },
+      {
+        "code": 5112,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      }
+    ],
+    "groups.state": [
+      {
+        "code": 4114,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      },
+      {
+        "code": 5115,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      }
+    ],
+    "groups.stop": [
+      {
+        "code": 4115,
+        "messages": [
+          "hosted room driver is unavailable"
+        ],
+        "sites": [
+          "tui_gateway/methods_groups.py:199"
+        ]
+      },
+      {
+        "code": 5116,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:210"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_groups.py:209"
+        ]
+      }
+    ],
+    "handoff.fail": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5007,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "handoff.request": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [
+          "session busy \u2014 wait for the current turn to finish, then retry the handoff"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1200"
+        ]
+      },
+      {
+        "code": 4023,
+        "messages": [
+          "platform required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1202"
+        ]
+      },
+      {
+        "code": 4024,
+        "messages": [
+          "unknown platform '{\u2026}'"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1208"
+        ]
+      },
+      {
+        "code": 4025,
+        "messages": [
+          "platform '{\u2026}' is not configured/enabled in the gateway"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1215"
+        ]
+      },
+      {
+        "code": 4026,
+        "messages": [
+          "no home channel configured for {\u2026} \u2014 set one with /sethome on the destination chat first"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1217"
+        ]
+      },
+      {
+        "code": 4027,
+        "messages": [
+          "session is already in flight for handoff \u2014 wait for it to settle, then retry"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1229"
+        ]
+      },
+      {
+        "code": 5007,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1231",
+          "tui_gateway/server.py:507"
+        ]
+      },
+      {
+        "code": 5021,
+        "messages": [
+          "could not load gateway config: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1213"
+        ]
+      }
+    ],
+    "handoff.state": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5007,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "image.attach": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4015,
+        "messages": [
+          "path required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:743"
+        ]
+      },
+      {
+        "code": 4016,
+        "messages": [
+          "image not found: {\u2026}",
+          "unsupported image: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:753",
+          "tui_gateway/methods_prompt.py:755"
+        ]
+      },
+      {
+        "code": 5027,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_prompt.py:761"
+        ]
+      }
+    ],
+    "image.attach_bytes": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4015,
+        "messages": [
+          "content_base64 required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:773"
+        ]
+      },
+      {
+        "code": 4016,
+        "messages": [
+          "unsupported image extension: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:785"
+        ]
+      },
+      {
+        "code": 4017,
+        "messages": [
+          "data is not valid base64",
+          "image is empty"
+        ],
+        "sites": [
+          "tui_gateway/prompt_attachments.py:55",
+          "tui_gateway/prompt_attachments.py:57"
+        ]
+      },
+      {
+        "code": 4018,
+        "messages": [
+          "{\u2026} too large ({\u2026} bytes; cap is {\u2026} MB)"
+        ],
+        "sites": [
+          "tui_gateway/prompt_attachments.py:60"
+        ]
+      },
+      {
+        "code": 5027,
+        "messages": [
+          "write failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:789"
+        ]
+      }
+    ],
+    "image.detach": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4015,
+        "messages": [
+          "path required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:930"
+        ]
+      }
+    ],
+    "image.generate": [
+      {
+        "code": 4071,
+        "messages": [
+          "prompt required"
+        ],
+        "sites": [
+          "tui_gateway/methods_images.py:74"
+        ]
+      },
+      {
+        "code": 5071,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_images.py:86"
+        ]
+      }
+    ],
+    "input.detect_drop": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5027,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_prompt.py:961"
+        ]
+      }
+    ],
+    "insights.get": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5017,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}",
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70",
+          "tui_gateway/server.py:507"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "learning.delete": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "learning.detail": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "learning.edit": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "learning.frames": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "llm.oneshot": [
+      {
+        "code": 4030,
+        "messages": [
+          "llm.oneshot requires a template or instructions/input"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1178"
+        ]
+      },
+      {
+        "code": 4031,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:1189"
+        ]
+      },
+      {
+        "code": 4032,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:1189"
+        ]
+      },
+      {
+        "code": 5030,
+        "messages": [
+          "one-shot generation failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1192"
+        ]
+      }
+    ],
+    "mcp.catalog": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.add": [
+      {
+        "code": 4001,
+        "messages": [
+          "server '{\u2026}' rejected: suspicious command/args configuration",
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1374",
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "config must specify a 'url' (http) or 'command' (stdio), or a valid 'preset'",
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1370",
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "server '{\u2026}' already exists",
+          "server '{\u2026}' is provided by plugin '{\u2026}' and cannot be modified"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:128",
+          "tui_gateway/methods_tools.py:1362"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.oauth.callback": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.oauth.cancel": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.oauth.poll": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.oauth.start": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found",
+          "stdio servers authenticate via env keys, not OAuth",
+          "this server uses header/API-key auth, not OAuth"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1465",
+          "tui_gateway/methods_tools.py:1467",
+          "tui_gateway/methods_tools.py:1473",
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found",
+          "server '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:122",
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "server '{\u2026}' is provided by plugin '{\u2026}' and cannot be modified"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:128"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.remove": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found",
+          "server '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1448",
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "server '{\u2026}' is provided by plugin '{\u2026}' and cannot be modified"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:128"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.set_api_key": [
+      {
+        "code": 4001,
+        "messages": [
+          "malformed server config",
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1391",
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "value is not a valid credential",
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1395",
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found",
+          "server '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:122",
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "server '{\u2026}' is provided by plugin '{\u2026}' and cannot be modified"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:128"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.status": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "mcp.servers.test": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found",
+          "server '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:122",
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "message.react": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4023,
+        "messages": [
+          "row_id or newest_role required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1141"
+        ]
+      },
+      {
+        "code": 4024,
+        "messages": [
+          "emoji must be a non-empty string or null"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1143"
+        ]
+      },
+      {
+        "code": 4025,
+        "messages": [
+          "author must be 'user' or 'agent'"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1145"
+        ]
+      },
+      {
+        "code": 4040,
+        "messages": [
+          "message not found in this session",
+          "no message to react to yet"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1153",
+          "tui_gateway/methods_session.py:1158"
+        ]
+      },
+      {
+        "code": 5007,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1156",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "model.disconnect": [
+      {
+        "code": 4001,
+        "messages": [
+          "slug is required"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:395"
+        ]
+      },
+      {
+        "code": 4005,
+        "messages": [
+          "no credentials found for {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:402"
+        ]
+      },
+      {
+        "code": 5035,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_complete.py:35"
+        ]
+      }
+    ],
+    "model.options": [
+      {
+        "code": 5033,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_complete.py:35"
+        ]
+      }
+    ],
+    "model.save_key": [
+      {
+        "code": 4001,
+        "messages": [
+          "slug and api_key are required"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:356"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "unknown provider: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:360"
+        ]
+      },
+      {
+        "code": 4003,
+        "messages": [
+          "{\u2026} uses {\u2026} auth \u2014 run `hermes model` to configure"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:362"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "no env var defined for {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:364"
+        ]
+      },
+      {
+        "code": 4006,
+        "messages": [
+          "managed install \u2014 credentials are read-only"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:358"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_complete.py:35"
+        ]
+      }
+    ],
+    "onboarding.ensure_setup_profile": [
+      {
+        "code": 5073,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_onboarding.py:22"
+        ]
+      }
+    ],
+    "onboarding.reset_setup_profile": [
+      {
+        "code": 4072,
+        "messages": [
+          "no setup profile to reset"
+        ],
+        "sites": [
+          "tui_gateway/methods_onboarding.py:32"
+        ]
+      },
+      {
+        "code": 5074,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_onboarding.py:37"
+        ]
+      }
+    ],
+    "paste.collapse": [
+      {
+        "code": 4004,
+        "messages": [
+          "empty paste"
+        ],
+        "sites": [
+          "tui_gateway/methods_complete.py:46"
+        ]
+      }
+    ],
+    "pdf.attach": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4015,
+        "messages": [
+          "first_page must be >= 1",
+          "first_page/last_page must be integers",
+          "last_page must be >= first_page",
+          "path or content_base64 required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:829",
+          "tui_gateway/methods_prompt.py:831",
+          "tui_gateway/methods_prompt.py:835",
+          "tui_gateway/methods_prompt.py:857"
+        ]
+      },
+      {
+        "code": 4016,
+        "messages": [
+          "PDF not found: {\u2026}",
+          "not a PDF: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:814",
+          "tui_gateway/methods_prompt.py:816"
+        ]
+      },
+      {
+        "code": 4017,
+        "messages": [
+          "data is not valid base64",
+          "decoded PDF is empty",
+          "payload is not a PDF (missing %PDF- magic bytes)"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:804",
+          "tui_gateway/prompt_attachments.py:55",
+          "tui_gateway/prompt_attachments.py:57"
+        ]
+      },
+      {
+        "code": 4018,
+        "messages": [
+          "PDF too large; cap is {\u2026} MB",
+          "{\u2026} too large ({\u2026} bytes; cap is {\u2026} MB)"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:819",
+          "tui_gateway/prompt_attachments.py:60"
+        ]
+      },
+      {
+        "code": 4019,
+        "messages": [
+          "page range exceeds cap of {\u2026} pages per attach call"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:837"
+        ]
+      },
+      {
+        "code": 5028,
+        "messages": [
+          "pdftoppm failed: {\u2026}",
+          "pdftoppm not installed (poppler-utils package required)",
+          "pdftoppm produced no pages (corrupt PDF?)",
+          "pdftoppm timed out (>120s)"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:853",
+          "tui_gateway/methods_prompt.py:877",
+          "tui_gateway/methods_prompt.py:880",
+          "tui_gateway/methods_prompt.py:883"
+        ]
+      }
+    ],
+    "pet.cancel": [],
+    "pet.cells": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.disable": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.export": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.gallery": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.generate": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing prompt",
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1557",
+          "tui_gateway/methods_session.py:173",
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1603",
+          "tui_gateway/methods_session.py:173",
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.generate.status": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.hatch": [
+      {
+        "code": 4004,
+        "messages": [
+          "draft expired \u2014 generate again",
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1613",
+          "tui_gateway/methods_session.py:1621",
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1625",
+          "tui_gateway/methods_session.py:1642",
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.info": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.info.meta": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.remove": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.rename": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing name",
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1484",
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "pet.rename failed",
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1487",
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.scale": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1516",
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.select": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "could not adopt '{\u2026}': {\u2026}",
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1444",
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "pet.thumb": [
+      {
+        "code": 4004,
+        "messages": [
+          "missing slug"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:183"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:189"
+        ]
+      }
+    ],
+    "ping": [],
+    "plugins.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again.",
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70",
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "plugins.manage": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4017,
+        "messages": [
+          "unknown {\u2026} action: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1275"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5026,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "preview.restart": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4012,
+        "messages": [
+          "url required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1082"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      },
+      {
+        "code": 5035,
+        "messages": [
+          "backend is retiring; reconnect to continue"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:999"
+        ]
+      }
+    ],
+    "process.kill": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4012,
+        "messages": [
+          "process_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:274"
+        ]
+      },
+      {
+        "code": 4044,
+        "messages": [
+          "no such process: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:278"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5010,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "process.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5010,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "process.stop": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5010,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "profiles.configure": [
+      {
+        "code": 4063,
+        "messages": [
+          "name required"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:73"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:78",
+          "tui_gateway/methods_profiles.py:80"
+        ]
+      },
+      {
+        "code": 5064,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:28"
+        ]
+      }
+    ],
+    "profiles.create": [
+      {
+        "code": 4061,
+        "messages": [
+          "name required"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:392"
+        ]
+      },
+      {
+        "code": 4062,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:404"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:406"
+        ]
+      }
+    ],
+    "profiles.describe": [
+      {
+        "code": 4063,
+        "messages": [
+          "name required"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:73"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:78",
+          "tui_gateway/methods_profiles.py:80"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:28"
+        ]
+      }
+    ],
+    "profiles.get_asset": [
+      {
+        "code": 4063,
+        "messages": [
+          "name required"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:73"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:78",
+          "tui_gateway/methods_profiles.py:80"
+        ]
+      },
+      {
+        "code": 5066,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:28"
+        ]
+      }
+    ],
+    "profiles.list": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:28"
+        ]
+      }
+    ],
+    "profiles.remember_onboarding": [
+      {
+        "code": 5067,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:28"
+        ]
+      }
+    ],
+    "profiles.set_asset": [
+      {
+        "code": 4063,
+        "messages": [
+          "name required"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:663",
+          "tui_gateway/methods_profiles.py:73"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:78",
+          "tui_gateway/methods_profiles.py:80"
+        ]
+      },
+      {
+        "code": 4066,
+        "messages": [
+          "unknown asset '{\u2026}' (supported: avatar)"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:665"
+        ]
+      },
+      {
+        "code": 4067,
+        "messages": [
+          "data required (data URL or base64)"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:676"
+        ]
+      },
+      {
+        "code": 4068,
+        "messages": [
+          "data is not valid base64"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:681"
+        ]
+      },
+      {
+        "code": 4069,
+        "messages": [
+          "asset too large ({\u2026} bytes; max 2MB)"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:683"
+        ]
+      },
+      {
+        "code": 4070,
+        "messages": [
+          "unsupported image format (PNG/JPEG/WebP only)"
+        ],
+        "sites": [
+          "tui_gateway/methods_profiles.py:686"
+        ]
+      },
+      {
+        "code": 5065,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_profiles.py:28"
+        ]
+      }
+    ],
+    "project.facts": [],
+    "projects.add_folder": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.archive": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.create": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.delete": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.discover_repos": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_config.py:22"
+        ]
+      }
+    ],
+    "projects.for_cwd": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.get": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.list": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.project_sessions": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_config.py:22"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [
+          "project_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_config.py:105"
+        ]
+      }
+    ],
+    "projects.record_repos": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_config.py:22"
+        ]
+      }
+    ],
+    "projects.remove_folder": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.set_active": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.set_primary": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "projects.tree": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_config.py:22"
+        ]
+      }
+    ],
+    "projects.update": [
+      {
+        "code": 5061,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:43"
+        ]
+      },
+      {
+        "code": 5062,
+        "messages": [
+          "no such project"
+        ],
+        "sites": [
+          "tui_gateway/methods_projects.py:39"
+        ]
+      },
+      {
+        "code": 5063,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_projects.py:41"
+        ]
+      }
+    ],
+    "prompt.background": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4012,
+        "messages": [
+          "text required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1010"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      },
+      {
+        "code": 5035,
+        "messages": [
+          "backend is retiring; reconnect to continue"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:999"
+        ]
+      }
+    ],
+    "prompt.btw": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4012,
+        "messages": [
+          "text required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1010"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      },
+      {
+        "code": 5035,
+        "messages": [
+          "backend is retiring; reconnect to continue"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:999"
+        ]
+      }
+    ],
+    "prompt.submit": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "confirm_truncate requires truncate_before_user_ordinal, truncate_before_message_id, or truncate_before_row_id",
+          "ordinal-only truncation is unsafe for durable session history; include truncate_before_row_id",
+          "{\u2026} must be an integer"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:131",
+          "tui_gateway/methods_prompt.py:342",
+          "tui_gateway/methods_prompt.py:542"
+        ]
+      },
+      {
+        "code": 4007,
+        "messages": [
+          "session no longer live; retry resume"
+        ],
+        "sites": [
+          "tui_gateway/session_lifecycle.py:696"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [
+          "session busy",
+          "session disconnect interrupt settling",
+          "subagent still running \u2014 wait for it to finish"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:540",
+          "tui_gateway/methods_prompt.py:650",
+          "tui_gateway/session_lifecycle.py:698"
+        ]
+      },
+      {
+        "code": 4018,
+        "messages": [
+          "target user message is no longer in session history"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:288"
+        ]
+      },
+      {
+        "code": 4028,
+        "messages": [
+          "truncation would erase the entire session transcript; resubmit with confirm_empty_truncate=true if this is intended"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:371"
+        ]
+      },
+      {
+        "code": 4029,
+        "messages": [
+          "truncation parameters require confirm_truncate=true; an ordinary prompt.submit must not drop session history (update your Hermes client if a rewind was intended)"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:263"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "truncate_before_user_ordinal ({\u2026}) does not match {\u2026} target turn ({\u2026})"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:323"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_prompt.py:607"
+        ]
+      },
+      {
+        "code": 4091,
+        "messages": [
+          "hosted room member session is busy"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:641"
+        ]
+      },
+      {
+        "code": 4120,
+        "messages": [
+          "hosted room turns require a bot_room session",
+          "invalid hosted room turn proof"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:196",
+          "tui_gateway/methods_prompt.py:203"
+        ]
+      },
+      {
+        "code": 4121,
+        "messages": [
+          "hosted room turns do not support isolated compute workers yet"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:622"
+        ]
+      },
+      {
+        "code": 4122,
+        "messages": [
+          "This room is managed by {\u2026}. Update Hermes Desktop to continue it."
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:236"
+        ]
+      },
+      {
+        "code": 4124,
+        "messages": [
+          "turn author is stamped by the gateway, never by a client"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:593"
+        ]
+      },
+      {
+        "code": 5008,
+        "messages": [
+          "failed to persist history truncation: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:420"
+        ]
+      },
+      {
+        "code": 5019,
+        "messages": [
+          "compute-host dispatch failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/compute_host_bridge.py:288"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "agent initialization timed out after {\u2026}s \u2014 your message was not sent; retry once the session is ready"
+        ],
+        "sites": [
+          "tui_gateway/server.py:934",
+          "tui_gateway/server.py:939",
+          "tui_gateway/server.py:948"
+        ]
+      },
+      {
+        "code": 5035,
+        "messages": [
+          "backend is retiring; reconnect to continue"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:536"
+        ]
+      },
+      {
+        "code": 5070,
+        "messages": [
+          "Session storage could not be written, so this message was not saved: the disk is full. Free some disk space, then send your message again."
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:467"
+        ]
+      },
+      {
+        "code": 5071,
+        "messages": [
+          "Session storage could not be written, so this message was not saved. Cause: {\u2026}. {\u2026} Then send your message again."
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:474"
+        ]
+      },
+      {
+        "code": 5072,
+        "messages": [
+          "Session storage is unavailable, so this message was not saved. Cause: {\u2026}. {\u2026} Then send your message again."
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:455"
+        ]
+      },
+      {
+        "code": 5122,
+        "messages": [
+          "Could not verify this group. Try again after the gateway recovers."
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:228",
+          "tui_gateway/methods_prompt.py:233"
+        ]
+      }
+    ],
+    "reload.env": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5015,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "reload.mcp": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5015,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5019,
+        "messages": [
+          "compute-host reload_mcp failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:346"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "request.answer": [
+      {
+        "code": 4002,
+        "messages": [
+          "id and an object result required"
+        ],
+        "sites": [
+          "tui_gateway/methods_prompt.py:1170"
+        ]
+      }
+    ],
+    "rollback.diff": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4014,
+        "messages": [
+          "hash required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1055"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5022,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1060",
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "rollback.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5020,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "rollback.restore": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_tools.py:1032"
+        ]
+      },
+      {
+        "code": 4014,
+        "messages": [
+          "hash required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1028"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5021,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.activate": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4007,
+        "messages": [
+          "session no longer live; retry resume"
+        ],
+        "sites": [
+          "tui_gateway/session_lifecycle.py:696"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [
+          "session disconnect interrupt settling"
+        ],
+        "sites": [
+          "tui_gateway/session_lifecycle.py:698"
+        ]
+      }
+    ],
+    "session.active_list": [
+      {
+        "code": 5036,
+        "messages": [
+          "could not enumerate active sessions: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:148"
+        ]
+      }
+    ],
+    "session.branch": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4008,
+        "messages": [
+          "nothing to branch \u2014 send a message first"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2085"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "agent init failed on branch: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2102"
+        ]
+      },
+      {
+        "code": 5008,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}",
+          "branch failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2098",
+          "tui_gateway/server.py:507"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.branch_stored": [
+      {
+        "code": -32602,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:343"
+        ]
+      },
+      {
+        "code": 4008,
+        "messages": [
+          "nothing to branch \u2014 send a message first",
+          "nothing to branch \u2014 {\u2026}",
+          "parent_session_id is required when copying parent history"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:350",
+          "tui_gateway/methods_session.py:360",
+          "tui_gateway/methods_session.py:363"
+        ]
+      },
+      {
+        "code": 5008,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.branch_whole": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4008,
+        "messages": [
+          "nothing to branch \u2014 send a message first"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2085"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "agent init failed on branch: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2102"
+        ]
+      },
+      {
+        "code": 5008,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}",
+          "branch failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2098",
+          "tui_gateway/server.py:507"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.close": [],
+    "session.compress": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:1854",
+          "tui_gateway/methods_session.py:1965"
+        ]
+      },
+      {
+        "code": 5005,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:1976"
+        ]
+      },
+      {
+        "code": 5019,
+        "messages": [
+          "compute-host compress failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1890"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.context_breakdown": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "Could not compute context breakdown: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1325"
+        ]
+      }
+    ],
+    "session.control": [
+      {
+        "code": 4001,
+        "messages": [
+          "session has no stored key",
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_control.py:278",
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "action is required",
+          "args must be an object",
+          "gate actions are not allowed through session.control",
+          "subgoal index must be >= 1",
+          "subgoal index must be an integer",
+          "subgoal text is required",
+          "unknown action: {\u2026}",
+          "unknown heartbeat action: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_control.py:257",
+          "tui_gateway/methods_session_control.py:259",
+          "tui_gateway/methods_session_control.py:261",
+          "tui_gateway/methods_session_control.py:266",
+          "tui_gateway/methods_session_control.py:287",
+          "tui_gateway/methods_session_control.py:312",
+          "tui_gateway/methods_session_control.py:317",
+          "tui_gateway/methods_session_control.py:319",
+          "tui_gateway/methods_session_control.py:375"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "command.dispatch unavailable",
+          "dispatch failed: {\u2026}",
+          "session.control snapshot failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_control.py:296",
+          "tui_gateway/methods_session_control.py:328",
+          "tui_gateway/methods_session_control.py:333"
+        ]
+      }
+    ],
+    "session.control.read": [
+      {
+        "code": 4001,
+        "messages": [
+          "session has no stored key",
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_control.py:243",
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "session.control.read failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_control.py:248"
+        ]
+      }
+    ],
+    "session.create": [
+      {
+        "code": -32602,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:343"
+        ]
+      },
+      {
+        "code": 4008,
+        "messages": [
+          "nothing to branch \u2014 send a message first",
+          "nothing to branch \u2014 {\u2026}",
+          "parent_session_id is required when copying parent history"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:350",
+          "tui_gateway/methods_session.py:360",
+          "tui_gateway/methods_session.py:363"
+        ]
+      },
+      {
+        "code": 5008,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.cwd.set": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [
+          "session busy"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:953"
+        ]
+      },
+      {
+        "code": 4016,
+        "messages": [
+          "cwd required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:955"
+        ]
+      },
+      {
+        "code": 4017,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:959"
+        ]
+      }
+    ],
+    "session.delete": [
+      {
+        "code": 4006,
+        "messages": [
+          "session_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1037"
+        ]
+      },
+      {
+        "code": 4007,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1052"
+        ]
+      },
+      {
+        "code": 4023,
+        "messages": [
+          "cannot delete an active session"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1042"
+        ]
+      },
+      {
+        "code": 5036,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}",
+          "could not enumerate active sessions: {\u2026}",
+          "delete failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1051",
+          "tui_gateway/methods_session.py:148",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.events.since": [
+      {
+        "code": -32602,
+        "messages": [
+          "invalid params: last_seen must be an integer"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2331"
+        ]
+      }
+    ],
+    "session.events.stats": [],
+    "session.foreign.import": [
+      {
+        "code": -32602,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session_foreign.py:30"
+        ]
+      },
+      {
+        "code": -32000,
+        "messages": [
+          "Could not read this session on the backend",
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_foreign.py:32",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.foreign.list": [
+      {
+        "code": -32602,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session_foreign.py:15"
+        ]
+      },
+      {
+        "code": -32000,
+        "messages": [
+          "Could not read session folders on this backend"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_foreign.py:17"
+        ]
+      }
+    ],
+    "session.foreign.preview": [
+      {
+        "code": -32602,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session_foreign.py:30"
+        ]
+      },
+      {
+        "code": -32000,
+        "messages": [
+          "Could not read this session on the backend",
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session_foreign.py:32",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.history": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      }
+    ],
+    "session.interrupt": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5019,
+        "messages": [
+          "compute-host interrupt failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2140"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.list": [
+      {
+        "code": 5006,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:500",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.most_recent": [],
+    "session.redirect": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "text is required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2180"
+        ]
+      },
+      {
+        "code": 4010,
+        "messages": [
+          "agent does not support active-turn redirect"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2192"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2161"
+        ]
+      }
+    ],
+    "session.resume": [
+      {
+        "code": 4006,
+        "messages": [
+          "session_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:918"
+        ]
+      },
+      {
+        "code": 4007,
+        "messages": [
+          "session no longer live; retry resume",
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:703",
+          "tui_gateway/session_lifecycle.py:696"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [
+          "session disconnect interrupt settling"
+        ],
+        "sites": [
+          "tui_gateway/session_lifecycle.py:698"
+        ]
+      },
+      {
+        "code": 4130,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:736"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:795",
+          "tui_gateway/methods_session.py:840",
+          "tui_gateway/methods_session.py:870",
+          "tui_gateway/methods_session.py:907",
+          "tui_gateway/server.py:507"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.save": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 5011,
+        "messages": [
+          "compute-host session save failed: {\u2026}",
+          "compute-host session save returned an invalid response",
+          "failed to create save directory {\u2026}: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1854",
+          "tui_gateway/methods_session.py:1863",
+          "tui_gateway/methods_session.py:1867",
+          "tui_gateway/methods_session.py:1989",
+          "tui_gateway/methods_session.py:2006"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.set_hidden": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1127"
+        ]
+      },
+      {
+        "code": 5007,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1131",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.status": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      }
+    ],
+    "session.steer": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "text is required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2180"
+        ]
+      },
+      {
+        "code": 4010,
+        "messages": [
+          "agent does not support steer"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2192"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "{\u2026} failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2161"
+        ]
+      }
+    ],
+    "session.title": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4021,
+        "messages": [
+          "title required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1081"
+        ]
+      },
+      {
+        "code": 4022,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:1097"
+        ]
+      },
+      {
+        "code": 5007,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1099",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "session.undo": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4009,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_session.py:1833"
+        ]
+      },
+      {
+        "code": 5008,
+        "messages": [
+          "undo: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:1847"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "session.usage": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      }
+    ],
+    "session.workspace.move": [
+      {
+        "code": 4007,
+        "messages": [
+          "session not found",
+          "session_key required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:971",
+          "tui_gateway/methods_session.py:989"
+        ]
+      },
+      {
+        "code": 4016,
+        "messages": [
+          "cwd required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:973"
+        ]
+      },
+      {
+        "code": 4017,
+        "messages": [
+          "working directory does not exist: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:977",
+          "tui_gateway/methods_session.py:999"
+        ]
+      },
+      {
+        "code": 5007,
+        "messages": [
+          "Session storage is unavailable: {\u2026}. {\u2026}",
+          "move failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:994",
+          "tui_gateway/server.py:507"
+        ]
+      }
+    ],
+    "setup.runtime_check": [],
+    "setup.status": [
+      {
+        "code": 5016,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_config.py:306"
+        ]
+      }
+    ],
+    "shell.exec": [
+      {
+        "code": 4004,
+        "messages": [
+          "empty command"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1726"
+        ]
+      },
+      {
+        "code": 4005,
+        "messages": [
+          "blocked (hardline): {\u2026}. Use the agent for dangerous commands.",
+          "blocked: {\u2026}. Use the agent for dangerous commands."
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1731",
+          "tui_gateway/methods_tools.py:1734"
+        ]
+      },
+      {
+        "code": 5001,
+        "messages": [
+          "shell.exec unavailable: approval safety module not importable"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1736"
+        ]
+      },
+      {
+        "code": 5003,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_tools.py:208"
+        ]
+      },
+      {
+        "code": "dynamic",
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_tools.py:206"
+        ]
+      }
+    ],
+    "skills.manage": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4017,
+        "messages": [
+          "unknown {\u2026} action: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1275"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5024,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "skills.reload": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5025,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "slash.exec": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4004,
+        "messages": [
+          "empty command"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:944"
+        ]
+      },
+      {
+        "code": 4018,
+        "messages": [
+          "skill command: use command.dispatch for /{\u2026}",
+          "snapshot restore mutates live config/state; use command.dispatch for /snapshot restore"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:955",
+          "tui_gateway/methods_tools.py:963"
+        ]
+      },
+      {
+        "code": 5030,
+        "messages": [
+          "slash worker start failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:984",
+          "tui_gateway/methods_tools.py:996"
+        ]
+      }
+    ],
+    "spawn_tree.list": [],
+    "spawn_tree.load": [
+      {
+        "code": 4000,
+        "messages": [
+          "path required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2303"
+        ]
+      },
+      {
+        "code": 4030,
+        "messages": [
+          "path outside spawn-trees root: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2307"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "spawn_tree.load failed: snapshot is not a JSON object",
+          "spawn_tree.load failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2311",
+          "tui_gateway/methods_session.py:2313"
+        ]
+      }
+    ],
+    "spawn_tree.save": [
+      {
+        "code": 4000,
+        "messages": [
+          "subagents list required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2248"
+        ]
+      },
+      {
+        "code": 5000,
+        "messages": [
+          "spawn_tree.save failed: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2258"
+        ]
+      }
+    ],
+    "subagent.interrupt": [
+      {
+        "code": 4000,
+        "messages": [
+          "subagent_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_subagents.py:72"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_subagents.py:76"
+        ]
+      }
+    ],
+    "subagent.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_subagents.py:58"
+        ]
+      }
+    ],
+    "subagent.steer": [
+      {
+        "code": 4000,
+        "messages": [
+          "subagent_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2231"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4002,
+        "messages": [
+          "text is required"
+        ],
+        "sites": [
+          "tui_gateway/methods_session.py:2233"
+        ]
+      }
+    ],
+    "subagent.tail": [
+      {
+        "code": 4000,
+        "messages": [
+          "subagent_id required"
+        ],
+        "sites": [
+          "tui_gateway/methods_subagents.py:95"
+        ]
+      },
+      {
+        "code": 4001,
+        "messages": [
+          "session not found or not owned by this transport"
+        ],
+        "sites": [
+          "tui_gateway/methods_subagents.py:98"
+        ]
+      }
+    ],
+    "subscription.change": [],
+    "subscription.preview": [],
+    "subscription.resume": [],
+    "subscription.state": [],
+    "subscription.upgrade": [],
+    "system.battery": [],
+    "terminal.resize": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      }
+    ],
+    "tools.configure": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4017,
+        "messages": [
+          "unknown tools action: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1158"
+        ]
+      },
+      {
+        "code": 4018,
+        "messages": [
+          "names required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:1160"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 4090,
+        "messages": [
+          "server '{\u2026}' is provided by plugin '{\u2026}' and cannot be modified"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:128"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      },
+      {
+        "code": 5035,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      }
+    ],
+    "tools.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5031,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "tools.show": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+        ],
+        "sites": [
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      },
+      {
+        "code": 5034,
+        "messages": [
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70"
+        ]
+      }
+    ],
+    "toolsets.list": [
+      {
+        "code": 4001,
+        "messages": [
+          "session not found"
+        ],
+        "sites": [
+          "tui_gateway/server.py:1166"
+        ]
+      },
+      {
+        "code": 4063,
+        "messages": [
+          "{\u2026} required"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:43"
+        ]
+      },
+      {
+        "code": 4064,
+        "messages": [
+          "profile '{\u2026}' not found"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:60"
+        ]
+      },
+      {
+        "code": 5032,
+        "messages": [
+          "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again.",
+          "{\u2026}{\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_tools.py:65",
+          "tui_gateway/methods_tools.py:70",
+          "tui_gateway/server.py:888",
+          "tui_gateway/server.py:889"
+        ]
+      }
+    ],
+    "usage.bars": [],
+    "vault.add": [
+      {
+        "code": 5095,
+        "messages": [
+          "secret payload is required"
+        ],
+        "sites": [
+          "tui_gateway/methods_vault.py:152",
+          "tui_gateway/methods_vault.py:163",
+          "tui_gateway/methods_vault.py:165"
+        ]
+      }
+    ],
+    "vault.list": [
+      {
+        "code": 5095,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_vault.py:57"
+        ]
+      }
+    ],
+    "vault.lock": [],
+    "vault.remove": [
+      {
+        "code": 5095,
+        "messages": [
+          "id is required"
+        ],
+        "sites": [
+          "tui_gateway/methods_vault.py:177",
+          "tui_gateway/methods_vault.py:180"
+        ]
+      }
+    ],
+    "vault.source.set": [
+      {
+        "code": 5095,
+        "messages": [
+          "unknown vault source: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_vault.py:88"
+        ]
+      }
+    ],
+    "vault.sources": [],
+    "vault.unlock": [
+      {
+        "code": 5095,
+        "messages": [
+          "master password is required",
+          "{\u2026} is not an enabled password manager"
+        ],
+        "sites": [
+          "tui_gateway/methods_vault.py:112",
+          "tui_gateway/methods_vault.py:114",
+          "tui_gateway/methods_vault.py:118"
+        ]
+      }
+    ],
+    "verification.status": [],
+    "voice.record": [
+      {
+        "code": 4015,
+        "messages": [
+          "voice mode is off \u2014 enable with /voice on"
+        ],
+        "sites": [
+          "tui_gateway/methods_voice.py:729"
+        ]
+      },
+      {
+        "code": 4019,
+        "messages": [
+          "unknown voice action: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_voice.py:721"
+        ]
+      },
+      {
+        "code": 5025,
+        "messages": [
+          "voice module not available \u2014 install audio dependencies"
+        ],
+        "sites": [
+          "tui_gateway/methods_voice.py:772",
+          "tui_gateway/methods_voice.py:773"
+        ]
+      }
+    ],
+    "voice.toggle": [
+      {
+        "code": 4013,
+        "messages": [
+          "unknown voice action: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_voice.py:690"
+        ]
+      }
+    ],
+    "voice.tts": [
+      {
+        "code": 4020,
+        "messages": [
+          "text required"
+        ],
+        "sites": [
+          "tui_gateway/methods_voice.py:780"
+        ]
+      },
+      {
+        "code": 5026,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_voice.py:784"
+        ]
+      }
+    ],
+    "wake.feed": [
+      {
+        "code": 4001,
+        "messages": [
+          "invalid base64 pcm: {\u2026}",
+          "pcm frame too large",
+          "wake.feed only accepts 16 kHz PCM",
+          "wake.feed requires base64 pcm"
+        ],
+        "sites": [
+          "tui_gateway/methods_voice.py:602",
+          "tui_gateway/methods_voice.py:607",
+          "tui_gateway/methods_voice.py:611",
+          "tui_gateway/methods_voice.py:613"
+        ]
+      },
+      {
+        "code": 5026,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_voice.py:619"
+        ]
+      }
+    ],
+    "wake.pause": [],
+    "wake.resume": [],
+    "wake.start": [
+      {
+        "code": 5026,
+        "messages": [
+          "wake module unavailable: {\u2026}"
+        ],
+        "sites": [
+          "tui_gateway/methods_voice.py:476",
+          "tui_gateway/methods_voice.py:509"
+        ]
+      }
+    ],
+    "wake.status": [
+      {
+        "code": 5026,
+        "messages": [],
+        "sites": [
+          "tui_gateway/methods_voice.py:593"
+        ]
+      }
+    ],
+    "wake.stop": []
+  },
+  "ref": "v0.21.5"
+}

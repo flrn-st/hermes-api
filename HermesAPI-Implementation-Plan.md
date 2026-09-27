@@ -74,10 +74,10 @@ Wire envelopes (from `tui_gateway/server.py`, `tui_gateway/server_requests.py`):
 
 ### Current iOS app (this repo) — for later integration
 
-- Hand-written client: `HermesAgent/Networking/HermesHTTPClient.swift` (+ `+Audio`, `+Kanban`,
-  `+Mail`), `HermesAgent/Networking/HermesTransport.swift`, `HermesAgent/Gateway/*`
+- Hand-written client: `Cadu/Networking/HermesHTTPClient.swift` (+ `+Audio`, `+Kanban`,
+  `+Mail`), `Cadu/Networking/HermesTransport.swift`, `Cadu/Gateway/*`
   (`GatewayClient`, `JSONRPC`, `RPCRequest`, `GatewayEvent` with 19 custom decoders, `EventReplay`),
-  models in `HermesAgent/Models/`.
+  models in `Cadu/Models/`.
 - **Known drift:** the app uses `approval.request`, `clarify.request`, `clarify.expire`,
   `mcp.setup.request`, `mcp.setup.respond`, `tool.progress` — none exist in the current contract
   (approvals/clarify became server→client requests). Likely broken against Hermes ≥ `v2026.9.14`.
@@ -308,7 +308,7 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 - `spec/refs.yaml` with `v0.21.4: v2026.9.21` only.
 - Spikes (write findings to `docs/findings.md`):
   1. Dashboard auth + WebSocket ticket flow at the target ref (read `hermes_cli/web_server.py`,
-     `tui_gateway/ws.py`; compare with this app's `HermesAgent/Gateway/GatewayClient.swift`).
+     `tui_gateway/ws.py`; compare with this app's `Cadu/Gateway/GatewayClient.swift`).
   2. How to point Hermes at a custom OpenAI-compatible base URL (stub LLM).
   3. How plugin routers are mounted and how to include them in `app.openapi()` offline.
   4. How to run Hermes headless in Docker at an arbitrary ref.
@@ -355,7 +355,7 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 - `tools/apply_overlay.py`: merge `spec/overlay/rest/*.yaml` → `spec/out/<ref>/openapi.json`.
   Every overlay action carries `x-source: <file>:<line>` and `x-handler-hash`.
 - Order of work: operations used by the iOS app first (collect paths from
-  `HermesAgent/Networking/HermesHTTPClient*.swift`, `HermesAgent/Kanban/`, `HermesAgent/Mail/`),
+  `Cadu/Networking/HermesHTTPClient*.swift`, `Cadu/Kanban/`, `Cadu/Mail/`),
   then the rest to 100%.
 - Extend the generator for OpenAPI (paths, params, request/response bodies); REST runtime on
   `HTTPTransport`. Streaming/binary endpoints (upload-stream, download) may be hand-written in
@@ -383,7 +383,7 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 
 1. Add `HermesAPI` as a local path package during development.
 2. Fix the approval/clarify/mcp.setup drift using generated `ServerRequest` types.
-3. Replace `HermesAgent/Gateway/*` wire types with `HermesAPI`, keeping `ChatSession` logic; inject a
+3. Replace `Cadu/Gateway/*` wire types with `HermesAPI`, keeping `ChatSession` logic; inject a
    transport that preserves `HermesTransport` behaviour (trust policy, cookies, headers, SSH).
 4. Migrate REST area by area behind `HermesHTTPClient`.
 5. Switch to the tagged release.

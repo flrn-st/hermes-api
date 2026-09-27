@@ -40,7 +40,10 @@ def _rest_scenario(home: Path) -> dict:
                 "GIT_COMMITTER_NAME": "HermesAPI", "GIT_COMMITTER_EMAIL": "hermes-api@example.invalid"}
     git_env = {**os.environ, **identity}
     (repo / "README.md").write_text("# Scenario\n", encoding="utf-8")
-    for command in (["init", "-q", "-b", "main"], ["add", "README.md"], ["commit", "-q", "-m", "Initial commit"]):
+    # A repository-local identity, so the dashboard's own `git commit` works on hosts without one.
+    for command in (["init", "-q", "-b", "main"], ["config", "user.name", identity["GIT_AUTHOR_NAME"]],
+                    ["config", "user.email", identity["GIT_AUTHOR_EMAIL"]], ["add", "README.md"],
+                    ["commit", "-q", "-m", "Initial commit"]):
         subprocess.run(["git", *command], cwd=repo, env=git_env, check=True, capture_output=True)
     values = {"home": str(home), "repo": str(repo)}
 

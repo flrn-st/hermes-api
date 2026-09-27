@@ -22,6 +22,7 @@ import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
 import hermes.api.generated.gateway.GatewayEventPayload
 import hermes.api.generated.gateway.PingParams
+import hermes.api.generated.gateway.PingResult
 import hermes.api.generated.gateway.ServerRequestResult
 import hermes.api.generated.gateway.SessionCloseParams
 import hermes.api.generated.gateway.SessionCreateParams
@@ -53,9 +54,11 @@ class HermesGatewayTest {
         val outbound = Channel<String>(Channel.UNLIMITED)
         val heartbeats = Channel<String>(Channel.UNLIMITED)
         @Volatile var isClosed = false
+        /** The socket died, but its reader has not noticed: sends fail, reads still wait. */
+        @Volatile var sendsFail = false
 
         override suspend fun send(text: String) {
-            check(!isClosed) { "closed" }
+            check(!isClosed && !sendsFail) { "closed" }
             val frame = Json.parseToJsonElement(text).jsonObject
             when (frame["method"]?.jsonPrimitive?.content) {
                 "client.capabilities" ->
@@ -207,6 +210,58 @@ class HermesGatewayTest {
         assertEquals("ping", frame.method())
         second.inbound.send(result(frame, """{"pong":true}"""))
         assertTrue(probe.await().pong)
+        gateway.disconnect()
+    }
+
+    @Test
+    fun readOnlyCallsAreRepeatedAfterALostConnection() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val gateway = client(sockets(first, second), timeout = 5_000)
+        gateway.connect()
+        val call = async { gateway.methods.ping(PingParams()) }
+        assertEquals("ping", first.sent().method())
+        first.sever()
+        val frame = second.sent()
+        assertEquals("ping", frame.method())
+        second.inbound.send(result(frame, """{"pong":true}"""))
+        assertTrue(call.await().pong)
+        gateway.disconnect()
+    }
+
+    @Test
+    fun callsThatMayHaveRunAreNotRepeated() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val gateway = client(sockets(first, second), timeout = 5_000)
+        gateway.connect()
+        val call = async { runCatching { gateway.call("probe", PingParams(), PingParams.serializer(), PingResult.serializer()) } }
+        assertEquals("probe", first.sent().method())
+        first.sever()
+        assertIs<HermesGatewayException.Transport>(call.await().exceptionOrNull())
+        // The next frame on the new socket is the next call, not a repeat of the one that may have run.
+        gateway.awaitState { it == GatewayConnectionState.Connected }
+        val next = async { gateway.methods.ping(PingParams()) }
+        val frame = second.sent()
+        assertEquals("ping", frame.method())
+        second.inbound.send(result(frame, """{"pong":true}"""))
+        next.await()
+        gateway.disconnect()
+    }
+
+    @Test
+    fun undeliveredCallsAreSentOnTheNextConnection() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val gateway = client(sockets(first, second), timeout = 5_000)
+        gateway.connect()
+        first.sendsFail = true
+        val call = async { gateway.call("probe", PingParams(), PingParams.serializer(), PingResult.serializer()) }
+        val frame = second.sent()
+        assertEquals("probe", frame.method())
+        second.inbound.send(result(frame, """{"pong":true}"""))
+        assertTrue(call.await().pong)
+        assertTrue(first.isClosed)
         gateway.disconnect()
     }
 

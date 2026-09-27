@@ -81,7 +81,8 @@ gateway.connect()
 | Replay window exceeded (512 events or 4 MiB per session) | Reports `.replayTruncated`; reload the transcript with `session.history`. |
 | Credential rejected (HTTP 401/403), incompatible server | Stops retrying and reports `.failed(error)`; call `connect()` again once fixed. |
 | Hermes is retiring the backend (RPC error 5035) | Reconnects. |
-| Calls made while reconnecting | Wait for the connection, up to their timeout. A call in flight when a socket dies fails with a transport error: Hermes may or may not have run it, so the client never retries it. |
+| Calls made while reconnecting | Wait for the connection, up to their timeout. |
+| Calls in flight when a socket dies | Sent again on the next connection when the frame never left, or when the method only reads state (`HermesGatewayContract.readOnlyMethods`, reviewed in `spec/gateway-read-only.yaml`), all within the call's timeout. Any other call whose response was lost fails with a transport error, because Hermes may already have run it: after `prompt.submit` fails that way, watch the session's events (reconnect replays them) and submit again only if the turn never starts. |
 | Slow event consumer | Events are buffered per subscriber; a slow consumer never stalls the socket or its heartbeat. |
 | Large replies | Messages up to 64 MiB (URLSession's default of 1 MiB is raised). |
 

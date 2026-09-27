@@ -9,4 +9,7 @@ public object HermesGatewayContract {
     public const val upstreamTag: String = {{ tag_literal }}
     public const val desktopContract: Int = {{ desktop_contract }}
     public val supportedContractRange: IntRange = {{ desktop_contract }}..{{ desktop_contract }}
+    /** Methods that only read state (`spec/gateway-read-only.yaml`); the gateway repeats them after a
+     *  reconnect when a dropped connection lost their response. */
+    public val readOnlyMethods: Set<String> = setOf({{ read_only }})
 }

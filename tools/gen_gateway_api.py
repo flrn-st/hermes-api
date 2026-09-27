@@ -6,6 +6,7 @@ import argparse
 import json
 from collections import defaultdict
 
+import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from tools.gen_gateway_models import (
@@ -91,6 +92,11 @@ def generate(ref: str, *, check: bool = False) -> int:
     contract = json.loads((ROOT / "spec" / "out" / ref / "openrpc.json").read_text())
     meta = json.loads((ROOT / "spec" / "out" / ref / "meta.json").read_text())
     methods, events = _views(contract)
+    read_only = yaml.safe_load((ROOT / "spec" / "gateway-read-only.yaml").read_text(encoding="utf-8"))["methods"]
+    unknown = sorted(set(read_only) - {item["name"] for item in contract["methods"]})
+    if unknown:
+        raise ValueError(f"spec/gateway-read-only.yaml names methods the contract lacks: {unknown}")
+    read_only_literals = ", ".join(_literal(name) for name in sorted(read_only))
     env = Environment(loader=FileSystemLoader(TEMPLATES), undefined=StrictUndefined,
                       trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     outputs = {
@@ -101,11 +107,11 @@ def generate(ref: str, *, check: bool = False) -> int:
         SWIFT_OUT / "GatewayRelease.swift": env.get_template("swift_release.j2").render(
             ref_literal=_literal(meta["ref"]), version_literal=_literal(meta["hermes_version"]),
             tag_literal=_literal(meta["tag"]),
-            desktop_contract=meta["desktop_contract"]),
+            desktop_contract=meta["desktop_contract"], read_only=read_only_literals),
         KOTLIN_OUT / "GatewayRelease.kt": env.get_template("kotlin_release.j2").render(
             ref_literal=_literal(meta["ref"]), version_literal=_literal(meta["hermes_version"]),
             tag_literal=_literal(meta["tag"]),
-            desktop_contract=meta["desktop_contract"]),
+            desktop_contract=meta["desktop_contract"], read_only=read_only_literals),
     }
     manifest = {
         "methods": [

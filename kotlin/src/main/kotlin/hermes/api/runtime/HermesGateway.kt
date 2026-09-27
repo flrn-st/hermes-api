@@ -380,9 +380,47 @@ public class HermesGateway(
     ): Result = call(method, params, paramsSerializer, resultSerializer, configuration.requestTimeoutMillis,
         waitsForConnection = true)
 
-    /** App calls made while reconnecting wait for the connection, up to their timeout. Calls in flight
-     *  when a socket dies fail with [HermesGatewayException.Transport]: Hermes may or may not have run them. */
+    /** App calls made while reconnecting wait for the connection, up to their timeout. When the connection
+     *  drops under a call, the call is sent again on the next connection if Hermes never received it, or if it
+     *  only reads state ([HermesGatewayContract.readOnlyMethods]). Any other call whose response was lost fails
+     *  with [HermesGatewayException.Transport]: Hermes may or may not have run it. */
     private suspend fun <Params : Any, Result : Any> call(
+        method: String,
+        params: Params,
+        paramsSerializer: KSerializer<Params>,
+        resultSerializer: KSerializer<Result>,
+        timeoutMillis: Long,
+        waitsForConnection: Boolean,
+    ): Result {
+        if (!waitsForConnection) {
+            return try { attemptCall(method, params, paramsSerializer, resultSerializer, timeoutMillis, false) }
+            catch (loss: ConnectionLoss) { throw loss.error }
+        }
+        return try {
+            withTimeout(timeoutMillis) {
+                var attempt = 1
+                while (true) {
+                    try {
+                        return@withTimeout attemptCall(method, params, paramsSerializer, resultSerializer, timeoutMillis, true)
+                    } catch (loss: ConnectionLoss) {
+                        val repeatable = !loss.delivered || method in HermesGatewayContract.readOnlyMethods
+                        if (!repeatable || attempt >= 6) throw loss.error
+                        attempt += 1
+                        configuration.logger.log(GatewayLogLevel.INFO, "Repeating $method after a lost connection (attempt $attempt)")
+                    }
+                }
+                @Suppress("UNREACHABLE_CODE")
+                error("unreachable")
+            }
+        } catch (_: TimeoutCancellationException) {
+            throw HermesGatewayException.Timeout(method)
+        }
+    }
+
+    /** A call the connection dropped under; [delivered] is false when the frame never left. */
+    private class ConnectionLoss(val delivered: Boolean, val error: HermesGatewayException) : Exception(error.message)
+
+    private suspend fun <Params : Any, Result : Any> attemptCall(
         method: String,
         params: Params,
         paramsSerializer: KSerializer<Params>,
@@ -411,9 +449,19 @@ public class HermesGateway(
             }
             try { connection.send(frame.toString()) }
             catch (error: CancellationException) { throw error }
-            catch (error: Exception) { throw gatewayError(error) }
+            catch (error: Exception) {
+                // A socket that cannot send is dead even if its reader has not noticed yet.
+                val lost = gatewayError(error)
+                withContext(confined) { connectionLost(lost, current) }
+                throw ConnectionLoss(delivered = false, error = lost)
+            }
             val result = try { withTimeout(timeoutMillis) { deferred.await() } }
             catch (_: TimeoutCancellationException) { throw HermesGatewayException.Timeout(method) }
+            catch (error: HermesGatewayException.Transport) {
+                // The socket this call went out on is gone: the response was lost with it.
+                if (withContext(confined) { generation } != current) throw ConnectionLoss(delivered = true, error = error)
+                throw error
+            }
             validateContract(result)
             val decoded = try { json.decodeFromJsonElement(resultSerializer, result) }
             catch (error: Exception) { throw HermesGatewayException.Protocol("Cannot decode $method result: ${error.message}") }

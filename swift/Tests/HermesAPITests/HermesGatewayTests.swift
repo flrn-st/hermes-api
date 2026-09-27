@@ -618,6 +618,47 @@ private func createSession(
     await gateway.disconnect()
 }
 
+@Test func turnOfADroppedSessionKeepsStreamingFromTheReplayBuffer() async throws {
+    let first = TestSocket()
+    let second = TestSocket()
+    let gateway = client(SequenceTransport([first, second]))
+    try await gateway.connect()
+    try await createSession(gateway, on: first, id: "runtime-1", stored: "stored-1")
+    var events = gateway.events().makeAsyncIterator()
+    var recoveries = gateway.sessionRecoveries().makeAsyncIterator()
+    await first.inject(event("message.start", session: "runtime-1", seq: 1))
+    #expect(await events.next()?.seq == 1)
+    var sent = second.sent.makeAsyncIterator()
+    await first.sever()
+    // Hermes dropped the session while its turn kept writing to the replay buffer.
+    let (_, activateID) = try sentCall(try #require(await sent.next()))
+    await second.inject(error(activateID, code: 4001, "session not found"))
+    let replay = try #require(await sent.next())
+    let (method, replayID) = try sentCall(replay)
+    #expect(method == "session.events.since")
+    #expect(try sentParams(replay)["session_id"] as? String == "runtime-1")
+    await second.inject(result(replayID, #"{"events":[{"type":"message.delta","session_id":"runtime-1","seq":2,"payload":{"text":"a"}}],"latest_seq":2,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"#))
+    let (_, resumeID) = try sentCall(try #require(await sent.next()))
+    await second.inject(result(resumeID, #"{"session_id":"runtime-2","session_key":"stored-1","message_count":1,"messages":[],"info":{}}"#))
+    #expect(await recoveries.next() == .resumed(previousSessionID: "runtime-1", sessionID: "runtime-2", storedSessionID: "stored-1"))
+    #expect(await events.next()?.seq == 2)
+    // Connected again, the client keeps fetching the old id's buffer until the turn completes.
+    let drain = try #require(await sent.next())
+    let (drainMethod, drainID) = try sentCall(drain)
+    #expect(drainMethod == "session.events.since")
+    #expect(try sentParams(drain)["last_seen"] as? Int == 2)
+    await second.inject(result(drainID, #"{"events":[{"type":"message.complete","session_id":"runtime-1","seq":3,"payload":{"text":"ab"}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"#))
+    let complete = try #require(await events.next())
+    #expect(complete.type == "message.complete" && complete.sessionID == "runtime-1" && complete.replayed)
+    // The turn is over: the next frame is the caller's own call, not another fetch.
+    let ping = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }
+    let (next, pingID) = try sentCall(try #require(await sent.next()))
+    #expect(next == "ping")
+    await second.inject(result(pingID, #"{"pong":true}"#))
+    #expect(try await ping.value.pong)
+    await gateway.disconnect()
+}
+
 @Test func reconnectReportsSessionsItCannotRecover() async throws {
     let first = TestSocket()
     let second = TestSocket()
@@ -632,6 +673,10 @@ private func createSession(
     let (method, activateID) = try sentCall(try #require(await sent.next()))
     #expect(method == "session.activate")
     await second.inject(error(activateID, code: 4001, "session not found"))
+    // Its turn was still running, so the client first fetches what Hermes buffered for it.
+    let (replay, replayID) = try sentCall(try #require(await sent.next()))
+    #expect(replay == "session.events.since")
+    await second.inject(result(replayID, #"{"events":[],"latest_seq":4,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"#))
     // No stored id is known for a session only seen through events, so it cannot be resumed.
     #expect(await recoveries.next() == .unavailable(sessionID: "gone", reason: "session not found"))
     let ping = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }

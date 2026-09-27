@@ -116,6 +116,11 @@ public class HermesGateway(
     private var replayEpoch: String? = null
     private var hasConnected = false
     private val replayHold = mutableMapOf<String, MutableList<JsonObject>>()
+    /** Turns still streaming when Hermes dropped their session, by runtime id, with when draining began
+     *  (nanoTime). The reply keeps landing in Hermes' replay buffer under that id, so the client fetches it
+     *  until the turn ends. */
+    private val draining = mutableMapOf<String, Long>()
+    private var drainJob: Job? = null
 
     // Events leave the reader through an unbounded queue, so a slow collector delays delivery but never
     // stalls the socket (and with it heartbeat replies).
@@ -172,6 +177,8 @@ public class HermesGateway(
         monitor = null
         networkKnown = false
         generation++
+        drainJob?.cancel()
+        drainJob = null
         closeConnection(HermesGatewayException.Transport("Gateway disconnected"))
         publish(GatewayConnectionState.Idle)
     }
@@ -270,6 +277,7 @@ public class HermesGateway(
             logger.log(GatewayLogLevel.INFO, "Gateway connected")
             publish(GatewayConnectionState.Connected)
             heartbeat = scope.launch(confined) { heartbeatLoop(connection, current) }
+            startDraining()
         } catch (error: Throwable) {
             if (current == generation) {
                 generation++
@@ -672,7 +680,7 @@ public class HermesGateway(
     // Session tracking and recovery
 
     /** Sessions this client must rebind after a reconnect, whether or not they have emitted events yet. */
-    private fun trackedSessionIds(): Set<String> = sessions.keys + lastSequence.keys
+    private fun trackedSessionIds(): Set<String> = sessions.keys + lastSequence.keys - draining.keys
 
     private fun trackSession(method: String, params: JsonElement, result: JsonElement) {
         val arguments = params as? JsonObject ?: JsonObject(emptyMap())
@@ -731,9 +739,16 @@ public class HermesGateway(
             forgetSession(sessionId)
             mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, "Closed on disconnect"))
         } else {
-            when (val outcome = rebind(sessionId)) {
+            val outcome = rebind(sessionId)
+            logger.log(GatewayLogLevel.DEBUG, "Rebind $sessionId: $outcome")
+            when (outcome) {
                 Rebind.Bound -> replay(sessionId, connection, current)
-                is Rebind.Gone -> resume(sessionId, session, outcome.reason)
+                is Rebind.Gone -> {
+                    // Hermes dropped the session, but its turn may still be writing the reply to the replay
+                    // buffer under this id: deliver what is there before moving to a new runtime id.
+                    if (sessionId in activeTurns) replay(sessionId, connection, current)
+                    resume(sessionId, session, outcome.reason)
+                }
                 Rebind.Settling -> Unit
             }
         }
@@ -764,7 +779,7 @@ public class HermesGateway(
     private suspend fun resume(sessionId: String, session: TrackedSession, reason: String) {
         val storedId = session.storedId
         if (!configuration.resumesReclaimedSessions || storedId == null) {
-            forgetSession(sessionId)
+            retire(sessionId)
             mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, reason))
             return
         }
@@ -776,13 +791,66 @@ public class HermesGateway(
                     omitMessages = true),
                 SessionResumeParams.serializer(), SessionResumeResult.serializer(),
                 configuration.requestTimeoutMillis, waitsForConnection = false)
-            forgetSession(sessionId)
+            retire(sessionId)
             logger.log(GatewayLogLevel.INFO, "Resumed a reclaimed session under a new runtime id")
             mutableRecoveries.tryEmit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, storedId))
         } catch (error: HermesGatewayException.RPC) {
-            forgetSession(sessionId)
+            retire(sessionId)
             mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))
         }
+    }
+
+    /** Stops rebinding a runtime id Hermes dropped. A turn still streaming under it keeps its events flowing:
+     *  the client drains the replay buffer until the turn ends. */
+    private fun retire(sessionId: String) {
+        if (sessionId !in activeTurns) return forgetSession(sessionId)
+        sessions.remove(sessionId)
+        draining[sessionId] = System.nanoTime()
+    }
+
+    private fun startDraining() {
+        if (draining.isEmpty() || drainJob != null) return
+        drainJob = scope.launch(confined) {
+            try {
+                drainDetachedTurns()
+            } finally {
+                drainJob = null
+            }
+        }
+    }
+
+    /** Fetches the replay buffer of every drained turn while connected, until the turn completes, Hermes can
+     *  no longer replay it, or [DRAIN_LIMIT_NANOS] passes. */
+    private suspend fun drainDetachedTurns() {
+        while (draining.isNotEmpty()) {
+            delay(DRAIN_INTERVAL_MILLIS)
+            if (!ready) continue
+            for ((sessionId, started) in draining.toSortedMap()) {
+                if (sessionId !in activeTurns || System.nanoTime() - started > DRAIN_LIMIT_NANOS) {
+                    finishDraining(sessionId)
+                    continue
+                }
+                try {
+                    val result = call("session.events.since",
+                        SessionEventsSinceParams(sessionId, lastSeen = Patch.Value(lastSequence[sessionId] ?: 0L)),
+                        SessionEventsSinceParams.serializer(), SessionEventsSinceResult.serializer(),
+                        RECOVERY_TIMEOUT_MILLIS, waitsForConnection = false)
+                    val restarted = replayEpoch != null && replayEpoch != result.epoch
+                    apply(result, sessionId)
+                    if (restarted || result.truncated) finishDraining(sessionId)
+                } catch (error: HermesGatewayException.RPC) {
+                    finishDraining(sessionId)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    // The connection dropped; draining continues once it is back.
+                }
+            }
+        }
+    }
+
+    private fun finishDraining(sessionId: String) {
+        if (draining.remove(sessionId) != null) forgetSession(sessionId)
     }
 
     private suspend fun replay(sessionId: String, connection: GatewayConnection, current: Int) {
@@ -797,6 +865,17 @@ public class HermesGateway(
             mutableRecoveries.tryEmit(GatewaySessionRecovery.ReplayTruncated(sessionId))
             return
         }
+        apply(result, sessionId)
+        result.openRequests.forEach {
+            handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current)
+        }
+    }
+
+    /** Delivers a page of replayed events, or reports the gap when Hermes no longer holds them. */
+    private fun apply(result: SessionEventsSinceResult, sessionId: String) {
+        logger.log(GatewayLogLevel.DEBUG, "Replay $sessionId after ${lastSequence[sessionId] ?: 0}: " +
+            "${result.events.size} events, latest ${result.latestSeq}, truncated ${result.truncated}, " +
+            "epoch ${if (result.epoch == replayEpoch) "same" else "changed"}")
         if (replayEpoch != null && replayEpoch != result.epoch) {
             resetWatermarks()
             replayEpoch = result.epoch
@@ -805,9 +884,6 @@ public class HermesGateway(
             mutableRecoveries.tryEmit(GatewaySessionRecovery.ReplayTruncated(sessionId))
         } else {
             result.events.forEach { handleEvent(JsonObject(it), true) }
-        }
-        result.openRequests.forEach {
-            handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current)
         }
     }
 
@@ -838,5 +914,8 @@ public class HermesGateway(
     private companion object {
         /** Recovery calls must not stall a reconnect behind a wedged backend. */
         const val RECOVERY_TIMEOUT_MILLIS = 10_000L
+        /** How often a detached turn's replay buffer is fetched, and for how long at most. */
+        const val DRAIN_INTERVAL_MILLIS = 1_000L
+        const val DRAIN_LIMIT_NANOS = 900_000_000_000L
     }
 }

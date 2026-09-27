@@ -7,6 +7,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import yaml
+
 from tools.fetch_spec import ROOT
 from tools.gateway_errors import load as load_errors
 from tools.ref_policy import require_release
@@ -130,6 +132,35 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
         entry["decode"] = entry["fixture"] and evidence["decode_swift"] and evidence["decode_kotlin"]
 
 
+CHECKS = ("typed", "generated", "fixture", "decode", "live_swift", "live_kotlin")
+KINDS = ("gateway_method", "server_request", "event", "rest")
+
+
+def _apply_exemptions(entries: list[dict], root: Path) -> None:
+    """Mark surfaces a human exempted from the release gate, and reject exemptions that no longer apply."""
+    path = root / "spec/exemptions.yaml"
+    listed = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("exemptions") or [] if path.exists() else []
+    by_key = {(entry["kind"], entry["name"]): entry for entry in entries}
+    problems = []
+    seen: set[tuple[str, str]] = set()
+    for item in listed:
+        key = (item.get("kind"), item.get("name"))
+        reason, reviewer = str(item.get("reason") or "").strip(), str(item.get("reviewed_by") or "").strip()
+        if key not in by_key:
+            problems.append(f"{key} is not a surface of this release")
+        elif key in seen:
+            problems.append(f"{key} is exempted twice")
+        elif not reason or not reviewer:
+            problems.append(f"{key} needs a reason and reviewed_by")
+        elif by_key[key]["complete"]:
+            problems.append(f"{key} is complete now; remove its exemption")
+        else:
+            by_key[key]["exempt"] = reason
+        seen.add(key)
+    if problems:
+        raise ValueError("spec/exemptions.yaml:\n  " + "\n  ".join(problems))
+
+
 def report(ref: str, root: Path = ROOT) -> dict:
     ref = require_release(ref)
     source = root / "spec/out" / ref
@@ -144,19 +175,29 @@ def report(ref: str, root: Path = ROOT) -> dict:
     meta = json.loads((source / "meta.json").read_text())
     _apply_evidence(entries, ref, root, meta["commit"])
     for entry in entries:
-        checks = ("typed", "generated", "fixture", "decode", "live_swift", "live_kotlin")
-        entry["complete"] = all(entry[name] for name in checks) and (entry.get("fresh", True))
+        entry["complete"] = all(entry[name] for name in CHECKS) and (entry.get("fresh", True))
+        entry["exempt"] = None
+    _apply_exemptions(entries, root)
     by_kind: dict[str, dict[str, int]] = {}
-    for kind in ("gateway_method", "server_request", "event", "rest"):
+    for kind in KINDS:
         subset = [entry for entry in entries if entry["kind"] == kind]
         by_kind[kind] = {"total": len(subset), "complete": sum(entry["complete"] for entry in subset),
+                         "exempt": sum(entry["exempt"] is not None for entry in subset),
                          "typed": sum(entry["typed"] for entry in subset),
                          "generated": sum(entry["generated"] for entry in subset),
                          "fixture": sum(entry["fixture"] for entry in subset),
                          "decode": sum(entry["decode"] for entry in subset),
                          "live_both": sum(entry["live_swift"] and entry["live_kotlin"] for entry in subset)}
     return {"ref": ref, "summary": by_kind, "entries": entries, "errors": _error_coverage(ref, root),
-            "total": len(entries), "complete": sum(entry["complete"] for entry in entries)}
+            "total": len(entries), "complete": sum(entry["complete"] for entry in entries),
+            "exempt": sum(entry["exempt"] is not None for entry in entries)}
+
+
+def _missing(entry: dict) -> list[str]:
+    missing = [name for name in CHECKS if not entry[name]]
+    if not entry.get("fresh", True):
+        missing.append("fresh")
+    return missing
 
 
 def _error_coverage(ref: str, root: Path) -> dict:
@@ -174,17 +215,29 @@ def write_report(ref: str, root: Path = ROOT) -> dict:
     output = root / "coverage"
     output.mkdir(exist_ok=True)
     (output / f"{ref}.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
-    lines = [f"# Coverage for {ref}", "", f"Complete: **{data['complete']} / {data['total']}**", "",
-             "| Surface | Complete | Typed | Generated | Fixture | Decode | Live both | Total |",
-             "|---|---:|---:|---:|---:|---:|---:|---:|"]
+    lines = [f"# Coverage for {ref}", "",
+             f"Complete: **{data['complete']} / {data['total']}**, exempted: **{data['exempt']}**", "",
+             "| Surface | Complete | Exempt | Typed | Generated | Fixture | Decode | Live both | Total |",
+             "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for kind, counts in data["summary"].items():
-        lines.append(f"| {kind} | {counts['complete']} | {counts['typed']} | {counts['generated']} | "
-                     f"{counts['fixture']} | {counts['decode']} | {counts['live_both']} | {counts['total']} |")
+        lines.append(f"| {kind} | {counts['complete']} | {counts['exempt']} | {counts['typed']} | "
+                     f"{counts['generated']} | {counts['fixture']} | {counts['decode']} | {counts['live_both']} | "
+                     f"{counts['total']} |")
     errors = data["errors"]
     live = ", ".join(errors["live_both"]) or "none"
     summary = f"**{len(errors['live_both'])} / {errors['named']}** ({live})"
     lines.extend(["", f"Named gateway errors classified live by both clients: {summary}."])
     lines.extend(["", "Fixture and live credit requires a recorded tag-pinned scenario, both clients passing live calls, and both fixture decode suites passing. The remaining operations require new scenarios and reviewed REST schemas.", ""])
+    gaps = [entry for entry in data["entries"] if not entry["complete"] and entry["exempt"] is None]
+    if gaps:
+        lines.extend([f"## Gaps ({len(gaps)})", "",
+                      "Neither complete nor exempted in `spec/exemptions.yaml`, with the evidence each lacks.", ""])
+        for kind in KINDS:
+            subset = sorted((entry for entry in gaps if entry["kind"] == kind), key=lambda entry: entry["name"])
+            if subset:
+                lines.extend([f"### {kind} ({len(subset)})", ""])
+                lines.extend(f"- `{entry['name']}`: {', '.join(_missing(entry))}" for entry in subset)
+                lines.append("")
     (output / f"{ref}.md").write_text("\n".join(lines))
     return data
 
@@ -195,8 +248,10 @@ def main() -> None:
     parser.add_argument("--gate", action="store_true", help="Fail if any operation lacks required evidence")
     args = parser.parse_args()
     data = write_report(args.ref)
-    print(f"Coverage {data['complete']}/{data['total']} for {args.ref}")
-    if args.gate and data["complete"] != data["total"]:
+    print(f"Coverage {data['complete']}/{data['total']} for {args.ref}, {data['exempt']} exempted")
+    if args.gate and data["complete"] + data["exempt"] != data["total"]:
+        print(f"{data['total'] - data['complete'] - data['exempt']} surfaces are neither complete nor exempted; "
+              f"see coverage/{args.ref}.md")
         raise SystemExit(1)
 
 

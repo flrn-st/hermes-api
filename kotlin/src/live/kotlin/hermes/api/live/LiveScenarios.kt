@@ -417,13 +417,16 @@ internal class FaultControl(private val base: URI) {
         try {
             connection.requestMethod = "POST"
             connection.connectTimeout = 10_000
-            connection.readTimeout = 120_000
+            connection.readTimeout = 180_000
             if (json != null) {
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/json")
                 connection.outputStream.use { it.write(json.toByteArray()) }
             }
-            if (connection.responseCode != 204) throw LiveScenarioFailure("Harness control $path failed")
+            if (connection.responseCode != 204) {
+                val reason = connection.errorStream?.use { it.readBytes().decodeToString().take(2000) }.orEmpty()
+                throw LiveScenarioFailure("Harness control $path failed: $reason")
+            }
         } finally {
             connection.disconnect()
         }

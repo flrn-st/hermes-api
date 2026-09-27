@@ -295,7 +295,21 @@ public enum LiveScenarios {
             return try await turnEvents(events, sessionID: sessionID, prompt: prompt, tool: tool, deadline: deadline,
                                         started: started, onFirstDelta: onFirstDelta)
         } catch let error as LiveScenarioError where error.description.hasPrefix("Timed out") {
-            throw LiveScenarioError("\(error.description); \(await started.trace)")
+            throw LiveScenarioError("\(error.description); \(await started.trace); \(await serverTail(gateway, sessionID, started))")
+        }
+    }
+
+    /// What Hermes still holds after the last event the client saw, to tell a lost event from one never sent.
+    private static func serverTail(_ gateway: HermesGateway, _ sessionID: String, _ started: TurnStarted) async -> String {
+        let seen = await started.lastSeq ?? 0
+        do {
+            let tail = try await gateway.session.eventsSince(.init(sessionId: sessionID, lastSeen: .value(seen)))
+            let types = tail.events.map { event in
+                "\(event["type"].map { String(describing: $0) } ?? "?")#\(event["seq"].map { String(describing: $0) } ?? "?")"
+            }
+            return "server after seq \(seen): latest \(tail.latestSeq), truncated \(tail.truncated), events \(types)"
+        } catch {
+            return "server tail unavailable: \(error)"
         }
     }
 
@@ -350,7 +364,7 @@ private actor TurnStarted {
     private var finishers: [@Sendable () -> Void] = []
     private var log: [String] = []
     private var counts: [String: Int] = [:]
-    private var lastSeq: Int?
+    private(set) var lastSeq: Int?
     private var replayedCount = 0
 
     func mark() { value = true }
@@ -478,15 +492,16 @@ struct FaultControl: Sendable {
         else { throw LiveScenarioError("Invalid control URL") }
         components.queryItems = query.isEmpty ? nil : query
         guard let url = components.url else { throw LiveScenarioError("Invalid control URL") }
-        var request = URLRequest(url: url, timeoutInterval: 120)
+        var request = URLRequest(url: url, timeoutInterval: 180)
         request.httpMethod = "POST"
         if let body {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 204 else {
-            throw LiveScenarioError("Harness control \(path) failed")
+            let reason = String(decoding: data.prefix(2000), as: UTF8.self)
+            throw LiveScenarioError("Harness control \(path) failed: \(reason)")
         }
     }
 }

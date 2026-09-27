@@ -14,6 +14,7 @@ import json
 import os
 import random
 import secrets
+import shutil
 import subprocess
 import tempfile
 import time
@@ -178,6 +179,13 @@ def run(ref: str, clients: tuple[str, ...], scale: float) -> dict:
         except Exception:
             print("\n".join(Path(home, "server.log").read_text(errors="replace").splitlines()[-20:])
                   .replace(token, "<redacted>")[-4000:])
+            if keep := os.environ.get("HERMES_STRESS_ARTIFACTS"):
+                # The server and Hermes logs of the failed run, for diagnosis.
+                target = Path(keep)
+                target.mkdir(parents=True, exist_ok=True)
+                shutil.copy(Path(home, "server.log"), target / "server.log")
+                if Path(home, "logs").is_dir():
+                    shutil.copytree(Path(home, "logs"), target / "logs", dirs_exist_ok=True)
             raise
         finally:
             if control is not None:

@@ -21,6 +21,7 @@ import hermes.api.live.LiveScenarioEnvironment
 import hermes.api.live.LiveScenarios
 import hermes.api.runtime.GatewayConnectionState
 import hermes.api.runtime.GatewayNetworkPath
+import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
 import hermes.api.runtime.KtorGatewayTransport
@@ -49,7 +50,7 @@ class LiveScenarioInstrumentedTest {
             withContext(Dispatchers.Default) {
                 val transport = KtorGatewayTransport()
                 val gateway = HermesGateway(HermesGatewayConfiguration(
-                    environment.url, environment.auth, transport,
+                    HermesDashboardAddress(environment.url), environment.auth, transport,
                     networkMonitor = environment.networkMonitor, logger = environment.logger,
                 ))
                 try {

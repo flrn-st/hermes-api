@@ -14,6 +14,7 @@ import kotlinx.serialization.json.long
 import hermes.api.generated.gateway.SessionCloseParams
 import hermes.api.generated.gateway.SessionCreateParams
 import hermes.api.generated.gateway.SessionCreateResult
+import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGatewayException
 import hermes.api.generated.gateway.SessionHistoryParams
 import hermes.api.generated.gateway.SessionListParams
@@ -53,12 +54,12 @@ internal object StressScenarios {
         val dataset = StressDataset(faults.stressDataset())
         synchronized(metrics) { metrics.clear() }
         KtorRESTTransport().use { transport ->
-            val rest = HermesREST(HermesRESTConfiguration(environment.url, LocalTokenAuth(token), transport = transport,
+            val rest = HermesREST(HermesRESTConfiguration(HermesDashboardAddress(environment.url), LocalTokenAuth(token), transport = transport,
                 logger = restLog))
             largeData(rest, dataset)
             parallelReads(rest)
             val ktor = KtorGatewayTransport()
-            val gateway = HermesGateway(HermesGatewayConfiguration(environment.url, environment.auth, ktor, httpTransport = ktor,
+            val gateway = HermesGateway(HermesGatewayConfiguration(HermesDashboardAddress(environment.url), environment.auth, ktor, httpTransport = ktor,
                 networkMonitor = environment.networkMonitor, logger = environment.logger))
             try {
                 gateway.connect()

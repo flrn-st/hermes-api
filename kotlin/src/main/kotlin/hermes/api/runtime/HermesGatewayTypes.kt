@@ -86,7 +86,8 @@ public fun interface GatewayLogger {
 }
 
 public data class HermesGatewayConfiguration(
-    val baseURI: URI,
+    /** Resolved before every connection attempt; see [HermesDashboardAddress]. */
+    val address: HermesDashboardAddress,
     val auth: HermesAuth,
     val transport: GatewayTransport = KtorGatewayTransport(),
     val httpTransport: GatewayHTTPTransport = transport as? GatewayHTTPTransport

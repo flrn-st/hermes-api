@@ -46,11 +46,11 @@ enum StressScenarios {
         let dataset = try await faults.stressDataset()
         let metrics = StressMetrics()
         let trail = HTTPTrail()
-        let rest = HermesREST(configuration: .init(baseURL: environment.url, auth: LocalTokenAuth(token: token),
+        let rest = HermesREST(configuration: .init(address: HermesDashboardAddress(environment.url), auth: LocalTokenAuth(token: token),
                                                    transport: TracingHTTPTransport(trail: trail)))
         try await largeData(rest, dataset: dataset, metrics: metrics)
         try await parallelReads(rest, metrics: metrics)
-        let gateway = HermesGateway(configuration: .init(baseURL: environment.url, auth: environment.auth))
+        let gateway = HermesGateway(configuration: .init(address: HermesDashboardAddress(environment.url), auth: environment.auth))
         do {
             try await gateway.connect()
             try await gatewayScale(gateway, dataset: dataset, metrics: metrics)

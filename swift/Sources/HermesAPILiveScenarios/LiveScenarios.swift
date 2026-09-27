@@ -87,7 +87,7 @@ public enum LiveScenarios {
 
     static func smoke(_ environment: LiveScenarioEnvironment, observations: LiveObservations) async throws {
         let gateway = HermesGateway(configuration: .init(
-            baseURL: environment.url, auth: environment.auth,
+            address: HermesDashboardAddress(environment.url), auth: environment.auth,
             transport: ObservingTransport(inner: URLSessionGatewayTransport(), observations: observations)))
         await gateway.setServerRequestHandler { request in
             switch request {
@@ -192,7 +192,7 @@ public enum LiveScenarios {
         let closed = try await gateway.session.close(.init(sessionId: session.sessionId))
         guard closed.closed else { throw LiveScenarioError("Gateway session did not close") }
         guard let token = environment.token else { throw LiveScenarioError("REST smoke needs the local token") }
-        let rest = HermesREST(configuration: .init(baseURL: environment.url, auth: LocalTokenAuth(token: token)))
+        let rest = HermesREST(configuration: .init(address: HermesDashboardAddress(environment.url), auth: LocalTokenAuth(token: token)))
         let voice = try await rest.audio.voiceLiveStatus(profile: "default")
         guard voice.ok, voice.mode == .chained, !voice.model.isEmpty, !voice.voice.isEmpty else {
             throw LiveScenarioError("Unexpected voice status")
@@ -215,7 +215,7 @@ public enum LiveScenarios {
         _ environment: LiveScenarioEnvironment, faults: FaultControl, observations: LiveObservations
     ) async throws {
         let gateway = HermesGateway(configuration: .init(
-            baseURL: environment.url, auth: environment.auth,
+            address: HermesDashboardAddress(environment.url), auth: environment.auth,
             transport: ObservingTransport(inner: URLSessionGatewayTransport(), observations: observations),
             reconnectDelay: { _ in .milliseconds(250) },
             heartbeatInterval: .seconds(1), heartbeatDeadline: .seconds(4)))

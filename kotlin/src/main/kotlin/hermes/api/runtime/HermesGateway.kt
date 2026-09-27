@@ -216,10 +216,11 @@ public class HermesGateway(
         else publish(GatewayConnectionState.WaitingForNetwork)
     }
 
-    private fun startMaintaining(delayFirstAttempt: Boolean) {
+    /** [failure] is why the connection before ended, if it failed. */
+    private fun startMaintaining(delayFirstAttempt: Boolean, failure: HermesGatewayException? = null) {
         cancelMaintaining()
         val run = ++maintainerRun
-        maintainer = scope.launch(confined) { maintainConnection(delayFirstAttempt, run) }
+        maintainer = scope.launch(confined) { maintainConnection(delayFirstAttempt, failure, run) }
     }
 
     private fun cancelMaintaining() {
@@ -227,8 +228,9 @@ public class HermesGateway(
         maintainer = null
     }
 
-    private suspend fun maintainConnection(delayFirstAttempt: Boolean, run: Int) {
+    private suspend fun maintainConnection(delayFirstAttempt: Boolean, failure: HermesGatewayException?, run: Int) {
         var attempt = 0
+        var previousFailure = failure
         try {
             while (wantsConnection) {
                 if (inBackground) { publish(GatewayConnectionState.Suspended); break }
@@ -238,10 +240,11 @@ public class HermesGateway(
                 publish(if (hasConnected) GatewayConnectionState.Reconnecting(attempt) else GatewayConnectionState.Connecting)
                 if (attempt > 1 || delayFirstAttempt) delay(configuration.reconnectDelayMillis(attempt))
                 try {
-                    open()
+                    open(previousFailure)
                     break
                 } catch (error: HermesGatewayException) {
                     if (error.isTerminal) { fail(error); break }
+                    previousFailure = error
                     logger.log(GatewayLogLevel.INFO, "Connection attempt $attempt failed: ${error.message}")
                 }
             }
@@ -250,13 +253,19 @@ public class HermesGateway(
         }
     }
 
-    /** One connection attempt: socket, capabilities, then session recovery. */
-    private suspend fun open() {
+    /** One connection attempt: address, credential, socket, capabilities, then session recovery. */
+    private suspend fun open(previousFailure: HermesGatewayException?) {
         opening = true
         val current = ++generation
         try {
-            val credential = configuration.auth.credential(configuration.baseURI, configuration.httpTransport)
-            val (uri, headers, protocols) = socketRequest(credential)
+            val baseURI = try { configuration.address.resolve(previousFailure) }
+            catch (error: CancellationException) { throw error }
+            catch (error: HermesGatewayException) { throw error }
+            catch (error: Exception) {
+                throw HermesGatewayException.Transport("Cannot resolve the dashboard address: ${error.message}")
+            }
+            val credential = configuration.auth.credential(baseURI, configuration.httpTransport)
+            val (uri, headers, protocols) = socketRequest(baseURI, credential)
             val connection = try { configuration.transport.connect(uri, headers, protocols) }
             catch (error: CancellationException) { throw error }
             catch (error: HermesGatewayException) { throw error }
@@ -311,7 +320,7 @@ public class HermesGateway(
         // During open() the attempt itself reports the failure.
         if (!wasReady || !wantsConnection) return
         if (error.isTerminal) fail(error)
-        else if (!inBackground) startMaintaining(delayFirstAttempt = !retryImmediately)
+        else if (!inBackground) startMaintaining(delayFirstAttempt = !retryImmediately, failure = error)
     }
 
     private suspend fun closeConnection(error: HermesGatewayException) {
@@ -896,12 +905,12 @@ public class HermesGateway(
         replayHold.remove(sessionId)?.forEach { handleEvent(it, false) }
     }
 
-    private fun socketRequest(credential: GatewayCredential): Triple<URI, Map<String, String>, List<String>> {
-        val scheme = when (configuration.baseURI.scheme) {
+    private fun socketRequest(baseURI: URI, credential: GatewayCredential): Triple<URI, Map<String, String>, List<String>> {
+        val scheme = when (baseURI.scheme) {
             "http" -> "ws"; "https" -> "wss"
             else -> throw HermesGatewayException.Transport("Dashboard URL must use HTTP or HTTPS")
         }
-        fun socketURI(rawQuery: String? = null) = dashboardURI(configuration.baseURI, "/api/ws", rawQuery, scheme)
+        fun socketURI(rawQuery: String? = null) = dashboardURI(baseURI, "/api/ws", rawQuery, scheme)
             ?: throw HermesGatewayException.Transport("Invalid dashboard URL")
         return when (credential) {
             is GatewayCredential.Ticket -> {

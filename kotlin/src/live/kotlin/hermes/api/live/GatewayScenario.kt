@@ -13,6 +13,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import hermes.api.live.generated.GatewayOperations
+import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
 import hermes.api.runtime.KtorGatewayTransport
@@ -26,7 +27,7 @@ internal object GatewayScenario {
     suspend fun run(calls: JsonArray, environment: LiveScenarioEnvironment, observations: LiveObservations) {
         val ktor = KtorGatewayTransport()
         val gateway = HermesGateway(HermesGatewayConfiguration(
-            environment.url, environment.auth, ObservingTransport(ktor, observations), httpTransport = ktor,
+            HermesDashboardAddress(environment.url), environment.auth, ObservingTransport(ktor, observations), httpTransport = ktor,
             networkMonitor = environment.networkMonitor, logger = environment.logger,
         ))
         try {

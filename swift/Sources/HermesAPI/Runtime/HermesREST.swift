@@ -227,7 +227,8 @@ public extension RESTResponse {
 }
 
 public struct HermesRESTConfiguration: Sendable {
-    public let baseURL: URL
+    /// Resolved before every attempt; see `HermesDashboardAddress`.
+    public let address: HermesDashboardAddress
     /// Authenticates every request; `nil` for public routes or cookie sessions the transport carries.
     public let auth: (any HermesRESTAuth)?
     /// Extra headers on every request, for example a reverse proxy's credential.
@@ -239,7 +240,7 @@ public struct HermesRESTConfiguration: Sendable {
     public let logger: Logger
 
     public init(
-        baseURL: URL,
+        address: HermesDashboardAddress,
         auth: (any HermesRESTAuth)? = nil,
         headers: @escaping @Sendable () async throws -> [String: String] = { [:] },
         transport: any HTTPTransport = URLSessionHTTPTransport(),
@@ -247,7 +248,7 @@ public struct HermesRESTConfiguration: Sendable {
         retry: RESTRetryPolicy = RESTRetryPolicy(),
         logger: Logger = Logger(subsystem: "hermes.api", category: "rest")
     ) {
-        self.baseURL = baseURL
+        self.address = address
         self.auth = auth
         self.headers = headers
         self.transport = transport
@@ -266,13 +267,13 @@ public struct HermesREST: RESTCalling {
     public var methods: RESTMethodCatalog { RESTMethodCatalog(caller: self) }
 
     public func send(_ request: RESTRequest) async throws -> RESTResponse {
-        let prepared = try urlRequest(for: request)
         let retry = configuration.retry
         var attempt = 1
         var renewed = false
+        var previousFailure: HermesRESTError?
         while true {
             try Task.checkCancellation()
-            var outgoing = prepared
+            var outgoing = try urlRequest(for: request, at: try await resolveAddress(after: previousFailure))
             for (name, value) in try await configuration.headers() { outgoing.setValue(value, forHTTPHeaderField: name) }
             let credential = try await configuration.auth?.authorizationHeaders() ?? [:]
             for (name, value) in credential { outgoing.setValue(value, forHTTPHeaderField: name) }
@@ -283,6 +284,7 @@ public struct HermesREST: RESTCalling {
                 if response.status == 401, !renewed, let auth = configuration.auth,
                    try await auth.renew(rejected: credential, response: response) {
                     renewed = true
+                    previousFailure = nil
                     continue
                 }
                 guard retry.retryableStatuses.contains(response.status), RESTRetryPolicy.isSafe(request.method),
@@ -306,6 +308,7 @@ public struct HermesREST: RESTCalling {
                 }
             }
             attempt += 1
+            previousFailure = failure
             let delay = retry.delay(beforeAttempt: attempt, retryAfter: retryAfter)
             configuration.logger.info(
                 "Retrying \(request.method, privacy: .public) \(request.path, privacy: .private) (attempt \(attempt)) after \(String(describing: failure), privacy: .public)")
@@ -313,8 +316,20 @@ public struct HermesREST: RESTCalling {
         }
     }
 
-    private func urlRequest(for request: RESTRequest) throws -> URLRequest {
-        guard var components = DashboardURL.components(base: configuration.baseURL, path: request.path) else {
+    private func resolveAddress(after previousFailure: HermesRESTError?) async throws -> URL {
+        do {
+            return try await configuration.address.resolve(previousFailure: previousFailure)
+        } catch let error as HermesRESTError {
+            throw error
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw HermesRESTError.transport("Cannot resolve the dashboard address: \(error.localizedDescription)")
+        }
+    }
+
+    private func urlRequest(for request: RESTRequest, at baseURL: URL) throws -> URLRequest {
+        guard var components = DashboardURL.components(base: baseURL, path: request.path) else {
             throw HermesRESTError.transport("Invalid REST path")
         }
         if !request.query.isEmpty {

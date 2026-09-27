@@ -62,7 +62,8 @@ public struct GatewayEvent: Sendable, Hashable {
 }
 
 public struct HermesGatewayConfiguration: Sendable {
-    public let baseURL: URL
+    /// Resolved before every connection attempt; see `HermesDashboardAddress`.
+    public let address: HermesDashboardAddress
     public let auth: any HermesAuth
     public let transport: any GatewayTransport
     public let httpTransport: any HTTPTransport
@@ -86,7 +87,7 @@ public struct HermesGatewayConfiguration: Sendable {
     public let logger: Logger
 
     public init(
-        baseURL: URL,
+        address: HermesDashboardAddress,
         auth: any HermesAuth,
         transport: any GatewayTransport = URLSessionGatewayTransport(),
         httpTransport: any HTTPTransport = URLSessionHTTPTransport(),
@@ -104,7 +105,7 @@ public struct HermesGatewayConfiguration: Sendable {
         minimumContract: Int = HermesGatewayContract.desktopContract,
         logger: Logger = Logger(subsystem: "hermes.api", category: "gateway")
     ) {
-        self.baseURL = baseURL
+        self.address = address
         self.auth = auth
         self.transport = transport
         self.httpTransport = httpTransport

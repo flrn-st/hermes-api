@@ -10,6 +10,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import hermes.api.live.generated.RESTOperations
 import java.net.URI
 import java.net.URLDecoder
+import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesREST
 import hermes.api.runtime.HermesRESTAuth
 import hermes.api.runtime.HermesRESTConfiguration
@@ -25,7 +26,7 @@ internal object RESTScenario {
      *  a [NativeSessionAuth] holding the tokens the scenario captured as `tokens`. */
     suspend fun run(calls: JsonArray, baseURI: URI, auth: HermesRESTAuth?, transport: RESTTransport,
                     observations: LiveObservations) {
-        val plain = HermesREST(HermesRESTConfiguration(baseURI, auth, transport = transport))
+        val plain = HermesREST(HermesRESTConfiguration(HermesDashboardAddress(baseURI), auth, transport = transport))
         var native: HermesREST? = null
         val captured = mutableMapOf<String, JsonElement>()
         for ((index, element) in calls.withIndex()) {
@@ -36,11 +37,11 @@ internal object RESTScenario {
                     val issued = captured["tokens"] as? JsonObject
                         ?: throw LiveScenarioFailure("REST scenario call ${index + 1} needs captured native tokens")
                     fun text(name: String) = (issued[name] as? JsonPrimitive)?.contentOrNull
-                    val session = NativeSessionAuth(baseURI, NativeSessionAuth.Tokens(
+                    val session = NativeSessionAuth(HermesDashboardAddress(baseURI), NativeSessionAuth.Tokens(
                         text("access_token") ?: throw LiveScenarioFailure("Captured tokens have no access_token"),
                         text("refresh_token") ?: throw LiveScenarioFailure("Captured tokens have no refresh_token"),
                         text("expires_at")?.toLongOrNull(), text("provider") ?: ""), transport)
-                    HermesREST(HermesRESTConfiguration(baseURI, session, transport = transport)).also { native = it }
+                    HermesREST(HermesRESTConfiguration(HermesDashboardAddress(baseURI), session, transport = transport)).also { native = it }
                 }
             } else {
                 plain

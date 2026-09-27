@@ -16,7 +16,7 @@ and VoIP apps
 
 ```swift
 let gateway = HermesGateway(configuration: .init(
-    baseURL: dashboardURL,
+    address: HermesDashboardAddress(dashboardURL),
     auth: DashboardTicketAuth { ["Authorization": "Bearer \(appToken)"] }
 ))
 await gateway.setServerRequestHandler { request in
@@ -54,7 +54,7 @@ network, lifecycle and Logcat adapters.
 
 ```kotlin
 val gateway = HermesGateway(HermesGatewayConfiguration(
-    baseURI = URI(dashboardUrl),
+    address = HermesDashboardAddress(URI(dashboardUrl)),
     auth = DashboardTicketAuth { mapOf("Authorization" to "Bearer $appToken") },
     networkMonitor = AndroidNetworkMonitor(context),
     logger = LogcatGatewayLogger(),
@@ -69,6 +69,21 @@ gateway.connect()
 
 The dashboard URL may carry a path (a reverse proxy's or relay's prefix); the ticket request and `/api/ws`
 are appended to it.
+
+### Moving between addresses
+
+A dashboard reachable at more than one address (a LAN and a VPN address, say) needs no second client. The
+gateway resolves its `HermesDashboardAddress` before every connection attempt and passes the failure that
+ended the attempt or connection before, so the app decides where to connect next without losing the
+gateway's sessions:
+
+```swift
+let address = HermesDashboardAddress { previousFailure in
+    previousFailure == nil ? await hosts.current() : await hosts.probe()
+}
+```
+
+`HermesREST` resolves it the same way before every request attempt, so its retries fail over too.
 
 ## What the client does for you
 

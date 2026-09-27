@@ -20,11 +20,42 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import yaml
+
 from harness.faults import ControlServer, FaultProxy
 from harness.stub_llm import APPROVAL_TARGET, MODEL, StubLLM
 from tools.extract_openapi import extract
 from tools.fetch_spec import ROOT
 from tools.ref_policy import require_release
+
+REST_SCENARIO = ROOT / "scenarios" / "rest.yaml"
+
+
+def _rest_scenario(home: Path) -> dict:
+    """The REST scenario with its harness values resolved: ``${@home}`` is the isolated Hermes home
+    and ``${@repo}`` a scratch git repository in it with one commit."""
+    repo = home / "scenario-repo"
+    repo.mkdir()
+    identity = {"GIT_AUTHOR_NAME": "HermesAPI", "GIT_AUTHOR_EMAIL": "hermes-api@example.invalid",
+                "GIT_COMMITTER_NAME": "HermesAPI", "GIT_COMMITTER_EMAIL": "hermes-api@example.invalid"}
+    git_env = {**os.environ, **identity}
+    (repo / "README.md").write_text("# Scenario\n", encoding="utf-8")
+    for command in (["init", "-q", "-b", "main"], ["add", "README.md"], ["commit", "-q", "-m", "Initial commit"]):
+        subprocess.run(["git", *command], cwd=repo, env=git_env, check=True, capture_output=True)
+    values = {"home": str(home), "repo": str(repo)}
+
+    def resolve(value: object) -> object:
+        if isinstance(value, str):
+            for name, replacement in values.items():
+                value = value.replace("${@" + name + "}", replacement)
+            return value
+        if isinstance(value, list):
+            return [resolve(item) for item in value]
+        if isinstance(value, dict):
+            return {key: resolve(item) for key, item in value.items()}
+        return value
+
+    return resolve(yaml.safe_load(REST_SCENARIO.read_text(encoding="utf-8")))
 
 
 def _free_port() -> int:
@@ -47,6 +78,52 @@ def _await_status(url: str, token: str, server: subprocess.Popen[bytes]) -> None
             pass
         time.sleep(0.2)
     raise TimeoutError("Hermes status route did not become ready")
+
+
+# The gated server's credentials: the bundled password provider, loaded like `hermes dashboard` does.
+GATED_USER, GATED_PASSWORD = "hermes-api", "scenario-password"
+
+
+class GatedServer:
+    """A second tagged dashboard behind the auth gate, for the REST scenario's authentication calls.
+
+    It binds loopback like the main server; a non-loopback ``dashboard.public_url`` engages the gate,
+    and the bundled password provider authenticates. It has its own isolated home.
+    """
+
+    def __init__(self, repo: Path, python: Path, home: Path, env: dict[str, str], log_path: Path) -> None:
+        self.repo, self.python, self.home, self.log_path = repo, python, home, log_path
+        self.port = _free_port()
+        self.url = f"http://127.0.0.1:{self.port}"
+        self.env = {**env, "HERMES_HOME": str(home), "HERMES_DASHBOARD_BASIC_AUTH_USERNAME": GATED_USER,
+                    "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD": GATED_PASSWORD}
+        self.env.pop("HERMES_DASHBOARD_SESSION_TOKEN", None)
+        self.process: subprocess.Popen[bytes] | None = None
+
+    def start(self) -> None:
+        self.home.mkdir()
+        (self.home / "config.yaml").write_text(
+            f"dashboard:\n  public_url: http://hermes-gated.localhost:{self.port}\n"
+            f"  basic_auth:\n    secret: {secrets.token_hex(32)}\n", encoding="utf-8")
+        code = ("from hermes_cli.plugins import discover_plugins; discover_plugins(); "
+                "from hermes_cli.web_server import start_server; "
+                f"start_server(host='127.0.0.1', port={self.port}, open_browser=False, headless=True)")
+        with self.log_path.open("ab") as log:
+            self.process = subprocess.Popen([str(self.python), "-c", code], cwd=self.repo, env=self.env,
+                                            stdout=log, stderr=subprocess.STDOUT)
+        # /api/status is public behind the gate.
+        _await_status(self.url, "", self.process)
+
+    def stop(self) -> None:
+        if self.process is None:
+            return
+        self.process.terminate()
+        try:
+            self.process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            self.process.kill()
+            self.process.wait(timeout=5)
+        self.process = None
 
 
 CLIENTS = ("swift", "kotlin", "ios", "android")
@@ -108,8 +185,8 @@ class HermesServer:
         self.start()
 
 
-def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,
-                    control: ControlServer) -> tuple[list[str], Path, dict[str, str]]:
+def _client_command(client: str, env: dict[str, str], proxy: FaultProxy, control: ControlServer,
+                    gated: GatedServer) -> tuple[list[str], Path, dict[str, str]]:
     if client == "swift":
         return ["swift", "run", "--quiet", "hermes-api-cli", "smoke", "--url", env["HERMES_LIVE_URL"]], ROOT, env
     if client == "kotlin":
@@ -127,7 +204,7 @@ def _client_command(client: str, env: dict[str, str], proxy: FaultProxy,
     if client == "android":
         adb = shutil.which("adb") or str(Path(env.get("ANDROID_HOME", "")) / "platform-tools" / "adb")
         # The emulator reaches the proxy and control endpoint on its own loopback.
-        for port in (proxy.port, control.port):
+        for port in (proxy.port, control.port, gated.port):
             subprocess.run([adb, "reverse", f"tcp:{port}", f"tcp:{port}"], check=True, env=env,
                            stdout=subprocess.DEVNULL)
         arguments = [f"-Pandroid.testInstrumentationRunnerArguments.{name}={env[variable]}" for name, variable in (
@@ -148,9 +225,11 @@ def _check_committed_evidence(ref: str, reports: dict[str, dict[str, list[str]]]
     path = ROOT / "coverage/evidence" / f"{ref}.json"
     if not path.exists():
         return
-    claimed = json.loads(path.read_text(encoding="utf-8")).get("live_gateway", {})
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    claimed = evidence.get("live_gateway", {})
     for client, report in reports.items():
-        expected = claimed.get(EVIDENCE_PLATFORM[client], {})
+        expected = dict(claimed.get(EVIDENCE_PLATFORM[client], {}))
+        expected["rest"] = evidence.get("live_rest", {}).get(EVIDENCE_PLATFORM[client], [])
         missing = {kind: sorted(set(names) - set(report[kind])) for kind, names in expected.items()}
         missing = {kind: names for kind, names in missing.items() if names}
         if missing:
@@ -194,18 +273,27 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                 env["DEVELOPER_DIR"] = str(xcode)
         log_path = Path(home) / "server.log"
         server = HermesServer(repo, python, port, token, env, log_path)
+        gated = GatedServer(repo, python, Path(home) / "gated-home", env, Path(home) / "gated-server.log")
         proxy: FaultProxy | None = None
         control: ControlServer | None = None
         try:
             server.start()
+            gated.start()
             proxy = FaultProxy(port)
-            control = ControlServer(proxy, server.restart)
+            rest_scenario = _rest_scenario(Path(home))
+            resolved_scenario = Path(home) / "rest-scenario.json"
+            resolved_scenario.write_text(json.dumps(rest_scenario), encoding="utf-8")
+            control = ControlServer(proxy, server.restart, {
+                "calls": rest_scenario["calls"],
+                "gated": {"url": gated.url, "calls": rest_scenario["gated_calls"]},
+            })
             env["HERMES_LIVE_URL"] = f"http://127.0.0.1:{proxy.port}"
             env["HERMES_LIVE_CONTROL"] = control.url
             if record:
                 subprocess.run(
                     [str(python), str(ROOT / "harness/record.py"),
                      "--scenario", str(ROOT / "scenarios/liveness.yaml"),
+                     "--rest-scenario", str(resolved_scenario), "--gated-url", gated.url,
                      "--output", str(ROOT / "fixtures" / ref / "liveness.jsonl"),
                      "--openapi", str(ROOT / "spec/out" / ref / "openapi.json")],
                     cwd=repo, env={**env, "HERMES_LIVE_URL": server.url}, check=True,
@@ -214,7 +302,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
             for client in clients:
                 restarts, drops, blackholes = control.restarts, proxy.drops, proxy.blackholes
                 control.report = None
-                command, cwd, client_env = _client_command(client, env, proxy, control)
+                command, cwd, client_env = _client_command(client, env, proxy, control, gated)
                 print(f"live: {client}", flush=True)
                 subprocess.run(command, cwd=cwd, env=client_env, check=True)
                 # The reconnect scenarios must have exercised both faults, not skipped them.
@@ -250,14 +338,12 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                     "events": sorted({entry["name"] for entry in recorded if entry["kind"] == "event"}),
                     "rest": sorted({entry["name"] for entry in recorded if entry["kind"] == "rest"}),
                     # Gateway items each client exercised, measured on the wire by its live scenarios.
-                    "live_gateway": {platform: reports[platform] for platform in ("swift", "kotlin")},
-                    "live_rest": ["GET /api/audio/voice-live/status",
-                                  "GET /api/profiles/active", "POST /api/profiles/active",
-                                  "GET /api/sessions/empty/count"],
+                    "live_gateway": {platform: {kind: names for kind, names in reports[platform].items()
+                                                if kind != "rest"} for platform in ("swift", "kotlin")},
+                    # REST operations whose generated method each client completed against the server.
+                    "live_rest": {platform: reports[platform]["rest"] for platform in ("swift", "kotlin")},
                     "decode_swift": True,
                     "decode_kotlin": True,
-                    "live_swift": True,
-                    "live_kotlin": True,
                 }
                 evidence_dir = ROOT / "coverage/evidence"
                 evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -275,6 +361,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
             if proxy is not None:
                 proxy.close()
             server.stop()
+            gated.stop()
             stub.close()
 
 def main() -> None:

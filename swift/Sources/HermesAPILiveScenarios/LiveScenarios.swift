@@ -56,8 +56,15 @@ public enum LiveScenarios {
         guard let control = environment.control else { return }
         let faults = FaultControl(base: control)
         if let token = environment.token {
-            let rest = HermesREST(configuration: .init(baseURL: environment.url, auth: LocalTokenAuth(token: token)))
-            try await RESTScenario.run(try await faults.restScenario(), rest: rest, observations: observations)
+            let scenario = try await faults.restScenario()
+            try await RESTScenario.run(scenario.calls, baseURL: environment.url, auth: LocalTokenAuth(token: token),
+                                       observations: observations)
+            if let gated = scenario.gated {
+                // Its own cookie storage: the gated calls sign in with a browser cookie session.
+                let transport = URLSessionHTTPTransport(session: URLSession(configuration: .ephemeral))
+                try await RESTScenario.run(gated.calls, baseURL: gated.url, auth: nil, transport: transport,
+                                           observations: observations)
+            }
         }
         if environment.lifecycle {
             try await reconnect(environment, faults: faults, observations: observations)
@@ -335,13 +342,13 @@ struct FaultControl: Sendable {
     }
 
     /// The REST scenario the harness recorded fixtures from.
-    func restScenario() async throws -> [RESTScenarioCall] {
+    func restScenario() async throws -> RESTScenarioDocument {
         let (data, response) = try await URLSession.shared.data(
             for: URLRequest(url: base.appendingPathComponent("rest-scenario"), timeoutInterval: 30))
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw LiveScenarioError("Harness control rest-scenario failed")
         }
-        return try JSONDecoder().decode([RESTScenarioCall].self, from: data)
+        return try JSONDecoder().decode(RESTScenarioDocument.self, from: data)
     }
 
     private func post(_ path: String, query: [URLQueryItem], body: Data? = nil) async throws {

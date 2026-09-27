@@ -13,7 +13,7 @@ from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-REPORT_KINDS = ("methods", "events", "server_requests")
+REPORT_KINDS = ("methods", "events", "server_requests", "rest")
 
 
 def _reset(sock: socket.socket) -> None:
@@ -119,17 +119,29 @@ class FaultProxy:
 
 class ControlServer:
     """``POST /drop?hold_ms=N`` severs client sockets, ``POST /blackhole`` stalls them silently,
-    ``POST /restart`` replaces the server process, and ``POST /report`` receives the JSON summary of
-    what a passing client run exercised on the wire."""
+    ``POST /restart`` replaces the server process, ``POST /report`` receives the JSON summary of
+    what a passing client run exercised on the wire, and ``GET /rest-scenario`` serves the REST calls
+    every client runs through its generated operations."""
 
-    def __init__(self, proxy: FaultProxy, restart: Callable[[], None]) -> None:
+    def __init__(self, proxy: FaultProxy, restart: Callable[[], None], rest_scenario: dict | None = None) -> None:
         self.restarts = 0
         self.report: dict[str, list[str]] | None = None
+        scenario = json.dumps(rest_scenario or {"calls": []}).encode("utf-8")
         owner = self
 
         class Handler(BaseHTTPRequestHandler):
             def log_message(self, _format: str, *_args: object) -> None:
                 pass
+
+            def do_GET(self) -> None:
+                if urlparse(self.path).path != "/rest-scenario":
+                    self.send_error(404)
+                    return
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(scenario)))
+                self.end_headers()
+                self.wfile.write(scenario)
 
             def do_POST(self) -> None:
                 url = urlparse(self.path)

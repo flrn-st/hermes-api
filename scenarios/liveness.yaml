@@ -42,16 +42,3 @@ server_requests:
       q0: Stable
   approval:
     choice: deny
-rest_calls:
-  - method: GET
-    path: /api/audio/voice-live/status
-  - method: GET
-    path: /api/profiles/active
-  - method: POST
-    path: /api/profiles/active
-    body:
-      name: default
-  - method: GET
-    path: /api/sessions/empty/count
-    query:
-      profile: default

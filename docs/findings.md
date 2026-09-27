@@ -59,9 +59,29 @@ the tag's handler source and hash.
 An isolated import of this release produced 293 OpenAPI paths and 334 operations.
 All 333 JSON success response schemas were empty objects; the remaining
 operation is a `HEAD` response without a body. The extraction recorded
-per-operation source locations and SHA-256 hashes; two authentication responses,
-the active-profile read and update responses, the voice live status, and the empty-session count are
-currently overlaid. The remaining operations are deliberately untyped.
+per-operation source locations and SHA-256 hashes (the whole handler, and the body without its
+decorators so a contract checkout's handler can be compared with the tag's).
+
+The response contracts on the fork's `feat/dashboard-rest-response-models` branch (commit
+`3f5b9b1ce2`, ~2,200 commits past the tag) seed the overlays. 309 of 336 handler bodies are
+byte-identical at the tag; 27 changed. Identical bodies do not guarantee identical output: running
+the tag's own route tests with every response validated against the imported contracts found helpers
+that drifted after the tag (session rows gained `_reset_from`/`_branched_from`, kanban tasks
+`current_run_started_at`, memory setup info `python_dependencies_declared`, env rows `provider_*`,
+local-model jobs pause/resume fields, file routes serving any media type). Those components, and the
+27 changed handlers, are hand-written against the tag in `spec/overlay/rest/*.yaml` and override the
+imported ones. After the corrections, the tag's tests exercise 186 overlaid operations and every
+response validates except those from tests that stub a helper with a fake dict, and the recorded REST
+scenario validates every response of the 268 operations it calls.
+
+Six handlers read an undeclared JSON body (`await request.json()`); their overlays carry reviewed
+request schemas. `POST /api/providers/oauth/{provider_id}/submit` always answers 400 and stays
+undocumented.
+
+Some operations act outside the isolated home: `POST /api/webhooks/enable` (and the gateway
+start/stop/restart/migrate routes, WhatsApp/Telegram onboarding apply) restart the gateway through the
+host's service supervisor, which restarted a developer machine's installed Hermes gateway during
+authoring. The REST scenario never calls them.
 
 `hermes_cli.web_server` imports and mounts its ordinary routers, then calls
 `_mount_plugin_api_routes()` during module import (`web_server.py:995`).

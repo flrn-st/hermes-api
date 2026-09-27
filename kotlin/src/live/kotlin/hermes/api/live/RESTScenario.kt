@@ -8,18 +8,43 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import hermes.api.live.generated.RESTOperations
+import java.net.URI
+import java.net.URLDecoder
 import hermes.api.runtime.HermesREST
+import hermes.api.runtime.HermesRESTAuth
+import hermes.api.runtime.HermesRESTConfiguration
+import hermes.api.runtime.NativeSessionAuth
+import hermes.api.runtime.RESTTransport
 import kotlinx.coroutines.delay
 
 /** Runs every call of the harness's REST scenario (`scenarios/rest.yaml`) through the generated operation
  *  table, in order, so each operation's typed method, request encoding and strict response decoding
  *  meet the tagged server. */
 internal object RESTScenario {
-    suspend fun run(calls: JsonArray, rest: HermesREST, observations: LiveObservations) {
+    /** Runs [calls] against [baseURI]. [auth] signs every call; a call marked `auth: native` is signed by
+     *  a [NativeSessionAuth] holding the tokens the scenario captured as `tokens`. */
+    suspend fun run(calls: JsonArray, baseURI: URI, auth: HermesRESTAuth?, transport: RESTTransport,
+                    observations: LiveObservations) {
+        val plain = HermesREST(HermesRESTConfiguration(baseURI, auth, transport = transport))
+        var native: HermesREST? = null
         val captured = mutableMapOf<String, JsonElement>()
         for ((index, element) in calls.withIndex()) {
             val call = element.jsonObject
             val operation = call.getValue("operation").jsonPrimitive.content
+            val rest = if ((call["auth"] as? JsonPrimitive)?.contentOrNull == "native") {
+                native ?: run {
+                    val issued = captured["tokens"] as? JsonObject
+                        ?: throw LiveScenarioFailure("REST scenario call ${index + 1} needs captured native tokens")
+                    fun text(name: String) = (issued[name] as? JsonPrimitive)?.contentOrNull
+                    val session = NativeSessionAuth(baseURI, NativeSessionAuth.Tokens(
+                        text("access_token") ?: throw LiveScenarioFailure("Captured tokens have no access_token"),
+                        text("refresh_token") ?: throw LiveScenarioFailure("Captured tokens have no refresh_token"),
+                        text("expires_at")?.toLongOrNull(), text("provider") ?: ""), transport)
+                    HermesREST(HermesRESTConfiguration(baseURI, session, transport = transport)).also { native = it }
+                }
+            } else {
+                plain
+            }
             fun section(name: String): Map<String, JsonElement> =
                 (call[name] as? JsonObject)?.mapValues { resolve(it.value, captured) } ?: emptyMap()
             val arguments = RESTArguments(
@@ -76,8 +101,16 @@ internal object RESTScenario {
         is JsonObject -> JsonObject(value.mapValues { resolve(it.value, captured) })
     }
 
-    /** A dotted path into a JSON value; `$` is the whole value. */
+    /** A dotted path into a JSON value; `$` is the whole value, and `path#param` the query parameter
+     *  `param` of the URL at `path`. */
     fun lookup(value: JsonElement, path: String): JsonElement? {
+        if ('#' in path) {
+            val url = (lookup(value, path.substringBefore('#')) as? JsonPrimitive)?.contentOrNull ?: return null
+            val query = runCatching { URI(url).rawQuery }.getOrNull() ?: return null
+            val parameter = query.split("&").map { it.split("=", limit = 2) }
+                .firstOrNull { it.size == 2 && it[0] == path.substringAfter('#') } ?: return null
+            return JsonPrimitive(URLDecoder.decode(parameter[1], "UTF-8"))
+        }
         if (path == "$") return value
         var current: JsonElement? = value
         for (key in path.split(".")) {

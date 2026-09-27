@@ -18,6 +18,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
@@ -33,6 +34,9 @@ import hermes.api.generated.gateway.SessionCreateParams
 import hermes.api.generated.gateway.SessionListParams
 import hermes.api.generated.rest.ProfileActiveUpdate
 import hermes.api.generated.rest.VoiceLiveStatusResponseMode
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.cookies.HttpCookies
 import hermes.api.runtime.GatewayConnection
 import hermes.api.runtime.GatewayConnectionState
 import hermes.api.runtime.GatewaySessionRecovery
@@ -97,9 +101,17 @@ public object LiveScenarios {
         val control = environment.control ?: return
         val faults = FaultControl(control)
         environment.token?.let { token ->
+            val scenario = faults.restScenario()
             KtorRESTTransport().use { transport ->
-                val rest = HermesREST(HermesRESTConfiguration(environment.url, LocalTokenAuth(token), transport = transport))
-                RESTScenario.run(faults.restScenario(), rest, observations)
+                RESTScenario.run(scenario.getValue("calls").jsonArray, environment.url, LocalTokenAuth(token), transport,
+                    observations)
+            }
+            (scenario["gated"] as? JsonObject)?.let { gated ->
+                // Its own cookie storage: the gated calls sign in with a browser cookie session.
+                KtorRESTTransport(HttpClient(CIO) { followRedirects = false; install(HttpCookies) }).use { transport ->
+                    RESTScenario.run(gated.getValue("calls").jsonArray, URI(gated.getValue("url").jsonPrimitive.content),
+                        null, transport, observations)
+                }
             }
         }
         if (environment.lifecycle) reconnect(environment, faults, observations)
@@ -334,13 +346,13 @@ private class FaultControl(private val base: URI) {
     suspend fun report(json: String) = post("report", json)
 
     /** The REST scenario the harness recorded fixtures from. */
-    suspend fun restScenario(): JsonArray = withContext(Dispatchers.IO) {
+    suspend fun restScenario(): JsonObject = withContext(Dispatchers.IO) {
         val connection = URL(base.resolve("/rest-scenario").toString()).openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = 10_000
             connection.readTimeout = 30_000
             if (connection.responseCode != 200) throw LiveScenarioFailure("Harness control rest-scenario failed")
-            Json.parseToJsonElement(connection.inputStream.use { it.readBytes().decodeToString() }).jsonArray
+            Json.parseToJsonElement(connection.inputStream.use { it.readBytes().decodeToString() }).jsonObject
         } finally {
             connection.disconnect()
         }

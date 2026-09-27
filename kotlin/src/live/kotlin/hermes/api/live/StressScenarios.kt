@@ -20,6 +20,8 @@ import hermes.api.generated.gateway.SessionListParams
 import hermes.api.generated.gateway.SessionResumeParams
 import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
+import hermes.api.runtime.GatewayLogLevel
+import hermes.api.runtime.GatewayLogger
 import hermes.api.runtime.HermesREST
 import hermes.api.runtime.HermesRESTConfiguration
 import hermes.api.runtime.KtorGatewayTransport
@@ -51,7 +53,8 @@ internal object StressScenarios {
         val dataset = StressDataset(faults.stressDataset())
         synchronized(metrics) { metrics.clear() }
         KtorRESTTransport().use { transport ->
-            val rest = HermesREST(HermesRESTConfiguration(environment.url, LocalTokenAuth(token), transport = transport))
+            val rest = HermesREST(HermesRESTConfiguration(environment.url, LocalTokenAuth(token), transport = transport,
+                logger = restLog))
             largeData(rest, dataset)
             parallelReads(rest)
             val ktor = KtorGatewayTransport()
@@ -68,6 +71,19 @@ internal object StressScenarios {
             }
         }
         faults.metrics(JsonObject(synchronized(metrics) { metrics.mapValues { JsonPrimitive(it.value) } }).toString())
+    }
+
+    /** The REST client's latest log lines, for failure messages: CI shows no other trace of its retries. */
+    private val restLog = object : GatewayLogger {
+        private val started = System.nanoTime()
+        private val lines = ArrayDeque<String>()
+
+        override fun log(level: GatewayLogLevel, message: String) = synchronized(lines) {
+            lines.addLast("+${(System.nanoTime() - started) / 1_000_000_000}s $message")
+            while (lines.size > 30) lines.removeFirst()
+        }
+
+        fun summary(): String = synchronized(lines) { lines.joinToString(" | ") }
     }
 
     private suspend fun <T> measure(name: String, block: suspend () -> T): T {
@@ -240,7 +256,11 @@ internal object StressScenarios {
 
         // A link that resets every connection after a few seconds: reads retry, the stream resumes by replay.
         faults.conditions("flaky")
-        measure("rest.reads.flaky") { repeat(4) { for (read in reads) read(rest) } }
+        try {
+            measure("rest.reads.flaky") { repeat(4) { for (read in reads) read(rest) } }
+        } catch (error: LiveScenarioFailure) {
+            throw LiveScenarioFailure("${error.message}; last retries: ${restLog.summary()}")
+        }
         val paced = createSession(gateway, closeOnDisconnect = false)
         val flaky = measure("gateway.paced_stream.flaky") {
             LiveScenarios.runTurn(gateway, paced.sessionId, Fixture.PACED_PROMPT, null, 300_000)

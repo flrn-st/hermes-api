@@ -1,0 +1,613 @@
+# Reviewed meanings of the error codes Hermes' gateway answers with.
+#
+# Hermes declares no errors in its gateway contract. `make rest` reads them from the tagged handlers into
+# spec/out/<ref>/gateway-errors.json: every code a method's handler can return, with its message
+# templates ("{…}" stands for text Hermes fills in). Hermes reuses codes for unrelated failures, so a code
+# alone does not identify an error: 4001 is "session not found" for session methods and an invalid audio
+# frame for wake.feed. The generators therefore classify by code and, where it differs, by message.
+#
+# kinds: what a client can do about the error.
+#   invalidRequest  the call itself is wrong: fix the parameters, the method or the order of calls
+#   unsupported     this backend, agent or host does not offer it
+#   notFound        the target does not exist, or no longer does
+#   conflict        the current state rules it out until something else changes
+#   busy            Hermes is occupied; the same call can succeed shortly
+#   forbidden       this client, account or configuration may not do it
+#   unavailable     a part of Hermes is down or starting; retry later, possibly after reconnecting
+#   serverError     Hermes failed while doing it
+#
+# codes: every code of the release. `kind` is the code's meaning; `messages` overrides it for message
+# templates that mean something else. `reviewed` is the SHA-256 of the code's sorted message templates
+# (JSON, UTF-8) when it was last reviewed: when a release changes them, generation stops until the code is
+# reviewed again and the hash updated.
+#
+# names: errors with a stable meaning that clients match on. Each lists the code and message templates
+# that identify it; an entry without a message matches every message of its code.
+names:
+  parseError:
+    summary: The frame was not valid JSON.
+    match: [{code: -32700}]
+  malformedRequest:
+    summary: The frame was not a valid JSON-RPC request.
+    match: [{code: -32600}]
+  unknownMethod:
+    summary: This Hermes release has no such method; client and backend versions differ.
+    match: [{code: -32601}]
+  invalidParams:
+    summary: The parameters are not an object, or a parameter has the wrong type.
+    match: [{code: -32602}]
+  paramsRejected:
+    summary: The parameters violate the method's contract, or a required one is missing.
+    match: [{code: 4000}]
+  internalError:
+    summary: Hermes failed to handle or answer the request.
+    match: [{code: -32603}, {code: -32000, message: "handler error: {…}"}]
+  sessionNotFound:
+    summary: No live session has this runtime id, or it belongs to another connection.
+    match:
+    - {code: 4001, message: "session not found"}
+    - {code: 4001, message: "session not found or not owned by this transport"}
+    - {code: 4007, message: "session not found"}
+  sessionNotLive:
+    summary: The session was reclaimed; resume it by its stored id.
+    match: [{code: 4007, message: "session no longer live; retry resume"}]
+  sessionSettling:
+    summary: Hermes is still interrupting the turn it orphaned when the client left; retry shortly.
+    match: [{code: 4009, message: "session disconnect interrupt settling"}]
+  sessionBusy:
+    summary: A turn or subagent is running; retry once it finishes.
+    match:
+    - {code: 4009, message: "session busy"}
+    - {code: 4009, message: "session busy — wait for the current turn to finish, then retry the handoff"}
+    - {code: 4009, message: "subagent still running — wait for it to finish"}
+    - {code: 4091, message: "hosted room member session is busy"}
+  sessionStarting:
+    summary: The session's agent is still loading; retry once it is ready.
+    match: [{code: 5032}]
+  sessionTooLarge:
+    summary: The stored session is too large to resume.
+    match: [{code: 4130}]
+  profileNotFound:
+    summary: No Hermes profile has this name.
+    match: [{code: 4064, message: "profile '{…}' not found"}]
+  signInRequired:
+    summary: The account must sign in before using connectors.
+    match: [{code: 4032}]
+  storageUnavailable:
+    summary: Hermes cannot open its session storage.
+    match:
+    - {code: -32000, message: "Session storage is unavailable: {…}. {…}"}
+    - {code: 5000, message: "Session storage is unavailable: {…}. {…}"}
+    - {code: 5006, message: "Session storage is unavailable: {…}. {…}"}
+    - {code: 5007, message: "Session storage is unavailable: {…}. {…}"}
+    - {code: 5008, message: "Session storage is unavailable: {…}. {…}"}
+    - {code: 5017, message: "Session storage is unavailable: {…}. {…}"}
+    - {code: 5036, message: "Session storage is unavailable: {…}. {…}"}
+    - {code: 5072}
+  storageFull:
+    summary: The disk is full, so the message was not saved.
+    match: [{code: 5070}]
+  messageNotSaved:
+    summary: Session storage failed to write, so the message was not saved.
+    match: [{code: 5071}]
+  backendRetiring:
+    summary: The backend is shutting down; reconnect to continue.
+    match: [{code: 5035, message: "backend is retiring; reconnect to continue"}]
+codes:
+  -32700:
+    kind: invalidRequest
+    reviewed: 94b7e5b1b0e6d15654f51d45281a18491e7903253a4538f346c7bbad9d7d5b2e
+  -32603:
+    kind: serverError
+    reviewed: 72f999383173565a29c5fd457f4c7cfda68c43ede7e82ce4be357da46551399e
+  -32602:
+    kind: invalidRequest
+    reviewed: dfcbab25938e84119b7b7f2fcef32506431ad2bc694e877b6c512c9f7efcf3fb
+  -32601:
+    kind: unsupported
+    reviewed: dd84de4747f327777bc8fe7ec8400bf2fadedf44ac9d70c4b15f55bb7987219a
+  -32600:
+    kind: invalidRequest
+    reviewed: e1d58a8cd02b8b4ccc469c1fe1ae200e7ed83e0640b1965b0505a7dd267686f2
+  -32000:
+    kind: serverError
+    messages:
+      "Session storage is unavailable: {…}. {…}": unavailable
+    reviewed: e47836a1aa766ff34e30a87a74e7e6eccd6166cfefaf8662fd863a4d8262d1ff
+  4000:
+    kind: invalidRequest
+    reviewed: 2d6ba2463eb1a66d75b29177af4e3c926e8689c195484461930488ca0b7acf70
+  4001:
+    kind: invalidRequest
+    messages:
+      "session has no stored key": conflict
+      "session not found": notFound
+      "session not found or not owned by this transport": notFound
+      "session ownership changed": conflict
+      "stdio servers authenticate via env keys, not OAuth": unsupported
+      "this server uses header/API-key auth, not OAuth": unsupported
+    reviewed: 0b7732cbf65e87ade295ce616cca0668a066af819e6adb4271f14800e2e487e7
+  4002:
+    kind: invalidRequest
+    messages:
+      "Reopen the stored link.": conflict
+      "The operation has settled.": conflict
+      "The target cannot be run again.": conflict
+      "This target cannot be run again.": conflict
+    reviewed: 082befc90795d6b191fbd95191579703adf939744e7d13f4bbc5f8aad4712a55
+  4003:
+    kind: invalidRequest
+    messages:
+      "{…} uses {…} auth — run `hermes model` to configure": conflict
+    reviewed: d590f90c5ba4071e70f24a282b2556cb389c851ae338a4dc8a11cd206b9adcd9
+  4004:
+    kind: invalidRequest
+    messages:
+      "No open connection operation for this session.": notFound
+      "No open operation with that op_id.": notFound
+      "No such target on the open operation.": notFound
+      "draft expired — generate again": conflict
+      "gate actions are not allowed through session.control": forbidden
+      "no env var defined for {…}": conflict
+    reviewed: 0902a2ba7a1ad28385d02c82d1f52282ef4be8ee7fb419939ea4ac8ca1c91965
+  4005:
+    kind: forbidden
+    messages:
+      "no credentials found for {…}": notFound
+    reviewed: 77fd73e870d67e81a431e321d332905cb097ea52cb8f589f050e24f2cb867cda
+  4006:
+    kind: invalidRequest
+    messages:
+      "managed install — credentials are read-only": forbidden
+    reviewed: ea8d374315886ed34907d74724e19dbc9dba858a17b98beba4a86f6733a5e1b7
+  4007:
+    kind: notFound
+    messages:
+      "session_key required": invalidRequest
+    reviewed: 8f5fc414905becd58901be846bdafbecca2d227110de01eee90565f0545c0e65
+  4008:
+    kind: conflict
+    messages:
+      "parent_session_id is required when copying parent history": invalidRequest
+    reviewed: c0e05c46953bea404f6ca092a8845b488ff979ca453bbf4253f7a7dae416806d
+  4009:
+    kind: busy
+    reviewed: c10159a5a017913854755d47f269a79ebe67ce3e900b406e56e5bf17a48cc457
+  4010:
+    kind: unsupported
+    reviewed: 613536bedb3dba3e9d95342d9f6124b770c277cb0d7ca65ccebff10d789b04e0
+  4011:
+    kind: notFound
+    reviewed: 242c44118495b7821e5f66d30e9270366ba212c211743bf826e845fe7b67b66f
+  4012:
+    kind: invalidRequest
+    reviewed: fef8330965c0d8c86fdab79285af8dd9351e235b5aa8d8a7fb5b7c1049c183e2
+  4013:
+    kind: invalidRequest
+    reviewed: 6f9a9d46ada06b4b6388f9b1712eb26e801f14f524131d6a06893c988df4ead5
+  4014:
+    kind: invalidRequest
+    reviewed: bb3c7e557bbdaf7ed49f603677f6b633b7ef6575c6b76194b43883a2873639bb
+  4015:
+    kind: invalidRequest
+    messages:
+      "voice mode is off — enable with /voice on": conflict
+    reviewed: d979367df8790cc02d7108acff8b558d38306b737e6a7b6ecbb60d9b79353a20
+  4016:
+    kind: invalidRequest
+    messages:
+      "PDF not found: {…}": notFound
+      "image not found: {…}": notFound
+    reviewed: 1aee983ee9711ead1ba51a2ce880174b9b9d255f009bf0138fdce49383535488
+  4017:
+    kind: invalidRequest
+    messages:
+      "working directory does not exist: {…}": notFound
+    reviewed: 88c5e62a45fff14e4875b321b1bc2fc4e3664cf0b4a2cdaa1321d945a99a07db
+  4018:
+    kind: invalidRequest
+    messages:
+      "target user message is no longer in session history": conflict
+    reviewed: 281bb0d263c88444f4d6922ddcd07fa2563b8246f49e32e99d7c50ff1ba67ac7
+  4019:
+    kind: invalidRequest
+    reviewed: fc4834b328475b1b08bfe1aeb2e9030f5792674b2df459bfe7970dc92bc546f8
+  4020:
+    kind: invalidRequest
+    reviewed: 586ddcd389ac5876d6a0f27cc107e4030e68814fa4c5f4b09798a0392098e171
+  4021:
+    kind: invalidRequest
+    reviewed: 37dcc17905de0643d5d4b1462635922aac6c305f9b04a54334b2fcf5e9ead762
+  4022:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4023:
+    kind: invalidRequest
+    messages:
+      "cannot delete an active session": conflict
+    reviewed: 2a954344054b08e5b258904ac49873582be07e2d537aeffb8f51b8ce5ef66879
+  4024:
+    kind: invalidRequest
+    reviewed: b267f1502ba4c9d4e77836265113c7e43eebcf3cd3c41e1494342d7b20d7da00
+  4025:
+    kind: invalidRequest
+    messages:
+      "platform '{…}' is not configured/enabled in the gateway": conflict
+    reviewed: 5f6d07ec71f2e748ab538a6781b8ec00dae14a430d6d2fbbb3cc296039673488
+  4026:
+    kind: conflict
+    reviewed: 6a4138589c6c17d4ade0e775d6894c7ddf170399d8b139696e478d6b85217865
+  4027:
+    kind: busy
+    reviewed: 0a4ea07fca61187b1f706c0ca0373d58de271855e1155c5ae41e62022ba3cee4
+  4028:
+    kind: conflict
+    reviewed: dd610ec10d8c1d33fe6a3a5d9f6b910d03e5a8d939be251af35bd9e305f49d73
+  4029:
+    kind: invalidRequest
+    reviewed: ce5d6d03273f2fc7ba856a9317ca8d6fa1d8c40d73458838a85e08252f9d9c28
+  4030:
+    kind: forbidden
+    messages:
+      "llm.oneshot requires a template or instructions/input": invalidRequest
+      "truncate_before_user_ordinal ({…}) does not match {…} target turn ({…})": conflict
+    reviewed: fed50fce65cd8a6afd776c065004487286950db1fc3c4a187a6a2b00f7580cd3
+  4031:
+    kind: unsupported
+    reviewed: 7688183cb3f13a5e4c76bd8ffd97537d6f46599d25e974be2508bec8dadab0b5
+  4032:
+    kind: forbidden
+    reviewed: f7952a6ea727d34bbeca30503549ecbdcefef848113f082ad14ddcf79f3c7933
+  4040:
+    kind: notFound
+    reviewed: 16c9e0cd0acf504f4b71325c4d592133c1b50fa06b91ff5088ac1feb69a11034
+  4041:
+    kind: notFound
+    reviewed: 5e721cfa83bc30dd345d3fc27c50581be843093457441c294f7caad4bc9c9897
+  4044:
+    kind: notFound
+    reviewed: 86332be3dbc43bc406cf60d4780f02428ae3e41c9ac1510dfb7666f8a9c0e800
+  4061:
+    kind: invalidRequest
+    reviewed: 7aea9516993e3fc75ac3eed2a8987adb0c46501d0ac2e0b79a38188eef63797b
+  4062:
+    kind: conflict
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4063:
+    kind: invalidRequest
+    reviewed: bd3f9c2e058c668a09ccac3e21037913f8990a4db55b4e2b590f918832560560
+  4064:
+    kind: notFound
+    reviewed: 30c24a3d83a188c4d2a80cc74c6df7355cb23ce7b6be238353d5a143c2133434
+  4066:
+    kind: invalidRequest
+    reviewed: 37a0e5ce7b18775b2b29649f484dea7ab5f1c590e483dec95196cc47fcbdc67b
+  4067:
+    kind: invalidRequest
+    reviewed: 94de0d6dccdd69ed64100a86b6fe8ace3b0606824717af810ba62662063f2a91
+  4068:
+    kind: invalidRequest
+    reviewed: 63fe01523a2f4f617ed8a0bc12819509a5eb752a316a627187672f41bad1f1db
+  4069:
+    kind: invalidRequest
+    reviewed: 05e16054c267fdaf173c9834497abece1a235d1e9c92d66384d85f80b3510e48
+  4070:
+    kind: invalidRequest
+    reviewed: 2a8f8eab8539c277372fa6e4c91cdddabe0a6a60c62e3d2a9975e75fda09069f
+  4071:
+    kind: invalidRequest
+    reviewed: 31ff2e3280d391e29d420488f5803090318bea03e8482d31da8d3c1c00c72b2e
+  4072:
+    kind: notFound
+    reviewed: 21c5fd0239a824723653eb6c8907e9d76132b524b2c4e1640e0416997684a44e
+  4090:
+    kind: conflict
+    messages:
+      "profile and message required": invalidRequest
+    reviewed: 8a595c9d23c1047cfb504d8f1362d2d948eeb7e95ae8bdebf93cd40678467876
+  4091:
+    kind: busy
+    messages:
+      "message too long": invalidRequest
+    reviewed: 56b98a6a45f6387b61cad46a9a9e54e5e25f1a14aed636f5ecf200c793c7dfa2
+  4092:
+    kind: notFound
+    reviewed: 08bbbb67caf96de7ea38b8311116206a73154fea5d5c83141d8075d51a16b68e
+  4093:
+    kind: invalidRequest
+    reviewed: 55f1ac8687d837b93048de6531c4acea00e6a1bb42ffce6ea7872896242a23fb
+  4094:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4110:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4111:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4112:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4113:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4114:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4115:
+    kind: unavailable
+    reviewed: d7417df3ad12c11394e2b4cb99164d8a176809f736c33b2ef8549be7f96d6705
+  4116:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4117:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4118:
+    kind: conflict
+    reviewed: b53b3fbb7a94868a08cd86f40653560765e416b3213cc4880723485951e302c3
+  4119:
+    kind: invalidRequest
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4120:
+    kind: invalidRequest
+    messages:
+      "invalid hosted room turn proof": forbidden
+    reviewed: 0d8c7407f96522622ab484be6c3862b3c57f2ffb6d11d25758c535fc8bc801d4
+  4121:
+    kind: unavailable
+    messages:
+      "hosted room turns do not support isolated compute workers yet": unsupported
+    reviewed: 0f9a904383b26bf8fb0360b704f5e31deb405b90449c0019c222547c076bc1a9
+  4122:
+    kind: unsupported
+    reviewed: 747103521ed5364c3dea7c2f41f589effa3b640ffe2b18bd444653e74db8ef0c
+  4123:
+    kind: unavailable
+    reviewed: a4b9846b7520b30e3d1f6ae09522f59aafeb4719d8437dd2edd730bb29622b7f
+  4124:
+    kind: invalidRequest
+    reviewed: f63d8c83eb60905e7597064a1b3d7a61e72830b3ad50c858a2ec2daeff988cc1
+  4130:
+    kind: conflict
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4403:
+    kind: forbidden
+    messages:
+      "command_id required": invalidRequest
+      "controller_id, browser_profile_id, and server session profile are required": invalidRequest
+      "no controller registered for this session": notFound
+      "no permitted controller capabilities requested": invalidRequest
+      "unsupported browser-control protocol version; expected {…}": unsupported
+    reviewed: 72d97752dcf29a4357f78eea1ef9b799a90fad85996b36c49176f139ffcea339
+  5000:
+    kind: serverError
+    messages:
+      "Session storage is unavailable: {…}. {…}": unavailable
+    reviewed: bf15b8d0aa3ca4e36d10b402c8f6897b7cc974691787cac3a292afd31ecc1c3b
+  5001:
+    kind: unavailable
+    reviewed: 0effaa75e3b02862e5c3a4de4d2583b0af3284fa244d49aeae3c4cd982851910
+  5003:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5004:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5005:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5006:
+    kind: serverError
+    messages:
+      "Session storage is unavailable: {…}. {…}": unavailable
+    reviewed: a5ae7e9ad438e0370707e67c6134dddb78ac3d70fba06ea9447e45599218debb
+  5007:
+    kind: serverError
+    messages:
+      "Session storage is unavailable: {…}. {…}": unavailable
+    reviewed: b2e1e11d7dcee9ba566f1f8cb304312e7b6b2a5290013dd6e9fd90feb5de8a5f
+  5008:
+    kind: serverError
+    messages:
+      "Session storage is unavailable: {…}. {…}": unavailable
+    reviewed: c551b52aae881cbd8dd0a8c9121c911a45abc5b1caae4edf8d8d3095f1ca4066
+  5010:
+    kind: serverError
+    reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
+  5011:
+    kind: serverError
+    reviewed: dc7d055c7d112439305b5b0df451ccff17859aaf0b24561760ffa0a122a92013
+  5012:
+    kind: serverError
+    reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
+  5015:
+    kind: serverError
+    reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
+  5016:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5017:
+    kind: serverError
+    messages:
+      "Session storage is unavailable: {…}. {…}": unavailable
+    reviewed: cb3a3a513be9ec3e974946e81c62f92633d3a8cc684907c1f6bdaf4c6d7f10e6
+  5019:
+    kind: serverError
+    reviewed: 736a27b6308fdfac172933b0a5ee48f7c73221bdfda62ef54a2916bfa3b1aeac
+  5020:
+    kind: serverError
+    reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
+  5021:
+    kind: serverError
+    reviewed: ddbea76635167d5363213844ce253fede56cab1d3b62be146d449be10cd35c1f
+  5022:
+    kind: serverError
+    reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
+  5023:
+    kind: serverError
+    reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
+  5024:
+    kind: serverError
+    reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
+  5025:
+    kind: serverError
+    messages:
+      "voice module not available — install audio dependencies": unsupported
+    reviewed: 4a2d62db4fecd737719eaa43cc48e7d4ba0f75083917ca28fb1852afac712f7c
+  5026:
+    kind: serverError
+    messages:
+      "wake module unavailable: {…}": unsupported
+    reviewed: 364743c6d617eeb6ad6ab4ffb69bfb009cc51976d37efbf78fb6b6b87ca04be7
+  5027:
+    kind: serverError
+    messages:
+      "clipboard unavailable: {…}": unavailable
+    reviewed: 434dbf6291014ee2fff010768a35eb1744385c5a417f04ebe1f77dfe96f9401d
+  5028:
+    kind: serverError
+    messages:
+      "pdftoppm not installed (poppler-utils package required)": unsupported
+    reviewed: 07df166553daef62d2ae7af9631d9e475af774f4f93cceb05102a6a11eb55955
+  5030:
+    kind: serverError
+    reviewed: 5b748b040aa4ce594b7f72f3678d71d2ce7ed4cd2fafc1c413c6e6334ebad21a
+  5031:
+    kind: serverError
+    messages:
+      "command.dispatch unavailable": unavailable
+      "could not reach browser CDP at {…}": unavailable
+      "could not reach browser CDP at {…}: {…}": unavailable
+    reviewed: dc0d11c15db41d2a60f52d706377e1ac8c7742dfa61f7717873c14a2c924e01f
+  5032:
+    kind: busy
+    reviewed: e69caaa70e8d5289a41c1db2dd5d893b2b127fc7029540f72567df251675bc32
+  5033:
+    kind: unsupported
+    reviewed: dcfe05c494e3fde6a680e2f6213b15e64288c5d69779f54c92b63b38c5498a07
+  5034:
+    kind: unavailable
+    messages:
+      "Connector request failed. Try again explicitly.": serverError
+      "Connector service returned an invalid response.": serverError
+      "Connector service returned no authorization results.": serverError
+    reviewed: b3f22c6ab34c2d02520490e1c6f57612f1df82f034ff951b9696b45fac54adad
+  5035:
+    kind: unavailable
+    reviewed: f9aeae571d183268d0d10ad979f2ef8eb7e2586009681e252a739de0aa7a0342
+  5036:
+    kind: serverError
+    messages:
+      "Session storage is unavailable: {…}. {…}": unavailable
+    reviewed: 7fa5c86bfdf25392416910b75105425f7eb7137e9843463c243c81c7552616b2
+  5061:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5062:
+    kind: serverError
+    messages:
+      "no such project": notFound
+    reviewed: 3b97f5b7781dffdb3f658bdb6e4bf12aabda1f402ac66fc46c24fcfa034195d1
+  5063:
+    kind: serverError
+    messages:
+      "project_id required": invalidRequest
+    reviewed: ca2d1e41c1c6e26da5f524aed960e9282aa05a6d708c55b6f440659c62dfc2a7
+  5064:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5065:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5066:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5067:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5070:
+    kind: serverError
+    reviewed: 4906042160937daf46c7a0c464da92299885d244d7ce9e0cd3c553730e242870
+  5071:
+    kind: serverError
+    reviewed: 733dc917bf2d69733e8f11fe54c6437d2e649a9a633ae4bdec70869d54bd0874
+  5072:
+    kind: unavailable
+    reviewed: fd2d7358e87cd77ec9d9645e921fce53c491889d2d7b689f03de23da4999556d
+  5073:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5074:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5090:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5091:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5092:
+    kind: serverError
+    reviewed: f6d9834407f3b8ca2bbd26cacf10d72923c1009471ca5cef7db83a0c41192978
+  5093:
+    kind: serverError
+    reviewed: 75b907bcf9f2ba9f9245651a042c29a19c8bbfeadac38cbe28b036cab669e6a7
+  5094:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5095:
+    kind: invalidRequest
+    messages:
+      "{…} is not an enabled password manager": conflict
+    reviewed: 6786b334e42f0b9b8c0bc5ec30b8b677371b3c8343222efc61a40231eb9ef01c
+  5096:
+    kind: busy
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5110:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5111:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5112:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5113:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5114:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5115:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5116:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5117:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5118:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5119:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5120:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5122:
+    kind: unavailable
+    reviewed: b01b3d20c4ecad75a970d8aa615a56707804d02fec65ff33e55e072160dd5b30
+  5300:
+    kind: serverError
+    messages:
+      "Bot Desktop runs on Linux gateway hosts only": unsupported
+      "a human holds this screen; pass force: true to stop it anyway": conflict
+      "no supported package manager (apt-get, dnf, pacman) on this host": unsupported
+      "this profile's Bot Desktop is not running; call display.start first": conflict
+      "viewer_id required": invalidRequest
+      "viewer_id required to release another viewer's lease (or pass force: true)": invalidRequest
+      "viewer_id was not minted for this connection; call display.observe first": forbidden
+    reviewed: ae91839fe04973162cbbfc2ea1fe29640c4630adb1c9d4f8b96ac6b1990660b4

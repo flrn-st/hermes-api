@@ -13,6 +13,7 @@ gen:
 
 rest:
 	uv run --locked python -m tools.extract_openapi --ref $(REF)
+	uv run --locked python -m tools.extract_gateway_errors --ref $(REF)
 	uv run --locked python -m tools.apply_overlay --ref $(REF)
 	uv run --locked python -m tools.gen_rest_api --ref $(REF)
 

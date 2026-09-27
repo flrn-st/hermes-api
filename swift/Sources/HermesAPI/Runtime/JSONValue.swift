@@ -35,6 +35,41 @@ public indirect enum JSONValue: Codable, Sendable, Hashable {
     }
 }
 
+public extension JSONValue {
+    /// Parses a JSON document. Several times faster than decoding `JSONValue` with `JSONDecoder`, which
+    /// probes every value's type by attempting decodes; the gateway parses every frame this way.
+    init(jsonData data: Data) throws {
+        self = try JSONValue(foundation: JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]))
+    }
+
+    private init(foundation value: Any) throws {
+        switch value {
+        case is NSNull:
+            self = .null
+        case let text as String:
+            self = .string(text)
+        case let number as NSNumber:
+            if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                self = .boolean(number.boolValue)
+            } else if CFNumberIsFloatType(number) {
+                // `JSONDecoder` reads an integral value such as 1.0 as an integer too.
+                let double = number.doubleValue
+                self = double.rounded() == double && abs(double) < 9.0e15 ? .integer(Int(double)) : .number(double)
+            } else if let exact = Int(exactly: number.int64Value), number.compare(NSNumber(value: exact)) == .orderedSame {
+                self = .integer(exact)
+            } else {
+                self = .number(number.doubleValue)
+            }
+        case let values as [Any]:
+            self = .array(try values.map(JSONValue.init(foundation:)))
+        case let fields as [String: Any]:
+            self = .object(try fields.mapValues(JSONValue.init(foundation:)))
+        default:
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Unsupported JSON value"))
+        }
+    }
+}
+
 /// Distinguishes an omitted request field from an explicit JSON null.
 public enum Patch<Value: Sendable & Hashable>: Sendable, Hashable {
     case absent

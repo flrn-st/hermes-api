@@ -122,6 +122,10 @@ public class HermesGateway(
     private val draining = mutableMapOf<String, Long>()
     private var drainJob: Job? = null
 
+    /** The desktop contract Hermes last reported in a session result, or `null` before the first one. */
+    @Volatile public var backendContract: Int? = null
+        private set
+
     // Events leave the reader through an unbounded queue, so a slow collector delays delivery but never
     // stalls the socket (and with it heartbeat replies).
     private val eventQueue = Channel<GatewayEvent>(Channel.UNLIMITED)
@@ -674,7 +678,8 @@ public class HermesGateway(
         val info = root["info"] as? JsonObject
         val contract = ((root["desktop_contract"] ?: info?.get("desktop_contract")) as? JsonPrimitive)
             ?.content?.toIntOrNull() ?: return
-        if (contract !in HermesGatewayContract.supportedContractRange) throw HermesGatewayException.IncompatibleServer(contract)
+        backendContract = contract
+        if (contract < configuration.minimumContract) throw HermesGatewayException.IncompatibleServer(contract)
     }
 
     // Session tracking and recovery

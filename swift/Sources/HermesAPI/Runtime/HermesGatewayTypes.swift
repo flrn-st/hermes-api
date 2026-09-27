@@ -8,6 +8,7 @@ public enum HermesGatewayError: Error, Sendable, Equatable {
     case decoding(String)
     case timeout
     case cancelled
+    /// Hermes reported a desktop contract below `HermesGatewayConfiguration.minimumContract`.
     case incompatibleServer(Int)
     /// The dashboard rejected the credential: HTTP 401 or 403 from the ticket request or the WebSocket
     /// upgrade. Hermes also answers 403 for a disallowed origin or a disabled chat, so retrying cannot help.
@@ -78,6 +79,10 @@ public struct HermesGatewayConfiguration: Sendable {
     public let heartbeatDeadline: Duration
     /// Resume sessions Hermes reclaimed while this client was disconnected. See `GatewaySessionRecovery`.
     public let resumesReclaimedSessions: Bool
+    /// The lowest desktop contract accepted from Hermes; a session result reporting less fails with
+    /// `incompatibleServer`. Contracts only grow, so any higher one is accepted. Lower it to keep working
+    /// with older backends, and branch on `HermesGateway.backendContract` for what they lack.
+    public let minimumContract: Int
     public let logger: Logger
 
     public init(
@@ -96,6 +101,7 @@ public struct HermesGatewayConfiguration: Sendable {
         heartbeatInterval: Duration = .seconds(15),
         heartbeatDeadline: Duration = .seconds(45),
         resumesReclaimedSessions: Bool = true,
+        minimumContract: Int = HermesGatewayContract.desktopContract,
         logger: Logger = Logger(subsystem: "hermes.api", category: "gateway")
     ) {
         self.baseURL = baseURL
@@ -109,6 +115,7 @@ public struct HermesGatewayConfiguration: Sendable {
         self.heartbeatInterval = heartbeatInterval
         self.heartbeatDeadline = heartbeatDeadline
         self.resumesReclaimedSessions = resumesReclaimedSessions
+        self.minimumContract = minimumContract
         self.logger = logger
     }
 }

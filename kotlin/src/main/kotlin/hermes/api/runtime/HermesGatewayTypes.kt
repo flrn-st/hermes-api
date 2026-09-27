@@ -4,6 +4,7 @@ import java.net.URI
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
 import hermes.api.generated.gateway.GatewayEventPayload
+import hermes.api.generated.gateway.HermesGatewayContract
 import kotlin.random.Random
 
 public sealed class HermesGatewayException(message: String) : Exception(message) {
@@ -11,6 +12,7 @@ public sealed class HermesGatewayException(message: String) : Exception(message)
     public class Protocol(message: String) : HermesGatewayException(message)
     public class Timeout(public val method: String) : HermesGatewayException("RPC $method timed out")
     public class RPC(public val code: Int, message: String, public val data: JsonElement?) : HermesGatewayException(message)
+    /** Hermes reported a desktop contract below [HermesGatewayConfiguration.minimumContract]. */
     public class IncompatibleServer(public val contract: Int) : HermesGatewayException("Unsupported desktop contract $contract")
     /** The dashboard rejected the credential: HTTP 401 or 403 from the ticket request or the WebSocket
      *  upgrade. Hermes also answers 403 for a disallowed origin or a disabled chat, so retrying cannot help. */
@@ -105,5 +107,9 @@ public data class HermesGatewayConfiguration(
     val heartbeatDeadlineMillis: Long = 45_000,
     /** Resume sessions Hermes reclaimed while this client was disconnected. See [GatewaySessionRecovery]. */
     val resumesReclaimedSessions: Boolean = true,
+    /** The lowest desktop contract accepted from Hermes; a session result reporting less fails with
+     *  [HermesGatewayException.IncompatibleServer]. Contracts only grow, so any higher one is accepted. Lower
+     *  it to keep working with older backends, and branch on [HermesGateway.backendContract] for what they lack. */
+    val minimumContract: Int = HermesGatewayContract.desktopContract,
     val logger: GatewayLogger = GatewayLogger.None,
 )

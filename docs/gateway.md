@@ -90,6 +90,15 @@ Sessions created with `close_on_disconnect: true` are torn down by Hermes as soo
 as the socket closes; the client reports them as `.unavailable` instead of
 rebinding them.
 
+## Backend versions
+
+Session results carry Hermes' desktop contract, a number Hermes raises whenever clients need something new
+from the backend (v7 turned blocking prompts into server requests, for example). The gateway accepts any
+backend reporting `minimumContract` or higher; the default is the contract of the pinned release
+(`HermesGatewayContract.desktopContract`), so a newer backend works and an older one fails the call with
+`incompatibleServer`. An app that must keep working with older backends lowers `minimumContract` and reads
+`backendContract` (the last contract Hermes reported) to leave out what those backends lack.
+
 ## Errors Hermes answers with
 
 A refused call throws `HermesGatewayError.rpc(code:message:data:)` (Kotlin: `HermesGatewayException.RPC`).

@@ -314,9 +314,7 @@ public struct HermesREST: RESTCalling {
     }
 
     private func urlRequest(for request: RESTRequest) throws -> URLRequest {
-        guard request.path.hasPrefix("/"), !request.path.hasPrefix("//"),
-              let url = URL(string: request.path, relativeTo: configuration.baseURL)?.absoluteURL,
-              var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+        guard var components = DashboardURL.components(base: configuration.baseURL, path: request.path) else {
             throw HermesRESTError.transport("Invalid REST path")
         }
         if !request.query.isEmpty {

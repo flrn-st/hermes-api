@@ -307,9 +307,8 @@ public class HermesREST(
         val suffix = request.query.toSortedMap().entries.joinToString("&") { (name, value) ->
             "${RESTPath.segment(name)}=${RESTPath.segment(value)}"
         }
-        val base = try { configuration.baseURI.resolve(request.path) }
-        catch (error: IllegalArgumentException) { throw HermesRESTException.Transport("Invalid REST path") }
-        return if (suffix.isEmpty()) base else URI("$base?$suffix")
+        return dashboardURI(configuration.baseURI, request.path, suffix)
+            ?: throw HermesRESTException.Transport("Invalid REST path")
     }
 
     private suspend fun perform(request: RESTRequest, uri: URI, headers: Map<String, String>): RESTResponse {

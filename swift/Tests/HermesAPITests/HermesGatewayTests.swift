@@ -12,9 +12,10 @@ private struct TestAuth: HermesAuth {
 
 private struct TicketHTTPTransport: HTTPTransport {
     var status = 200
+    var path = "/api/auth/ws-ticket"
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        #expect(request.url?.path == "/api/auth/ws-ticket")
+        #expect(request.url?.path == path)
         #expect(request.httpMethod == "POST")
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer test")
         guard let url = request.url,
@@ -101,14 +102,16 @@ private actor SequenceTransport: GatewayTransport {
 
     private var steps: [Step]
     private(set) var attempts = 0
+    private(set) var urls: [URL] = []
+    private(set) var subprotocols: [[String]] = []
 
     init(_ steps: [Step]) { self.steps = steps }
 
     init(_ sockets: [TestSocket]) { self.steps = sockets.map(Step.socket) }
 
     func connect(url: URL, headers: [String: String], subprotocols: [String]) async throws -> any GatewayConnection {
-        #expect(url.path == "/api/ws")
-        #expect(subprotocols == ["hermes-gateway-v1", "hermes-gateway-ticket.test-ticket"])
+        urls.append(url)
+        self.subprotocols.append(subprotocols)
         attempts += 1
         guard !steps.isEmpty else {
             try await Task.sleep(for: .seconds(3600))
@@ -142,10 +145,12 @@ private let offline = GatewayNetworkPath(isAvailable: false, interface: nil)
 private func client(
     _ transport: SequenceTransport, timeout: Duration = .seconds(1), monitor: TestNetworkMonitor? = nil,
     reconnectDelay: Duration = .zero, heartbeat: Duration = .seconds(60), deadline: Duration = .seconds(120),
-    minimumContract: Int = HermesGatewayContract.desktopContract
+    minimumContract: Int = HermesGatewayContract.desktopContract,
+    baseURL: URL = URL(string: "https://example.test")!, auth: any HermesAuth = TestAuth(),
+    httpTransport: any HTTPTransport = TicketHTTPTransport()
 ) -> HermesGateway {
     HermesGateway(configuration: .init(
-        baseURL: URL(string: "https://example.test")!, auth: TestAuth(), transport: transport,
+        baseURL: baseURL, auth: auth, transport: transport, httpTransport: httpTransport,
         networkMonitor: monitor, requestTimeout: timeout, reconnectDelay: { _ in reconnectDelay },
         heartbeatInterval: heartbeat, heartbeatDeadline: deadline, minimumContract: minimumContract
     ))
@@ -398,6 +403,20 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
     }
     #expect(ticket == "fresh-ticket")
     #expect(headers["Authorization"] == "Bearer test")
+}
+
+@Test func connectionsKeepTheBaseURLPath() async throws {
+    let socket = TestSocket()
+    let transport = SequenceTransport([socket])
+    let gateway = client(
+        transport, baseURL: try #require(URL(string: "https://relay.example/agents/box/")),
+        auth: DashboardTicketAuth { ["Authorization": "Bearer test"] },
+        httpTransport: TicketHTTPTransport(path: "/agents/box/api/auth/ws-ticket")
+    )
+    try await gateway.connect()
+    #expect(await transport.urls.map(\.absoluteString) == ["wss://relay.example/agents/box/api/ws"])
+    #expect(await transport.subprotocols == [["hermes-gateway-v1", "hermes-gateway-ticket.fresh-ticket"]])
+    await gateway.disconnect()
 }
 
 @Test func rejectedTicketIsAnAuthenticationFailure() async throws {

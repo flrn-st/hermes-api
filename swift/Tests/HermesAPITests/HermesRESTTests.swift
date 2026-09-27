@@ -42,8 +42,9 @@ private let base = URL(string: "https://dashboard.example")!
 private let fastRetry = RESTRetryPolicy(maxAttempts: 3, initialDelay: .milliseconds(1), maximumDelay: .milliseconds(5))
 
 private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? = nil,
-                    retry: RESTRetryPolicy = fastRetry, timeout: Duration = .seconds(5)) -> HermesREST {
-    HermesREST(configuration: .init(baseURL: base, auth: auth, transport: transport, timeout: timeout, retry: retry))
+                    retry: RESTRetryPolicy = fastRetry, timeout: Duration = .seconds(5),
+                    baseURL: URL = base) -> HermesREST {
+    HermesREST(configuration: .init(baseURL: baseURL, auth: auth, transport: transport, timeout: timeout, retry: retry))
 }
 
 @Test func queryValuesAndPathSegmentsArePercentEncoded() async throws {
@@ -58,6 +59,17 @@ private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? 
     #expect(requests[0].url?.absoluteString
             == "https://dashboard.example/api/sessions/empty/count?profile=qa%20%26%20mobile%2B1%2F%C3%A9")
     #expect(requests[1].url?.absoluteString == "https://dashboard.example/api/sessions/a%2Fb%20c%3F%23%C3%A9")
+}
+
+@Test func routesKeepTheBaseURLPath() async throws {
+    let transport = ScriptedTransport([.respond(200, #"{"count":2}"#), .respond(200, #"{"count":3}"#)])
+    let behindRelay = client(transport, baseURL: URL(string: "https://relay.example/agents/box%201/?ignored=1")!)
+    #expect(try await behindRelay.sessions.emptyCount(profile: "default").count == 2)
+    let behindProxy = client(transport, baseURL: URL(string: "https://proxy.example/hermes")!)
+    #expect(try await behindProxy.sessions.emptyCount().count == 3)
+    let requests = await transport.requests
+    #expect(requests[0].url?.absoluteString == "https://relay.example/agents/box%201/api/sessions/empty/count?profile=default")
+    #expect(requests[1].url?.absoluteString == "https://proxy.example/hermes/api/sessions/empty/count")
 }
 
 @Test func localTokenAuthenticatesAndJSONBodiesAreSent() async throws {

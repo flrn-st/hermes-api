@@ -67,6 +67,9 @@ scope.launch { gateway.sessionRecoveries.collect(::handle) }
 gateway.connect()
 ```
 
+The dashboard URL may carry a path (a reverse proxy's or relay's prefix); the ticket request and `/api/ws`
+are appended to it.
+
 ## What the client does for you
 
 | Situation | Behaviour |

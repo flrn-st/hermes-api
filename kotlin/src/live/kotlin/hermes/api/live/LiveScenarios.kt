@@ -315,6 +315,18 @@ public object LiveScenarios {
             }
             deadline(60_000, "the gateway to reconnect after the restart") { awaitReconnect(reconnectsBeforeRestart) }
             runTurn(gateway, resumed.sessionId, "Reply with a short greeting.", null).expectReply(Fixture.REPLY)
+
+            // An outage longer than Hermes' 20 s grace drops the session while its turn keeps writing the reply
+            // to the replay buffer; the gateway resumes the session and still delivers the whole turn.
+            val outageRecovery = async(start = CoroutineStart.UNDISPATCHED) { gateway.sessionRecoveries.first() }
+            val outage = runTurn(gateway, resumed.sessionId, Fixture.RECONNECT_PROMPT, null,
+                onFirstDelta = { faults.drop(25_000) })
+            outage.expectReply(Fixture.RECONNECT_REPLY)
+            outage.expectContiguousSequence()
+            val dropped = deadline(10_000, "the recovery after the long outage") { outageRecovery.await() }
+            if (dropped !is GatewaySessionRecovery.Resumed || dropped.previousSessionId != resumed.sessionId) {
+                throw LiveScenarioFailure("Expected ${resumed.sessionId} to be resumed after the outage, got $dropped")
+            }
         } finally {
             gateway.disconnect()
             ktor.close()

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import re
 import subprocess
 import tomllib
 from collections.abc import Callable
@@ -20,6 +19,7 @@ from tools.ref_policy import (
     version_from_pyproject,
     version_key,
 )
+from tools.release_version import bump_minor
 
 
 def stable_tags(remote_output: str) -> list[str]:
@@ -70,7 +70,7 @@ def detect(root: Path = ROOT) -> tuple[str, str] | None:
 
 
 def adopt(ref: str, tag: str, root: Path = ROOT) -> str:
-    """Track Hermes ``ref`` (released as ``tag``) as the current release; returns the package version."""
+    """Track Hermes ``ref`` (released as ``tag``) as the current release; returns the new package version."""
     ref = require_release(ref)
     tag = require_upstream_tag(tag)
     current = current_release(root)
@@ -80,16 +80,10 @@ def adopt(ref: str, tag: str, root: Path = ROOT) -> str:
     releases = load_releases(config)
     if ref in releases or tag in releases.values():
         raise ValueError(f"Hermes {ref} ({tag}) is already tracked")
-    version = ref[1:]
-    gradle = root / "kotlin/build.gradle.kts"
-    body = gradle.read_text(encoding="utf-8")
-    new, count = re.subn(r'^version = "\d+\.\d+\.\d+"$', f'version = "{version}"', body, flags=re.MULTILINE)
-    if count != 1:
-        raise ValueError("Expected one Kotlin package version")
+    version = bump_minor(root)
     with config.open("a", encoding="utf-8") as stream:
         stream.write(f"  {ref}: {tag}\n")
     (root / "spec/current-release.txt").write_text(ref + "\n", encoding="utf-8")
-    gradle.write_text(new, encoding="utf-8")
     return version
 
 

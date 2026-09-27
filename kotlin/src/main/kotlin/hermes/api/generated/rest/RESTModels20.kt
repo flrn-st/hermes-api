@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = WhatsAppOnboardingApply.Serializer::class)
@@ -25,8 +26,10 @@ public data class WhatsAppOnboardingApply(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("WhatsAppOnboardingApply requires an object")
-            val known = setOf<String>("allowed_users", "mode", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("allowed_users", "mode", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return WhatsAppOnboardingApply(
                 allowedUsers = when (val raw = input["allowed_users"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 mode = when (val raw = input["mode"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -152,6 +155,7 @@ public data class WhatsAppOnboardingResponse(
 public sealed interface WhatsAppOnboardingResponseMode {
     public data object Bot : WhatsAppOnboardingResponseMode
     public data object SelfChat : WhatsAppOnboardingResponseMode
+    public data class Unknown(public val raw: kotlin.String) : WhatsAppOnboardingResponseMode
 
     public object Serializer : KSerializer<WhatsAppOnboardingResponseMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingResponseMode", PrimitiveKind.STRING)
@@ -159,13 +163,14 @@ public sealed interface WhatsAppOnboardingResponseMode {
         override fun deserialize(decoder: Decoder): WhatsAppOnboardingResponseMode = when (val raw = decoder.decodeString()) {
             "bot" -> Bot
             "self-chat" -> SelfChat
-            else -> throw SerializationException("Unexpected WhatsAppOnboardingResponseMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected WhatsAppOnboardingResponseMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: WhatsAppOnboardingResponseMode) {
             val raw: kotlin.String = when (value) {
                 Bot -> "bot"
                 SelfChat -> "self-chat"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -182,6 +187,7 @@ public sealed interface WhatsAppOnboardingResponseStatus {
     public data object Error : WhatsAppOnboardingResponseStatus
     public data object Expired : WhatsAppOnboardingResponseStatus
     public data object Cancelled : WhatsAppOnboardingResponseStatus
+    public data class Unknown(public val raw: kotlin.String) : WhatsAppOnboardingResponseStatus
 
     public object Serializer : KSerializer<WhatsAppOnboardingResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingResponseStatus", PrimitiveKind.STRING)
@@ -194,7 +200,7 @@ public sealed interface WhatsAppOnboardingResponseStatus {
             "error" -> Error
             "expired" -> Expired
             "cancelled" -> Cancelled
-            else -> throw SerializationException("Unexpected WhatsAppOnboardingResponseStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected WhatsAppOnboardingResponseStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: WhatsAppOnboardingResponseStatus) {
@@ -206,6 +212,7 @@ public sealed interface WhatsAppOnboardingResponseStatus {
                 Error -> "error"
                 Expired -> "expired"
                 Cancelled -> "cancelled"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -229,8 +236,10 @@ public data class WhatsAppOnboardingStart(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("WhatsAppOnboardingStart requires an object")
-            val known = setOf<String>("allowed_users", "mode", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("allowed_users", "mode", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return WhatsAppOnboardingStart(
                 allowedUsers = when (val raw = input["allowed_users"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 mode = when (val raw = input["mode"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -282,8 +291,10 @@ public data class _AgentPluginInstallBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("_AgentPluginInstallBody requires an object")
-            val known = setOf<String>("catalog_name", "enable", "force", "identifier", "ref")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("catalog_name", "enable", "force", "identifier", "ref")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return _AgentPluginInstallBody(
                 catalogName = when (val raw = input["catalog_name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 enable = input["enable"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
@@ -363,8 +374,10 @@ public data class _PluginProvidersPutBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("_PluginProvidersPutBody requires an object")
-            val known = setOf<String>("context_engine", "memory_provider")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("context_engine", "memory_provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return _PluginProvidersPutBody(
                 contextEngine = when (val raw = input["context_engine"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 memoryProvider = when (val raw = input["memory_provider"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },

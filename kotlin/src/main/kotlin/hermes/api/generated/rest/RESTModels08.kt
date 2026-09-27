@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.get_run_endpoint``. */
 @Serializable
@@ -354,6 +355,7 @@ public sealed interface KanbanWarningsSummaryHighestSeverity {
     public data object Warning : KanbanWarningsSummaryHighestSeverity
     public data object Error : KanbanWarningsSummaryHighestSeverity
     public data object Critical : KanbanWarningsSummaryHighestSeverity
+    public data class Unknown(public val raw: kotlin.String) : KanbanWarningsSummaryHighestSeverity
 
     public object Serializer : KSerializer<KanbanWarningsSummaryHighestSeverity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanWarningsSummaryHighestSeverity", PrimitiveKind.STRING)
@@ -362,7 +364,7 @@ public sealed interface KanbanWarningsSummaryHighestSeverity {
             "warning" -> Warning
             "error" -> Error
             "critical" -> Critical
-            else -> throw SerializationException("Unexpected KanbanWarningsSummaryHighestSeverity value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanWarningsSummaryHighestSeverity value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanWarningsSummaryHighestSeverity) {
@@ -370,6 +372,7 @@ public sealed interface KanbanWarningsSummaryHighestSeverity {
                 Warning -> "warning"
                 Error -> "error"
                 Critical -> "critical"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -412,6 +415,7 @@ public data class LearningGraphMemoryCard(
 public sealed interface LearningGraphMemoryCardSource {
     public data object Memory : LearningGraphMemoryCardSource
     public data object Profile : LearningGraphMemoryCardSource
+    public data class Unknown(public val raw: kotlin.String) : LearningGraphMemoryCardSource
 
     public object Serializer : KSerializer<LearningGraphMemoryCardSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphMemoryCardSource", PrimitiveKind.STRING)
@@ -419,13 +423,14 @@ public sealed interface LearningGraphMemoryCardSource {
         override fun deserialize(decoder: Decoder): LearningGraphMemoryCardSource = when (val raw = decoder.decodeString()) {
             "memory" -> Memory
             "profile" -> Profile
-            else -> throw SerializationException("Unexpected LearningGraphMemoryCardSource value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningGraphMemoryCardSource value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LearningGraphMemoryCardSource) {
             val raw: kotlin.String = when (value) {
                 Memory -> "memory"
                 Profile -> "profile"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -462,6 +467,7 @@ public data class LearningGraphNode(
 public sealed interface LearningGraphNodeKind {
     public data object Skill : LearningGraphNodeKind
     public data object Memory : LearningGraphNodeKind
+    public data class Unknown(public val raw: kotlin.String) : LearningGraphNodeKind
 
     public object Serializer : KSerializer<LearningGraphNodeKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphNodeKind", PrimitiveKind.STRING)
@@ -469,13 +475,14 @@ public sealed interface LearningGraphNodeKind {
         override fun deserialize(decoder: Decoder): LearningGraphNodeKind = when (val raw = decoder.decodeString()) {
             "skill" -> Skill
             "memory" -> Memory
-            else -> throw SerializationException("Unexpected LearningGraphNodeKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningGraphNodeKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LearningGraphNodeKind) {
             val raw: kotlin.String = when (value) {
                 Skill -> "skill"
                 Memory -> "memory"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -487,6 +494,7 @@ public sealed interface LearningGraphNodeKind {
 public sealed interface LearningGraphNodeMemorySource {
     public data object Memory : LearningGraphNodeMemorySource
     public data object Profile : LearningGraphNodeMemorySource
+    public data class Unknown(public val raw: kotlin.String) : LearningGraphNodeMemorySource
 
     public object Serializer : KSerializer<LearningGraphNodeMemorySource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphNodeMemorySource", PrimitiveKind.STRING)
@@ -494,13 +502,14 @@ public sealed interface LearningGraphNodeMemorySource {
         override fun deserialize(decoder: Decoder): LearningGraphNodeMemorySource = when (val raw = decoder.decodeString()) {
             "memory" -> Memory
             "profile" -> Profile
-            else -> throw SerializationException("Unexpected LearningGraphNodeMemorySource value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningGraphNodeMemorySource value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LearningGraphNodeMemorySource) {
             val raw: kotlin.String = when (value) {
                 Memory -> "memory"
                 Profile -> "profile"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -606,6 +615,7 @@ public data class LearningNodeDetailResponse(
 public sealed interface LearningNodeDetailResponseKind {
     public data object Skill : LearningNodeDetailResponseKind
     public data object Memory : LearningNodeDetailResponseKind
+    public data class Unknown(public val raw: kotlin.String) : LearningNodeDetailResponseKind
 
     public object Serializer : KSerializer<LearningNodeDetailResponseKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningNodeDetailResponseKind", PrimitiveKind.STRING)
@@ -613,13 +623,14 @@ public sealed interface LearningNodeDetailResponseKind {
         override fun deserialize(decoder: Decoder): LearningNodeDetailResponseKind = when (val raw = decoder.decodeString()) {
             "skill" -> Skill
             "memory" -> Memory
-            else -> throw SerializationException("Unexpected LearningNodeDetailResponseKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningNodeDetailResponseKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LearningNodeDetailResponseKind) {
             val raw: kotlin.String = when (value) {
                 Skill -> "skill"
                 Memory -> "memory"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -643,8 +654,10 @@ public data class LearningNodeEdit(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("LearningNodeEdit requires an object")
-            val known = setOf<String>("content", "id", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("content", "id", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return LearningNodeEdit(
                 content = json.decodeFromJsonElement<String>((input["content"] ?: throw SerializationException("Missing content"))),
                 id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
@@ -694,8 +707,10 @@ public data class LearningNodeRef(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("LearningNodeRef requires an object")
-            val known = setOf<String>("id", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("id", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return LearningNodeRef(
                 id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },

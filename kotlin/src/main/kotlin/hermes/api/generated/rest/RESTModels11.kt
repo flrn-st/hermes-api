@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``memory_oauth_status`` → the provider's ``oauth_flow.get_flow_status()`` (``plugins/memory/honcho/oauth_flow.py``); ``auth`` names the stored credential, if any. */
 @Serializable
@@ -26,6 +27,7 @@ public data class MemoryOAuthStatusResponse(
 public sealed interface MemoryOAuthStatusResponseAuth {
     public data object Oauth : MemoryOAuthStatusResponseAuth
     public data object Apikey : MemoryOAuthStatusResponseAuth
+    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStatusResponseAuth
 
     public object Serializer : KSerializer<MemoryOAuthStatusResponseAuth> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStatusResponseAuth", PrimitiveKind.STRING)
@@ -33,13 +35,14 @@ public sealed interface MemoryOAuthStatusResponseAuth {
         override fun deserialize(decoder: Decoder): MemoryOAuthStatusResponseAuth = when (val raw = decoder.decodeString()) {
             "oauth" -> Oauth
             "apikey" -> Apikey
-            else -> throw SerializationException("Unexpected MemoryOAuthStatusResponseAuth value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStatusResponseAuth value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MemoryOAuthStatusResponseAuth) {
             val raw: kotlin.String = when (value) {
                 Oauth -> "oauth"
                 Apikey -> "apikey"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -53,6 +56,7 @@ public sealed interface MemoryOAuthStatusResponseState {
     public data object Pending : MemoryOAuthStatusResponseState
     public data object Connected : MemoryOAuthStatusResponseState
     public data object Error : MemoryOAuthStatusResponseState
+    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStatusResponseState
 
     public object Serializer : KSerializer<MemoryOAuthStatusResponseState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStatusResponseState", PrimitiveKind.STRING)
@@ -62,7 +66,7 @@ public sealed interface MemoryOAuthStatusResponseState {
             "pending" -> Pending
             "connected" -> Connected
             "error" -> Error
-            else -> throw SerializationException("Unexpected MemoryOAuthStatusResponseState value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStatusResponseState value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MemoryOAuthStatusResponseState) {
@@ -71,6 +75,7 @@ public sealed interface MemoryOAuthStatusResponseState {
                 Pending -> "pending"
                 Connected -> "connected"
                 Error -> "error"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -210,6 +215,7 @@ public sealed interface MemoryProviderLegacyFieldKind {
     public data object Integer : MemoryProviderLegacyFieldKind
     public data object Number : MemoryProviderLegacyFieldKind
     public data object Text : MemoryProviderLegacyFieldKind
+    public data class Unknown(public val raw: kotlin.String) : MemoryProviderLegacyFieldKind
 
     public object Serializer : KSerializer<MemoryProviderLegacyFieldKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderLegacyFieldKind", PrimitiveKind.STRING)
@@ -221,7 +227,7 @@ public sealed interface MemoryProviderLegacyFieldKind {
             "integer" -> Integer
             "number" -> Number
             "text" -> Text
-            else -> throw SerializationException("Unexpected MemoryProviderLegacyFieldKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryProviderLegacyFieldKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MemoryProviderLegacyFieldKind) {
@@ -232,6 +238,7 @@ public sealed interface MemoryProviderLegacyFieldKind {
                 Integer -> "integer"
                 Number -> "number"
                 Text -> "text"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -353,6 +360,7 @@ public sealed interface MemoryProviderSetupStepResultKind {
     public data object Setup : MemoryProviderSetupStepResultKind
     public data object ExternalCheck : MemoryProviderSetupStepResultKind
     public data object ExternalInstall : MemoryProviderSetupStepResultKind
+    public data class Unknown(public val raw: kotlin.String) : MemoryProviderSetupStepResultKind
 
     public object Serializer : KSerializer<MemoryProviderSetupStepResultKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderSetupStepResultKind", PrimitiveKind.STRING)
@@ -362,7 +370,7 @@ public sealed interface MemoryProviderSetupStepResultKind {
             "setup" -> Setup
             "external_check" -> ExternalCheck
             "external_install" -> ExternalInstall
-            else -> throw SerializationException("Unexpected MemoryProviderSetupStepResultKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryProviderSetupStepResultKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MemoryProviderSetupStepResultKind) {
@@ -371,6 +379,7 @@ public sealed interface MemoryProviderSetupStepResultKind {
                 Setup -> "setup"
                 ExternalCheck -> "external_check"
                 ExternalInstall -> "external_install"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -401,6 +410,7 @@ public sealed interface MemoryProviderStatusRowStatus {
     public data object Unavailable : MemoryProviderStatusRowStatus
     public data object NeedsConfig : MemoryProviderStatusRowStatus
     public data object Ready : MemoryProviderStatusRowStatus
+    public data class Unknown(public val raw: kotlin.String) : MemoryProviderStatusRowStatus
 
     public object Serializer : KSerializer<MemoryProviderStatusRowStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderStatusRowStatus", PrimitiveKind.STRING)
@@ -410,7 +420,7 @@ public sealed interface MemoryProviderStatusRowStatus {
             "unavailable" -> Unavailable
             "needs_config" -> NeedsConfig
             "ready" -> Ready
-            else -> throw SerializationException("Unexpected MemoryProviderStatusRowStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryProviderStatusRowStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MemoryProviderStatusRowStatus) {
@@ -419,6 +429,7 @@ public sealed interface MemoryProviderStatusRowStatus {
                 Unavailable -> "unavailable"
                 NeedsConfig -> "needs_config"
                 Ready -> "ready"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -634,8 +645,10 @@ public data class MessagingPlatformUpdate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MessagingPlatformUpdate requires an object")
-            val known = setOf<String>("clear_env", "enabled", "env", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("clear_env", "enabled", "env", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MessagingPlatformUpdate(
                 clearEnv = input["clear_env"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 enabled = when (val raw = input["enabled"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
@@ -705,6 +718,7 @@ public sealed interface MessagingWhatsAppSetupMode {
     public data object Empty : MessagingWhatsAppSetupMode
     public data object Bot : MessagingWhatsAppSetupMode
     public data object SelfChat : MessagingWhatsAppSetupMode
+    public data class Unknown(public val raw: kotlin.String) : MessagingWhatsAppSetupMode
 
     public object Serializer : KSerializer<MessagingWhatsAppSetupMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MessagingWhatsAppSetupMode", PrimitiveKind.STRING)
@@ -713,7 +727,7 @@ public sealed interface MessagingWhatsAppSetupMode {
             "" -> Empty
             "bot" -> Bot
             "self-chat" -> SelfChat
-            else -> throw SerializationException("Unexpected MessagingWhatsAppSetupMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MessagingWhatsAppSetupMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MessagingWhatsAppSetupMode) {
@@ -721,6 +735,7 @@ public sealed interface MessagingWhatsAppSetupMode {
                 Empty -> ""
                 Bot -> "bot"
                 SelfChat -> "self-chat"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

@@ -62,9 +62,13 @@ calling task or coroutine cancels the request; it is never reported as a transpo
 | `.http(status:body:)` | `HTTP` | A status the operation does not document as a success. `detail` is FastAPI's message; `isAuthenticationFailure` covers 401 and 403. |
 | `.decoding` | `Decoding` | The response does not match the reviewed contract. |
 
-Decoding is strict: a closed object with an unknown key, an enum value the contract does not list,
-or a missing required key fails, so contract drift surfaces instead of being silently dropped.
-Objects that the contract leaves open keep their undeclared keys in `additionalProperties`.
+Decoding is strict by default: a closed object with an unknown key, an enum value the contract does not
+list, or a missing required key fails, so contract drift surfaces instead of being silently dropped.
+An app that must keep working when its users' Hermes is newer than the pinned release sets
+`decoding: .tolerant` (Kotlin: `RESTDecoding.Tolerant`): unknown keys are skipped and unlisted enum values
+arrive in the enum's `unknown` case (Kotlin: `Unknown`), so fields and values a newer release adds do not
+fail the call. A missing required key still fails in both modes. Objects that the contract leaves open
+keep their undeclared keys in `additionalProperties`.
 
 ## Results
 

@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``toggle_toolset``. */
 @Serializable
@@ -58,6 +59,7 @@ public sealed interface TtsLeaseResponseAction {
     public data object Warmed : TtsLeaseResponseAction
     public data object Installed : TtsLeaseResponseAction
     public data object Error : TtsLeaseResponseAction
+    public data class Unknown(public val raw: kotlin.String) : TtsLeaseResponseAction
 
     public object Serializer : KSerializer<TtsLeaseResponseAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TtsLeaseResponseAction", PrimitiveKind.STRING)
@@ -69,7 +71,7 @@ public sealed interface TtsLeaseResponseAction {
             "warmed" -> Warmed
             "installed" -> Installed
             "error" -> Error
-            else -> throw SerializationException("Unexpected TtsLeaseResponseAction value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected TtsLeaseResponseAction value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: TtsLeaseResponseAction) {
@@ -80,6 +82,7 @@ public sealed interface TtsLeaseResponseAction {
                 Warmed -> "warmed"
                 Installed -> "installed"
                 Error -> "error"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -319,8 +322,10 @@ public data class UpdateTaskBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("UpdateTaskBody requires an object")
-            val known = setOf<String>("assignee", "block_reason", "body", "clear_model_override", "clear_reasoning_effort", "metadata", "model_override", "priority", "provider_override", "reasoning_effort", "result", "status", "summary", "title")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("assignee", "block_reason", "body", "clear_model_override", "clear_reasoning_effort", "metadata", "model_override", "priority", "provider_override", "reasoning_effort", "result", "status", "summary", "title")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return UpdateTaskBody(
                 assignee = when (val raw = input["assignee"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 blockReason = when (val raw = input["block_reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -548,6 +553,7 @@ public data class VoiceClientSttConfig(
 public sealed interface VoiceClientSttConfigMode {
     public data object Relay : VoiceClientSttConfigMode
     public data object Direct : VoiceClientSttConfigMode
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientSttConfigMode
 
     public object Serializer : KSerializer<VoiceClientSttConfigMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientSttConfigMode", PrimitiveKind.STRING)
@@ -555,13 +561,14 @@ public sealed interface VoiceClientSttConfigMode {
         override fun deserialize(decoder: Decoder): VoiceClientSttConfigMode = when (val raw = decoder.decodeString()) {
             "relay" -> Relay
             "direct" -> Direct
-            else -> throw SerializationException("Unexpected VoiceClientSttConfigMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientSttConfigMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientSttConfigMode) {
             val raw: kotlin.String = when (value) {
                 Relay -> "relay"
                 Direct -> "direct"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -574,6 +581,7 @@ public sealed interface VoiceClientSttConfigWire {
     public data object OpenaiMultipart : VoiceClientSttConfigWire
     public data object XaiStt : VoiceClientSttConfigWire
     public data object ElevenlabsStt : VoiceClientSttConfigWire
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientSttConfigWire
 
     public object Serializer : KSerializer<VoiceClientSttConfigWire> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientSttConfigWire", PrimitiveKind.STRING)
@@ -582,7 +590,7 @@ public sealed interface VoiceClientSttConfigWire {
             "openai-multipart" -> OpenaiMultipart
             "xai-stt" -> XaiStt
             "elevenlabs-stt" -> ElevenlabsStt
-            else -> throw SerializationException("Unexpected VoiceClientSttConfigWire value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientSttConfigWire value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientSttConfigWire) {
@@ -590,6 +598,7 @@ public sealed interface VoiceClientSttConfigWire {
                 OpenaiMultipart -> "openai-multipart"
                 XaiStt -> "xai-stt"
                 ElevenlabsStt -> "elevenlabs-stt"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -629,6 +638,7 @@ public data class VoiceClientTtsConfig(
 public sealed interface VoiceClientTtsConfigMode {
     public data object Relay : VoiceClientTtsConfigMode
     public data object Direct : VoiceClientTtsConfigMode
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientTtsConfigMode
 
     public object Serializer : KSerializer<VoiceClientTtsConfigMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientTtsConfigMode", PrimitiveKind.STRING)
@@ -636,13 +646,14 @@ public sealed interface VoiceClientTtsConfigMode {
         override fun deserialize(decoder: Decoder): VoiceClientTtsConfigMode = when (val raw = decoder.decodeString()) {
             "relay" -> Relay
             "direct" -> Direct
-            else -> throw SerializationException("Unexpected VoiceClientTtsConfigMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientTtsConfigMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientTtsConfigMode) {
             val raw: kotlin.String = when (value) {
                 Relay -> "relay"
                 Direct -> "direct"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -654,6 +665,7 @@ public sealed interface VoiceClientTtsConfigMode {
 public sealed interface VoiceClientTtsConfigWire {
     public data object OpenaiSpeech : VoiceClientTtsConfigWire
     public data object ElevenlabsTts : VoiceClientTtsConfigWire
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientTtsConfigWire
 
     public object Serializer : KSerializer<VoiceClientTtsConfigWire> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientTtsConfigWire", PrimitiveKind.STRING)
@@ -661,13 +673,14 @@ public sealed interface VoiceClientTtsConfigWire {
         override fun deserialize(decoder: Decoder): VoiceClientTtsConfigWire = when (val raw = decoder.decodeString()) {
             "openai-speech" -> OpenaiSpeech
             "elevenlabs-tts" -> ElevenlabsTts
-            else -> throw SerializationException("Unexpected VoiceClientTtsConfigWire value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientTtsConfigWire value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientTtsConfigWire) {
             val raw: kotlin.String = when (value) {
                 OpenaiSpeech -> "openai-speech"
                 ElevenlabsTts -> "elevenlabs-tts"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -728,8 +741,10 @@ public data class VoiceLiveSessionRequest(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("VoiceLiveSessionRequest requires an object")
-            val known = setOf<String>("history", "sdp")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("history", "sdp")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return VoiceLiveSessionRequest(
                 history = when (val raw = input["history"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<List<Map<String, JsonElement>>>(raw)) },
                 sdp = json.decodeFromJsonElement<String>((input["sdp"] ?: throw SerializationException("Missing sdp"))),
@@ -818,6 +833,7 @@ public data class VoiceLiveStatusResponse(
 public sealed interface VoiceLiveStatusResponseMode {
     public data object Chained : VoiceLiveStatusResponseMode
     public data object GptLive : VoiceLiveStatusResponseMode
+    public data class Unknown(public val raw: kotlin.String) : VoiceLiveStatusResponseMode
 
     public object Serializer : KSerializer<VoiceLiveStatusResponseMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceLiveStatusResponseMode", PrimitiveKind.STRING)
@@ -825,13 +841,14 @@ public sealed interface VoiceLiveStatusResponseMode {
         override fun deserialize(decoder: Decoder): VoiceLiveStatusResponseMode = when (val raw = decoder.decodeString()) {
             "chained" -> Chained
             "gpt-live" -> GptLive
-            else -> throw SerializationException("Unexpected VoiceLiveStatusResponseMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceLiveStatusResponseMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: VoiceLiveStatusResponseMode) {
             val raw: kotlin.String = when (value) {
                 Chained -> "chained"
                 GptLive -> "gpt-live"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -903,8 +920,10 @@ public data class WebhookCreate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("WebhookCreate requires an object")
-            val known = setOf<String>("deliver", "deliver_chat_id", "deliver_only", "description", "events", "name", "prompt", "script", "secret", "skills")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("deliver", "deliver_chat_id", "deliver_only", "description", "events", "name", "prompt", "script", "secret", "skills")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return WebhookCreate(
                 deliver = input["deliver"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 deliverChatId = when (val raw = input["deliver_chat_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },

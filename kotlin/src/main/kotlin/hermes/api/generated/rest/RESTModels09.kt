@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = LocalModelJobKind.Serializer::class)
@@ -15,6 +16,7 @@ public sealed interface LocalModelJobKind {
     public data object ModelDownload : LocalModelJobKind
     public data object Quickstart : LocalModelJobKind
     public data object ModelActivate : LocalModelJobKind
+    public data class Unknown(public val raw: kotlin.String) : LocalModelJobKind
 
     public object Serializer : KSerializer<LocalModelJobKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelJobKind", PrimitiveKind.STRING)
@@ -24,7 +26,7 @@ public sealed interface LocalModelJobKind {
             "model-download" -> ModelDownload
             "quickstart" -> Quickstart
             "model-activate" -> ModelActivate
-            else -> throw SerializationException("Unexpected LocalModelJobKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LocalModelJobKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelJobKind) {
@@ -33,6 +35,7 @@ public sealed interface LocalModelJobKind {
                 ModelDownload -> "model-download"
                 Quickstart -> "quickstart"
                 ModelActivate -> "model-activate"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -45,6 +48,7 @@ public sealed interface LocalModelJobStatus {
     public data object Running : LocalModelJobStatus
     public data object Done : LocalModelJobStatus
     public data object Error : LocalModelJobStatus
+    public data class Unknown(public val raw: kotlin.String) : LocalModelJobStatus
 
     public object Serializer : KSerializer<LocalModelJobStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelJobStatus", PrimitiveKind.STRING)
@@ -53,7 +57,7 @@ public sealed interface LocalModelJobStatus {
             "running" -> Running
             "done" -> Done
             "error" -> Error
-            else -> throw SerializationException("Unexpected LocalModelJobStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LocalModelJobStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelJobStatus) {
@@ -61,6 +65,7 @@ public sealed interface LocalModelJobStatus {
                 Running -> "running"
                 Done -> "done"
                 Error -> "error"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -115,7 +120,8 @@ public sealed interface LocalModelRepoFileFit {
     public data object FitsGpu : LocalModelRepoFileFit
     public data object NeedsRam : LocalModelRepoFileFit
     public data object TooBig : LocalModelRepoFileFit
-    public data object Unknown : LocalModelRepoFileFit
+    public data object KnownUnknown : LocalModelRepoFileFit
+    public data class Unknown(public val raw: kotlin.String) : LocalModelRepoFileFit
 
     public object Serializer : KSerializer<LocalModelRepoFileFit> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelRepoFileFit", PrimitiveKind.STRING)
@@ -124,8 +130,8 @@ public sealed interface LocalModelRepoFileFit {
             "fits-gpu" -> FitsGpu
             "needs-ram" -> NeedsRam
             "too-big" -> TooBig
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected LocalModelRepoFileFit value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LocalModelRepoFileFit value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelRepoFileFit) {
@@ -133,7 +139,8 @@ public sealed interface LocalModelRepoFileFit {
                 FitsGpu -> "fits-gpu"
                 NeedsRam -> "needs-ram"
                 TooBig -> "too-big"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -279,6 +286,7 @@ public data class LocalModelsServerResponse(
 public sealed interface LocalModelsServerResponseAction {
     public data object Stop : LocalModelsServerResponseAction
     public data object Start : LocalModelsServerResponseAction
+    public data class Unknown(public val raw: kotlin.String) : LocalModelsServerResponseAction
 
     public object Serializer : KSerializer<LocalModelsServerResponseAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelsServerResponseAction", PrimitiveKind.STRING)
@@ -286,13 +294,14 @@ public sealed interface LocalModelsServerResponseAction {
         override fun deserialize(decoder: Decoder): LocalModelsServerResponseAction = when (val raw = decoder.decodeString()) {
             "stop" -> Stop
             "start" -> Start
-            else -> throw SerializationException("Unexpected LocalModelsServerResponseAction value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LocalModelsServerResponseAction value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelsServerResponseAction) {
             val raw: kotlin.String = when (value) {
                 Stop -> "stop"
                 Start -> "start"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -353,6 +362,7 @@ public sealed interface LocalModelsStatusResponseLoadedModelsValue {
     public data object Loaded : LocalModelsStatusResponseLoadedModelsValue
     public data object Ready : LocalModelsStatusResponseLoadedModelsValue
     public data object Loading : LocalModelsStatusResponseLoadedModelsValue
+    public data class Unknown(public val raw: kotlin.String) : LocalModelsStatusResponseLoadedModelsValue
 
     public object Serializer : KSerializer<LocalModelsStatusResponseLoadedModelsValue> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelsStatusResponseLoadedModelsValue", PrimitiveKind.STRING)
@@ -361,7 +371,7 @@ public sealed interface LocalModelsStatusResponseLoadedModelsValue {
             "loaded" -> Loaded
             "ready" -> Ready
             "loading" -> Loading
-            else -> throw SerializationException("Unexpected LocalModelsStatusResponseLoadedModelsValue value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LocalModelsStatusResponseLoadedModelsValue value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelsStatusResponseLoadedModelsValue) {
@@ -369,6 +379,7 @@ public sealed interface LocalModelsStatusResponseLoadedModelsValue {
                 Loaded -> "loaded"
                 Ready -> "ready"
                 Loading -> "loading"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -402,8 +413,10 @@ public data class MCPCatalogInstall(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MCPCatalogInstall requires an object")
-            val known = setOf<String>("enable", "env", "name", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("enable", "env", "name", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MCPCatalogInstall(
                 enable = input["enable"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 env = input["env"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, String>>(it) },
@@ -446,8 +459,10 @@ public data class MCPEnabledToggle(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MCPEnabledToggle requires an object")
-            val known = setOf<String>("enabled", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("enabled", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MCPEnabledToggle(
                 enabled = json.decodeFromJsonElement<Boolean>((input["enabled"] ?: throw SerializationException("Missing enabled"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -492,8 +507,10 @@ public data class MCPServerCreate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MCPServerCreate requires an object")
-            val known = setOf<String>("args", "auth", "bearer_token", "command", "env", "name", "profile", "url")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("args", "auth", "bearer_token", "command", "env", "name", "profile", "url")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MCPServerCreate(
                 args = input["args"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 auth = when (val raw = input["auth"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -560,8 +577,10 @@ public data class MCPServersReplace(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MCPServersReplace requires an object")
-            val known = setOf<String>("profile", "servers")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("profile", "servers")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MCPServersReplace(
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 servers = input["servers"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, Map<String, JsonElement>>>(it) },

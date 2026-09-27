@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``_PRUNE_ROW_KEYS`` of one ``SessionDB.list_prune_candidates`` row. */
 @Serializable
@@ -47,8 +48,10 @@ public data class SessionRename(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SessionRename requires an object")
-            val known = setOf<String>("archived", "hidden", "pinned", "profile", "title", "unread")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("archived", "hidden", "pinned", "profile", "title", "unread")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SessionRename(
                 archived = when (val raw = input["archived"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
                 hidden = when (val raw = input["hidden"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
@@ -253,6 +256,7 @@ public sealed interface SessionToolCallLabelKind {
     public data object Connector : SessionToolCallLabelKind
     public data object Mcp : SessionToolCallLabelKind
     public data object Tool : SessionToolCallLabelKind
+    public data class Unknown(public val raw: kotlin.String) : SessionToolCallLabelKind
 
     public object Serializer : KSerializer<SessionToolCallLabelKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionToolCallLabelKind", PrimitiveKind.STRING)
@@ -261,7 +265,7 @@ public sealed interface SessionToolCallLabelKind {
             "connector" -> Connector
             "mcp" -> Mcp
             "tool" -> Tool
-            else -> throw SerializationException("Unexpected SessionToolCallLabelKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SessionToolCallLabelKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: SessionToolCallLabelKind) {
@@ -269,6 +273,7 @@ public sealed interface SessionToolCallLabelKind {
                 Connector -> "connector"
                 Mcp -> "mcp"
                 Tool -> "tool"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -310,8 +315,10 @@ public data class SkillContentUpdate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SkillContentUpdate requires an object")
-            val known = setOf<String>("content", "name", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("content", "name", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SkillContentUpdate(
                 content = json.decodeFromJsonElement<String>((input["content"] ?: throw SerializationException("Missing content"))),
                 name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
@@ -371,8 +378,10 @@ public data class SkillCreate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SkillCreate requires an object")
-            val known = setOf<String>("category", "content", "name", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("category", "content", "name", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SkillCreate(
                 category = when (val raw = input["category"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 content = json.decodeFromJsonElement<String>((input["content"] ?: throw SerializationException("Missing content"))),
@@ -559,6 +568,7 @@ public sealed interface SkillHubScanResponsePolicy {
     public data object Allow : SkillHubScanResponsePolicy
     public data object Ask : SkillHubScanResponsePolicy
     public data object Block : SkillHubScanResponsePolicy
+    public data class Unknown(public val raw: kotlin.String) : SkillHubScanResponsePolicy
 
     public object Serializer : KSerializer<SkillHubScanResponsePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillHubScanResponsePolicy", PrimitiveKind.STRING)
@@ -567,7 +577,7 @@ public sealed interface SkillHubScanResponsePolicy {
             "allow" -> Allow
             "ask" -> Ask
             "block" -> Block
-            else -> throw SerializationException("Unexpected SkillHubScanResponsePolicy value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SkillHubScanResponsePolicy value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: SkillHubScanResponsePolicy) {
@@ -575,6 +585,7 @@ public sealed interface SkillHubScanResponsePolicy {
                 Allow -> "allow"
                 Ask -> "ask"
                 Block -> "block"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -587,6 +598,7 @@ public sealed interface SkillHubScanResponseVerdict {
     public data object Safe : SkillHubScanResponseVerdict
     public data object Caution : SkillHubScanResponseVerdict
     public data object Dangerous : SkillHubScanResponseVerdict
+    public data class Unknown(public val raw: kotlin.String) : SkillHubScanResponseVerdict
 
     public object Serializer : KSerializer<SkillHubScanResponseVerdict> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillHubScanResponseVerdict", PrimitiveKind.STRING)
@@ -595,7 +607,7 @@ public sealed interface SkillHubScanResponseVerdict {
             "safe" -> Safe
             "caution" -> Caution
             "dangerous" -> Dangerous
-            else -> throw SerializationException("Unexpected SkillHubScanResponseVerdict value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SkillHubScanResponseVerdict value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: SkillHubScanResponseVerdict) {
@@ -603,6 +615,7 @@ public sealed interface SkillHubScanResponseVerdict {
                 Safe -> "safe"
                 Caution -> "caution"
                 Dangerous -> "dangerous"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -709,8 +722,10 @@ public data class SkillInstallRequest(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SkillInstallRequest requires an object")
-            val known = setOf<String>("identifier", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("identifier", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SkillInstallRequest(
                 identifier = json.decodeFromJsonElement<String>((input["identifier"] ?: throw SerializationException("Missing identifier"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },

@@ -19,6 +19,8 @@ public sealed interface {{ enum.name }} {
             else -> throw SerializationException("Unexpected const value: $raw")
 {% elif enum.closed %}
             else -> throw SerializationException("Unexpected {{ enum.name }} value: $raw")
+{% elif enum.strict %}
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected {{ enum.name }} value: $raw")
 {% else %}
             else -> Unknown(raw)
 {% endif %}

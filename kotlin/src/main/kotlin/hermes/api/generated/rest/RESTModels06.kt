@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``update_hermes``: a refusal (``ok: false``, ``pid: null`` + ``error``/``message``/``update_command``, via ``_update_refused``; the managed-runtime refusal carries ``update_command: "managed outside dashboard"``), the already-running update (``already_running: true``, ``action_id`` when recorded), or the freshly spawned one (with ``action_id``). */
 @Serializable
@@ -48,8 +49,10 @@ public data class HookCreate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("HookCreate requires an object")
-            val known = setOf<String>("approve", "command", "event", "matcher", "timeout")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("approve", "command", "event", "matcher", "timeout")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return HookCreate(
                 approve = input["approve"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 command = json.decodeFromJsonElement<String>((input["command"] ?: throw SerializationException("Missing command"))),
@@ -124,8 +127,10 @@ public data class ImportBoardBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ImportBoardBody requires an object")
-            val known = setOf<String>("archive", "slug", "switch")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("archive", "slug", "switch")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ImportBoardBody(
                 archive = json.decodeFromJsonElement<String>((input["archive"] ?: throw SerializationException("Missing archive"))),
                 slug = when (val raw = input["slug"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -449,6 +454,7 @@ public sealed interface KanbanBoardColumnName {
     public data object Review : KanbanBoardColumnName
     public data object Done : KanbanBoardColumnName
     public data object Archived : KanbanBoardColumnName
+    public data class Unknown(public val raw: kotlin.String) : KanbanBoardColumnName
 
     public object Serializer : KSerializer<KanbanBoardColumnName> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardColumnName", PrimitiveKind.STRING)
@@ -463,7 +469,7 @@ public sealed interface KanbanBoardColumnName {
             "review" -> Review
             "done" -> Done
             "archived" -> Archived
-            else -> throw SerializationException("Unexpected KanbanBoardColumnName value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanBoardColumnName value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardColumnName) {
@@ -477,6 +483,7 @@ public sealed interface KanbanBoardColumnName {
                 Review -> "review"
                 Done -> "done"
                 Archived -> "archived"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -498,6 +505,7 @@ public sealed interface KanbanBoardDefaultWorkspaceKind {
     public data object Scratch : KanbanBoardDefaultWorkspaceKind
     public data object Worktree : KanbanBoardDefaultWorkspaceKind
     public data object Dir : KanbanBoardDefaultWorkspaceKind
+    public data class Unknown(public val raw: kotlin.String) : KanbanBoardDefaultWorkspaceKind
 
     public object Serializer : KSerializer<KanbanBoardDefaultWorkspaceKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardDefaultWorkspaceKind", PrimitiveKind.STRING)
@@ -506,7 +514,7 @@ public sealed interface KanbanBoardDefaultWorkspaceKind {
             "scratch" -> Scratch
             "worktree" -> Worktree
             "dir" -> Dir
-            else -> throw SerializationException("Unexpected KanbanBoardDefaultWorkspaceKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanBoardDefaultWorkspaceKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardDefaultWorkspaceKind) {
@@ -514,6 +522,7 @@ public sealed interface KanbanBoardDefaultWorkspaceKind {
                 Scratch -> "scratch"
                 Worktree -> "worktree"
                 Dir -> "dir"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -679,6 +688,7 @@ public sealed interface KanbanBoardListRowDefaultWorkspaceKind {
     public data object Scratch : KanbanBoardListRowDefaultWorkspaceKind
     public data object Worktree : KanbanBoardListRowDefaultWorkspaceKind
     public data object Dir : KanbanBoardListRowDefaultWorkspaceKind
+    public data class Unknown(public val raw: kotlin.String) : KanbanBoardListRowDefaultWorkspaceKind
 
     public object Serializer : KSerializer<KanbanBoardListRowDefaultWorkspaceKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardListRowDefaultWorkspaceKind", PrimitiveKind.STRING)
@@ -687,7 +697,7 @@ public sealed interface KanbanBoardListRowDefaultWorkspaceKind {
             "scratch" -> Scratch
             "worktree" -> Worktree
             "dir" -> Dir
-            else -> throw SerializationException("Unexpected KanbanBoardListRowDefaultWorkspaceKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanBoardListRowDefaultWorkspaceKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardListRowDefaultWorkspaceKind) {
@@ -695,6 +705,7 @@ public sealed interface KanbanBoardListRowDefaultWorkspaceKind {
                 Scratch -> "scratch"
                 Worktree -> "worktree"
                 Dir -> "dir"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -717,6 +728,7 @@ public data class KanbanBoardRemoval(
 public sealed interface KanbanBoardRemovalAction {
     public data object Archived : KanbanBoardRemovalAction
     public data object Deleted : KanbanBoardRemovalAction
+    public data class Unknown(public val raw: kotlin.String) : KanbanBoardRemovalAction
 
     public object Serializer : KSerializer<KanbanBoardRemovalAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardRemovalAction", PrimitiveKind.STRING)
@@ -724,13 +736,14 @@ public sealed interface KanbanBoardRemovalAction {
         override fun deserialize(decoder: Decoder): KanbanBoardRemovalAction = when (val raw = decoder.decodeString()) {
             "archived" -> Archived
             "deleted" -> Deleted
-            else -> throw SerializationException("Unexpected KanbanBoardRemovalAction value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanBoardRemovalAction value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardRemovalAction) {
             val raw: kotlin.String = when (value) {
                 Archived -> "archived"
                 Deleted -> "deleted"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

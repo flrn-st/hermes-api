@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``evidence_for`` — the session holding the best per-session value for the metric. */
 @Serializable
@@ -72,6 +73,7 @@ public sealed interface AchievementItemKind {
     public data object Lifetime : AchievementItemKind
     public data object BestSession : AchievementItemKind
     public data object MultiCondition : AchievementItemKind
+    public data class Unknown(public val raw: kotlin.String) : AchievementItemKind
 
     public object Serializer : KSerializer<AchievementItemKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementItemKind", PrimitiveKind.STRING)
@@ -80,7 +82,7 @@ public sealed interface AchievementItemKind {
             "lifetime" -> Lifetime
             "best_session" -> BestSession
             "multi_condition" -> MultiCondition
-            else -> throw SerializationException("Unexpected AchievementItemKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected AchievementItemKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: AchievementItemKind) {
@@ -88,6 +90,7 @@ public sealed interface AchievementItemKind {
                 Lifetime -> "lifetime"
                 BestSession -> "best_session"
                 MultiCondition -> "multi_condition"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -100,6 +103,7 @@ public sealed interface AchievementItemState {
     public data object Unlocked : AchievementItemState
     public data object Discovered : AchievementItemState
     public data object Secret : AchievementItemState
+    public data class Unknown(public val raw: kotlin.String) : AchievementItemState
 
     public object Serializer : KSerializer<AchievementItemState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementItemState", PrimitiveKind.STRING)
@@ -108,7 +112,7 @@ public sealed interface AchievementItemState {
             "unlocked" -> Unlocked
             "discovered" -> Discovered
             "secret" -> Secret
-            else -> throw SerializationException("Unexpected AchievementItemState value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected AchievementItemState value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: AchievementItemState) {
@@ -116,6 +120,7 @@ public sealed interface AchievementItemState {
                 Unlocked -> "unlocked"
                 Discovered -> "discovered"
                 Secret -> "secret"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -190,6 +195,7 @@ public sealed interface AchievementScanMetaMode {
     public data object InProgress : AchievementScanMetaMode
     public data object Pending : AchievementScanMetaMode
     public data object Failed : AchievementScanMetaMode
+    public data class Unknown(public val raw: kotlin.String) : AchievementScanMetaMode
 
     public object Serializer : KSerializer<AchievementScanMetaMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementScanMetaMode", PrimitiveKind.STRING)
@@ -200,7 +206,7 @@ public sealed interface AchievementScanMetaMode {
             "in_progress" -> InProgress
             "pending" -> Pending
             "failed" -> Failed
-            else -> throw SerializationException("Unexpected AchievementScanMetaMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected AchievementScanMetaMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: AchievementScanMetaMode) {
@@ -210,6 +216,7 @@ public sealed interface AchievementScanMetaMode {
                 InProgress -> "in_progress"
                 Pending -> "pending"
                 Failed -> "failed"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -243,6 +250,7 @@ public sealed interface AchievementScanMetaWithStatusMode {
     public data object InProgress : AchievementScanMetaWithStatusMode
     public data object Pending : AchievementScanMetaWithStatusMode
     public data object Failed : AchievementScanMetaWithStatusMode
+    public data class Unknown(public val raw: kotlin.String) : AchievementScanMetaWithStatusMode
 
     public object Serializer : KSerializer<AchievementScanMetaWithStatusMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementScanMetaWithStatusMode", PrimitiveKind.STRING)
@@ -253,7 +261,7 @@ public sealed interface AchievementScanMetaWithStatusMode {
             "in_progress" -> InProgress
             "pending" -> Pending
             "failed" -> Failed
-            else -> throw SerializationException("Unexpected AchievementScanMetaWithStatusMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected AchievementScanMetaWithStatusMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: AchievementScanMetaWithStatusMode) {
@@ -263,6 +271,7 @@ public sealed interface AchievementScanMetaWithStatusMode {
                 InProgress -> "in_progress"
                 Pending -> "pending"
                 Failed -> "failed"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -300,6 +309,7 @@ public sealed interface AchievementScanStatusState {
     public data object Idle : AchievementScanStatusState
     public data object Running : AchievementScanStatusState
     public data object Failed : AchievementScanStatusState
+    public data class Unknown(public val raw: kotlin.String) : AchievementScanStatusState
 
     public object Serializer : KSerializer<AchievementScanStatusState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementScanStatusState", PrimitiveKind.STRING)
@@ -308,7 +318,7 @@ public sealed interface AchievementScanStatusState {
             "idle" -> Idle
             "running" -> Running
             "failed" -> Failed
-            else -> throw SerializationException("Unexpected AchievementScanStatusState value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected AchievementScanStatusState value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: AchievementScanStatusState) {
@@ -316,6 +326,7 @@ public sealed interface AchievementScanStatusState {
                 Idle -> "idle"
                 Running -> "running"
                 Failed -> "failed"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

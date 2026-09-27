@@ -43,8 +43,9 @@ private let fastRetry = RESTRetryPolicy(maxAttempts: 3, initialDelay: .milliseco
 
 private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? = nil,
                     retry: RESTRetryPolicy = fastRetry, timeout: Duration = .seconds(5),
-                    baseURL: URL = base) -> HermesREST {
-    HermesREST(configuration: .init(address: HermesDashboardAddress(baseURL), auth: auth, transport: transport, timeout: timeout, retry: retry))
+                    baseURL: URL = base, decoding: RESTDecoding = .strict) -> HermesREST {
+    HermesREST(configuration: .init(address: HermesDashboardAddress(baseURL), auth: auth, transport: transport,
+                                    timeout: timeout, retry: retry, decoding: decoding))
 }
 
 @Test func queryValuesAndPathSegmentsArePercentEncoded() async throws {
@@ -123,6 +124,21 @@ private actor FailoverAddress {
     } catch HermesRESTError.decoding(let message) {
         #expect(message.contains("telepathy"))
     }
+}
+
+@Test func tolerantDecodingSkipsUnknownFieldsAndKeepsEnumValues() async throws {
+    let transport = ScriptedTransport([
+        .respond(200, #"{"ticket":"fresh","ttl_seconds":30,"surprise":1}"#),
+        .respond(200, #"{"ok":true,"mode":"telepathy","available":false,"reason":null,"model":"m","voice":"v"}"#),
+        .respond(200, #"{"ttl_seconds":30}"#),
+    ])
+    let rest = client(transport, decoding: .tolerant)
+    #expect(try await rest.auth.wsTicket().ticket == "fresh")
+    let status = try await rest.audio.voiceLiveStatus()
+    #expect(status.mode == .unknown("telepathy"))
+    #expect(try JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(status.mode)) == .string("telepathy"))
+    // Tolerance covers additions, not removals: a missing required key still fails.
+    await #expect(throws: HermesRESTError.self) { _ = try await rest.auth.wsTicket() }
 }
 
 @Test func requiredNullableFieldsKeepNullAndRequireTheKey() throws {

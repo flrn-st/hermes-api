@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = MoaConfigPayload.Serializer::class)
@@ -34,8 +35,10 @@ public data class MoaConfigPayload(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MoaConfigPayload requires an object")
-            val known = setOf<String>("active_preset", "aggregator", "aggregator_temperature", "default_preset", "degraded_reference_policy", "enabled", "fanout", "presets", "profile", "reference_models", "reference_temperature", "reference_timeout")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("active_preset", "aggregator", "aggregator_temperature", "default_preset", "degraded_reference_policy", "enabled", "fanout", "presets", "profile", "reference_models", "reference_temperature", "reference_timeout")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MoaConfigPayload(
                 activePreset = input["active_preset"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 aggregator = input["aggregator"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<MoaModelSlot>(it) },
@@ -99,6 +102,7 @@ public data class MoaConfigPayload(
 public sealed interface MoaConfigPayloadDegradedReferencePolicy {
     public data object Loud : MoaConfigPayloadDegradedReferencePolicy
     public data object Silent : MoaConfigPayloadDegradedReferencePolicy
+    public data class Unknown(public val raw: kotlin.String) : MoaConfigPayloadDegradedReferencePolicy
 
     public object Serializer : KSerializer<MoaConfigPayloadDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigPayloadDegradedReferencePolicy", PrimitiveKind.STRING)
@@ -106,13 +110,14 @@ public sealed interface MoaConfigPayloadDegradedReferencePolicy {
         override fun deserialize(decoder: Decoder): MoaConfigPayloadDegradedReferencePolicy = when (val raw = decoder.decodeString()) {
             "loud" -> Loud
             "silent" -> Silent
-            else -> throw SerializationException("Unexpected MoaConfigPayloadDegradedReferencePolicy value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MoaConfigPayloadDegradedReferencePolicy value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigPayloadDegradedReferencePolicy) {
             val raw: kotlin.String = when (value) {
                 Loud -> "loud"
                 Silent -> "silent"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -154,6 +159,7 @@ public data class MoaConfigResponse(
 public sealed interface MoaConfigResponseDegradedReferencePolicy {
     public data object Loud : MoaConfigResponseDegradedReferencePolicy
     public data object Silent : MoaConfigResponseDegradedReferencePolicy
+    public data class Unknown(public val raw: kotlin.String) : MoaConfigResponseDegradedReferencePolicy
 
     public object Serializer : KSerializer<MoaConfigResponseDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigResponseDegradedReferencePolicy", PrimitiveKind.STRING)
@@ -161,13 +167,14 @@ public sealed interface MoaConfigResponseDegradedReferencePolicy {
         override fun deserialize(decoder: Decoder): MoaConfigResponseDegradedReferencePolicy = when (val raw = decoder.decodeString()) {
             "loud" -> Loud
             "silent" -> Silent
-            else -> throw SerializationException("Unexpected MoaConfigResponseDegradedReferencePolicy value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MoaConfigResponseDegradedReferencePolicy value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigResponseDegradedReferencePolicy) {
             val raw: kotlin.String = when (value) {
                 Loud -> "loud"
                 Silent -> "silent"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -180,6 +187,7 @@ public sealed interface MoaConfigResponsePrivacyFilter {
     public data object Empty : MoaConfigResponsePrivacyFilter
     public data object Display : MoaConfigResponsePrivacyFilter
     public data object Full : MoaConfigResponsePrivacyFilter
+    public data class Unknown(public val raw: kotlin.String) : MoaConfigResponsePrivacyFilter
 
     public object Serializer : KSerializer<MoaConfigResponsePrivacyFilter> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigResponsePrivacyFilter", PrimitiveKind.STRING)
@@ -188,7 +196,7 @@ public sealed interface MoaConfigResponsePrivacyFilter {
             "" -> Empty
             "display" -> Display
             "full" -> Full
-            else -> throw SerializationException("Unexpected MoaConfigResponsePrivacyFilter value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MoaConfigResponsePrivacyFilter value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigResponsePrivacyFilter) {
@@ -196,6 +204,7 @@ public sealed interface MoaConfigResponsePrivacyFilter {
                 Empty -> ""
                 Display -> "display"
                 Full -> "full"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -239,6 +248,7 @@ public data class MoaConfigSaveResponse(
 public sealed interface MoaConfigSaveResponseDegradedReferencePolicy {
     public data object Loud : MoaConfigSaveResponseDegradedReferencePolicy
     public data object Silent : MoaConfigSaveResponseDegradedReferencePolicy
+    public data class Unknown(public val raw: kotlin.String) : MoaConfigSaveResponseDegradedReferencePolicy
 
     public object Serializer : KSerializer<MoaConfigSaveResponseDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigSaveResponseDegradedReferencePolicy", PrimitiveKind.STRING)
@@ -246,13 +256,14 @@ public sealed interface MoaConfigSaveResponseDegradedReferencePolicy {
         override fun deserialize(decoder: Decoder): MoaConfigSaveResponseDegradedReferencePolicy = when (val raw = decoder.decodeString()) {
             "loud" -> Loud
             "silent" -> Silent
-            else -> throw SerializationException("Unexpected MoaConfigSaveResponseDegradedReferencePolicy value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MoaConfigSaveResponseDegradedReferencePolicy value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigSaveResponseDegradedReferencePolicy) {
             val raw: kotlin.String = when (value) {
                 Loud -> "loud"
                 Silent -> "silent"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -265,6 +276,7 @@ public sealed interface MoaConfigSaveResponsePrivacyFilter {
     public data object Empty : MoaConfigSaveResponsePrivacyFilter
     public data object Display : MoaConfigSaveResponsePrivacyFilter
     public data object Full : MoaConfigSaveResponsePrivacyFilter
+    public data class Unknown(public val raw: kotlin.String) : MoaConfigSaveResponsePrivacyFilter
 
     public object Serializer : KSerializer<MoaConfigSaveResponsePrivacyFilter> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigSaveResponsePrivacyFilter", PrimitiveKind.STRING)
@@ -273,7 +285,7 @@ public sealed interface MoaConfigSaveResponsePrivacyFilter {
             "" -> Empty
             "display" -> Display
             "full" -> Full
-            else -> throw SerializationException("Unexpected MoaConfigSaveResponsePrivacyFilter value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MoaConfigSaveResponsePrivacyFilter value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigSaveResponsePrivacyFilter) {
@@ -281,6 +293,7 @@ public sealed interface MoaConfigSaveResponsePrivacyFilter {
                 Empty -> ""
                 Display -> "display"
                 Full -> "full"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -305,8 +318,10 @@ public data class MoaModelSlot(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MoaModelSlot requires an object")
-            val known = setOf<String>("enabled", "model", "provider", "reasoning_effort")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("enabled", "model", "provider", "reasoning_effort")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MoaModelSlot(
                 enabled = input["enabled"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 model = input["model"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
@@ -360,6 +375,7 @@ public data class MoaPreset(
 public sealed interface MoaPresetDegradedReferencePolicy {
     public data object Loud : MoaPresetDegradedReferencePolicy
     public data object Silent : MoaPresetDegradedReferencePolicy
+    public data class Unknown(public val raw: kotlin.String) : MoaPresetDegradedReferencePolicy
 
     public object Serializer : KSerializer<MoaPresetDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaPresetDegradedReferencePolicy", PrimitiveKind.STRING)
@@ -367,13 +383,14 @@ public sealed interface MoaPresetDegradedReferencePolicy {
         override fun deserialize(decoder: Decoder): MoaPresetDegradedReferencePolicy = when (val raw = decoder.decodeString()) {
             "loud" -> Loud
             "silent" -> Silent
-            else -> throw SerializationException("Unexpected MoaPresetDegradedReferencePolicy value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MoaPresetDegradedReferencePolicy value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MoaPresetDegradedReferencePolicy) {
             val raw: kotlin.String = when (value) {
                 Loud -> "loud"
                 Silent -> "silent"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -402,8 +419,10 @@ public data class MoaPresetPayload(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("MoaPresetPayload requires an object")
-            val known = setOf<String>("aggregator", "aggregator_temperature", "degraded_reference_policy", "enabled", "fanout", "reference_models", "reference_temperature", "reference_timeout")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("aggregator", "aggregator_temperature", "degraded_reference_policy", "enabled", "fanout", "reference_models", "reference_temperature", "reference_timeout")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return MoaPresetPayload(
                 aggregator = input["aggregator"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<MoaModelSlot>(it) },
                 aggregatorTemperature = when (val raw = input["aggregator_temperature"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Double>(raw)) },
@@ -455,6 +474,7 @@ public data class MoaPresetPayload(
 public sealed interface MoaPresetPayloadDegradedReferencePolicy {
     public data object Loud : MoaPresetPayloadDegradedReferencePolicy
     public data object Silent : MoaPresetPayloadDegradedReferencePolicy
+    public data class Unknown(public val raw: kotlin.String) : MoaPresetPayloadDegradedReferencePolicy
 
     public object Serializer : KSerializer<MoaPresetPayloadDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaPresetPayloadDegradedReferencePolicy", PrimitiveKind.STRING)
@@ -462,13 +482,14 @@ public sealed interface MoaPresetPayloadDegradedReferencePolicy {
         override fun deserialize(decoder: Decoder): MoaPresetPayloadDegradedReferencePolicy = when (val raw = decoder.decodeString()) {
             "loud" -> Loud
             "silent" -> Silent
-            else -> throw SerializationException("Unexpected MoaPresetPayloadDegradedReferencePolicy value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MoaPresetPayloadDegradedReferencePolicy value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MoaPresetPayloadDegradedReferencePolicy) {
             val raw: kotlin.String = when (value) {
                 Loud -> "loud"
                 Silent -> "silent"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -518,8 +539,10 @@ public data class ModelAssignment(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ModelAssignment requires an object")
-            val known = setOf<String>("api_key", "base_url", "confirm_expensive_model", "model", "profile", "provider", "reasoning_effort", "scope", "task")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("api_key", "base_url", "confirm_expensive_model", "model", "profile", "provider", "reasoning_effort", "scope", "task")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ModelAssignment(
                 apiKey = input["api_key"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 baseUrl = input["base_url"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
@@ -594,6 +617,7 @@ public data class ModelAssignmentResponse(
 public sealed interface ModelAssignmentResponseScope {
     public data object Main : ModelAssignmentResponseScope
     public data object Auxiliary : ModelAssignmentResponseScope
+    public data class Unknown(public val raw: kotlin.String) : ModelAssignmentResponseScope
 
     public object Serializer : KSerializer<ModelAssignmentResponseScope> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ModelAssignmentResponseScope", PrimitiveKind.STRING)
@@ -601,13 +625,14 @@ public sealed interface ModelAssignmentResponseScope {
         override fun deserialize(decoder: Decoder): ModelAssignmentResponseScope = when (val raw = decoder.decodeString()) {
             "main" -> Main
             "auxiliary" -> Auxiliary
-            else -> throw SerializationException("Unexpected ModelAssignmentResponseScope value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ModelAssignmentResponseScope value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: ModelAssignmentResponseScope) {
             val raw: kotlin.String = when (value) {
                 Main -> "main"
                 Auxiliary -> "auxiliary"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

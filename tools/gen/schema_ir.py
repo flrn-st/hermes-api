@@ -39,7 +39,7 @@ class ObjectDecl:
     always_null: tuple[str, ...] = ()
     # The always-null properties that are always present (strict models require and emit them).
     required_null: tuple[str, ...] = ()
-    # Decoding fails on a key the closed object does not declare.
+    # Strict decoding fails on a key the closed object does not declare; tolerant decoding skips it.
     reject_unknown: bool = False
     description: str | None = None
     # The type of undeclared keys' values in an open object; None means any JSON value.
@@ -53,6 +53,8 @@ class EnumDecl:
     constant: bool
     # No case for unknown values: decoding one fails.
     closed: bool = False
+    # Strict decoding rejects a value outside `values`; tolerant decoding keeps it in the unknown case.
+    strict: bool = False
 
 
 @dataclass(frozen=True)
@@ -184,7 +186,7 @@ class SchemaGraph:
                 required_null=tuple(key for key in always_null if key in required),
             )
         elif schema.get("type") == "string" and "enum" in schema:
-            self.enums[name] = EnumDecl(name, tuple(schema["enum"]), False, closed=self.strict)
+            self.enums[name] = EnumDecl(name, tuple(schema["enum"]), False, strict=self.strict)
         else:
             raise ValueError(f"Unsupported named component {name}")
 
@@ -210,7 +212,7 @@ class SchemaGraph:
             raise ValueError(f"Unsupported integer const outside an object field: {name}")
         if kind == "string" and ("enum" in schema or "const" in schema):
             values = tuple(schema.get("enum", [schema.get("const")]))
-            self.enums[name] = EnumDecl(name, values, "const" in schema, closed=self.strict or "const" in schema)
+            self.enums[name] = EnumDecl(name, values, "const" in schema, closed="const" in schema, strict=self.strict)
             return TypeRef(name, name)
         if self.strict and kind == "array" and "prefixItems" in schema:
             items = tuple(self.resolve(item, f"{name}{index}") for index, item in enumerate(schema["prefixItems"]))

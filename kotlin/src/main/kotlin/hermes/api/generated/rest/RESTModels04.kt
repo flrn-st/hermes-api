@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``run_debug_share_endpoint`` — ``hermes_cli/debug.py::DebugShareResult`` minus ``report``. */
 @Serializable
@@ -39,8 +40,10 @@ public data class DecomposeBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("DecomposeBody requires an object")
-            val known = setOf<String>("author")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("author")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return DecomposeBody(
                 author = when (val raw = input["author"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -83,8 +86,10 @@ public data class DescribeBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("DescribeBody requires an object")
-            val known = setOf<String>("description")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("description")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return DescribeBody(
                 description = when (val raw = input["description"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -172,8 +177,10 @@ public data class EnvVarDelete(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("EnvVarDelete requires an object")
-            val known = setOf<String>("key", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("key", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return EnvVarDelete(
                 key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -260,8 +267,10 @@ public data class EnvVarReveal(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("EnvVarReveal requires an object")
-            val known = setOf<String>("key", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("key", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return EnvVarReveal(
                 key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -322,8 +331,10 @@ public data class EnvVarUpdate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("EnvVarUpdate requires an object")
-            val known = setOf<String>("api_key", "key", "profile", "value")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("api_key", "key", "profile", "value")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return EnvVarUpdate(
                 apiKey = input["api_key"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
@@ -366,8 +377,10 @@ public data class EstimateBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("EstimateBody requires an object")
-            val known = setOf<String>("body", "title")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("body", "title")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return EstimateBody(
                 body = when (val raw = input["body"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 title = input["title"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
@@ -504,6 +517,7 @@ public data class GatewayDrainRequest(
 public sealed interface GatewayDrainRequestAction {
     public data object Drain : GatewayDrainRequestAction
     public data object Cancel : GatewayDrainRequestAction
+    public data class Unknown(public val raw: kotlin.String) : GatewayDrainRequestAction
 
     public object Serializer : KSerializer<GatewayDrainRequestAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainRequestAction", PrimitiveKind.STRING)
@@ -511,13 +525,14 @@ public sealed interface GatewayDrainRequestAction {
         override fun deserialize(decoder: Decoder): GatewayDrainRequestAction = when (val raw = decoder.decodeString()) {
             "drain" -> Drain
             "cancel" -> Cancel
-            else -> throw SerializationException("Unexpected GatewayDrainRequestAction value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected GatewayDrainRequestAction value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: GatewayDrainRequestAction) {
             val raw: kotlin.String = when (value) {
                 Drain -> "drain"
                 Cancel -> "cancel"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -546,6 +561,7 @@ public data class GatewayDrainResponse(
 public sealed interface GatewayDrainResponseAction {
     public data object Drain : GatewayDrainResponseAction
     public data object Cancel : GatewayDrainResponseAction
+    public data class Unknown(public val raw: kotlin.String) : GatewayDrainResponseAction
 
     public object Serializer : KSerializer<GatewayDrainResponseAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainResponseAction", PrimitiveKind.STRING)
@@ -553,13 +569,14 @@ public sealed interface GatewayDrainResponseAction {
         override fun deserialize(decoder: Decoder): GatewayDrainResponseAction = when (val raw = decoder.decodeString()) {
             "drain" -> Drain
             "cancel" -> Cancel
-            else -> throw SerializationException("Unexpected GatewayDrainResponseAction value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected GatewayDrainResponseAction value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: GatewayDrainResponseAction) {
             val raw: kotlin.String = when (value) {
                 Drain -> "drain"
                 Cancel -> "cancel"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

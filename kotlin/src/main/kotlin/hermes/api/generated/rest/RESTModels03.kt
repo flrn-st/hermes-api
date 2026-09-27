@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_custom_endpoint`` — the refreshed list. */
 @Serializable
@@ -45,8 +46,10 @@ public data class CustomEndpointModelDetail(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CustomEndpointModelDetail requires an object")
-            val known = setOf<String>("canonical_model", "id", "reasoning_effort")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("canonical_model", "id", "reasoning_effort")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return CustomEndpointModelDetail(
                 canonicalModel = when (val raw = input["canonical_model"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
@@ -111,6 +114,7 @@ public sealed interface CustomEndpointRowApiMode {
     public data object ChatCompletions : CustomEndpointRowApiMode
     public data object CodexResponses : CustomEndpointRowApiMode
     public data object AnthropicMessages : CustomEndpointRowApiMode
+    public data class Unknown(public val raw: kotlin.String) : CustomEndpointRowApiMode
 
     public object Serializer : KSerializer<CustomEndpointRowApiMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CustomEndpointRowApiMode", PrimitiveKind.STRING)
@@ -120,7 +124,7 @@ public sealed interface CustomEndpointRowApiMode {
             "chat_completions" -> ChatCompletions
             "codex_responses" -> CodexResponses
             "anthropic_messages" -> AnthropicMessages
-            else -> throw SerializationException("Unexpected CustomEndpointRowApiMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CustomEndpointRowApiMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: CustomEndpointRowApiMode) {
@@ -129,6 +133,7 @@ public sealed interface CustomEndpointRowApiMode {
                 ChatCompletions -> "chat_completions"
                 CodexResponses -> "codex_responses"
                 AnthropicMessages -> "anthropic_messages"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -141,6 +146,7 @@ public sealed interface CustomEndpointRowSource {
     public data object Providers : CustomEndpointRowSource
     public data object CustomProviders : CustomEndpointRowSource
     public data object DirectConfig : CustomEndpointRowSource
+    public data class Unknown(public val raw: kotlin.String) : CustomEndpointRowSource
 
     public object Serializer : KSerializer<CustomEndpointRowSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CustomEndpointRowSource", PrimitiveKind.STRING)
@@ -149,7 +155,7 @@ public sealed interface CustomEndpointRowSource {
             "providers" -> Providers
             "custom_providers" -> CustomProviders
             "direct-config" -> DirectConfig
-            else -> throw SerializationException("Unexpected CustomEndpointRowSource value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CustomEndpointRowSource value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: CustomEndpointRowSource) {
@@ -157,6 +163,7 @@ public sealed interface CustomEndpointRowSource {
                 Providers -> "providers"
                 CustomProviders -> "custom_providers"
                 DirectConfig -> "direct-config"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -188,8 +195,10 @@ public data class CustomEndpointUpdate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CustomEndpointUpdate requires an object")
-            val known = setOf<String>("api_key", "api_mode", "base_url", "context_length", "discover_models", "id", "make_default", "model", "model_details", "models", "name")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("api_key", "api_mode", "base_url", "context_length", "discover_models", "id", "make_default", "model", "model_details", "models", "name")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return CustomEndpointUpdate(
                 apiKey = when (val raw = input["api_key"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 apiMode = when (val raw = input["api_mode"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<CustomEndpointUpdateApiMode>(raw)) },
@@ -253,6 +262,7 @@ public sealed interface CustomEndpointUpdateApiMode {
     public data object ChatCompletions : CustomEndpointUpdateApiMode
     public data object CodexResponses : CustomEndpointUpdateApiMode
     public data object AnthropicMessages : CustomEndpointUpdateApiMode
+    public data class Unknown(public val raw: kotlin.String) : CustomEndpointUpdateApiMode
 
     public object Serializer : KSerializer<CustomEndpointUpdateApiMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CustomEndpointUpdateApiMode", PrimitiveKind.STRING)
@@ -262,7 +272,7 @@ public sealed interface CustomEndpointUpdateApiMode {
             "chat_completions" -> ChatCompletions
             "codex_responses" -> CodexResponses
             "anthropic_messages" -> AnthropicMessages
-            else -> throw SerializationException("Unexpected CustomEndpointUpdateApiMode value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CustomEndpointUpdateApiMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: CustomEndpointUpdateApiMode) {
@@ -271,6 +281,7 @@ public sealed interface CustomEndpointUpdateApiMode {
                 ChatCompletions -> "chat_completions"
                 CodexResponses -> "codex_responses"
                 AnthropicMessages -> "anthropic_messages"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -450,6 +461,7 @@ public sealed interface DashboardPluginManifestSource {
     public data object User : DashboardPluginManifestSource
     public data object Bundled : DashboardPluginManifestSource
     public data object Project : DashboardPluginManifestSource
+    public data class Unknown(public val raw: kotlin.String) : DashboardPluginManifestSource
 
     public object Serializer : KSerializer<DashboardPluginManifestSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardPluginManifestSource", PrimitiveKind.STRING)
@@ -458,7 +470,7 @@ public sealed interface DashboardPluginManifestSource {
             "user" -> User
             "bundled" -> Bundled
             "project" -> Project
-            else -> throw SerializationException("Unexpected DashboardPluginManifestSource value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected DashboardPluginManifestSource value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: DashboardPluginManifestSource) {
@@ -466,6 +478,7 @@ public sealed interface DashboardPluginManifestSource {
                 User -> "user"
                 Bundled -> "bundled"
                 Project -> "project"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -546,6 +559,7 @@ public sealed interface DashboardThemeDefinitionLayoutVariant {
     public data object Standard : DashboardThemeDefinitionLayoutVariant
     public data object Cockpit : DashboardThemeDefinitionLayoutVariant
     public data object Tiled : DashboardThemeDefinitionLayoutVariant
+    public data class Unknown(public val raw: kotlin.String) : DashboardThemeDefinitionLayoutVariant
 
     public object Serializer : KSerializer<DashboardThemeDefinitionLayoutVariant> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeDefinitionLayoutVariant", PrimitiveKind.STRING)
@@ -554,7 +568,7 @@ public sealed interface DashboardThemeDefinitionLayoutVariant {
             "standard" -> Standard
             "cockpit" -> Cockpit
             "tiled" -> Tiled
-            else -> throw SerializationException("Unexpected DashboardThemeDefinitionLayoutVariant value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected DashboardThemeDefinitionLayoutVariant value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: DashboardThemeDefinitionLayoutVariant) {
@@ -562,6 +576,7 @@ public sealed interface DashboardThemeDefinitionLayoutVariant {
                 Standard -> "standard"
                 Cockpit -> "cockpit"
                 Tiled -> "tiled"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -605,6 +620,7 @@ public sealed interface DashboardThemeLayoutDensity {
     public data object Compact : DashboardThemeLayoutDensity
     public data object Comfortable : DashboardThemeLayoutDensity
     public data object Spacious : DashboardThemeLayoutDensity
+    public data class Unknown(public val raw: kotlin.String) : DashboardThemeLayoutDensity
 
     public object Serializer : KSerializer<DashboardThemeLayoutDensity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeLayoutDensity", PrimitiveKind.STRING)
@@ -613,7 +629,7 @@ public sealed interface DashboardThemeLayoutDensity {
             "compact" -> Compact
             "comfortable" -> Comfortable
             "spacious" -> Spacious
-            else -> throw SerializationException("Unexpected DashboardThemeLayoutDensity value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected DashboardThemeLayoutDensity value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: DashboardThemeLayoutDensity) {
@@ -621,6 +637,7 @@ public sealed interface DashboardThemeLayoutDensity {
                 Compact -> "compact"
                 Comfortable -> "comfortable"
                 Spacious -> "spacious"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

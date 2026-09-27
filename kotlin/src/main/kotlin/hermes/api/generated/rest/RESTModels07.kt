@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable
@@ -112,6 +113,7 @@ public sealed interface KanbanDiagnosticSeverity {
     public data object Warning : KanbanDiagnosticSeverity
     public data object Error : KanbanDiagnosticSeverity
     public data object Critical : KanbanDiagnosticSeverity
+    public data class Unknown(public val raw: kotlin.String) : KanbanDiagnosticSeverity
 
     public object Serializer : KSerializer<KanbanDiagnosticSeverity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanDiagnosticSeverity", PrimitiveKind.STRING)
@@ -120,7 +122,7 @@ public sealed interface KanbanDiagnosticSeverity {
             "warning" -> Warning
             "error" -> Error
             "critical" -> Critical
-            else -> throw SerializationException("Unexpected KanbanDiagnosticSeverity value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanDiagnosticSeverity value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanDiagnosticSeverity) {
@@ -128,6 +130,7 @@ public sealed interface KanbanDiagnosticSeverity {
                 Warning -> "warning"
                 Error -> "error"
                 Critical -> "critical"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -187,6 +190,7 @@ public data class KanbanDispatchResponse(
 public sealed interface KanbanDispatchResponseMemoryPressure {
     public data object Critical : KanbanDispatchResponseMemoryPressure
     public data object Elevated : KanbanDispatchResponseMemoryPressure
+    public data class Unknown(public val raw: kotlin.String) : KanbanDispatchResponseMemoryPressure
 
     public object Serializer : KSerializer<KanbanDispatchResponseMemoryPressure> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanDispatchResponseMemoryPressure", PrimitiveKind.STRING)
@@ -194,13 +198,14 @@ public sealed interface KanbanDispatchResponseMemoryPressure {
         override fun deserialize(decoder: Decoder): KanbanDispatchResponseMemoryPressure = when (val raw = decoder.decodeString()) {
             "critical" -> Critical
             "elevated" -> Elevated
-            else -> throw SerializationException("Unexpected KanbanDispatchResponseMemoryPressure value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanDispatchResponseMemoryPressure value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanDispatchResponseMemoryPressure) {
             val raw: kotlin.String = when (value) {
                 Critical -> "critical"
                 Elevated -> "elevated"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -338,6 +343,7 @@ public sealed interface KanbanEstimateResponseComplexity {
     public data object S : KanbanEstimateResponseComplexity
     public data object M : KanbanEstimateResponseComplexity
     public data object L : KanbanEstimateResponseComplexity
+    public data class Unknown(public val raw: kotlin.String) : KanbanEstimateResponseComplexity
 
     public object Serializer : KSerializer<KanbanEstimateResponseComplexity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanEstimateResponseComplexity", PrimitiveKind.STRING)
@@ -346,7 +352,7 @@ public sealed interface KanbanEstimateResponseComplexity {
             "S" -> S
             "M" -> M
             "L" -> L
-            else -> throw SerializationException("Unexpected KanbanEstimateResponseComplexity value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanEstimateResponseComplexity value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: KanbanEstimateResponseComplexity) {
@@ -354,6 +360,7 @@ public sealed interface KanbanEstimateResponseComplexity {
                 S -> "S"
                 M -> "M"
                 L -> "L"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

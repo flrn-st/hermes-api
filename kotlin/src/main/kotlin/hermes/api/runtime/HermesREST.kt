@@ -24,7 +24,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -138,6 +140,20 @@ public class RESTMultipart(public val boundary: String = "hermes-api-${UUID.rand
 /** The JSON configuration generated REST calls use: unknown keys fail, absent optionals stay absent. */
 public val RESTJson: Json = Json { ignoreUnknownKeys = false; encodeDefaults = false }
 
+/** How strictly REST responses are decoded against the reviewed contracts. */
+public enum class RESTDecoding(internal val json: Json) {
+    /** Fails on a key a closed object does not declare and on an enum value the contract does not list, so
+     *  contract drift surfaces at once. */
+    Strict(RESTJson),
+    /** Skips undeclared keys and keeps unlisted enum values in their `Unknown` case, so a newer Hermes that
+     *  adds fields or values still decodes. A missing required key still fails. */
+    Tolerant(Json { ignoreUnknownKeys = true; encodeDefaults = false }),
+}
+
+/** Whether generated REST models skip what their contract does not declare ([RESTDecoding.Tolerant]). */
+internal val Decoder.decodesTolerantly: Boolean
+    get() = (this as? JsonDecoder)?.json?.configuration?.ignoreUnknownKeys == true
+
 public interface RESTCaller {
     public val json: Json get() = RESTJson
 
@@ -247,13 +263,16 @@ public data class HermesRESTConfiguration(
     /** Bounds each attempt, from sending the request to the last byte of the response. */
     val timeoutMillis: Long = 60_000,
     val retry: RESTRetryPolicy = RESTRetryPolicy(),
+    /** [RESTDecoding.Strict] by default; apps that must keep working with newer Hermes releases choose
+     *  [RESTDecoding.Tolerant]. */
+    val decoding: RESTDecoding = RESTDecoding.Strict,
     val logger: GatewayLogger = GatewayLogger.None,
 )
 
 /** Typed REST calls generated only for responses reviewed against the tagged handler. */
 public class HermesREST(
     private val configuration: HermesRESTConfiguration,
-    override val json: Json = RESTJson,
+    override val json: Json = configuration.decoding.json,
 ) : RESTCaller {
     public val methods: RESTMethodCatalog = RESTMethodCatalog(this)
 

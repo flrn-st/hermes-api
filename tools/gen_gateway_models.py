@@ -163,7 +163,8 @@ def _enum_view(enum: EnumDecl) -> dict[str, object]:
             "kotlin_name": "KnownUnknown" if value == "unknown" and not enum.closed else pascal(words),
             "wire_literal": _literal(value),
         })
-    return {"name": enum.name, "cases": cases, "constant": enum.constant, "closed": enum.closed}
+    return {"name": enum.name, "cases": cases, "constant": enum.constant, "closed": enum.closed,
+            "strict": enum.strict}
 
 
 def _tuple_view(item: TupleDecl) -> dict[str, object]:

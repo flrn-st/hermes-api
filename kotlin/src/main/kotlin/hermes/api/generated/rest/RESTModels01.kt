@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``agent/insights.py::InsightsEngine._compute_skill_breakdown``. */
 @Serializable
@@ -161,6 +162,7 @@ public sealed interface AudioSpeakResponseMimeType {
     public data object AudioOgg : AudioSpeakResponseMimeType
     public data object AudioWav : AudioSpeakResponseMimeType
     public data object AudioFlac : AudioSpeakResponseMimeType
+    public data class Unknown(public val raw: kotlin.String) : AudioSpeakResponseMimeType
 
     public object Serializer : KSerializer<AudioSpeakResponseMimeType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AudioSpeakResponseMimeType", PrimitiveKind.STRING)
@@ -170,7 +172,7 @@ public sealed interface AudioSpeakResponseMimeType {
             "audio/ogg" -> AudioOgg
             "audio/wav" -> AudioWav
             "audio/flac" -> AudioFlac
-            else -> throw SerializationException("Unexpected AudioSpeakResponseMimeType value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected AudioSpeakResponseMimeType value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: AudioSpeakResponseMimeType) {
@@ -179,6 +181,7 @@ public sealed interface AudioSpeakResponseMimeType {
                 AudioOgg -> "audio/ogg"
                 AudioWav -> "audio/wav"
                 AudioFlac -> "audio/flac"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -201,8 +204,10 @@ public data class AudioTranscriptionRequest(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("AudioTranscriptionRequest requires an object")
-            val known = setOf<String>("data_url", "mime_type")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("data_url", "mime_type")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return AudioTranscriptionRequest(
                 dataUrl = json.decodeFromJsonElement<String>((input["data_url"] ?: throw SerializationException("Missing data_url"))),
                 mimeType = when (val raw = input["mime_type"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -286,8 +291,10 @@ public data class BackupRequest(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("BackupRequest requires an object")
-            val known = setOf<String>("output")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("output")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return BackupRequest(
                 output = when (val raw = input["output"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -344,8 +351,10 @@ public data class Body_upload_task_attachment_api_plugins_kanban_tasks__task_id_
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("Body_upload_task_attachment_api_plugins_kanban_tasks__task_id__attachments_post requires an object")
-            val known = setOf<String>("file", "uploaded_by")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("file", "uploaded_by")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return Body_upload_task_attachment_api_plugins_kanban_tasks__task_id__attachments_post(
                 file = json.decodeFromJsonElement<String>((input["file"] ?: throw SerializationException("Missing file"))),
                 uploadedBy = when (val raw = input["uploaded_by"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -393,8 +402,10 @@ public data class BulkDeleteSessions(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("BulkDeleteSessions requires an object")
-            val known = setOf<String>("ids", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("ids", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return BulkDeleteSessions(
                 ids = json.decodeFromJsonElement<List<String>>((input["ids"] ?: throw SerializationException("Missing ids"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -445,8 +456,10 @@ public data class BulkTaskBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("BulkTaskBody requires an object")
-            val known = setOf<String>("archive", "assignee", "clear_model_override", "clear_reasoning_effort", "ids", "metadata", "model_override", "priority", "provider_override", "reasoning_effort", "reclaim_first", "result", "status", "summary")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("archive", "assignee", "clear_model_override", "clear_reasoning_effort", "ids", "metadata", "model_override", "priority", "provider_override", "reasoning_effort", "reclaim_first", "result", "status", "summary")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return BulkTaskBody(
                 archive = input["archive"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 assignee = when (val raw = input["assignee"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -541,8 +554,10 @@ public data class ChatImageUpload(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ChatImageUpload requires an object")
-            val known = setOf<String>("data_url", "filename")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("data_url", "filename")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ChatImageUpload(
                 dataUrl = json.decodeFromJsonElement<String>((input["data_url"] ?: throw SerializationException("Missing data_url"))),
                 filename = when (val raw = input["filename"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -664,8 +679,10 @@ public data class CommentBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CommentBody requires an object")
-            val known = setOf<String>("author", "body")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("author", "body")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return CommentBody(
                 author = when (val raw = input["author"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 body = json.decodeFromJsonElement<String>((input["body"] ?: throw SerializationException("Missing body"))),
@@ -825,6 +842,7 @@ public sealed interface ConfigSchemaFieldType {
     public data object List : ConfigSchemaFieldType
     public data object String : ConfigSchemaFieldType
     public data object Select : ConfigSchemaFieldType
+    public data class Unknown(public val raw: kotlin.String) : ConfigSchemaFieldType
 
     public object Serializer : KSerializer<ConfigSchemaFieldType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConfigSchemaFieldType", PrimitiveKind.STRING)
@@ -835,7 +853,7 @@ public sealed interface ConfigSchemaFieldType {
             "list" -> List
             "string" -> String
             "select" -> Select
-            else -> throw SerializationException("Unexpected ConfigSchemaFieldType value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ConfigSchemaFieldType value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: ConfigSchemaFieldType) {
@@ -845,6 +863,7 @@ public sealed interface ConfigSchemaFieldType {
                 List -> "list"
                 String -> "string"
                 Select -> "select"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

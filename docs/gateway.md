@@ -109,6 +109,15 @@ Sessions created with `close_on_disconnect: true` are torn down by Hermes as soo
 as the socket closes; the client reports them as `.unavailable` instead of
 rebinding them.
 
+## Profiles
+
+One gateway serves every Hermes profile. `/api/ws` reads no profile from its URL (a `?profile=` query is
+ignored; only the dashboard's terminal sockets read one): the profile is a parameter of each call. 211 of
+the 237 methods take `profile`, as Hermes' desktop client sends it (`session.create`, `session.resume`,
+`session.list`, `config.*`, `groups.*`, `connectors.*`, `projects.*`, `display.*`, `profiles.*`, …);
+the others act on the dashboard's active profile or on none. The gateway resumes a reclaimed session in the
+profile it was created or resumed with.
+
 ## Backend versions
 
 Session results carry Hermes' desktop contract, a number Hermes raises whenever clients need something new

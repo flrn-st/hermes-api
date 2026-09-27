@@ -1,0 +1,92 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  MemoryOAuthStartResponse:
+    additionalProperties: false
+    description: '``start_memory_oauth`` → ``oauth_flow.start_loopback_flow_background()``: the full status on a
+
+      fresh start, only ``state``/``detail`` when a flow is already pending (idempotent re-click).'
+    properties:
+      auth:
+        anyOf:
+        - enum:
+          - oauth
+          - apikey
+          type: string
+        - type: 'null'
+      connected:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      detail:
+        type: string
+      state:
+        enum:
+        - idle
+        - pending
+        - connected
+        - error
+        type: string
+    required:
+    - state
+    - detail
+    type: object
+  MemoryOAuthStatusResponse:
+    additionalProperties: false
+    description: '``memory_oauth_status`` → the provider''s ``oauth_flow.get_flow_status()``
+
+      (``plugins/memory/honcho/oauth_flow.py``); ``auth`` names the stored credential, if any.'
+    properties:
+      auth:
+        anyOf:
+        - enum:
+          - oauth
+          - apikey
+          type: string
+        - type: 'null'
+      connected:
+        type: boolean
+      detail:
+        type: string
+      state:
+        enum:
+        - idle
+        - pending
+        - connected
+        - error
+        type: string
+    required:
+    - state
+    - detail
+    - connected
+    - auth
+    type: object
+operations:
+- method: GET
+  path: /api/memory/providers/{provider}/oauth/status
+  x-source: hermes_cli/memory_oauth.py:65
+  x-handler-hash: a1f4704e0923645fb5ddc01c82180a9adc59a2b5d756833fe1d20b247015d967
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MemoryOAuthStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MemoryOAuthStatusResponse'
+      description: Successful Response
+- method: POST
+  path: /api/memory/providers/{provider}/oauth/start
+  x-source: hermes_cli/memory_oauth.py:51
+  x-handler-hash: 1599695e8c1c342ae2fff7ff4f1b2eb00f4ba0fee67075d99000488d757090be
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MemoryOAuthStartResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MemoryOAuthStartResponse'
+      description: Successful Response

@@ -1,0 +1,355 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  ActionStatusResponse:
+    additionalProperties: false
+    description: '``get_action_status``; ``action_id`` and ``receipt`` only for ``hermes-update``.'
+    properties:
+      action_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      exit_code:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      lines:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      receipt:
+        anyOf:
+        - $ref: '#/components/schemas/UpdateReceiptSummary'
+        - type: 'null'
+      running:
+        type: boolean
+    required:
+    - name
+    - running
+    - exit_code
+    - pid
+    - lines
+    type: object
+  GatewayDrainResponse:
+    additionalProperties: false
+    description: '``gateway_drain``: ``cancel`` answers ``was_draining``; ``drain`` echoes the marker it wrote
+
+      (``gateway/drain_control.py::write_drain_request``) and whether a drain is now active.'
+    properties:
+      action:
+        enum:
+        - drain
+        - cancel
+        type: string
+      draining:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      ok:
+        type: boolean
+      requested_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      suppress_notification:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      was_draining:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+    required:
+    - ok
+    - action
+    type: object
+  GatewayMigrationPlanResponse:
+    additionalProperties: false
+    description: '``gateway_migrate_plan`` → ``hermes_cli/gateway_migrate.py::MigrationPlan.to_dict`` (the
+
+      same JSON as ``hermes gateway migrate --plan``).'
+    properties:
+      already_multiplexed:
+        type: boolean
+      blockers:
+        items:
+          type: string
+        type: array
+      command:
+        type: string
+      default_home:
+        type: string
+      eligible:
+        type: boolean
+      interrupted:
+        type: boolean
+      live_served:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      multiplex_flag_on:
+        type: boolean
+      notices:
+        items:
+          type: string
+        type: array
+      profiles:
+        items:
+          $ref: '#/components/schemas/GatewayMigrationProfile'
+        type: array
+      standalone_by_config:
+        items:
+          type: string
+        type: array
+    required:
+    - default_home
+    - profiles
+    - standalone_by_config
+    - multiplex_flag_on
+    - live_served
+    - already_multiplexed
+    - interrupted
+    - blockers
+    - notices
+    - eligible
+    - command
+    type: object
+  GatewayMigrationProfile:
+    additionalProperties: false
+    description: '``hermes_cli/gateway_migrate.py::ProfileGateway.to_dict``.'
+    properties:
+      home:
+        type: string
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      profile:
+        type: string
+      run_as_user:
+        anyOf:
+        - type: string
+        - type: 'null'
+      runtime_home:
+        anyOf:
+        - type: string
+        - type: 'null'
+      service:
+        anyOf:
+        - $ref: '#/components/schemas/GatewayMigrationService'
+        - type: 'null'
+      services:
+        items:
+          $ref: '#/components/schemas/GatewayMigrationService'
+        type: array
+      uid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - profile
+    - home
+    - pid
+    - service
+    - services
+    - run_as_user
+    - uid
+    - runtime_home
+    type: object
+  GatewayMigrationService:
+    additionalProperties: false
+    description: '``hermes_cli/gateway_migrate.py::_service_dict`` — ``kind`` is ``systemd``, ``launchd``,
+
+      ``s6`` or ``windows``; ``system`` marks a system-scope systemd unit.'
+    properties:
+      kind:
+        type: string
+      system:
+        type: boolean
+    required:
+    - kind
+    - system
+    type: object
+  UpdateReceiptResponse:
+    additionalProperties: false
+    description: '``get_update_receipt``: the full latest receipt plus its compact summary.'
+    properties:
+      receipt:
+        $ref: '#/components/schemas/UpdateReceiptRecord'
+      summary:
+        anyOf:
+        - $ref: '#/components/schemas/UpdateReceiptSummary'
+        - type: 'null'
+    required:
+    - receipt
+    - summary
+    type: object
+  UpdateReceiptSkip:
+    additionalProperties: true
+    description: '``hermes_cli/update_receipt.py::UpdateReceipt.skip``.'
+    properties:
+      at:
+        type: string
+      name:
+        type: string
+      reason:
+        type: string
+    required:
+    - name
+    - reason
+    - at
+    type: object
+  UpdateReceiptStep:
+    additionalProperties: true
+    description: '``hermes_cli/update_receipt.py::UpdateReceipt.step``.'
+    properties:
+      at:
+        type: string
+      detail:
+        type: string
+      name:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - name
+    - ok
+    - detail
+    - at
+    type: object
+  UpdateReceiptSummary:
+    additionalProperties: false
+    description: '``_latest_update_receipt_summary``; values are copied out of the receipt file, so any may be
+
+      ``null`` when that receipt lacks them.'
+    properties:
+      finished_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fleet_states:
+        items:
+          type: string
+        type: array
+      outcome:
+        anyOf:
+        - type: string
+        - type: 'null'
+      post_sha:
+        anyOf:
+        - type: string
+        - type: 'null'
+      post_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+      pre_sha:
+        anyOf:
+        - type: string
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - outcome
+    - started_at
+    - finished_at
+    - pre_sha
+    - post_sha
+    - post_version
+    - fleet_states
+    type: object
+operations:
+- method: GET
+  path: /api/actions/{name}/status
+  x-source: hermes_cli/web_routers/actions.py:331
+  x-handler-hash: 3cf6be3f92507578262c7ea33bd083361b01281f332d40c10015098a1362f370
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/gateway/migrate/plan
+  x-source: hermes_cli/web_routers/actions.py:147
+  x-handler-hash: e993d554561559e632733a8663af8fc785c67338b3f45a67362564fae2bce4d3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GatewayMigrationPlanResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GatewayMigrationPlanResponse'
+      description: Successful Response
+- method: GET
+  path: /api/hermes/update/receipt
+  x-source: hermes_cli/web_routers/actions.py:413
+  x-handler-hash: b175b85754a47e14209d3512537067bc55a34445fd2eba29c45543c927430336
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: UpdateReceiptResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateReceiptResponse'
+      description: Successful Response
+- method: POST
+  path: /api/gateway/drain
+  x-source: hermes_cli/web_routers/actions.py:165
+  x-handler-hash: a4368bc614b8f1b747536fad22df9fbb4e1e5a9fd21148bfb855d9105f734c8a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GatewayDrainResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GatewayDrainResponse'
+      description: Successful Response
+- method: POST
+  path: /api/gateway/migrate
+  x-source: hermes_cli/web_routers/actions.py:155
+  x-handler-hash: 076985975d5723e479c5a6298ee002edecec52510c237c54b655071d77b4269e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/gateway/restart
+  x-source: hermes_cli/web_routers/actions.py:139
+  x-handler-hash: 09b24d4e47d9c486aeef81c751059085f73401209bcfdbc320465771f9bd30ec
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response

@@ -1,0 +1,336 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  LocalModelJob:
+    type: object
+    additionalProperties: false
+    description: '``_job`` record as rendered by ``_job_view`` (tag: ``hermes_cli/web_routers/local_models.py:121``/``:134``).
+      The record is copied verbatim; ``percent`` is added only when ``total_bytes`` is non-zero.'
+    properties:
+      job_id: &id001
+        type: string
+      kind:
+        type: string
+        enum:
+        - runtime-install
+        - model-download
+        - quickstart
+        - model-activate
+      target:
+        type: string
+        description: Human-readable subject, e.g. ``llama.cpp <tag> (<backend>)`` or ``<display name> (<quant>)``.
+      model_id:
+        anyOf:
+        - *id001
+        - type: 'null'
+        description: Catalog family id (``/download``, quickstart), GGUF-derived variant id (``/download-browsed``,
+          activate); null for runtime installs.
+      status:
+        type: string
+        enum:
+        - running
+        - done
+        - error
+      phase:
+        type: string
+        description: Current step name (``starting``, ``downloading``, ``downloading-runtime``, ``unpacking-runtime``,
+          ``verifying-runtime``, ``installing-runtime``, ``restarting``, ``starting-server``, ``setting-default``,
+          ``done``).
+      detail: *id001
+      total_bytes:
+        anyOf:
+        - &id002
+          type: integer
+        - type: 'null'
+      done_bytes: *id002
+      started_at:
+        type: number
+        description: Unix time the job was created.
+      error:
+        anyOf:
+        - *id001
+        - type: 'null'
+        description: Exception text once ``status`` is ``error``.
+      percent:
+        type: integer
+        description: 0-100; present only while ``total_bytes`` is known and non-zero.
+    required:
+    - job_id
+    - kind
+    - target
+    - model_id
+    - status
+    - phase
+    - detail
+    - total_bytes
+    - done_bytes
+    - started_at
+    - error
+  LocalModelLoadProgress:
+    type: object
+    additionalProperties: false
+    description: '``hermes_cli/local_runtime/load_progress.py::get_loading_progress`` entry.'
+    properties:
+      stage: *id001
+      value:
+        type: number
+        description: Progress within ``stage``, 0..1.
+      percent:
+        type: integer
+        description: Composite 0-100 across all load stages.
+    required:
+    - stage
+    - value
+    - percent
+  LocalModelPlacement:
+    type: object
+    additionalProperties: false
+    description: '``_loaded_models`` facts: the preset decision (``window``/``window_label``/``spilled``, together)
+      and the window the live server actually granted (``granted_window``/``granted_window_label``, together); each
+      group only when known.'
+    properties:
+      window: *id002
+      window_label: *id001
+      spilled: &id003
+        type: boolean
+      granted_window: *id002
+      granted_window_label: *id001
+    required: []
+  LocalModelStagedRow:
+    type: object
+    additionalProperties: false
+    description: '``_staged_row``: one downloaded variant (a split model''s whole size).'
+    properties:
+      id: *id001
+      size_bytes: *id002
+      size_label: *id001
+    required:
+    - id
+    - size_bytes
+    - size_label
+  LocalModelsDownloadResponse:
+    type: object
+    additionalProperties: false
+    description: '``local_models_download`` / ``local_models_download_browsed``: ``job_id`` is null and ``already_downloaded``
+      is present (always true) when the variant is already staged; ``model_id`` is the variant id.'
+    properties:
+      job_id:
+        anyOf:
+        - *id001
+        - type: 'null'
+      model_id: *id001
+      already_downloaded:
+        type: boolean
+        description: Present (true) only when nothing was started.
+    required:
+    - job_id
+    - model_id
+  LocalModelsJobsResponse:
+    type: object
+    additionalProperties: false
+    description: '``local_models_jobs``: running jobs first, then newest first; at most 20 in total.'
+    properties:
+      jobs:
+        type: array
+        items:
+          $ref: '#/components/schemas/LocalModelJob'
+    required:
+    - jobs
+  LocalModelsQuickstartResponse:
+    type: object
+    additionalProperties: false
+    description: '``local_models_quickstart``; ``model_id`` is the catalog family id.'
+    properties:
+      job_id: *id001
+      model_id: *id001
+      display_name: *id001
+      needs_runtime: *id003
+      needs_download: *id003
+      download_bytes:
+        type: integer
+        description: 0 when nothing needs downloading.
+    required:
+    - job_id
+    - model_id
+    - display_name
+    - needs_runtime
+    - needs_download
+    - download_bytes
+  LocalModelsRuntimeInstallResponse:
+    type: object
+    additionalProperties: false
+    description: '``local_models_runtime_install``.'
+    properties:
+      job_id: *id001
+      backend: *id001
+      tag: *id001
+    required:
+    - job_id
+    - backend
+    - tag
+  LocalModelsStatusResponse:
+    type: object
+    additionalProperties: false
+    description: '``local_models_status``.'
+    properties:
+      enabled: *id003
+      tag:
+        type: string
+        description: 'The tag actually serving: ``configured_tag`` when installed, else the newest installed tag,
+          else ``configured_tag``.'
+      configured_tag:
+        type: string
+        description: '``local_runtime.tag`` or the release default.'
+      update_available:
+        type: boolean
+        description: Enabled, some tag installed, and ``configured_tag`` not installed.
+      runtime_installed: *id003
+      runtime_backend:
+        anyOf:
+        - *id001
+        - type: 'null'
+        description: First backend dir under ``tag`` with a working server binary.
+      server_running: *id003
+      server_base_url:
+        anyOf:
+        - *id001
+        - type: 'null'
+      active_model_id:
+        anyOf:
+        - *id001
+        - type: 'null'
+      loaded_models:
+        type: object
+        additionalProperties:
+          type: string
+          enum:
+          - loaded
+          - ready
+          - loading
+      loading:
+        type: object
+        additionalProperties:
+          $ref: '#/components/schemas/LocalModelLoadProgress'
+      placement:
+        type: object
+        additionalProperties:
+          $ref: '#/components/schemas/LocalModelPlacement'
+      models:
+        type: array
+        items:
+          $ref: '#/components/schemas/LocalModelStagedRow'
+      models_dir: *id001
+    required:
+    - enabled
+    - tag
+    - configured_tag
+    - update_available
+    - runtime_installed
+    - runtime_backend
+    - server_running
+    - server_base_url
+    - active_model_id
+    - loaded_models
+    - loading
+    - placement
+    - models
+    - models_dir
+operations:
+- method: POST
+  path: /api/local-models/download
+  x-source: hermes_cli/web_routers/local_models.py:703
+  x-handler-hash: d4718241cf7193f355a8c99b0f6b6cdd4c1a4435b0fe929d8eb2960ee0d900dc
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsDownloadResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsDownloadResponse'
+- method: POST
+  path: /api/local-models/download-browsed
+  x-source: hermes_cli/web_routers/local_models.py:923
+  x-handler-hash: d98b16768148e1153ceef10cd35844eeed2a6de710ba5cc12cef3f39f1aa421d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsDownloadResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsDownloadResponse'
+- method: GET
+  path: /api/local-models/jobs
+  x-source: hermes_cli/web_routers/local_models.py:887
+  x-handler-hash: 21796b6a5545b96331f9a003c25081df860669e2e91bdf89cc9882e5aabddc1e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsJobsResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsJobsResponse'
+- method: GET
+  path: /api/local-models/jobs/{job_id}
+  x-source: hermes_cli/web_routers/local_models.py:895
+  x-handler-hash: f9e58656bbbab7818b02b25949ba994cd3d2554d8f87a733355e033300c6f0af
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelJob
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelJob'
+- method: POST
+  path: /api/local-models/quickstart
+  x-source: hermes_cli/web_routers/local_models.py:757
+  x-handler-hash: 94580173490cbf35b66c50efd3c2f78889f05b09006e84cf6020954ec5890a50
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsQuickstartResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsQuickstartResponse'
+- method: POST
+  path: /api/local-models/runtime/install
+  x-source: hermes_cli/web_routers/local_models.py:662
+  x-handler-hash: 57499030d5b54369e8b0f6a459fa9bef29d2fe7804d52f372110354588c8f1bb
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsRuntimeInstallResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsRuntimeInstallResponse'
+- method: GET
+  path: /api/local-models/status
+  x-source: hermes_cli/web_routers/local_models.py:476
+  x-handler-hash: d3a76b703e02c28813af51bdc394e233471a55240a97470afdae6fd0532a4298
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsStatusResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsStatusResponse'

@@ -1,0 +1,333 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  MemoryProviderConfigSaveResponse:
+    additionalProperties: false
+    description: '``update_memory_provider_config``; ``active`` only on the legacy surface, which also
+
+      activates the provider.'
+    properties:
+      active:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+    required:
+    - ok
+    type: object
+  MemoryProviderDeclaredConfigResponse:
+    additionalProperties: false
+    description: '``get_memory_provider_config`` with ``surface=declared`` (``_declared_provider_payload``, or an
+
+      empty panel when the provider declares no ``config_schema.py``).'
+    properties:
+      docs_url:
+        type: string
+      fields:
+        items:
+          $ref: '#/components/schemas/MemoryProviderDeclaredField'
+        type: array
+      label:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - label
+    - docs_url
+    - fields
+    type: object
+  MemoryProviderDeclaredField:
+    additionalProperties: false
+    description: 'One field of ``_declared_provider_payload`` (``plugins/memory/config_schema.py::ProviderField``).
+
+      ``value`` is always the string the generic panel edits; secrets are ``""`` (write-only).'
+    properties:
+      description:
+        type: string
+      group:
+        type: string
+      info:
+        type: string
+      inline:
+        type: boolean
+      is_set:
+        type: boolean
+      key:
+        type: string
+      kind:
+        type: string
+      label:
+        type: string
+      options:
+        items:
+          $ref: '#/components/schemas/MemoryProviderFieldOption'
+        type: array
+      placeholder:
+        type: string
+      value:
+        type: string
+    required:
+    - key
+    - label
+    - kind
+    - description
+    - info
+    - placeholder
+    - inline
+    - group
+    - options
+    - value
+    - is_set
+    type: object
+  MemoryProviderExternalDependency:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_memory.py::_memory_provider_setup_manifest`` — blank strings when the
+
+      manifest omits a key.'
+    properties:
+      check:
+        type: string
+      install:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - install
+    - check
+    type: object
+  MemoryProviderFieldOption:
+    additionalProperties: false
+    properties:
+      description:
+        type: string
+      label:
+        type: string
+      value:
+        type: string
+    required:
+    - value
+    - label
+    - description
+    type: object
+  MemoryProviderLegacyConfigResponse:
+    additionalProperties: false
+    description: '``get_memory_provider_config`` without ``surface=declared`` (``_memory_provider_payload``, or
+
+      an empty field list when the provider cannot be loaded).'
+    properties:
+      fields:
+        items:
+          $ref: '#/components/schemas/MemoryProviderLegacyField'
+        type: array
+      label:
+        type: string
+      name:
+        type: string
+      setup:
+        $ref: '#/components/schemas/MemoryProviderSetupInfo'
+    required:
+    - name
+    - label
+    - fields
+    - setup
+    type: object
+  MemoryProviderLegacyField:
+    additionalProperties: false
+    description: 'One field of ``_memory_provider_payload`` (normalised by
+
+      ``hermes_cli/web_server_memory.py::_normalize_memory_provider_schema``). ``value`` is a bool for
+
+      ``boolean`` fields and a string otherwise (``""`` for secrets); the bounds pass through from the
+
+      provider''s ``get_config_schema()`` unchanged.'
+    properties:
+      description:
+        type: string
+      is_set:
+        type: boolean
+      key:
+        type: string
+      kind:
+        enum:
+        - secret
+        - select
+        - boolean
+        - integer
+        - number
+        - text
+        type: string
+      label:
+        type: string
+      maximum: {}
+      minimum: {}
+      options:
+        items:
+          $ref: '#/components/schemas/MemoryProviderFieldOption'
+        type: array
+      placeholder:
+        type: string
+      required:
+        type: boolean
+      step: {}
+      url:
+        type: string
+      value:
+        anyOf:
+        - type: string
+        - type: boolean
+      when:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+    required:
+    - key
+    - label
+    - kind
+    - description
+    - placeholder
+    - required
+    - value
+    - is_set
+    - options
+    - url
+    - when
+    - minimum
+    - maximum
+    - step
+    type: object
+  MemoryProviderSetupResponse:
+    additionalProperties: false
+    description: '``setup_memory_provider`` → ``_install_memory_provider_setup``; ``status`` is ``None`` when
+
+      discovery no longer lists the provider.'
+    properties:
+      ok:
+        type: boolean
+      provider:
+        type: string
+      results:
+        items:
+          $ref: '#/components/schemas/MemoryProviderSetupStepResult'
+        type: array
+      status:
+        anyOf:
+        - $ref: '#/components/schemas/MemoryProviderStatusRow'
+        - type: 'null'
+    required:
+    - ok
+    - provider
+    - results
+    - status
+    type: object
+  MemoryProviderSetupStepResult:
+    additionalProperties: false
+    description: '``_command_result``; ``returncode`` is ``None`` when no process ran.'
+    properties:
+      command:
+        type: string
+      kind:
+        enum:
+        - pip
+        - setup
+        - external_check
+        - external_install
+        type: string
+      name:
+        type: string
+      returncode:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      status:
+        type: string
+      stderr:
+        type: string
+      stdout:
+        type: string
+    required:
+    - kind
+    - name
+    - status
+    - command
+    - returncode
+    - stdout
+    - stderr
+    type: object
+  MemoryProviderStatusRow:
+    additionalProperties: false
+    description: One ``hermes_cli/web_server_memory.py::_discover_memory_provider_statuses`` row.
+    properties:
+      available:
+        type: boolean
+      configured:
+        type: boolean
+      description:
+        type: string
+      name:
+        type: string
+      setup:
+        $ref: '#/components/schemas/MemoryProviderSetupInfo'
+      status:
+        enum:
+        - missing
+        - unavailable
+        - needs_config
+        - ready
+        type: string
+    required:
+    - name
+    - description
+    - available
+    - configured
+    - status
+    - setup
+    type: object
+operations:
+- method: GET
+  path: /api/memory/providers/{name}/config
+  x-source: hermes_cli/web_routers/memory_providers.py:520
+  x-handler-hash: 0a01e594aaab5690d20f427f5132f79fccb43a9eb43a7962207d117557714388
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"anyOf": [{"$ref": "#/components/schemas/MemoryProviderDeclaredConfigResponse"}, {"$ref": "#/components/schemas/MemoryProviderLegacyConfigResponse"}]}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/MemoryProviderDeclaredConfigResponse'
+            - $ref: '#/components/schemas/MemoryProviderLegacyConfigResponse'
+      description: Successful Response
+- method: POST
+  path: /api/memory/providers/{name}/setup
+  x-source: hermes_cli/web_routers/memory_providers.py:540
+  x-handler-hash: d380648a18bb660842f092da1510ce59484c2f09c19437cbc8a3e7e6cbf4b165
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MemoryProviderSetupResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MemoryProviderSetupResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/memory/providers/{name}/config
+  x-source: hermes_cli/web_routers/memory_providers.py:563
+  x-handler-hash: 3ea18a14785c4b3aa0a8b13878f08c23a2aa8a4778a7cf161be51baa35a566fe
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MemoryProviderConfigSaveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MemoryProviderConfigSaveResponse'
+      description: Successful Response

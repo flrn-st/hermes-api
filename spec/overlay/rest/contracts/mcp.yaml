@@ -1,0 +1,699 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  McpCatalogDiagnostic:
+    additionalProperties: false
+    description: '``hermes_cli/mcp_catalog.py::catalog_diagnostics`` — a manifest skipped by ``list_catalog``.'
+    properties:
+      kind:
+        enum:
+        - future_manifest
+        - invalid
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - kind
+    - message
+    type: object
+  McpCatalogDiscovery:
+    additionalProperties: false
+    description: '``hermes_cli/mcp_app_detection.py::discover_catalog_apps`` ``discovery`` block (or the
+
+      router''s ``unavailable`` fallback). ``unavailable`` means empty ``detected_apps`` are unknown.'
+    properties:
+      platform:
+        type: string
+      scope:
+        const: backend
+        type: string
+      status:
+        enum:
+        - ok
+        - unavailable
+        type: string
+    required:
+    - scope
+    - status
+    - platform
+    type: object
+  McpCatalogEntryRow:
+    additionalProperties: false
+    description: '``hermes_cli/web_routers/mcp.py::_catalog_entry_json`` over a parsed
+
+      ``hermes_cli/mcp_catalog.py::CatalogEntry``.'
+    properties:
+      args:
+        items:
+          type: string
+        type: array
+      auth_type:
+        enum:
+        - api_key
+        - oauth
+        - none
+        type: string
+      bootstrap:
+        items:
+          type: string
+        type: array
+      command:
+        anyOf:
+        - type: string
+        - type: 'null'
+      connector_slug:
+        anyOf:
+        - type: string
+        - type: 'null'
+      default_enabled:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      description:
+        type: string
+      detected_apps:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+        description: 'Only with ``detect_apps=true``: matched application labels.'
+      enabled:
+        type: boolean
+      install_ref:
+        anyOf:
+        - type: string
+        - type: 'null'
+      install_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      installed:
+        type: boolean
+      name:
+        type: string
+      needs_install:
+        type: boolean
+      post_install:
+        type: string
+      required_env:
+        items:
+          $ref: '#/components/schemas/McpCatalogRequiredEnv'
+        type: array
+      source:
+        type: string
+      suggest:
+        anyOf:
+        - $ref: '#/components/schemas/McpCatalogSuggest'
+        - type: 'null'
+      transport:
+        enum:
+        - stdio
+        - http
+        type: string
+      url:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - name
+    - description
+    - connector_slug
+    - source
+    - transport
+    - auth_type
+    - required_env
+    - command
+    - args
+    - url
+    - install_url
+    - install_ref
+    - bootstrap
+    - default_enabled
+    - post_install
+    - suggest
+    - needs_install
+    - installed
+    - enabled
+    type: object
+  McpCatalogInstallResponse:
+    additionalProperties: false
+    description: '``install_mcp_catalog_entry`` — git-bootstrap entries install in a background action
+
+      (``background: true`` + ``action``); others install synchronously.'
+    properties:
+      action:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Background action name, tailed via ``GET /api/actions/{action}/status``.
+      background:
+        type: boolean
+      name:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - name
+    - background
+    type: object
+  McpCatalogRequiredEnv:
+    additionalProperties: false
+    description: '``hermes_cli/mcp_catalog.py::EnvVarSpec`` (names and prompts only, never values).'
+    properties:
+      name:
+        type: string
+      prompt:
+        type: string
+      required:
+        type: boolean
+    required:
+    - name
+    - prompt
+    - required
+    type: object
+  McpCatalogResponse:
+    additionalProperties: false
+    description: '``list_mcp_catalog``; ``discovery`` only with ``detect_apps=true``.'
+    properties:
+      diagnostics:
+        items:
+          $ref: '#/components/schemas/McpCatalogDiagnostic'
+        type: array
+      discovery:
+        anyOf:
+        - $ref: '#/components/schemas/McpCatalogDiscovery'
+        - type: 'null'
+      entries:
+        items:
+          $ref: '#/components/schemas/McpCatalogEntryRow'
+        type: array
+    required:
+    - entries
+    - diagnostics
+    type: object
+  McpCatalogSuggest:
+    additionalProperties: false
+    description: '``hermes_cli/mcp_catalog.py::SuggestSpec``.'
+    properties:
+      applications:
+        items:
+          type: string
+        type: array
+      examples:
+        items:
+          type: string
+        type: array
+      hosts:
+        items:
+          type: string
+        type: array
+      keywords:
+        items:
+          type: string
+        type: array
+      requires_app:
+        type: boolean
+    required:
+    - keywords
+    - hosts
+    - applications
+    - examples
+    - requires_app
+    type: object
+  McpOAuthCancelResponse:
+    additionalProperties: false
+    description: '``cancel_mcp_oauth_flow`` — ``expired`` for an unknown/GC''d flow; otherwise the flow''s status
+
+      after cancelling (``approved`` if it had already completed).'
+    properties:
+      ok:
+        type: boolean
+      status:
+        enum:
+        - expired
+        - approved
+        - error
+        type: string
+    required:
+    - ok
+    - status
+    type: object
+  McpOAuthFlowResponse:
+    additionalProperties: false
+    description: '``auth_mcp_server`` — ``tools/mcp_dashboard_oauth.py::DashboardOAuthFlow.snapshot``.'
+    properties:
+      authorization_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      flow_id:
+        type: string
+      server_name:
+        type: string
+      status:
+        enum:
+        - starting
+        - authorization_required
+        - approved
+        - error
+        type: string
+    required:
+    - flow_id
+    - server_name
+    - status
+    - authorization_url
+    - error
+    type: object
+  McpOAuthFlowStatusResponse:
+    additionalProperties: false
+    description: '``mcp_oauth_flow_status`` — the flow snapshot plus the tools probed once approved
+
+      (``[]`` until then).'
+    properties:
+      authorization_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      flow_id:
+        type: string
+      server_name:
+        type: string
+      status:
+        enum:
+        - starting
+        - authorization_required
+        - approved
+        - error
+        type: string
+      tools:
+        items:
+          $ref: '#/components/schemas/McpToolSummary'
+        type: array
+    required:
+    - flow_id
+    - server_name
+    - status
+    - authorization_url
+    - error
+    - tools
+    type: object
+  McpServerAddResponse:
+    additionalProperties: false
+    description: '``add_mcp_server`` — the summary of the server just saved (always ``source: "config"``).'
+    properties:
+      args:
+        items:
+          type: string
+        type: array
+      auth:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: '``mcp_servers.<name>.auth`` as written, or ``"header"`` when an Authorization header is configured.'
+      command:
+        anyOf:
+        - type: string
+        - type: 'null'
+      enabled:
+        type: boolean
+      env:
+        additionalProperties:
+          type: string
+        description: Env var name -> redacted value (``redact_key``).
+        type: object
+      name:
+        type: string
+      plugin:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        enum:
+        - config
+        - plugin
+        type: string
+      tools:
+        anyOf:
+        - {}
+        - type: 'null'
+        description: '``mcp_servers.<name>.tools`` as written (include/exclude filter); ``null`` = all tools.'
+      transport:
+        enum:
+        - http
+        - stdio
+        - unknown
+        type: string
+      url:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - name
+    - transport
+    - url
+    - command
+    - args
+    - env
+    - auth
+    - enabled
+    - tools
+    - source
+    - plugin
+    type: object
+  McpServerConfigSummary:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_mcp.py::_mcp_server_summary`` — a configured server with stdio ``env``
+
+      values redacted. Sibling of the ``mcp.servers.list`` JSON-RPC row
+
+      (``tui_gateway/contracts/tools_mcp_plugins.py::McpServerSummary``), which lists env key names
+
+      instead of redacted values.'
+    properties:
+      args:
+        items:
+          type: string
+        type: array
+      auth:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: '``mcp_servers.<name>.auth`` as written, or ``"header"`` when an Authorization header is configured.'
+      command:
+        anyOf:
+        - type: string
+        - type: 'null'
+      enabled:
+        type: boolean
+      env:
+        additionalProperties:
+          type: string
+        description: Env var name -> redacted value (``redact_key``).
+        type: object
+      name:
+        type: string
+      plugin:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        enum:
+        - config
+        - plugin
+        type: string
+      tools:
+        anyOf:
+        - {}
+        - type: 'null'
+        description: '``mcp_servers.<name>.tools`` as written (include/exclude filter); ``null`` = all tools.'
+      transport:
+        enum:
+        - http
+        - stdio
+        - unknown
+        type: string
+      url:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - name
+    - transport
+    - url
+    - command
+    - args
+    - env
+    - auth
+    - enabled
+    - tools
+    - source
+    - plugin
+    type: object
+  McpServerEnabledResponse:
+    additionalProperties: false
+    description: '``set_mcp_server_enabled``.'
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - name
+    - enabled
+    type: object
+  McpServerListResponse:
+    additionalProperties: false
+    description: '``list_mcp_servers`` — sorted by name.'
+    properties:
+      servers:
+        items:
+          $ref: '#/components/schemas/McpServerConfigSummary'
+        type: array
+    required:
+    - servers
+    type: object
+  McpServerProbeTool:
+    additionalProperties: false
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      schema_chars:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        description: Size of the registered tool schema; omitted when it could not be measured.
+    required:
+    - name
+    - description
+    type: object
+  McpServerTestResponse:
+    additionalProperties: false
+    description: '``test_mcp_server`` — ``ok: false`` carries ``error`` and an empty ``tools``; the prompt and
+
+      resource counts are only reported on success.'
+    properties:
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      prompts:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      resources:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      tools:
+        items:
+          $ref: '#/components/schemas/McpServerProbeTool'
+        type: array
+    required:
+    - ok
+    - tools
+    type: object
+  McpToolSummary:
+    additionalProperties: false
+    description: 'A ``(name, description)`` pair from ``hermes_cli/mcp_config.py::_probe_single_server``
+
+      (description truncated to 80 chars, ``""`` when absent).'
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - description
+    type: object
+operations:
+- method: DELETE
+  path: /api/mcp/oauth/flows/{flow_id}
+  x-source: hermes_cli/web_routers/mcp.py:316
+  x-handler-hash: d3329ebb72cf3305b26b7d1af6df925d0e50ab042057e769c15ad8da90deba07
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpOAuthCancelResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpOAuthCancelResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/mcp/servers/{name}
+  x-source: hermes_cli/web_routers/mcp.py:174
+  x-handler-hash: 5a0db139b28772ac3a2e117dd6061386f712dc0aca98069345f9d70fe7fcaf7c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: GET
+  path: /api/mcp/catalog
+  x-source: hermes_cli/web_routers/mcp.py:430
+  x-handler-hash: 09da9f231963cb22c747ffb3986fbc2f154d5bfa8fd11474c6ff3992d4326ecd
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpCatalogResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpCatalogResponse'
+      description: Successful Response
+- method: GET
+  path: /api/mcp/oauth/callback/{server_name}
+  x-source: hermes_cli/web_routers/mcp.py:330
+  x-handler-hash: db246cff2cd857a624d55552bb4501cd1208015a3876d11c96ea4e1f6a2a6e84
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 text/html
+  responses:
+    '200':
+      content:
+        text/html:
+          schema:
+            type: string
+      description: Authorization received page
+- method: GET
+  path: /api/mcp/oauth/flows/{flow_id}
+  x-source: hermes_cli/web_routers/mcp.py:304
+  x-handler-hash: b8b11bb4599ca4a2a0d8b9f9df9ba567f4c48b3247a39dfd93234e9d288e9dee
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpOAuthFlowStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpOAuthFlowStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/mcp/servers
+  x-source: hermes_cli/web_routers/mcp.py:94
+  x-handler-hash: 14e4212c431c1496e5043c58b781696c34b75e3dc5e01cb02ec3e2e6cb1d6c5a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpServerListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpServerListResponse'
+      description: Successful Response
+- method: POST
+  path: /api/mcp/catalog/install
+  x-source: hermes_cli/web_routers/mcp.py:492
+  x-handler-hash: b5b2f78d81d86a1c77f91d19ed4a958d558736388e4e317b77a57e8614a47f6e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpCatalogInstallResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpCatalogInstallResponse'
+      description: Successful Response
+- method: POST
+  path: /api/mcp/servers
+  x-source: hermes_cli/web_routers/mcp.py:110
+  x-handler-hash: 0e8b2608f853b452649414442d3a75ad9d0634467be77c416b2cc0461b17dfd4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpServerAddResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpServerAddResponse'
+      description: Successful Response
+- method: POST
+  path: /api/mcp/servers/{name}/auth
+  x-source: hermes_cli/web_routers/mcp.py:245
+  x-handler-hash: 1f5e4fa311a1e6a76d120c75ba54322dec7f3adb4bf50dd950e0b2c6d03f845d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpOAuthFlowResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpOAuthFlowResponse'
+      description: Successful Response
+- method: POST
+  path: /api/mcp/servers/{name}/test
+  x-source: hermes_cli/web_routers/mcp.py:195
+  x-handler-hash: 45dfcbd25442b570e1cdb220b5fddd9763acc82b9ebfb38691be905d4a9c95ab
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpServerTestResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpServerTestResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/mcp/servers
+  x-source: hermes_cli/web_routers/mcp.py:151
+  x-handler-hash: 210e0c99f667b266ea827e82d98ec7d38d85dee671c21a13e78491646918c612
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/mcp/servers/{name}/enabled
+  x-source: hermes_cli/web_routers/mcp.py:363
+  x-handler-hash: 6490de3b97b392f55589b55e0453de8218e233ade81db2c4d7f748e9a61264b1
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: McpServerEnabledResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpServerEnabledResponse'
+      description: Successful Response

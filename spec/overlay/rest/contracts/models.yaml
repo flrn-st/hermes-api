@@ -1,0 +1,623 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  AuxiliaryModelsResponse:
+    additionalProperties: false
+    description: '``get_auxiliary_models`` — one row per ``_AUX_TASK_SLOTS`` entry.'
+    properties:
+      main:
+        $ref: '#/components/schemas/MainModelAssignment'
+      tasks:
+        items:
+          $ref: '#/components/schemas/AuxiliaryTaskAssignment'
+        type: array
+    required:
+    - tasks
+    - main
+    type: object
+  AuxiliaryTaskAssignment:
+    additionalProperties: false
+    properties:
+      base_url:
+        type: string
+      local_endpoint:
+        type: boolean
+      model:
+        type: string
+      provider:
+        type: string
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      task:
+        type: string
+    required:
+    - task
+    - provider
+    - model
+    - base_url
+    - reasoning_effort
+    - local_endpoint
+    type: object
+  MainModelAssignment:
+    additionalProperties: false
+    properties:
+      model:
+        type: string
+      provider:
+        type: string
+    required:
+    - provider
+    - model
+    type: object
+  MoaConfigResponse:
+    additionalProperties: false
+    description: '``hermes_cli/moa_config.py::normalize_moa_config`` — named presets plus the default preset''s
+
+      fields flattened on top for older callers.'
+    properties:
+      active_preset:
+        type: string
+      aggregator:
+        $ref: '#/components/schemas/MoaSlot'
+      aggregator_temperature:
+        anyOf:
+        - type: number
+        - type: 'null'
+      default_preset:
+        type: string
+      degraded_reference_policy:
+        enum:
+        - loud
+        - silent
+        type: string
+      enabled:
+        type: boolean
+      fanout:
+        description: '"user_turn", "per_iteration" or "every_n:<N>".'
+        type: string
+      presets:
+        additionalProperties:
+          $ref: '#/components/schemas/MoaPreset'
+        type: object
+      privacy_filter:
+        enum:
+        - ''
+        - display
+        - full
+        type: string
+      reference_models:
+        items:
+          $ref: '#/components/schemas/MoaSlot'
+        type: array
+      reference_temperature:
+        anyOf:
+        - type: number
+        - type: 'null'
+      reference_timeout:
+        anyOf:
+        - type: number
+        - type: 'null'
+    required:
+    - enabled
+    - reference_models
+    - aggregator
+    - reference_temperature
+    - aggregator_temperature
+    - reference_timeout
+    - degraded_reference_policy
+    - fanout
+    - default_preset
+    - active_preset
+    - presets
+    - privacy_filter
+    type: object
+  MoaConfigSaveResponse:
+    additionalProperties: false
+    description: '``set_moa_models`` — ``{"ok": true}`` plus the normalized config that was saved.'
+    properties:
+      active_preset:
+        type: string
+      aggregator:
+        $ref: '#/components/schemas/MoaSlot'
+      aggregator_temperature:
+        anyOf:
+        - type: number
+        - type: 'null'
+      default_preset:
+        type: string
+      degraded_reference_policy:
+        enum:
+        - loud
+        - silent
+        type: string
+      enabled:
+        type: boolean
+      fanout:
+        description: '"user_turn", "per_iteration" or "every_n:<N>".'
+        type: string
+      ok:
+        type: boolean
+      presets:
+        additionalProperties:
+          $ref: '#/components/schemas/MoaPreset'
+        type: object
+      privacy_filter:
+        enum:
+        - ''
+        - display
+        - full
+        type: string
+      reference_models:
+        items:
+          $ref: '#/components/schemas/MoaSlot'
+        type: array
+      reference_temperature:
+        anyOf:
+        - type: number
+        - type: 'null'
+      reference_timeout:
+        anyOf:
+        - type: number
+        - type: 'null'
+    required:
+    - enabled
+    - reference_models
+    - aggregator
+    - reference_temperature
+    - aggregator_temperature
+    - reference_timeout
+    - degraded_reference_policy
+    - fanout
+    - default_preset
+    - active_preset
+    - presets
+    - privacy_filter
+    - ok
+    type: object
+  MoaPreset:
+    additionalProperties: false
+    description: '``hermes_cli/moa_config.py::_normalize_preset``; a ``None`` number means "provider default".'
+    properties:
+      aggregator:
+        $ref: '#/components/schemas/MoaSlot'
+      aggregator_temperature:
+        anyOf:
+        - type: number
+        - type: 'null'
+      degraded_reference_policy:
+        enum:
+        - loud
+        - silent
+        type: string
+      enabled:
+        type: boolean
+      fanout:
+        description: '"user_turn", "per_iteration" or "every_n:<N>".'
+        type: string
+      reference_models:
+        items:
+          $ref: '#/components/schemas/MoaSlot'
+        type: array
+      reference_temperature:
+        anyOf:
+        - type: number
+        - type: 'null'
+      reference_timeout:
+        anyOf:
+        - type: number
+        - type: 'null'
+    required:
+    - enabled
+    - reference_models
+    - aggregator
+    - reference_temperature
+    - aggregator_temperature
+    - reference_timeout
+    - degraded_reference_policy
+    - fanout
+    type: object
+  MoaSlot:
+    additionalProperties: false
+    description: '``hermes_cli/moa_config.py::_clean_slot``; ``enabled`` only on reference slots.'
+    properties:
+      enabled:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      model:
+        type: string
+      provider:
+        type: string
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - provider
+    - model
+    type: object
+  ModelAssignmentResponse:
+    additionalProperties: false
+    description: '``set_model_assignment``: the expensive-model confirmation prompt (``ok: false``,
+
+      ``confirm_required``), a main-slot assignment, an auxiliary assignment or the auxiliary
+
+      ``__reset__`` — the union of ``_apply_main_assignment_sync`` and ``_apply_aux_assignment_sync``.'
+    properties:
+      base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      confirm_message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      confirm_required:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      gateway_tools:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reset:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      scope:
+        enum:
+        - main
+        - auxiliary
+        type: string
+      stale_aux:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/StaleAuxiliaryPin'
+          type: array
+        - type: 'null'
+      tasks:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+    required:
+    - ok
+    - scope
+    type: object
+  ModelOptionCapabilities:
+    additionalProperties: false
+    description: '``hermes_cli/inventory.py::_apply_capabilities``.'
+    properties:
+      can_disable_reasoning:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      fast:
+        type: boolean
+      reasoning:
+        type: boolean
+    required:
+    - fast
+    - reasoning
+    type: object
+  ModelOptionPricing:
+    additionalProperties: false
+    description: '``hermes_cli/inventory.py::_apply_pricing`` — formatted $/Mtok strings (``""`` unknown,
+
+      ``"free"``); the sale fields are Nous Portal-only.'
+    properties:
+      cache:
+        anyOf:
+        - type: string
+        - type: 'null'
+      discount_percent:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      free:
+        type: boolean
+      input:
+        type: string
+      output:
+        type: string
+      was_input:
+        anyOf:
+        - type: string
+        - type: 'null'
+      was_output:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - input
+    - output
+    - free
+    type: object
+  ModelOptionProviderRow:
+    additionalProperties: true
+    description: 'One ``hermes_cli/inventory.py::build_models_payload`` provider row (the union of every field
+
+      the builder sets). Same row as the ``model.options`` JSON-RPC result
+
+      (``tui_gateway/contracts/config_free_tier_control.py::ModelOptionProvider``).'
+    properties:
+      aliases:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      api_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      auth_type:
+        anyOf:
+        - type: string
+        - type: 'null'
+      authenticated:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      capabilities:
+        anyOf:
+        - additionalProperties:
+            $ref: '#/components/schemas/ModelOptionCapabilities'
+          type: object
+        - type: 'null'
+      featured_models:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      free_tier:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      free_tier_pending:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      free_tier_row:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      is_current:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      is_user_defined:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      key_env:
+        anyOf:
+        - type: string
+        - type: 'null'
+      models:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      pricing:
+        anyOf:
+        - additionalProperties:
+            $ref: '#/components/schemas/ModelOptionPricing'
+          type: object
+        - type: 'null'
+      pricing_pending:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      slug:
+        type: string
+      source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      total_models:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      unavailable_models:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      warning:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - slug
+    - name
+    type: object
+  ModelOptionsResponse:
+    additionalProperties: false
+    description: '``hermes_cli/inventory.py::build_model_options_payload`` — the REST twin of the
+
+      ``model.options`` JSON-RPC result.'
+    properties:
+      model:
+        default: ''
+        type: string
+      provider:
+        default: ''
+        type: string
+      providers:
+        items:
+          $ref: '#/components/schemas/ModelOptionProviderRow'
+        type: array
+    required:
+    - providers
+    type: object
+  ModelsDevCapabilities:
+    additionalProperties: false
+    description: '``agent/models_dev.py::ModelCapabilities``; ``{}`` when models.dev has no row.'
+    properties:
+      context_window:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_output_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model_family:
+        anyOf:
+        - type: string
+        - type: 'null'
+      supports_reasoning:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      supports_tools:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      supports_vision:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+    type: object
+  RecommendedDefaultModelResponse:
+    additionalProperties: false
+    description: '``get_recommended_default_model``; ``free_tier`` is only a bool for Nous and ``model`` may
+
+      be ``""``.'
+    properties:
+      free_tier:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      model:
+        type: string
+      provider:
+        type: string
+    required:
+    - provider
+    - model
+    - free_tier
+    type: object
+  StaleAuxiliaryPin:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_config.py::_stale_aux_pins``.'
+    properties:
+      model:
+        type: string
+      provider:
+        type: string
+      task:
+        type: string
+    required:
+    - task
+    - provider
+    - model
+    type: object
+operations:
+- method: GET
+  path: /api/model/auxiliary
+  x-source: hermes_cli/web_routers/models.py:176
+  x-handler-hash: 6cd5169b8be9dda083e5938483904d7c92015e693ed594cefb4c513918abdbbf
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AuxiliaryModelsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuxiliaryModelsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/model/moa
+  x-source: hermes_cli/web_routers/models.py:204
+  x-handler-hash: 106e167f6ffd4d68fef15be885545fdf2d11fe61ff97155c5d8e645f99fb46b3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MoaConfigResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MoaConfigResponse'
+      description: Successful Response
+- method: GET
+  path: /api/model/options
+  x-source: hermes_cli/web_routers/models.py:101
+  x-handler-hash: cdd326e27167d58b9971c8a62757d5c1e4f38d61cce67ab3f820c793d65fdc3f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ModelOptionsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ModelOptionsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/model/recommended-default
+  x-source: hermes_cli/web_routers/models.py:139
+  x-handler-hash: dc3f82081719656c1235e39aa6ea584e8260c1bcc2c1d128dd2760d2f941f9e6
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: RecommendedDefaultModelResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RecommendedDefaultModelResponse'
+      description: Successful Response
+- method: POST
+  path: /api/model/set
+  x-source: hermes_cli/web_routers/models.py:275
+  x-handler-hash: 679d4809381ee90f69a2693d99276ee4feae595075b2f428e8e5e4d9c62f998b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ModelAssignmentResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ModelAssignmentResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/model/moa
+  x-source: hermes_cli/web_routers/models.py:235
+  x-handler-hash: 5dd4477d502c609621ff19767684532a04f962cce5c1445f83a96413def94019
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MoaConfigSaveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MoaConfigSaveResponse'
+      description: Successful Response

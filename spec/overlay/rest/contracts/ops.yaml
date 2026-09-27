@@ -1,0 +1,952 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  CredentialPoolAddResponse:
+    additionalProperties: false
+    description: '``add_credential_pool_entry`` — ``count`` is the provider''s pool size after the add.'
+    properties:
+      count:
+        type: integer
+      ok:
+        type: boolean
+      provider:
+        type: string
+    required:
+    - ok
+    - provider
+    - count
+    type: object
+  CredentialPoolEntrySummary:
+    additionalProperties: false
+    description: '``_pool_entry_summary``; ``index`` is 1-based (``CredentialPool.remove_index``).'
+    properties:
+      auth_type:
+        type: string
+      has_refresh:
+        type: boolean
+      id:
+        type: string
+      index:
+        type: integer
+      label:
+        type: string
+      last_status:
+        anyOf:
+        - type: string
+        - type: 'null'
+      priority:
+        type: integer
+      request_count:
+        type: integer
+      source:
+        type: string
+      token_preview:
+        type: string
+    required:
+    - index
+    - id
+    - label
+    - auth_type
+    - source
+    - priority
+    - last_status
+    - request_count
+    - token_preview
+    - has_refresh
+    type: object
+  CredentialPoolListResponse:
+    additionalProperties: false
+    description: '``list_credential_pool`` — providers with at least one pooled entry.'
+    properties:
+      providers:
+        items:
+          $ref: '#/components/schemas/CredentialPoolProvider'
+        type: array
+    required:
+    - providers
+    type: object
+  CredentialPoolProvider:
+    additionalProperties: false
+    properties:
+      entries:
+        items:
+          $ref: '#/components/schemas/CredentialPoolEntrySummary'
+        type: array
+      provider:
+        type: string
+    required:
+    - provider
+    - entries
+    type: object
+  CredentialPoolRemoveResponse:
+    additionalProperties: false
+    description: '``remove_credential_pool_entry`` — ``cleaned``/``hints`` come from the source''s RemovalStep.'
+    properties:
+      cleaned:
+        items:
+          type: string
+        type: array
+      count:
+        type: integer
+      hints:
+        items:
+          type: string
+        type: array
+      ok:
+        type: boolean
+      provider:
+        type: string
+    required:
+    - ok
+    - provider
+    - count
+    - cleaned
+    - hints
+    type: object
+  MemoryBuiltinFileSizes:
+    additionalProperties: false
+    description: Byte size of ``memories/MEMORY.md`` / ``memories/USER.md`` (0 when absent).
+    properties:
+      memory:
+        type: integer
+      user:
+        type: integer
+    required:
+    - memory
+    - user
+    type: object
+  MemoryProviderSelectResponse:
+    additionalProperties: false
+    description: '``set_memory_provider``; ``active`` is ``""`` for the built-in provider.'
+    properties:
+      active:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - active
+    type: object
+  MemoryResetResponse:
+    additionalProperties: false
+    description: '``reset_memory`` — the file names actually deleted.'
+    properties:
+      deleted:
+        items:
+          type: string
+        type: array
+      ok:
+        type: boolean
+    required:
+    - ok
+    - deleted
+    type: object
+  MemoryStatusResponse:
+    additionalProperties: false
+    description: '``get_memory_status``; ``active`` is ``""`` for the built-in provider.'
+    properties:
+      active:
+        type: string
+      builtin_files:
+        $ref: '#/components/schemas/MemoryBuiltinFileSizes'
+      providers:
+        items:
+          $ref: '#/components/schemas/MemoryProviderStatusRow'
+        type: array
+    required:
+    - active
+    - providers
+    - builtin_files
+    type: object
+  OpsBackupResponse:
+    additionalProperties: false
+    description: '``run_backup``; ``archive`` only when the dashboard chose the output path (no ``output``
+
+      in the request), so the UI can offer ``/api/ops/backup/download``.'
+    properties:
+      archive:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      ok:
+        type: boolean
+      pid:
+        type: integer
+    required:
+    - ok
+    - pid
+    - name
+    type: object
+  OpsCheckpointListResponse:
+    additionalProperties: false
+    description: '``list_checkpoints`` — per-session file count and size of the /rollback shadow store.'
+    properties:
+      sessions:
+        items:
+          $ref: '#/components/schemas/OpsCheckpointSession'
+        type: array
+      total_bytes:
+        type: integer
+    required:
+    - sessions
+    - total_bytes
+    type: object
+  OpsCheckpointSession:
+    additionalProperties: false
+    properties:
+      bytes:
+        type: integer
+      files:
+        type: integer
+      session:
+        type: string
+    required:
+    - session
+    - files
+    - bytes
+    type: object
+  OpsImportUploadResponse:
+    additionalProperties: false
+    description: '``run_import_upload`` — the staged archive path and its size in bytes.'
+    properties:
+      archive:
+        type: string
+      name:
+        type: string
+      ok:
+        type: boolean
+      pid:
+        type: integer
+      uploaded_bytes:
+        type: integer
+    required:
+    - ok
+    - pid
+    - name
+    - archive
+    - uploaded_bytes
+    type: object
+  OpsShellHook:
+    additionalProperties: false
+    description: 'One ``list_hooks`` row (``ShellHookSpec`` + consent state); ``approved_at`` is the ISO
+
+      timestamp from the allowlist entry.'
+    properties:
+      allowed:
+        type: boolean
+      approved_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      command:
+        type: string
+      event:
+        type: string
+      executable:
+        type: boolean
+      matcher:
+        anyOf:
+        - type: string
+        - type: 'null'
+      timeout:
+        type: integer
+    required:
+    - event
+    - matcher
+    - command
+    - timeout
+    - allowed
+    - approved_at
+    - executable
+    type: object
+  OpsShellHookCreateResponse:
+    additionalProperties: false
+    description: '``create_hook``; ``approved`` is False when consent was not requested or recording it failed.'
+    properties:
+      approved:
+        type: boolean
+      command:
+        type: string
+      event:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - event
+    - command
+    - approved
+    type: object
+  OpsShellHookListResponse:
+    additionalProperties: false
+    description: '``list_hooks``; ``valid_events`` is ``[]`` when the plugin hook registry cannot be imported.'
+    properties:
+      hooks:
+        items:
+          $ref: '#/components/schemas/OpsShellHook'
+        type: array
+      valid_events:
+        items:
+          type: string
+        type: array
+    required:
+    - hooks
+    - valid_events
+    type: object
+  UserPairingApproveResponse:
+    additionalProperties: false
+    description: '``approve_pairing``.'
+    properties:
+      ok:
+        type: boolean
+      user:
+        $ref: '#/components/schemas/UserPairingApprovedUser'
+    required:
+    - ok
+    - user
+    type: object
+  UserPairingApprovedRow:
+    additionalProperties: true
+    description: '``PairingStore.list_approved`` — the stored ``{user_name, approved_at}`` record spread over
+
+      ``platform``/``user_id``; ``approved_at`` is epoch seconds.'
+    properties:
+      approved_at:
+        type: number
+      platform:
+        type: string
+      user_id:
+        type: string
+      user_name:
+        type: string
+    required:
+    - platform
+    - user_id
+    - user_name
+    - approved_at
+    type: object
+  UserPairingApprovedUser:
+    additionalProperties: false
+    description: '``PairingStore._finish_approval``.'
+    properties:
+      user_id:
+        type: string
+      user_name:
+        type: string
+    required:
+    - user_id
+    - user_name
+    type: object
+  UserPairingClearResponse:
+    additionalProperties: false
+    description: '``clear_pending_pairing`` — ``cleared`` counts the removed pending requests.'
+    properties:
+      cleared:
+        type: integer
+      ok:
+        type: boolean
+    required:
+    - ok
+    - cleared
+    type: object
+  UserPairingListResponse:
+    additionalProperties: false
+    description: '``list_pairing``.'
+    properties:
+      approved:
+        items:
+          $ref: '#/components/schemas/UserPairingApprovedRow'
+        type: array
+      pending:
+        items:
+          $ref: '#/components/schemas/UserPairingPendingRow'
+        type: array
+    required:
+    - pending
+    - approved
+    type: object
+  UserPairingPendingRow:
+    additionalProperties: false
+    description: '``PairingStore.list_pending``; ``request_id`` is ``""`` for legacy pre-hash entries (never the
+
+      code itself).'
+    properties:
+      age_minutes:
+        type: integer
+      platform:
+        type: string
+      request_id:
+        type: string
+      user_id:
+        type: string
+      user_name:
+        type: string
+    required:
+    - platform
+    - request_id
+    - user_id
+    - user_name
+    - age_minutes
+    type: object
+  WebhookCreateResponse:
+    additionalProperties: false
+    description: '``create_webhook`` — the summary plus the HMAC secret, surfaced only here.'
+    properties:
+      created_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      deliver:
+        type: string
+      deliver_only:
+        type: boolean
+      description:
+        type: string
+      enabled:
+        type: boolean
+      events:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      prompt:
+        type: string
+      script:
+        type: string
+      secret:
+        type: string
+      secret_set:
+        type: boolean
+      skills:
+        items:
+          type: string
+        type: array
+      url:
+        type: string
+    required:
+    - name
+    - description
+    - events
+    - deliver
+    - deliver_only
+    - prompt
+    - script
+    - skills
+    - created_at
+    - url
+    - secret_set
+    - enabled
+    - secret
+    type: object
+  WebhookEnableResponse:
+    additionalProperties: false
+    description: '``enable_webhooks`` — spreads ``hermes_cli/web_server_gateway.py::_restart_gateway_after``:
+
+      ``restart_action``/``restart_pid`` when the restart spawned, ``restart_error`` when it failed.'
+    properties:
+      enabled:
+        type: boolean
+      needs_restart:
+        type: boolean
+      ok:
+        type: boolean
+      platform:
+        type: string
+      restart_action:
+        anyOf:
+        - type: string
+        - type: 'null'
+      restart_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      restart_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      restart_started:
+        type: boolean
+    required:
+    - ok
+    - platform
+    - enabled
+    - needs_restart
+    - restart_started
+    type: object
+  WebhookEnabledToggleResponse:
+    additionalProperties: false
+    description: '``set_webhook_enabled``.'
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - name
+    - enabled
+    type: object
+  WebhookListResponse:
+    additionalProperties: false
+    description: '``list_webhooks``.'
+    properties:
+      base_url:
+        type: string
+      enabled:
+        type: boolean
+      subscriptions:
+        items:
+          $ref: '#/components/schemas/WebhookSubscription'
+        type: array
+    required:
+    - enabled
+    - base_url
+    - subscriptions
+    type: object
+  WebhookSubscription:
+    additionalProperties: false
+    description: '``_webhook_route_summary``; ``created_at`` is ``None`` for a hand-written route without one.'
+    properties:
+      created_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      deliver:
+        type: string
+      deliver_only:
+        type: boolean
+      description:
+        type: string
+      enabled:
+        type: boolean
+      events:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      prompt:
+        type: string
+      script:
+        type: string
+      secret_set:
+        type: boolean
+      skills:
+        items:
+          type: string
+        type: array
+      url:
+        type: string
+    required:
+    - name
+    - description
+    - events
+    - deliver
+    - deliver_only
+    - prompt
+    - script
+    - skills
+    - created_at
+    - url
+    - secret_set
+    - enabled
+    type: object
+operations:
+- method: DELETE
+  path: /api/credentials/pool/{provider}/{index}
+  x-source: hermes_cli/web_routers/ops.py:421
+  x-handler-hash: 046c87a86ea7cb059639ad191cc8d3c191bdf33e0d7de1685467208021dc1901
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CredentialPoolRemoveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CredentialPoolRemoveResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/ops/hooks
+  x-source: hermes_cli/web_routers/ops.py:756
+  x-handler-hash: 4f9de7d9db0ec8bac2bedd1492c5f92acb2a66f16dfa60b8031ba0a9a5a72403
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/webhooks/{name}
+  x-source: hermes_cli/web_routers/ops.py:251
+  x-handler-hash: 5394123de3bd34446e908d495c871d0bcccbd8096e7d92b6245a575b419bf9c5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: GET
+  path: /api/credentials/pool
+  x-source: hermes_cli/web_routers/ops.py:334
+  x-handler-hash: b5228c5e248394626d8435b65a454189d765d3f92856c533dfc1fe47b2af1ffe
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CredentialPoolListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CredentialPoolListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/memory
+  x-source: hermes_cli/web_routers/ops.py:481
+  x-handler-hash: c94513cf59b42f5f964c41f1a933f75ea5044a85bcf8c9600fd0c30e4a9d2653
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MemoryStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MemoryStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/ops/backup/download
+  x-source: hermes_cli/web_routers/ops.py:585
+  x-handler-hash: 547ef8fe75a0d4813f3ddd375df7cc38379ce91de168736915f8630625219713
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 application/zip
+  responses:
+    '200':
+      content:
+        application/zip:
+          schema:
+            format: binary
+            type: string
+      description: The backup archive.
+- method: GET
+  path: /api/ops/checkpoints
+  x-source: hermes_cli/web_routers/ops.py:791
+  x-handler-hash: 7b7a6ad7dec0339d68635843bd7d051139a0c3b15b6c935039cafcab039eb990
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OpsCheckpointListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpsCheckpointListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/ops/hooks
+  x-source: hermes_cli/web_routers/ops.py:656
+  x-handler-hash: c8d62701e0be910a1e3fbce266ef41023687d3fdc6922b42fd2842a7d5969f37
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OpsShellHookListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpsShellHookListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/pairing
+  x-source: hermes_cli/web_routers/ops.py:84
+  x-handler-hash: 0d8005f425f1edd70f5ad6dd81a24d40ec972bad523b0c0e36d69e7bc516eaf3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: UserPairingListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserPairingListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/webhooks
+  x-source: hermes_cli/web_routers/ops.py:154
+  x-handler-hash: fc31ec4fd90a7a5ca491572fb36ff4894e4bad30399e3e431522109b420187e4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: WebhookListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhookListResponse'
+      description: Successful Response
+- method: POST
+  path: /api/credentials/pool
+  x-source: hermes_cli/web_routers/ops.py:363
+  x-handler-hash: 2f7ceb14ddeef560a8253ea42b2c2dc4abc79cefc7e95bb7546dff86c2df5201
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CredentialPoolAddResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CredentialPoolAddResponse'
+      description: Successful Response
+- method: POST
+  path: /api/gateway/start
+  x-source: hermes_cli/web_routers/ops.py:282
+  x-handler-hash: 7bab0601ca1510bbd7ed0a2f8d663d0e27708091111e18193638189facbbf259
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/gateway/stop
+  x-source: hermes_cli/web_routers/ops.py:295
+  x-handler-hash: 31adc99a7ee3b9e8f1c69e423d0c8c4a47cf81905e5a219c2f3166f3c89e6421
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/memory/reset
+  x-source: hermes_cli/web_routers/ops.py:518
+  x-handler-hash: 33a6d8c6fe63d3c2f53bacf9066bc02af03231950bb06efe9e2306a8c3e85e9d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MemoryResetResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MemoryResetResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/backup
+  x-source: hermes_cli/web_routers/ops.py:566
+  x-handler-hash: 0c1592d06c92b239e3701ecb814332f5d926f6e23593dadfc58f9a9ba8d31103
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OpsBackupResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpsBackupResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/checkpoints/prune
+  x-source: hermes_cli/web_routers/ops.py:821
+  x-handler-hash: 77d6a892d5e0d1eed57a37c01155f50c7fa2dc4220b77aa5907e41f9e93ebb69
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/doctor
+  x-source: hermes_cli/web_routers/ops.py:546
+  x-handler-hash: 0b2aa16fdbd03ff88fa78239f5718cd4b3a7bea5a7110951082e9c3debc1aa6d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/hooks
+  x-source: hermes_cli/web_routers/ops.py:705
+  x-handler-hash: 8caab405d2221195963d6b99cb7ad33782bbec265a4740897bb8351e6229325e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OpsShellHookCreateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpsShellHookCreateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/import
+  x-source: hermes_cli/web_routers/ops.py:612
+  x-handler-hash: 33928e5399b221ee7dbb31c35e2118a73baa53d588674868ec0949d457b68293
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/import-upload
+  x-source: hermes_cli/web_routers/ops.py:631
+  x-handler-hash: 3f432aae9837cf5b38eee1c737dcc2559ddd578350e6c36d6df5b875a645ff20
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OpsImportUploadResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpsImportUploadResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/security-audit
+  x-source: hermes_cli/web_routers/ops.py:552
+  x-handler-hash: b061c0db67a02b08f47894d7316e6c7844c0ab778241e345cb6a2d0a9c7ca326
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/pairing/approve
+  x-source: hermes_cli/web_routers/ops.py:90
+  x-handler-hash: f53f4ad9d594e397bbad063d2a567f819b3007410107093cc7651c751770769c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: UserPairingApproveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserPairingApproveResponse'
+      description: Successful Response
+- method: POST
+  path: /api/pairing/clear-pending
+  x-source: hermes_cli/web_routers/ops.py:127
+  x-handler-hash: a9e0e67a86113702f6a08aa0f6a9f351b3cd8ae30b0f2cf530df181595218e9a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: UserPairingClearResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserPairingClearResponse'
+      description: Successful Response
+- method: POST
+  path: /api/pairing/revoke
+  x-source: hermes_cli/web_routers/ops.py:116
+  x-handler-hash: 232307be3c388332ad44b1a7f9083ab6d2ef6346a96189ed32e52d88a1c87ac9
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/webhooks
+  x-source: hermes_cli/web_routers/ops.py:190
+  x-handler-hash: 7b8bc1b960d4808d4e4fbf880a8cc8f34a8add9edd85f6bb08e7a12654726659
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: WebhookCreateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhookCreateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/webhooks/enable
+  x-source: hermes_cli/web_routers/ops.py:172
+  x-handler-hash: a88a42a894c933ec6119ae1583ebb1fe9bc60aa28024e0e7dd8c36d0ab5f8a24
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: WebhookEnableResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhookEnableResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/memory/provider
+  x-source: hermes_cli/web_routers/ops.py:497
+  x-handler-hash: 41dfb0e0f8d9382588515a108d4b46cf1ce3d0295fe7a04eb411781794fc3838
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MemoryProviderSelectResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MemoryProviderSelectResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/webhooks/{name}/enabled
+  x-source: hermes_cli/web_routers/ops.py:264
+  x-handler-hash: 9ddf6cb6f5dcfbbe00323682d74c4d0eeeb5c7cd8f25d64e68efa6aaca2f2f1a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: WebhookEnabledToggleResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhookEnabledToggleResponse'
+      description: Successful Response

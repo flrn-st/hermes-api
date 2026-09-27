@@ -1,0 +1,274 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  DashboardAuthBearerTokenResponse:
+    additionalProperties: false
+    description: '``_bearer_payload`` (``auth_native_token``, ``auth_native_refresh``): tokens in the body,
+
+      no cookie.'
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: integer
+      provider:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        const: Bearer
+        type: string
+      user_id:
+        type: string
+    required:
+    - access_token
+    - refresh_token
+    - token_type
+    - expires_at
+    - provider
+    - user_id
+    type: object
+  DashboardAuthMeResponse:
+    additionalProperties: false
+    description: '``api_auth_me``: the verified ``request.state.session`` minus its tokens.'
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      expires_at:
+        type: integer
+      org_id:
+        type: string
+      provider:
+        type: string
+      user_id:
+        type: string
+    required:
+    - user_id
+    - email
+    - display_name
+    - org_id
+    - provider
+    - expires_at
+    type: object
+  DashboardAuthPasswordLoginResponse:
+    additionalProperties: false
+    description: '``auth_password_login``: ``next`` is the validated landing path (session cookies set), or
+
+      the desktop''s loopback redirect URL on a native sign-in (no cookies).'
+    properties:
+      next:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - next
+    type: object
+  DashboardAuthProviderOption:
+    additionalProperties: false
+    properties:
+      display_name:
+        type: string
+      name:
+        type: string
+      supports_password:
+        type: boolean
+    required:
+    - name
+    - display_name
+    - supports_password
+    type: object
+  DashboardAuthProvidersResponse:
+    additionalProperties: false
+    description: '``api_auth_providers``: the interactive (session) providers, the login page''s options.'
+    properties:
+      providers:
+        items:
+          $ref: '#/components/schemas/DashboardAuthProviderOption'
+        type: array
+    required:
+    - providers
+    type: object
+  DashboardAuthWsTicketResponse:
+    additionalProperties: false
+    description: '``api_auth_ws_ticket``: a single-use WS upgrade ticket (``ws_tickets.TTL_SECONDS``).'
+    properties:
+      ticket:
+        type: string
+      ttl_seconds:
+        type: integer
+    required:
+    - ticket
+    - ttl_seconds
+    type: object
+operations:
+- method: GET
+  path: /api/auth/me
+  x-source: hermes_cli/dashboard_auth/routes.py:449
+  x-handler-hash: 882db0a77e20ab724d3d1245f2ae839615801ec1754b812a328f03346ad80eae
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardAuthMeResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardAuthMeResponse'
+      description: Successful Response
+- method: GET
+  path: /api/auth/providers
+  x-source: hermes_cli/dashboard_auth/routes.py:183
+  x-handler-hash: 905d5aa69ff08dd6257f943bf4f97429d40bb21d29efc886dc1b5d6e993f4111
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardAuthProvidersResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardAuthProvidersResponse'
+      description: Successful Response
+- method: GET
+  path: /auth/callback
+  x-source: hermes_cli/dashboard_auth/routes.py:290
+  x-handler-hash: 092c50406c093f66b910953fa6324264801fc353e627c671c5f75c07709fcf9f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 302 redirect
+  responses:
+    '302':
+      description: 'Browser login: to the validated ``next`` path (or ``/``) with the session cookies set. Native
+        login: to the desktop''s loopback ``redirect_uri?code=…&state=…``, no session cookies.'
+      headers:
+        Location:
+          description: Redirect target.
+          schema:
+            type: string
+- method: GET
+  path: /auth/login
+  x-source: hermes_cli/dashboard_auth/routes.py:197
+  x-handler-hash: 40b81e3fdc679ca68c221e83bd2946c17c12cbeae210a7cbf3c702bcada684ab
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 302 redirect
+  responses:
+    '302':
+      description: 'Password providers: to the ``/login`` form (``next`` preserved); otherwise to the IDP''s authorize
+        URL with the PKCE cookie set.'
+      headers:
+        Location:
+          description: Redirect target.
+          schema:
+            type: string
+- method: GET
+  path: /auth/native/authorize
+  x-source: hermes_cli/dashboard_auth/routes.py:242
+  x-handler-hash: e3e81ad4c61e2cd16379464550a0432335f42fb3751d7792e0493bd8a14088bc
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 text/html, 302 redirect
+  responses:
+    '200':
+      content:
+        text/html:
+          schema:
+            type: string
+      description: Provider chooser page, when ``provider`` is empty and several interactive providers are registered
+        (``no-store``).
+    '302':
+      description: 'Password providers: to the ``/login`` form; otherwise to the IDP''s authorize URL. Both set
+        the PKCE cookie carrying the native broker handle.'
+      headers:
+        Location:
+          description: Redirect target.
+          schema:
+            type: string
+- method: GET
+  path: /login
+  x-source: hermes_cli/dashboard_auth/routes.py:176
+  x-handler-hash: 9303c279d03595b796261af0b4eda5775cd865c189d9d9d8e55b0a97110573de
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 text/html
+  responses:
+    '200':
+      content:
+        text/html:
+          schema:
+            type: string
+      description: The server-rendered login page (``no-store``).
+- method: POST
+  path: /api/auth/ws-ticket
+  x-source: hermes_cli/dashboard_auth/routes.py:458
+  x-handler-hash: ca9ea418c9194f0473fc3466b0b93cebb456e3f7822e66a86b7834ab50010d56
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardAuthWsTicketResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardAuthWsTicketResponse'
+      description: Successful Response
+- method: POST
+  path: /auth/logout
+  x-source: hermes_cli/dashboard_auth/routes.py:421
+  x-handler-hash: 1792c05dbeeb4659be68fd84b878405fe4c03293494718c793e5f9b041316af9
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 302 redirect
+  responses:
+    '302':
+      description: To ``/login`` with the session and PKCE cookies cleared.
+      headers:
+        Location:
+          description: Redirect target.
+          schema:
+            type: string
+- method: POST
+  path: /auth/native/refresh
+  x-source: hermes_cli/dashboard_auth/routes.py:496
+  x-handler-hash: 070f76ace7d16b28f40739785013cb0519e2c823802f08c85c4095e5deba29a3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardAuthBearerTokenResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardAuthBearerTokenResponse'
+      description: Successful Response
+- method: POST
+  path: /auth/native/token
+  x-source: hermes_cli/dashboard_auth/routes.py:476
+  x-handler-hash: b4f6d4f578d6badbb82d6c1f71679facc7931e8880e2c374f1b3ebee97c5edd1
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardAuthBearerTokenResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardAuthBearerTokenResponse'
+      description: Successful Response
+- method: POST
+  path: /auth/password-login
+  x-source: hermes_cli/dashboard_auth/routes.py:372
+  x-handler-hash: bdf87f90cffd43bbbd3876c2fd23cf0f6f2ca5d4e22ddeab799529ea4b3ac7ff
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardAuthPasswordLoginResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardAuthPasswordLoginResponse'
+      description: Successful Response

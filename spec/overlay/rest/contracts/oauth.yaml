@@ -1,0 +1,270 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  OAuthDeviceCodeStartResponse:
+    additionalProperties: false
+    description: '``start_oauth_login`` — the per-provider ``_start_*_device_code`` display fields.'
+    properties:
+      expires_in:
+        type: integer
+      flow:
+        const: device_code
+        type: string
+      poll_interval:
+        type: integer
+      session_id:
+        type: string
+      user_code:
+        type: string
+      verification_url:
+        type: string
+    required:
+    - session_id
+    - flow
+    - user_code
+    - verification_url
+    - expires_in
+    - poll_interval
+    type: object
+  OAuthProviderListResponse:
+    additionalProperties: false
+    description: '``list_oauth_providers``.'
+    properties:
+      providers:
+        items:
+          $ref: '#/components/schemas/OAuthProviderRow'
+        type: array
+    required:
+    - providers
+    type: object
+  OAuthProviderRow:
+    additionalProperties: false
+    description: One ``_build_oauth_catalog`` row; ``disconnectable`` is ``disconnect_hint is None``.
+    properties:
+      cli_command:
+        type: string
+      disconnect_command:
+        anyOf:
+        - type: string
+        - type: 'null'
+      disconnect_hint:
+        anyOf:
+        - type: string
+        - type: 'null'
+      disconnectable:
+        type: boolean
+      docs_url:
+        type: string
+      flow:
+        description: 'Catalog flow: "device_code" or "external" for the built-in cards.'
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        $ref: '#/components/schemas/OAuthProviderStatus'
+    required:
+    - id
+    - name
+    - flow
+    - cli_command
+    - docs_url
+    - disconnect_hint
+    - disconnect_command
+    - disconnectable
+    - status
+    type: object
+  OAuthProviderStatus:
+    additionalProperties: false
+    description: '``_resolve_provider_status`` — the union of ``_status_card`` (plus the Nous tier fields),
+
+      the catalog ``status_fn`` cards in ``hermes_cli/web_server_oauth.py`` (``configured`` is
+
+      copilot-acp only; a logged-out Anthropic/Claude Code card is just ``logged_in`` + ``source``),
+
+      and the ``{"logged_in": false, "error"}`` fallback when a status helper raised.'
+    properties:
+      account_tier:
+        anyOf:
+        - type: string
+        - type: 'null'
+      configured:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      expires_at:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+        description: 'As the provider stores it: an ISO timestamp or an epoch number (Claude Code: ms).'
+      free_tier:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      has_refresh_token:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      last_refresh:
+        anyOf:
+        - type: string
+        - type: 'null'
+      logged_in:
+        type: boolean
+      source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source_label:
+        anyOf:
+        - type: string
+        - type: 'null'
+      token_preview:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Last few characters only, never the token.
+    required:
+    - logged_in
+    type: object
+  OAuthSessionCancelResponse:
+    additionalProperties: false
+    description: '``cancel_oauth_session``: ``{"ok": true, "session_id"}`` or, for an unknown session,
+
+      ``{"ok": false, "message"}``.'
+    properties:
+      message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    type: object
+  OAuthSessionPollResponse:
+    additionalProperties: false
+    description: '``poll_oauth_session``. ``reason`` / ``account_email`` / ``model`` / ``retryable`` /
+
+      ``retry_after`` are only set by a Nous sign-in over a free-tier identity
+
+      (``hermes_cli/web_server_oauth.py::_record_sign_in_state``).'
+    properties:
+      account_email:
+        anyOf:
+        - type: string
+        - type: 'null'
+      error_message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      expires_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+        description: Epoch seconds; null until the flow knows it.
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      retry_after:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      retryable:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      session_id:
+        type: string
+      status:
+        enum:
+        - pending
+        - approved
+        - denied
+        - expired
+        - error
+        - cancelled
+        type: string
+    required:
+    - session_id
+    - status
+    - error_message
+    - expires_at
+    - reason
+    - account_email
+    - model
+    - retryable
+    - retry_after
+    type: object
+operations:
+- method: DELETE
+  path: /api/providers/oauth/sessions/{session_id}
+  x-source: hermes_cli/web_routers/oauth.py:775
+  x-handler-hash: 6972d4511a781e4d906b3eb36c6b4e55528d5d8cd0686671fd306c77b2143ac4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OAuthSessionCancelResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OAuthSessionCancelResponse'
+      description: Successful Response
+- method: GET
+  path: /api/providers/oauth
+  x-source: hermes_cli/web_routers/oauth.py:619
+  x-handler-hash: 7db275b51f0b9a3906f88b3b4b1dc8e9a2d2d60d05ecd037a8b2326ac7f72153
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OAuthProviderListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OAuthProviderListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/providers/oauth/{provider_id}/poll/{session_id}
+  x-source: hermes_cli/web_routers/oauth.py:751
+  x-handler-hash: 28dd787a5bc480878a21c89c5b9382ba1a4c9a7a316a9f7f516a8abbb7e3239c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OAuthSessionPollResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OAuthSessionPollResponse'
+      description: Successful Response
+- method: POST
+  path: /api/providers/oauth/{provider_id}/start
+  x-source: hermes_cli/web_routers/oauth.py:720
+  x-handler-hash: aa7f4de1b4eb597b57bf923c8c0984fd2e92b1134cfd1bcc153dc889c0461e4a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OAuthDeviceCodeStartResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OAuthDeviceCodeStartResponse'
+      description: Successful Response

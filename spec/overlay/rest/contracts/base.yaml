@@ -1,0 +1,30 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  ActionSpawnResponse:
+    additionalProperties: false
+    description: 'A backgrounded ``hermes`` action (``_spawn_hermes_action`` / ``spawn_profile_action``); ``name``
+
+      is the log key polled via ``GET /api/actions/{name}/status``.'
+    properties:
+      name:
+        type: string
+      ok:
+        type: boolean
+      pid:
+        type: integer
+    required:
+    - ok
+    - pid
+    - name
+    type: object
+  OkResponse:
+    additionalProperties: false
+    description: 'The bare ``{"ok": true}`` acknowledgement.'
+    properties:
+      ok:
+        type: boolean
+    required:
+    - ok
+    type: object
+operations: []

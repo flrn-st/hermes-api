@@ -1,0 +1,30 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  RawConfigYamlResponse:
+    additionalProperties: false
+    description: '``get_config_raw`` — ``yaml`` is ``""`` when the profile''s ``config.yaml`` does not exist.'
+    properties:
+      path:
+        type: string
+      yaml:
+        type: string
+    required:
+    - yaml
+    - path
+    type: object
+operations:
+- method: GET
+  path: /api/config/raw
+  x-source: hermes_cli/web_routers/analytics.py:33
+  x-handler-hash: 7ceaae7a6e3e7b7d287f949f2c8332aaae3d9aef3e38b42e5b61b4ecdf553d82
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: RawConfigYamlResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RawConfigYamlResponse'

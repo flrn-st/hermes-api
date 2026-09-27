@@ -1,0 +1,1994 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  KanbanActiveWorker:
+    additionalProperties: false
+    description: '``list_active_workers`` SQL row (open run with a ``worker_pid`` on a running task).'
+    properties:
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+      run_id:
+        type: integer
+      started_at:
+        type: integer
+      task_assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      task_id:
+        type: string
+      task_status:
+        type: string
+      task_title:
+        type: string
+      worker_pid:
+        type: integer
+    required:
+    - run_id
+    - task_id
+    - task_title
+    - task_status
+    - task_assignee
+    - profile
+    - worker_pid
+    - started_at
+    - claim_lock
+    - claim_expires
+    - last_heartbeat_at
+    - max_runtime_seconds
+    type: object
+  KanbanActiveWorkersResponse:
+    additionalProperties: false
+    description: '``plugin_api.list_active_workers``.'
+    properties:
+      checked_at:
+        type: integer
+      count:
+        type: integer
+      workers:
+        items:
+          $ref: '#/components/schemas/KanbanActiveWorker'
+        type: array
+    required:
+    - workers
+    - count
+    - checked_at
+    type: object
+  KanbanAssignee:
+    additionalProperties: false
+    description: '``kanban_db.known_assignees`` row.'
+    properties:
+      counts:
+        additionalProperties:
+          type: integer
+        type: object
+      name:
+        type: string
+      on_disk:
+        type: boolean
+    required:
+    - name
+    - on_disk
+    - counts
+    type: object
+  KanbanAssigneesResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_assignees``.'
+    properties:
+      assignees:
+        items:
+          $ref: '#/components/schemas/KanbanAssignee'
+        type: array
+    required:
+    - assignees
+    type: object
+  KanbanAttachment:
+    additionalProperties: false
+    description: '``plugin_api._attachment_dict``; ``stored_path`` is the absolute path workers read.'
+    properties:
+      content_type:
+        anyOf:
+        - type: string
+        - type: 'null'
+      created_at:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: integer
+      size:
+        type: integer
+      stored_path:
+        type: string
+      task_id:
+        type: string
+      uploaded_by:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - task_id
+    - filename
+    - content_type
+    - size
+    - uploaded_by
+    - stored_path
+    - created_at
+    type: object
+  KanbanAttachmentDeleteResponse:
+    additionalProperties: false
+    description: '``plugin_api.remove_attachment``.'
+    properties:
+      id:
+        type: integer
+      ok:
+        type: boolean
+    required:
+    - ok
+    - id
+    type: object
+  KanbanAttachmentListResponse:
+    additionalProperties: false
+    description: '``plugin_api.list_task_attachments``.'
+    properties:
+      attachments:
+        items:
+          $ref: '#/components/schemas/KanbanAttachment'
+        type: array
+    required:
+    - attachments
+    type: object
+  KanbanAttachmentUploadResponse:
+    additionalProperties: false
+    description: '``plugin_api.upload_task_attachment``.'
+    properties:
+      attachment:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanAttachment'
+        - type: 'null'
+    required:
+    - attachment
+    type: object
+  KanbanBoard:
+    additionalProperties: true
+    description: '``plugin_api._annotate_board_meta`` (create / rename).'
+    properties:
+      archived:
+        type: boolean
+      color:
+        type: string
+      created_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      db_path:
+        type: string
+      default_workdir:
+        anyOf:
+        - type: string
+        - type: 'null'
+      default_workspace_kind:
+        enum:
+        - scratch
+        - worktree
+        - dir
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      name:
+        type: string
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      project_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      slug:
+        type: string
+    required:
+    - slug
+    - name
+    - description
+    - icon
+    - color
+    - default_workdir
+    - project_id
+    - created_at
+    - archived
+    - db_path
+    - default_workspace_kind
+    - project_name
+    type: object
+  KanbanBoardColumn:
+    additionalProperties: false
+    properties:
+      name:
+        enum:
+        - triage
+        - todo
+        - scheduled
+        - ready
+        - running
+        - blocked
+        - review
+        - done
+        - archived
+        type: string
+      tasks:
+        items:
+          $ref: '#/components/schemas/KanbanBoardCard'
+        type: array
+    required:
+    - name
+    - tasks
+    type: object
+  KanbanBoardCreateResponse:
+    additionalProperties: false
+    description: '``plugin_api.create_board_endpoint``.'
+    properties:
+      board:
+        $ref: '#/components/schemas/KanbanBoard'
+      current:
+        type: string
+    required:
+    - board
+    - current
+    type: object
+  KanbanBoardDeleteResponse:
+    additionalProperties: false
+    description: '``plugin_api.delete_board``.'
+    properties:
+      current:
+        type: string
+      result:
+        $ref: '#/components/schemas/KanbanBoardRemoval'
+    required:
+    - result
+    - current
+    type: object
+  KanbanBoardExportResponse:
+    additionalProperties: false
+    description: '``kanban_transfer.export_board``; ``counts`` = per-table rows + ``attachment_files`` /
+
+      ``log_files``.'
+    properties:
+      archive:
+        type: string
+      board:
+        type: string
+      counts:
+        additionalProperties:
+          type: integer
+        type: object
+      size:
+        type: integer
+    required:
+    - board
+    - archive
+    - size
+    - counts
+    type: object
+  KanbanBoardImportResponse:
+    additionalProperties: false
+    description: '``kanban_transfer.import_board`` plus the active board slug.'
+    properties:
+      activated:
+        type: boolean
+      attachments_restored:
+        type: integer
+      board:
+        type: string
+      counts:
+        additionalProperties:
+          type: integer
+        type: object
+      current:
+        type: string
+      db_path:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      renamed:
+        type: boolean
+      requested_board:
+        type: string
+      source:
+        $ref: '#/components/schemas/KanbanBoardImportSource'
+      tasks_parked:
+        type: integer
+      warnings:
+        items:
+          type: string
+        type: array
+    required:
+    - board
+    - requested_board
+    - renamed
+    - name
+    - path
+    - db_path
+    - source
+    - counts
+    - attachments_restored
+    - tasks_parked
+    - warnings
+    - activated
+    - current
+    type: object
+  KanbanBoardImportSource:
+    additionalProperties: false
+    description: Read from the archive's ``manifest.json``; absent keys come back ``null``.
+    properties:
+      board:
+        anyOf:
+        - type: string
+        - type: 'null'
+      exported_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      hermes_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - board
+    - exported_at
+    - hermes_version
+    type: object
+  KanbanBoardListResponse:
+    additionalProperties: false
+    description: '``plugin_api.list_boards``.'
+    properties:
+      boards:
+        items:
+          $ref: '#/components/schemas/KanbanBoardListRow'
+        type: array
+      current:
+        type: string
+    required:
+    - boards
+    - current
+    type: object
+  KanbanBoardListRow:
+    additionalProperties: true
+    description: 'One ``list_boards`` row; ``counts`` is ``{status: n}`` incl. archived, ``total`` excludes it.'
+    properties:
+      archived:
+        type: boolean
+      color:
+        type: string
+      counts:
+        additionalProperties:
+          type: integer
+        type: object
+      created_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      db_path:
+        type: string
+      default_workdir:
+        anyOf:
+        - type: string
+        - type: 'null'
+      default_workspace_kind:
+        enum:
+        - scratch
+        - worktree
+        - dir
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      is_current:
+        type: boolean
+      name:
+        type: string
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      project_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      slug:
+        type: string
+      total:
+        type: integer
+    required:
+    - slug
+    - name
+    - description
+    - icon
+    - color
+    - default_workdir
+    - project_id
+    - created_at
+    - archived
+    - db_path
+    - default_workspace_kind
+    - project_name
+    - is_current
+    - counts
+    - total
+    type: object
+  KanbanBoardRemoval:
+    additionalProperties: false
+    description: '``kanban_db.remove_board``; ``new_path`` is ``""`` for a hard delete.'
+    properties:
+      action:
+        enum:
+        - archived
+        - deleted
+        type: string
+      new_path:
+        type: string
+      slug:
+        type: string
+    required:
+    - slug
+    - action
+    - new_path
+    type: object
+  KanbanBoardResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_board`` — ``archived`` column only with ``include_archived``.'
+    properties:
+      assignees:
+        items:
+          type: string
+        type: array
+      columns:
+        items:
+          $ref: '#/components/schemas/KanbanBoardColumn'
+        type: array
+      latest_event_id:
+        type: integer
+      now:
+        type: integer
+      tenants:
+        items:
+          type: string
+        type: array
+    required:
+    - columns
+    - tenants
+    - assignees
+    - latest_event_id
+    - now
+    type: object
+  KanbanBoardSwitchResponse:
+    additionalProperties: false
+    description: '``plugin_api.switch_board``.'
+    properties:
+      current:
+        type: string
+    required:
+    - current
+    type: object
+  KanbanBoardUpdateResponse:
+    additionalProperties: false
+    description: '``plugin_api.rename_board``.'
+    properties:
+      board:
+        $ref: '#/components/schemas/KanbanBoard'
+    required:
+    - board
+    type: object
+  KanbanBulkResult:
+    additionalProperties: false
+    properties:
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - id
+    - ok
+    type: object
+  KanbanBulkUpdateResponse:
+    additionalProperties: false
+    description: '``plugin_api.bulk_update`` — one outcome per id.'
+    properties:
+      results:
+        items:
+          $ref: '#/components/schemas/KanbanBulkResult'
+        type: array
+    required:
+    - results
+    type: object
+  KanbanChildProgress:
+    additionalProperties: false
+    properties:
+      done:
+        type: integer
+      total:
+        type: integer
+    required:
+    - done
+    - total
+    type: object
+  KanbanDashboardConfigResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_config`` — the ``dashboard.kanban`` config section with defaults.'
+    properties:
+      default_tenant:
+        type: string
+      include_archived_by_default:
+        type: boolean
+      lane_by_profile:
+        type: boolean
+      render_markdown:
+        type: boolean
+    required:
+    - default_tenant
+    - lane_by_profile
+    - include_archived_by_default
+    - render_markdown
+    type: object
+  KanbanDecomposeResponse:
+    additionalProperties: false
+    description: '``plugin_api.decompose_task_endpoint`` (``kanban_decompose.DecomposeOutcome``); non-OK is 200.'
+    properties:
+      child_ids:
+        items:
+          type: string
+        type: array
+      fanout:
+        type: boolean
+      new_title:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      reason:
+        type: string
+      task_id:
+        type: string
+    required:
+    - ok
+    - task_id
+    - reason
+    - fanout
+    - child_ids
+    - new_title
+    type: object
+  KanbanDiagnostic:
+    additionalProperties: false
+    description: '``kanban_diagnostics.Diagnostic.to_dict`` — one active distress signal on a task.'
+    properties:
+      actions:
+        items:
+          $ref: '#/components/schemas/KanbanDiagnosticAction'
+        type: array
+      count:
+        type: integer
+      data:
+        additionalProperties: true
+        type: object
+      detail:
+        type: string
+      first_seen_at:
+        type: integer
+      kind:
+        type: string
+      last_seen_at:
+        type: integer
+      run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      severity:
+        enum:
+        - warning
+        - error
+        - critical
+        type: string
+      title:
+        type: string
+    required:
+    - kind
+    - severity
+    - title
+    - detail
+    - actions
+    - first_seen_at
+    - last_seen_at
+    - count
+    - run_id
+    - data
+    type: object
+  KanbanDiagnosticAction:
+    additionalProperties: false
+    description: '``kanban_diagnostics.DiagnosticAction.to_dict``; ``payload`` is per-``kind``.'
+    properties:
+      kind:
+        type: string
+      label:
+        type: string
+      payload:
+        additionalProperties: true
+        type: object
+      suggested:
+        type: boolean
+    required:
+    - kind
+    - label
+    - payload
+    - suggested
+    type: object
+  KanbanDiagnosticsResponse:
+    additionalProperties: false
+    description: '``plugin_api.list_diagnostics``; ``count`` is the number of diagnostics, not tasks.'
+    properties:
+      count:
+        type: integer
+      diagnostics:
+        items:
+          $ref: '#/components/schemas/KanbanTaskDiagnostics'
+        type: array
+    required:
+    - diagnostics
+    - count
+    type: object
+  KanbanDispatchResponse:
+    additionalProperties: false
+    description: '``asdict(kanban_db_dispatch.DispatchResult)`` from ``plugin_api.dispatch``.'
+    properties:
+      auto_assigned_default:
+        items:
+          type: string
+        type: array
+      auto_blocked:
+        items:
+          type: string
+        type: array
+      crashed:
+        items:
+          type: string
+        type: array
+      memory_pressure:
+        anyOf:
+        - enum:
+          - critical
+          - elevated
+          type: string
+        - type: 'null'
+      promoted:
+        type: integer
+      rate_limited:
+        items:
+          type: string
+        type: array
+      reaped_terminal_workers:
+        items:
+          type: string
+        type: array
+      reclaimed:
+        type: integer
+      reconciled_orphans:
+        items:
+          type: string
+        type: array
+      respawn_guarded:
+        items:
+          maxItems: 2
+          minItems: 2
+          prefixItems:
+          - type: string
+          - type: string
+          type: array
+        type: array
+      skipped_locked:
+        type: boolean
+      skipped_nonspawnable:
+        items:
+          type: string
+        type: array
+      skipped_per_profile_capped:
+        items:
+          maxItems: 3
+          minItems: 3
+          prefixItems:
+          - type: string
+          - type: string
+          - type: integer
+          type: array
+        type: array
+      skipped_unassigned:
+        items:
+          type: string
+        type: array
+      spawned:
+        items:
+          maxItems: 3
+          minItems: 3
+          prefixItems:
+          - type: string
+          - type: string
+          - type: string
+          type: array
+        type: array
+      stale:
+        items:
+          type: string
+        type: array
+      timed_out:
+        items:
+          type: string
+        type: array
+    required:
+    - reclaimed
+    - promoted
+    - reconciled_orphans
+    - reaped_terminal_workers
+    - spawned
+    - skipped_unassigned
+    - auto_assigned_default
+    - skipped_nonspawnable
+    - skipped_per_profile_capped
+    - crashed
+    - auto_blocked
+    - timed_out
+    - stale
+    - respawn_guarded
+    - rate_limited
+    - skipped_locked
+    - memory_pressure
+    type: object
+  KanbanEstimateResponse:
+    additionalProperties: false
+    description: '``plugin_api._run_estimate``: ``{ok: false, reason}`` or the parsed estimate.'
+    properties:
+      complexity:
+        anyOf:
+        - enum:
+          - S
+          - M
+          - L
+          type: string
+        - type: 'null'
+      est_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      rationale:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    type: object
+  KanbanHomeChannel:
+    additionalProperties: false
+    description: '``plugin_api._configured_home_channels`` row; ``thread_id`` is ``""`` when unset.'
+    properties:
+      chat_id:
+        type: string
+      name:
+        type: string
+      platform:
+        type: string
+      thread_id:
+        type: string
+    required:
+    - platform
+    - chat_id
+    - thread_id
+    - name
+    type: object
+  KanbanHomeChannelState:
+    additionalProperties: false
+    properties:
+      chat_id:
+        type: string
+      name:
+        type: string
+      platform:
+        type: string
+      subscribed:
+        type: boolean
+      thread_id:
+        type: string
+    required:
+    - platform
+    - chat_id
+    - thread_id
+    - name
+    - subscribed
+    type: object
+  KanbanHomeChannelsResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_home_channels``.'
+    properties:
+      home_channels:
+        items:
+          $ref: '#/components/schemas/KanbanHomeChannelState'
+        type: array
+    required:
+    - home_channels
+    type: object
+  KanbanHomeSubscriptionResponse:
+    additionalProperties: false
+    description: '``plugin_api.subscribe_home`` / ``unsubscribe_home``.'
+    properties:
+      home_channel:
+        $ref: '#/components/schemas/KanbanHomeChannel'
+      ok:
+        type: boolean
+      task_id:
+        type: string
+    required:
+    - ok
+    - task_id
+    - home_channel
+    type: object
+  KanbanLinkAddResponse:
+    additionalProperties: false
+    description: '``plugin_api.add_link``; ``gated`` = the link demoted a ready child back to ``todo``.'
+    properties:
+      gated:
+        type: boolean
+      ok:
+        type: boolean
+    required:
+    - ok
+    - gated
+    type: object
+  KanbanLinkCounts:
+    additionalProperties: false
+    properties:
+      children:
+        type: integer
+      parents:
+        type: integer
+    required:
+    - parents
+    - children
+    type: object
+  KanbanModelOptionProvider:
+    additionalProperties: false
+    properties:
+      label:
+        type: string
+      models:
+        items:
+          type: string
+        type: array
+      slug:
+        type: string
+    required:
+    - slug
+    - label
+    - models
+    type: object
+  KanbanModelOptionsResponse:
+    additionalProperties: false
+    description: '``plugin_api.model_options``; ``providers`` is ``[]`` when the catalog fails to load.'
+    properties:
+      providers:
+        items:
+          $ref: '#/components/schemas/KanbanModelOptionProvider'
+        type: array
+    required:
+    - providers
+    type: object
+  KanbanOrchestrationResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_orchestration_settings`` (PUT returns the same); an unset profile is
+
+      ``""`` while its ``resolved_*`` twin falls back to ``active_profile``.'
+    properties:
+      active_profile:
+        type: string
+      auto_decompose:
+        type: boolean
+      auto_promote_children:
+        type: boolean
+      default_assignee:
+        type: string
+      orchestrator_profile:
+        type: string
+      resolved_default_assignee:
+        type: string
+      resolved_orchestrator_profile:
+        type: string
+    required:
+    - orchestrator_profile
+    - default_assignee
+    - auto_decompose
+    - auto_promote_children
+    - resolved_orchestrator_profile
+    - resolved_default_assignee
+    - active_profile
+    type: object
+  KanbanProfile:
+    additionalProperties: false
+    description: '``plugin_api.list_profile_roster`` row; empty strings for unset fields.'
+    properties:
+      description:
+        type: string
+      description_auto:
+        type: boolean
+      is_default:
+        type: boolean
+      model:
+        type: string
+      name:
+        type: string
+      provider:
+        type: string
+      skill_count:
+        type: integer
+    required:
+    - name
+    - is_default
+    - model
+    - provider
+    - description
+    - description_auto
+    - skill_count
+    type: object
+  KanbanProfileAutoDescribeResponse:
+    additionalProperties: false
+    description: '``plugin_api.auto_describe_profile`` (``profile_describer.DescribeOutcome``); non-OK is 200.'
+    properties:
+      description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      profile:
+        type: string
+      reason:
+        type: string
+    required:
+    - ok
+    - profile
+    - reason
+    - description
+    type: object
+  KanbanProfileDescriptionResponse:
+    additionalProperties: false
+    description: '``plugin_api.update_profile_description``; ``profile`` is the canonical name.'
+    properties:
+      description:
+        type: string
+      ok:
+        type: boolean
+      profile:
+        type: string
+    required:
+    - ok
+    - profile
+    - description
+    type: object
+  KanbanProfilesResponse:
+    additionalProperties: false
+    description: '``plugin_api.list_profile_roster``.'
+    properties:
+      profiles:
+        items:
+          $ref: '#/components/schemas/KanbanProfile'
+        type: array
+    required:
+    - profiles
+    type: object
+  KanbanProject:
+    additionalProperties: false
+    description: '``plugin_api.list_kanban_projects`` row; empty strings for unset fields.'
+    properties:
+      color:
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      primary_path:
+        type: string
+      slug:
+        type: string
+    required:
+    - id
+    - slug
+    - name
+    - primary_path
+    - icon
+    - color
+    type: object
+  KanbanProjectsResponse:
+    additionalProperties: false
+    description: '``plugin_api.list_kanban_projects``.'
+    properties:
+      projects:
+        items:
+          $ref: '#/components/schemas/KanbanProject'
+        type: array
+    required:
+    - projects
+    type: object
+  KanbanReassignResponse:
+    additionalProperties: false
+    description: '``plugin_api.reassign_task_endpoint``; ``assignee`` is ``None`` when unassigned.'
+    properties:
+      assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      task_id:
+        type: string
+    required:
+    - ok
+    - task_id
+    - assignee
+    type: object
+  KanbanRun:
+    additionalProperties: false
+    description: '``asdict(kanban_db.Run)`` — one attempt at a task (``task_runs`` row).'
+    properties:
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ended_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: integer
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      metadata:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      outcome:
+        anyOf:
+        - type: string
+        - type: 'null'
+      profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+      started_at:
+        type: integer
+      status:
+        type: string
+      step_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      task_id:
+        type: string
+      worker_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - id
+    - task_id
+    - profile
+    - step_key
+    - status
+    - claim_lock
+    - claim_expires
+    - worker_pid
+    - max_runtime_seconds
+    - last_heartbeat_at
+    - started_at
+    - ended_at
+    - outcome
+    - summary
+    - metadata
+    - error
+    type: object
+  KanbanRunInspectResponse:
+    additionalProperties: false
+    description: '``plugin_api.inspect_run_endpoint`` — the union of the dead (``reason``), live (psutil
+
+      stats) and access-denied (``error``) shapes.'
+    properties:
+      alive:
+        type: boolean
+      cmdline:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      cpu_percent:
+        anyOf:
+        - type: number
+        - type: 'null'
+      create_time:
+        anyOf:
+        - type: number
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      memory_rss_bytes:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      memory_vms_bytes:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      num_fds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      num_threads:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      run_id:
+        type: integer
+      status:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - run_id
+    - alive
+    type: object
+  KanbanRunResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_run_endpoint``.'
+    properties:
+      run:
+        $ref: '#/components/schemas/KanbanRun'
+    required:
+    - run
+    type: object
+  KanbanRunTerminateResponse:
+    additionalProperties: false
+    description: '``plugin_api.terminate_run_endpoint``.'
+    properties:
+      ok:
+        type: boolean
+      run_id:
+        type: integer
+      task_id:
+        type: string
+    required:
+    - ok
+    - run_id
+    - task_id
+    type: object
+  KanbanSpecifyResponse:
+    additionalProperties: false
+    description: '``plugin_api.specify_task_endpoint`` (``kanban_specify.SpecifyOutcome``); non-OK is 200.'
+    properties:
+      new_title:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      reason:
+        type: string
+      task_id:
+        type: string
+    required:
+    - ok
+    - task_id
+    - reason
+    - new_title
+    type: object
+  KanbanStatsResponse:
+    additionalProperties: false
+    description: '``kanban_db.board_stats`` — non-archived counts ``{status: n}`` / ``{assignee: {status: n}}``.'
+    properties:
+      by_assignee:
+        additionalProperties:
+          additionalProperties:
+            type: integer
+          type: object
+        type: object
+      by_status:
+        additionalProperties:
+          type: integer
+        type: object
+      now:
+        type: integer
+      oldest_ready_age_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - by_status
+    - by_assignee
+    - oldest_ready_age_seconds
+    - now
+    type: object
+  KanbanTaskAckResponse:
+    additionalProperties: false
+    description: '``plugin_api.reclaim_task_endpoint``.'
+    properties:
+      ok:
+        type: boolean
+      task_id:
+        type: string
+    required:
+    - ok
+    - task_id
+    type: object
+  KanbanTaskAge:
+    additionalProperties: false
+    description: '``kanban_db.task_age`` — seconds; negative when a timestamp is in the future.'
+    properties:
+      created_age_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      started_age_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      time_to_complete_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - created_age_seconds
+    - started_age_seconds
+    - time_to_complete_seconds
+    type: object
+  KanbanTaskDeleteResponse:
+    additionalProperties: false
+    description: '``plugin_api.delete_task``.'
+    properties:
+      deleted:
+        type: boolean
+      task_id:
+        type: string
+    required:
+    - deleted
+    - task_id
+    type: object
+  KanbanTaskDiagnostics:
+    additionalProperties: false
+    description: '``list_diagnostics`` row; the task columns are ``None`` if the task vanished mid-read.'
+    properties:
+      diagnostics:
+        items:
+          $ref: '#/components/schemas/KanbanDiagnostic'
+        type: array
+      task_assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      task_id:
+        type: string
+      task_status:
+        anyOf:
+        - type: string
+        - type: 'null'
+      task_title:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - task_id
+    - task_title
+    - task_status
+    - task_assignee
+    - diagnostics
+    type: object
+  KanbanTaskLogResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_task_log``; ``content`` is ``""`` when the log does not exist.'
+    properties:
+      content:
+        type: string
+      exists:
+        type: boolean
+      path:
+        type: string
+      size_bytes:
+        type: integer
+      task_id:
+        type: string
+      truncated:
+        type: boolean
+    required:
+    - task_id
+    - path
+    - exists
+    - size_bytes
+    - content
+    - truncated
+    type: object
+  KanbanWarningsSummary:
+    additionalProperties: false
+    description: '``plugin_api._warnings_summary_from_diagnostics`` — the card badge.'
+    properties:
+      count:
+        type: integer
+      highest_severity:
+        anyOf:
+        - enum:
+          - warning
+          - error
+          - critical
+          type: string
+        - type: 'null'
+      kinds:
+        additionalProperties:
+          type: integer
+        type: object
+      latest_at:
+        type: integer
+    required:
+    - count
+    - kinds
+    - latest_at
+    - highest_severity
+    type: object
+operations:
+- method: DELETE
+  path: /api/plugins/kanban/attachments/{attachment_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:499
+  x-handler-hash: aa2f32a7fc70223ff88b35393f70e9613a228d2d4df42126819002f19477c5d3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanAttachmentDeleteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanAttachmentDeleteResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/plugins/kanban/boards/{slug}
+  x-source: plugins/kanban/dashboard/plugin_api.py:1454
+  x-handler-hash: 9ddf8f3bbd9522de4b58e55d638ea56c59afce0be18948452d912d18d1fb830c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardDeleteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardDeleteResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/plugins/kanban/links
+  x-source: plugins/kanban/dashboard/plugin_api.py:798
+  x-handler-hash: 520dd8f460247eb8211552e8aa7d6ebd7adb230f53e296c9250f87257b77e7e7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/plugins/kanban/tasks/{task_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:693
+  x-handler-hash: 2a38d8e8840afae95e392866f2b532ef4b8a5045a6b27f7db0831b15ca2ba129
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanTaskDeleteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskDeleteResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}
+  x-source: plugins/kanban/dashboard/plugin_api.py:1202
+  x-handler-hash: 324831d5a1e83303a234dc5ba3bec044dbea6eb24362f08e0283ebddaeca8471
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanHomeSubscriptionResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanHomeSubscriptionResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/assignees
+  x-source: plugins/kanban/dashboard/plugin_api.py:1221
+  x-handler-hash: 3471a25e9813fcc61b188d3546aaf233c3d26e866dce367a0ed6b6aea61c6c9f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanAssigneesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanAssigneesResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/board
+  x-source: plugins/kanban/dashboard/plugin_api.py:339
+  x-handler-hash: b3537dcfa99e960765141f06130ba4b2983b3bd5168aeb74eed7cc68baed3537
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/boards
+  x-source: plugins/kanban/dashboard/plugin_api.py:1385
+  x-handler-hash: 3e3505eda245cbe38e74f20920a488cd69adad3f6ddbd7ea7a2db0d1b61f2a4e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/config
+  x-source: plugins/kanban/dashboard/plugin_api.py:1123
+  x-handler-hash: ecb5394e9d5cc00536b7ccd4a1d3a893758055308bcefadcc58f02d38cb28c16
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanDashboardConfigResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanDashboardConfigResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/diagnostics
+  x-source: plugins/kanban/dashboard/plugin_api.py:856
+  x-handler-hash: a2e860d0f9180390e43c09b626b84f09f099dc396a9434a9be28020e26562874
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanDiagnosticsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanDiagnosticsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/home-channels
+  x-source: plugins/kanban/dashboard/plugin_api.py:1170
+  x-handler-hash: 8be5020ee792e29a4aaf8f3106939639734ed25bdda3e13cb1383ff30cee4dd5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanHomeChannelsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanHomeChannelsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/model-options
+  x-source: plugins/kanban/dashboard/plugin_api.py:1254
+  x-handler-hash: 74bff6f4f004660249963099539412233ecf115e87d2263d795a756c087323d2
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanModelOptionsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanModelOptionsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/orchestration
+  x-source: plugins/kanban/dashboard/plugin_api.py:1599
+  x-handler-hash: 5c81fb7535a003fb559d7aa838496b79db5a4d8b95690906f48f192870bfba4c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanOrchestrationResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanOrchestrationResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/profiles
+  x-source: plugins/kanban/dashboard/plugin_api.py:1527
+  x-handler-hash: 07817e3fad521b8ab114ab328bb6daafec1a78e1591afd901a917e643d9501d6
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanProfilesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanProfilesResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/projects
+  x-source: plugins/kanban/dashboard/plugin_api.py:1372
+  x-handler-hash: 9ae0248c4500291202cbe10cf23ca41ef036737cf6418858f4c46b7b9ec1f65f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanProjectsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanProjectsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/runs/{run_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:910
+  x-handler-hash: 112fbc84eb17d4dc9c7184aadd2b0243a72e365bb432e4887c0ce30f519837b5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanRunResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanRunResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/runs/{run_id}/inspect
+  x-source: plugins/kanban/dashboard/plugin_api.py:917
+  x-handler-hash: 1f38e98558f03a3784aa68f90bbd9ca9b9846683eea9ebb9cc2d480ac06a57f0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanRunInspectResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanRunInspectResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/stats
+  x-source: plugins/kanban/dashboard/plugin_api.py:1214
+  x-handler-hash: 6895c3730fd924f1d5eb66aa6ab3a3ef21115fb9e0a30d9b20842137b5790080
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanStatsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanStatsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/tasks/{task_id}/attachments
+  x-source: plugins/kanban/dashboard/plugin_api.py:440
+  x-handler-hash: 5e99061722a7473721a8632b673074ea87e199162cc12a8abf2aacc11853580a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanAttachmentListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanAttachmentListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/tasks/{task_id}/log
+  x-source: plugins/kanban/dashboard/plugin_api.py:1229
+  x-handler-hash: 1eee6be87742315fd412c7080aa6864f688ac26641e5a3b03fb19dbe1b8f096a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanTaskLogResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskLogResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/workers/active
+  x-source: plugins/kanban/dashboard/plugin_api.py:894
+  x-handler-hash: 8e9b515acfd35430091453369d193c9f8c3b0f5939e9b7cbcd8fc10a52861b50
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanActiveWorkersResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanActiveWorkersResponse'
+      description: Successful Response
+- method: PATCH
+  path: /api/plugins/kanban/boards/{slug}
+  x-source: plugins/kanban/dashboard/plugin_api.py:1431
+  x-handler-hash: 2be3d2f2d50a82bef4ecbb3cb764372a6a50b03d65405dedefcf765c50273a0b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardUpdateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardUpdateResponse'
+      description: Successful Response
+- method: PATCH
+  path: /api/plugins/kanban/profiles/{profile_name}
+  x-source: plugins/kanban/dashboard/plugin_api.py:1541
+  x-handler-hash: bc869c469ba46f644b73e3ffc49f8e111f7979b1ac805dd97621986a50d455b0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanProfileDescriptionResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanProfileDescriptionResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/boards
+  x-source: plugins/kanban/dashboard/plugin_api.py:1414
+  x-handler-hash: 643c1c7e4b08ebe01cb3c3f9bce64c8abd49738b1a010c70d8195bb45b90159c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardCreateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardCreateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/boards/import
+  x-source: plugins/kanban/dashboard/plugin_api.py:1494
+  x-handler-hash: 82d09abcd5783f0639b3df724f944b61976de245062a45a06396cc0c47db5b83
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardImportResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardImportResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/boards/{slug}/export
+  x-source: plugins/kanban/dashboard/plugin_api.py:1476
+  x-handler-hash: 52e6686266e68897453897d937cbfdf594608166b1ae4dd6a67085493ae25f31
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardExportResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardExportResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/boards/{slug}/switch
+  x-source: plugins/kanban/dashboard/plugin_api.py:1508
+  x-handler-hash: e0071dc16137b5cc6c1ce8e0320124cc4c64734756e9db377bd6720af00b834b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBoardSwitchResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBoardSwitchResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/dispatch
+  x-source: plugins/kanban/dashboard/plugin_api.py:1243
+  x-handler-hash: 2e9ff9399027e3722539dae7ee4b4de32f10dc2cf2987b67ae7fa138ae75c522
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanDispatchResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanDispatchResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/estimate
+  x-source: plugins/kanban/dashboard/plugin_api.py:1045
+  x-handler-hash: 964ef6a58c50b2aae57c1bbbedc7ed4deadd28a1309e4ba4b3506e85462d3735
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanEstimateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanEstimateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/links
+  x-source: plugins/kanban/dashboard/plugin_api.py:791
+  x-handler-hash: 409ff1f6d963fc0cfe268753e2aad9d1775139f5e8c0152657c5ee8f65b927ee
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanLinkAddResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanLinkAddResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/profiles/{profile_name}/describe-auto
+  x-source: plugins/kanban/dashboard/plugin_api.py:1560
+  x-handler-hash: 82531b0dc7c831f8e5ae22b96141822a74c3153e678b3beef79baa6fbb603f94
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanProfileAutoDescribeResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanProfileAutoDescribeResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/runs/{run_id}/terminate
+  x-source: plugins/kanban/dashboard/plugin_api.py:959
+  x-handler-hash: 7f3c75912ee963a63ca0b9b153578a652d1f32d34da651d411914e478c716c82
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanRunTerminateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanRunTerminateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/bulk
+  x-source: plugins/kanban/dashboard/plugin_api.py:832
+  x-handler-hash: 7e7f35c662cfc9e944076bcd347f624e94e68a32736b5b1c7a990b9e5641f092
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanBulkUpdateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanBulkUpdateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/attachments
+  x-source: plugins/kanban/dashboard/plugin_api.py:447
+  x-handler-hash: 8fe796ce330ffa0d727a2575632221d528f7d551171b705897911b5721fa41a2
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanAttachmentUploadResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanAttachmentUploadResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/comments
+  x-source: plugins/kanban/dashboard/plugin_api.py:776
+  x-handler-hash: 192f21eb4cb717dc768934690802894334647f1d8c1cb3ea1b4ed051196b27f1
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/decompose
+  x-source: plugins/kanban/dashboard/plugin_api.py:1576
+  x-handler-hash: 97803f7bee2775b2a54394c7d7b98f92ede61e4893d6eaa6b7d418cb03c29d6a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanDecomposeResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanDecomposeResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/estimate
+  x-source: plugins/kanban/dashboard/plugin_api.py:1051
+  x-handler-hash: accd27a886e0febb2957617f977fa36250e80b59f9d43f93748899fac46de9a3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanEstimateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanEstimateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}
+  x-source: plugins/kanban/dashboard/plugin_api.py:1185
+  x-handler-hash: 7ff4f4189b3b64ccf62bf765bb6d9bc1924141ffbfe27b3113dde086048cd3e0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanHomeSubscriptionResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanHomeSubscriptionResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/reassign
+  x-source: plugins/kanban/dashboard/plugin_api.py:1013
+  x-handler-hash: 193e34abfd98a12ec988edb88440d4eb28a7fefb17b1394a3780253ab0765a6b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanReassignResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanReassignResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/reclaim
+  x-source: plugins/kanban/dashboard/plugin_api.py:982
+  x-handler-hash: 546dccc4df5b668f707da54cb9c2c75d89a370eab3f7e542f0027b3a0b3365ff
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanTaskAckResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskAckResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/kanban/tasks/{task_id}/specify
+  x-source: plugins/kanban/dashboard/plugin_api.py:999
+  x-handler-hash: 0db9ee30fec6bbf1970571728cbe9aa38cc14a079fbb89a6f4a17f999bdeac7c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanSpecifyResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanSpecifyResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/plugins/kanban/orchestration
+  x-source: plugins/kanban/dashboard/plugin_api.py:1641
+  x-handler-hash: 657f550d34c26b4918f8110f8712071f85c0a12dc52118684cfa7a6280567738
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanOrchestrationResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanOrchestrationResponse'
+      description: Successful Response

@@ -1,0 +1,1006 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  SessionDetailResponse:
+    additionalProperties: true
+    description: '``get_session_detail`` — the stored row stamped with its owning profile.'
+    properties:
+      actual_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      api_call_count:
+        type: integer
+      archived:
+        type: integer
+      billing_base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_mode:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cache_read_tokens:
+        type: integer
+      cache_write_tokens:
+        type: integer
+      chat_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      chat_type:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_failure_cooldown_until:
+        anyOf:
+        - type: number
+        - type: 'null'
+      compression_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_fallback_streak:
+        type: integer
+      compression_ineffective_count:
+        type: integer
+      compression_recovery_deadline:
+        anyOf:
+        - type: number
+        - type: 'null'
+      cost_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cost_status:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cwd:
+        anyOf:
+        - type: string
+        - type: 'null'
+      display_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      end_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ended_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      estimated_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      expiry_finalized:
+        type: integer
+      git_branch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      git_metadata_generation:
+        type: integer
+      git_repo_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_platform:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      hidden:
+        type: integer
+      id:
+        type: string
+      input_tokens:
+        type: integer
+      is_default_profile:
+        type: boolean
+      last_activity_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      last_activity_description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_activity_provenance:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_read_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+        description: Read watermark; ``0`` = marked unread, null = never tracked.
+      message_count:
+        type: integer
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model_config:
+        anyOf:
+        - type: string
+        - type: 'null'
+      origin_json:
+        anyOf:
+        - type: string
+        - type: 'null'
+      output_tokens:
+        type: integer
+      parent_session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      pinned:
+        type: integer
+      pricing_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+      profile:
+        type: string
+      profile_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_tokens:
+        type: integer
+      rewind_count:
+        type: integer
+      session_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        type: string
+      started_at:
+        type: number
+      system_prompt:
+        anyOf:
+        - type: string
+        - type: 'null'
+      system_prompt_hash:
+        anyOf:
+        - type: string
+        - type: 'null'
+      thread_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_call_count:
+        type: integer
+      tool_names:
+        anyOf:
+        - type: string
+        - type: 'null'
+      transport_profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+      user_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - source
+    - user_id
+    - session_key
+    - chat_id
+    - chat_type
+    - thread_id
+    - display_name
+    - origin_json
+    - expiry_finalized
+    - model
+    - parent_session_id
+    - started_at
+    - ended_at
+    - end_reason
+    - message_count
+    - tool_call_count
+    - input_tokens
+    - output_tokens
+    - cache_read_tokens
+    - cache_write_tokens
+    - reasoning_tokens
+    - cwd
+    - git_branch
+    - git_repo_root
+    - billing_provider
+    - billing_base_url
+    - billing_mode
+    - estimated_cost_usd
+    - actual_cost_usd
+    - cost_status
+    - cost_source
+    - pricing_version
+    - title
+    - title_source
+    - last_activity_at
+    - last_activity_description
+    - last_activity_provenance
+    - api_call_count
+    - handoff_state
+    - handoff_platform
+    - handoff_error
+    - compression_failure_cooldown_until
+    - compression_failure_error
+    - compression_fallback_streak
+    - compression_ineffective_count
+    - compression_recovery_deadline
+    - profile_name
+    - transport_profile
+    - rewind_count
+    - hidden
+    - last_read_at
+    - tool_names
+    - archived
+    - pinned
+    - model_config
+    - system_prompt
+    - system_prompt_hash
+    - git_metadata_generation
+    - profile
+    - is_default_profile
+    type: object
+  SessionExportResponse:
+    additionalProperties: true
+    description: '``export_session_endpoint`` streams this one JSON document: ``SessionDB.get_session`` with
+
+      the session''s active (``active = 1``) raw, unprojected message rows appended.'
+    properties:
+      actual_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      api_call_count:
+        type: integer
+      archived:
+        type: integer
+      billing_base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_mode:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cache_read_tokens:
+        type: integer
+      cache_write_tokens:
+        type: integer
+      chat_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      chat_type:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_failure_cooldown_until:
+        anyOf:
+        - type: number
+        - type: 'null'
+      compression_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_fallback_streak:
+        type: integer
+      compression_ineffective_count:
+        type: integer
+      compression_recovery_deadline:
+        anyOf:
+        - type: number
+        - type: 'null'
+      cost_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cost_status:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cwd:
+        anyOf:
+        - type: string
+        - type: 'null'
+      display_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      end_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ended_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      estimated_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      expiry_finalized:
+        type: integer
+      git_branch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      git_metadata_generation:
+        type: integer
+      git_repo_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_platform:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      hidden:
+        type: integer
+      id:
+        type: string
+      input_tokens:
+        type: integer
+      last_activity_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      last_activity_description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_activity_provenance:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_read_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+        description: Read watermark; ``0`` = marked unread, null = never tracked.
+      message_count:
+        type: integer
+      messages:
+        items:
+          $ref: '#/components/schemas/SessionMessage'
+        type: array
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model_config:
+        anyOf:
+        - type: string
+        - type: 'null'
+      origin_json:
+        anyOf:
+        - type: string
+        - type: 'null'
+      output_tokens:
+        type: integer
+      parent_session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      pinned:
+        type: integer
+      pricing_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+      profile_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_tokens:
+        type: integer
+      rewind_count:
+        type: integer
+      session_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        type: string
+      started_at:
+        type: number
+      system_prompt:
+        anyOf:
+        - type: string
+        - type: 'null'
+      system_prompt_hash:
+        anyOf:
+        - type: string
+        - type: 'null'
+      thread_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_call_count:
+        type: integer
+      tool_names:
+        anyOf:
+        - type: string
+        - type: 'null'
+      transport_profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+      user_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - source
+    - user_id
+    - session_key
+    - chat_id
+    - chat_type
+    - thread_id
+    - display_name
+    - origin_json
+    - expiry_finalized
+    - model
+    - parent_session_id
+    - started_at
+    - ended_at
+    - end_reason
+    - message_count
+    - tool_call_count
+    - input_tokens
+    - output_tokens
+    - cache_read_tokens
+    - cache_write_tokens
+    - reasoning_tokens
+    - cwd
+    - git_branch
+    - git_repo_root
+    - billing_provider
+    - billing_base_url
+    - billing_mode
+    - estimated_cost_usd
+    - actual_cost_usd
+    - cost_status
+    - cost_source
+    - pricing_version
+    - title
+    - title_source
+    - last_activity_at
+    - last_activity_description
+    - last_activity_provenance
+    - api_call_count
+    - handoff_state
+    - handoff_platform
+    - handoff_error
+    - compression_failure_cooldown_until
+    - compression_failure_error
+    - compression_fallback_streak
+    - compression_ineffective_count
+    - compression_recovery_deadline
+    - profile_name
+    - transport_profile
+    - rewind_count
+    - hidden
+    - last_read_at
+    - tool_names
+    - archived
+    - pinned
+    - model_config
+    - system_prompt
+    - system_prompt_hash
+    - git_metadata_generation
+    - messages
+    type: object
+  SessionListResponse:
+    additionalProperties: false
+    description: '``get_sessions``. ``storage`` maps the serving profile to ``"corrupt"`` when its store is
+
+      latched unreadable, else ``{}``.'
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      sessions:
+        items:
+          $ref: '#/components/schemas/SessionListRow'
+        type: array
+      storage:
+        additionalProperties:
+          const: corrupt
+          type: string
+        type: object
+      total:
+        type: integer
+    required:
+    - sessions
+    - total
+    - limit
+    - offset
+    - storage
+    type: object
+  SessionListRow:
+    additionalProperties: true
+    description: 'One ``SessionDB.list_sessions_rich`` row as the list endpoints stamp it (``is_active``,
+
+      ``profile``, boolean ``archived`` / ``pinned``). The prompt-storage columns ride only with
+
+      ``full=1``; the ``_lineage_*`` keys only on a compression root projected onto its live tip.'
+    properties:
+      _lineage_ids:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      _lineage_root_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      actual_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      api_call_count:
+        type: integer
+      archived:
+        type: boolean
+      billing_base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_mode:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cache_read_tokens:
+        type: integer
+      cache_write_tokens:
+        type: integer
+      chat_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      chat_type:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_failure_cooldown_until:
+        anyOf:
+        - type: number
+        - type: 'null'
+      compression_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_fallback_streak:
+        type: integer
+      compression_ineffective_count:
+        type: integer
+      compression_recovery_deadline:
+        anyOf:
+        - type: number
+        - type: 'null'
+      cost_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cost_status:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cwd:
+        anyOf:
+        - type: string
+        - type: 'null'
+      display_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      end_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ended_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      estimated_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      expiry_finalized:
+        type: integer
+      git_branch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      git_metadata_generation:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      git_repo_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_platform:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      hidden:
+        type: integer
+      id:
+        type: string
+      input_tokens:
+        type: integer
+      is_active:
+        type: boolean
+      is_default_profile:
+        type: boolean
+      last_active:
+        type: number
+      last_activity_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      last_activity_description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_activity_provenance:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_read_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+        description: Read watermark; ``0`` = marked unread, null = never tracked.
+      message_count:
+        type: integer
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model_config:
+        anyOf:
+        - type: string
+        - type: 'null'
+      origin_json:
+        anyOf:
+        - type: string
+        - type: 'null'
+      output_tokens:
+        type: integer
+      parent_session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      pinned:
+        type: boolean
+      preview:
+        type: string
+      pricing_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+      profile:
+        type: string
+      profile_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_tokens:
+        type: integer
+      rewind_count:
+        type: integer
+      session_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        type: string
+      started_at:
+        type: number
+      system_prompt:
+        anyOf:
+        - type: string
+        - type: 'null'
+      system_prompt_hash:
+        anyOf:
+        - type: string
+        - type: 'null'
+      thread_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_call_count:
+        type: integer
+      tool_names:
+        anyOf:
+        - type: string
+        - type: 'null'
+      transport_profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+      unread:
+        type: boolean
+      user_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - source
+    - user_id
+    - session_key
+    - chat_id
+    - chat_type
+    - thread_id
+    - display_name
+    - origin_json
+    - expiry_finalized
+    - model
+    - parent_session_id
+    - started_at
+    - ended_at
+    - end_reason
+    - message_count
+    - tool_call_count
+    - input_tokens
+    - output_tokens
+    - cache_read_tokens
+    - cache_write_tokens
+    - reasoning_tokens
+    - cwd
+    - git_branch
+    - git_repo_root
+    - billing_provider
+    - billing_base_url
+    - billing_mode
+    - estimated_cost_usd
+    - actual_cost_usd
+    - cost_status
+    - cost_source
+    - pricing_version
+    - title
+    - title_source
+    - last_activity_at
+    - last_activity_description
+    - last_activity_provenance
+    - api_call_count
+    - handoff_state
+    - handoff_platform
+    - handoff_error
+    - compression_failure_cooldown_until
+    - compression_failure_error
+    - compression_fallback_streak
+    - compression_ineffective_count
+    - compression_recovery_deadline
+    - profile_name
+    - transport_profile
+    - rewind_count
+    - hidden
+    - last_read_at
+    - tool_names
+    - archived
+    - pinned
+    - last_active
+    - preview
+    - unread
+    - is_active
+    - profile
+    - is_default_profile
+    type: object
+  SessionMessage:
+    additionalProperties: true
+    description: '``SessionDB._row_to_message_dict``: a ``messages`` row with ``content`` / ``tool_calls`` /
+
+      ``display_metadata`` decoded and the display-index columns dropped. ``content`` is text or the
+
+      decoded multimodal parts; the reasoning sidecars stay JSON text.'
+    properties:
+      _compressed_summary:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      active:
+        type: integer
+      api_content:
+        anyOf:
+        - type: string
+        - type: 'null'
+      codex_message_items:
+        anyOf:
+        - type: string
+        - type: 'null'
+      codex_reasoning_items:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compacted:
+        type: integer
+      content: {}
+      display_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      display_metadata:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      effect_disposition:
+        anyOf:
+        - type: string
+        - type: 'null'
+      finish_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: integer
+      observed:
+        type: integer
+      platform_message_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_content:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_details:
+        anyOf:
+        - type: string
+        - type: 'null'
+      role:
+        type: string
+      session_id:
+        type: string
+      timestamp:
+        type: number
+      token_count:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      tool_call_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_calls:
+        description: Decoded tool-call list (``[]`` when undecodable), or null.
+      tool_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - session_id
+    - role
+    - content
+    - tool_call_id
+    - tool_calls
+    - tool_name
+    - effect_disposition
+    - timestamp
+    - token_count
+    - finish_reason
+    - reasoning
+    - reasoning_content
+    - reasoning_details
+    - codex_reasoning_items
+    - codex_message_items
+    - platform_message_id
+    - observed
+    - active
+    - compacted
+    - api_content
+    - display_kind
+    - display_metadata
+    type: object
+operations:
+- method: GET
+  path: /api/sessions
+  x-source: hermes_cli/web_routers/sessions.py:167
+  x-handler-hash: 6abf8739442ed8c5bbfcf5b51c0aca9b6b8a60a27b38e3b84709276fdc1a577b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SessionListResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionListResponse'
+- method: GET
+  path: /api/sessions/{session_id}/export
+  x-source: hermes_cli/web_routers/sessions.py:787
+  x-handler-hash: 2836907e606ebf7854ba2cbaf37c3d24d6327d40250cc1d8091db2e82f4ec78b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SessionExportResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionExportResponse'

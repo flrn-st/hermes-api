@@ -1,0 +1,658 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  CuratorPausedResponse:
+    additionalProperties: false
+    description: '``set_curator_paused``.'
+    properties:
+      ok:
+        type: boolean
+      paused:
+        type: boolean
+    required:
+    - ok
+    - paused
+    type: object
+  CuratorStatusResponse:
+    additionalProperties: false
+    description: '``get_curator_status``; a getter that raised reads as ``null``.'
+    properties:
+      archive_after_days:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      enabled:
+        type: boolean
+      interval_hours:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      last_run_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      min_idle_hours:
+        anyOf:
+        - type: number
+        - type: 'null'
+      paused:
+        type: boolean
+      stale_after_days:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - enabled
+    - paused
+    - interval_hours
+    - last_run_at
+    - min_idle_hours
+    - stale_after_days
+    - archive_after_days
+    type: object
+  DebugShareResponse:
+    additionalProperties: false
+    description: '``run_debug_share_endpoint`` — ``hermes_cli/debug.py::DebugShareResult`` minus ``report``.'
+    properties:
+      auto_delete_seconds:
+        type: integer
+      failures:
+        items:
+          type: string
+        type: array
+      ok:
+        type: boolean
+      redacted:
+        type: boolean
+      urls:
+        additionalProperties:
+          type: string
+        description: Label ("Report", "agent.log", …) → paste URL.
+        type: object
+    required:
+    - ok
+    - urls
+    - failures
+    - redacted
+    - auto_delete_seconds
+    type: object
+  HealthIdleResponse:
+    additionalProperties: false
+    description: '``get_health_idle`` — ``{"ok": true}`` plus ``hermes_cli/web_server_idle_proof.py::idle_proof``.
+
+      ``idle: null`` means a ledger was unreadable (treat as busy).'
+    properties:
+      detail:
+        anyOf:
+        - type: string
+        - type: 'null'
+      idle:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      ok:
+        type: boolean
+      reason:
+        anyOf:
+        - enum:
+          - turn_probe_unavailable
+          - turn_in_flight
+          - input_probe_unavailable
+          - awaiting_human_input
+          type: string
+        - type: 'null'
+    required:
+    - ok
+    - idle
+    - reason
+    type: object
+  HealthRetirementResponse:
+    additionalProperties: false
+    description: '``post_health_retirement`` — ``hermes_cli/backend_retirement.py::RetirementFence``
+
+      ``prepare`` / ``commit`` / ``cancel``. Only ``prepare`` carries ``idle`` (``null`` = cannot
+
+      prove idle) and, when it succeeded, ``token``.'
+    properties:
+      idle:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      ok:
+        type: boolean
+      token:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    type: object
+  HostIdentityResponse:
+    additionalProperties: false
+    description: '``get_host_identity``.'
+    properties:
+      ok:
+        type: boolean
+      pid:
+        type: integer
+      protocolVersion:
+        type: integer
+      role:
+        description: The published host role; "serve" when none was recorded.
+        type: string
+      servesSpa:
+        type: boolean
+    required:
+    - ok
+    - protocolVersion
+    - pid
+    - role
+    - servesSpa
+    type: object
+  LearningGraphCluster:
+    additionalProperties: false
+    properties:
+      category:
+        type: string
+      count:
+        type: integer
+    required:
+    - category
+    - count
+    type: object
+  LearningGraphEdge:
+    additionalProperties: false
+    properties:
+      source:
+        type: string
+      target:
+        type: string
+    required:
+    - source
+    - target
+    type: object
+  LearningGraphNode:
+    additionalProperties: false
+    description: A learned skill or a memory card; ``memorySource`` only on memory nodes.
+    properties:
+      category:
+        type: string
+      createdBy:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: string
+      kind:
+        enum:
+        - skill
+        - memory
+        type: string
+      label:
+        type: string
+      memorySource:
+        anyOf:
+        - enum:
+          - memory
+          - profile
+          type: string
+        - type: 'null'
+      pinned:
+        type: boolean
+      state:
+        type: string
+      timestamp:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      useCount:
+        type: integer
+    required:
+    - id
+    - label
+    - kind
+    - timestamp
+    - category
+    - useCount
+    - state
+    - createdBy
+    - pinned
+    type: object
+  LearningGraphResponse:
+    additionalProperties: false
+    description: '``agent/learning_graph.py::build_learning_graph``.'
+    properties:
+      clusters:
+        items:
+          $ref: '#/components/schemas/LearningGraphCluster'
+        type: array
+      edges:
+        items:
+          $ref: '#/components/schemas/LearningGraphEdge'
+        type: array
+      memory:
+        items:
+          $ref: '#/components/schemas/LearningGraphMemoryCard'
+        type: array
+      nodes:
+        items:
+          $ref: '#/components/schemas/LearningGraphNode'
+        type: array
+      stats:
+        $ref: '#/components/schemas/LearningGraphStats'
+    required:
+    - nodes
+    - edges
+    - clusters
+    - memory
+    - stats
+    type: object
+  LearningGraphStats:
+    additionalProperties: false
+    description: '``agent/learning_graph.py::density_stats`` plus the memory counts.'
+    properties:
+      agent_created:
+        type: integer
+      categories:
+        type: integer
+      edges_per_node:
+        type: number
+      isolated_pct:
+        type: number
+      learned_skills:
+        type: integer
+      linked_nodes:
+        type: integer
+      memory_nodes:
+        type: integer
+      memory_skill_edges:
+        type: integer
+      nodes:
+        type: integer
+      related_edges:
+        type: integer
+      top_categories:
+        description: Up to 8 ``[category, count]`` pairs.
+        items:
+          maxItems: 2
+          minItems: 2
+          prefixItems:
+          - type: string
+          - type: integer
+          type: array
+        type: array
+      used:
+        type: integer
+    required:
+    - nodes
+    - related_edges
+    - edges_per_node
+    - linked_nodes
+    - isolated_pct
+    - categories
+    - agent_created
+    - used
+    - top_categories
+    - memory_nodes
+    - memory_skill_edges
+    - learned_skills
+    type: object
+  LearningNodeDetailResponse:
+    additionalProperties: false
+    description: '``agent/learning_mutations.py::node_detail`` (the non-ok results become a 404).'
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+      kind:
+        enum:
+        - skill
+        - memory
+        type: string
+      label:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - kind
+    - id
+    - label
+    - content
+    type: object
+  LearningNodeMutationResponse:
+    additionalProperties: false
+    description: '``agent/learning_mutations.py::delete_node`` / ``edit_node`` (the non-ok results become
+
+      a 400).'
+    properties:
+      message:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - message
+    type: object
+  LogsResponse:
+    additionalProperties: false
+    description: '``get_logs`` — raw log lines (trailing newline kept); ``[]`` when the file does not exist.'
+    properties:
+      file:
+        type: string
+      lines:
+        items:
+          type: string
+        type: array
+    required:
+    - file
+    - lines
+    type: object
+  PortalFeature:
+    additionalProperties: false
+    properties:
+      label:
+        type: string
+      state:
+        description: '"via Nous Portal", the active provider name, "active" or "not configured".'
+        type: string
+    required:
+    - label
+    - state
+    type: object
+  PortalStatusResponse:
+    additionalProperties: false
+    description: '``_get_portal_status_sync``.'
+    properties:
+      account_tier:
+        anyOf:
+        - type: string
+        - type: 'null'
+      features:
+        items:
+          $ref: '#/components/schemas/PortalFeature'
+        type: array
+      free_tier:
+        type: boolean
+      inference_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      logged_in:
+        type: boolean
+      portal_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider:
+        type: string
+      subscription_url:
+        type: string
+    required:
+    - logged_in
+    - portal_url
+    - inference_url
+    - provider
+    - free_tier
+    - account_tier
+    - subscription_url
+    - features
+    type: object
+  SshOwnershipResponse:
+    additionalProperties: false
+    description: '``get_ssh_ownership``.'
+    properties:
+      ok:
+        type: boolean
+      protocolVersion:
+        type: integer
+      runtimeIntact:
+        type: boolean
+      sshOwnerNonce:
+        type: string
+    required:
+    - ok
+    - sshOwnerNonce
+    - protocolVersion
+    - runtimeIntact
+    type: object
+operations:
+- method: DELETE
+  path: /api/learning/node
+  x-source: hermes_cli/web_routers/status.py:695
+  x-handler-hash: 0e092211a366c83688a28c6bcb8ebfa980766921a445453ee8d9a79d82b48f4e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LearningNodeMutationResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LearningNodeMutationResponse'
+      description: Successful Response
+- method: GET
+  path: /api/curator
+  x-source: hermes_cli/web_routers/status.py:615
+  x-handler-hash: 0d1136ec5e3066aa6d5c845a99056a00259eeb1ae2d3c45363b66cfb1457aaf6
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CuratorStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CuratorStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/health/idle
+  x-source: hermes_cli/web_routers/status.py:141
+  x-handler-hash: 0d35deca838280b99572dd1a57a2a697ae0439642ac388246b93e56dca1b90c0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: HealthIdleResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthIdleResponse'
+      description: Successful Response
+- method: GET
+  path: /api/host/identity
+  x-source: hermes_cli/web_routers/status.py:122
+  x-handler-hash: ba05393e6a67c494481b8605f5a4599ed0318023ab18911b2fb3c04dbdbcf316
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: HostIdentityResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HostIdentityResponse'
+      description: Successful Response
+- method: GET
+  path: /api/learning/graph
+  x-source: hermes_cli/web_routers/status.py:663
+  x-handler-hash: ab76b5467d73fccc49aec4cae29337798609083a90488ceb143a50a1afdf778e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LearningGraphResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LearningGraphResponse'
+      description: Successful Response
+- method: GET
+  path: /api/learning/node
+  x-source: hermes_cli/web_routers/status.py:688
+  x-handler-hash: b8458a11216d80571f7e8e0e4653c4b534c04b9152511cd705c74e8e7b8268ab
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LearningNodeDetailResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LearningNodeDetailResponse'
+      description: Successful Response
+- method: GET
+  path: /api/logs
+  x-source: hermes_cli/web_routers/status.py:801
+  x-handler-hash: aba2019bac9e605edd62701b65a5ea191fd056a3054be0266b12cfef84ae676a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LogsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LogsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/portal
+  x-source: hermes_cli/web_routers/status.py:714
+  x-handler-hash: 995af2868007f6cd33adbb9069751229d927a6e44d1f25dd00244a2cfd3a87a4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: PortalStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PortalStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/ssh/ownership
+  x-source: hermes_cli/web_routers/status.py:105
+  x-handler-hash: 985ff366261691ea4bd7507c45ee383085c0328eff75ed9426b09f541ee8b2da
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SshOwnershipResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SshOwnershipResponse'
+      description: Successful Response
+- method: POST
+  path: /api/curator/run
+  x-source: hermes_cli/web_routers/status.py:654
+  x-handler-hash: 1ec6b7d123c6c107af57d776565f6085ac6c7c851c2a3771ea37bbd90a2b14d5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/health/retirement
+  x-source: hermes_cli/web_routers/status.py:149
+  x-handler-hash: 3bf36964298d230a5b4c11d0e46082ac4c3561a12cc3d56f73c80a210299c7fc
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: HealthRetirementResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthRetirementResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/config-migrate
+  x-source: hermes_cli/web_routers/status.py:774
+  x-handler-hash: 9a1f3ddfec8b66432e785300d9acdbca7befe1a88805283cf5066c2cbc6b4b17
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/debug-share
+  x-source: hermes_cli/web_routers/status.py:779
+  x-handler-hash: 9d5817e962bac2127440f7b450040e1b65283fb32e0445d79b272b8924e973d3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DebugShareResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DebugShareResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/dump
+  x-source: hermes_cli/web_routers/status.py:769
+  x-handler-hash: a0c520864f5ecc7e1993fae91a20f8ac86c462f63a68cd48408d35bad18c15b2
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/ops/prompt-size
+  x-source: hermes_cli/web_routers/status.py:764
+  x-handler-hash: 6dcac00cf6c90e2c19cfb6d8de71378d718693844940cd058c371d4fe40ce231
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/curator/paused
+  x-source: hermes_cli/web_routers/status.py:635
+  x-handler-hash: 56ce985454676030b6f7c83d2ba8cd2697e465d44a122e36c458fc10e175fca2
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CuratorPausedResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CuratorPausedResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/learning/node
+  x-source: hermes_cli/web_routers/status.py:703
+  x-handler-hash: 8d4abedea59670228d6cf6977252d4f859f1a34435891f3ff876340f4756de2d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LearningNodeMutationResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LearningNodeMutationResponse'
+      description: Successful Response

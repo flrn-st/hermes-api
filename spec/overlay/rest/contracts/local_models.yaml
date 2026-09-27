@@ -1,0 +1,397 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  LocalModelCatalogRow:
+    additionalProperties: false
+    description: '``_catalog_row``. ``fits=false`` rows price the smallest build and add ``fit_detail``;
+
+      ``fits=true`` rows add the selected variant, plus the start window unless physics refused.'
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      downloaded:
+        type: boolean
+      downloaded_model_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      downloaded_quant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fit_detail:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fit_summary:
+        type: string
+      fits:
+        type: boolean
+      id:
+        type: string
+      min_engine:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      mtp:
+        type: boolean
+      native_context:
+        type: integer
+      native_context_label:
+        type: string
+      needs_engine:
+        type: boolean
+      quant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      quant_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      quant_validated:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      recommended:
+        type: boolean
+      recommended_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      size_bytes:
+        type: integer
+      size_label:
+        type: string
+      spilled:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      start_window:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      start_window_label:
+        anyOf:
+        - type: string
+        - type: 'null'
+      variant_count:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      vision:
+        type: boolean
+    required:
+    - id
+    - display_name
+    - description
+    - native_context
+    - native_context_label
+    - recommended
+    - recommended_reason
+    - downloaded
+    - downloaded_model_id
+    - downloaded_quant
+    - mtp
+    - vision
+    - needs_engine
+    - min_engine
+    - fits
+    - size_bytes
+    - size_label
+    - fit_summary
+    type: object
+  LocalModelRepoFile:
+    additionalProperties: false
+    description: '``hermes_cli/local_runtime/hf_browse.py::HFFileGroup`` priced by ``rough_fit``.'
+    properties:
+      fit:
+        enum:
+        - fits-gpu
+        - needs-ram
+        - too-big
+        - unknown
+        type: string
+      label:
+        type: string
+      paths:
+        description: Repo-relative; every part of a split GGUF, in order.
+        items:
+          type: string
+        type: array
+      total_bytes:
+        type: integer
+    required:
+    - label
+    - paths
+    - total_bytes
+    - fit
+    type: object
+  LocalModelSearchHit:
+    additionalProperties: false
+    description: '``hermes_cli/local_runtime/hf_browse.py::HFModelHit``.'
+    properties:
+      downloads:
+        type: integer
+      gated:
+        type: boolean
+      likes:
+        type: integer
+      repo:
+        type: string
+      updated:
+        type: string
+    required:
+    - repo
+    - downloads
+    - likes
+    - updated
+    - gated
+    type: object
+  LocalModelsActivateResponse:
+    additionalProperties: false
+    description: '``local_models_activate``.'
+    properties:
+      job_id:
+        type: string
+    required:
+    - job_id
+    type: object
+  LocalModelsCatalogResponse:
+    additionalProperties: false
+    description: '``local_models_catalog``.'
+    properties:
+      models:
+        items:
+          $ref: '#/components/schemas/LocalModelCatalogRow'
+        type: array
+    required:
+    - models
+    type: object
+  LocalModelsHardwareResponse:
+    additionalProperties: false
+    description: '``local_models_hardware``; the ``gpu_*``/``vram_used_bytes`` readouts are NVIDIA-only (null
+
+      elsewhere).'
+    properties:
+      gpu_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gpu_util_percent:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      ram_available_bytes:
+        type: integer
+      ram_total_bytes:
+        type: integer
+      uma:
+        type: boolean
+      vram_label:
+        type: string
+      vram_total_bytes:
+        type: integer
+      vram_usable_bytes:
+        type: integer
+      vram_used_bytes:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - uma
+    - vram_total_bytes
+    - vram_usable_bytes
+    - ram_total_bytes
+    - ram_available_bytes
+    - vram_label
+    - gpu_name
+    - gpu_util_percent
+    - vram_used_bytes
+    type: object
+  LocalModelsSearchFilesResponse:
+    additionalProperties: false
+    description: '``local_models_search_files``.'
+    properties:
+      files:
+        items:
+          $ref: '#/components/schemas/LocalModelRepoFile'
+        type: array
+    required:
+    - files
+    type: object
+  LocalModelsSearchResponse:
+    additionalProperties: false
+    description: '``local_models_search``.'
+    properties:
+      hits:
+        items:
+          $ref: '#/components/schemas/LocalModelSearchHit'
+        type: array
+    required:
+    - hits
+    type: object
+  LocalModelsServerResponse:
+    additionalProperties: false
+    description: '``local_models_server``.'
+    properties:
+      action:
+        enum:
+        - stop
+        - start
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - action
+    type: object
+  LocalModelsSideloadResponse:
+    additionalProperties: false
+    description: '``local_models_sideload``.'
+    properties:
+      already_present:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      model_id:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - model_id
+    type: object
+operations:
+- method: DELETE
+  path: /api/local-models/models/{model_id}
+  x-source: hermes_cli/web_routers/local_models.py:717
+  x-handler-hash: d5fc6726113d939452ee84eb9fd80d490a2e5d6654004cb2155454d400d2ee7d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: GET
+  path: /api/local-models/catalog
+  x-source: hermes_cli/web_routers/local_models.py:595
+  x-handler-hash: 5cde4d4c6b5bcaf2bfd7b894232d81f31bfffb4a617e38ad8540e1fb85410345
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsCatalogResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsCatalogResponse'
+      description: Successful Response
+- method: GET
+  path: /api/local-models/hardware
+  x-source: hermes_cli/web_routers/local_models.py:523
+  x-handler-hash: c098ceb9adcb1164ff581527608385741445676657e87727ad2adbefb473e396
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsHardwareResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsHardwareResponse'
+      description: Successful Response
+- method: GET
+  path: /api/local-models/search
+  x-source: hermes_cli/web_routers/local_models.py:905
+  x-handler-hash: b8de0cf8ddd0d5252b080d74253cd849e2aa6a895ecb849b3be900eb5c1c4757
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsSearchResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsSearchResponse'
+      description: Successful Response
+- method: GET
+  path: /api/local-models/search/files
+  x-source: hermes_cli/web_routers/local_models.py:914
+  x-handler-hash: 07018791aeb7b2c6450c21e65176670bd7a9ba3996c2d4703ab09b8726b9f82d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsSearchFilesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsSearchFilesResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/activate
+  x-source: hermes_cli/web_routers/local_models.py:860
+  x-handler-hash: 65fe174a1dbb23084f83438096794ea5a19e278112951edc834e5988ceecf789
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsActivateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsActivateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/eject
+  x-source: hermes_cli/web_routers/local_models.py:842
+  x-handler-hash: 11e9286a6c5ab6b68bcb09f73e3819a841ada201271c124e8ab4434fb7ade2ba
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/server
+  x-source: hermes_cli/web_routers/local_models.py:825
+  x-handler-hash: c1ce623a58a4394d4f587541d199a2f004672e90129731bf90a8f81dd0f0e4f3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsServerResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsServerResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/sideload
+  x-source: hermes_cli/web_routers/local_models.py:950
+  x-handler-hash: c183df49e4271e1529c559167a6bdf9b12a3ab6a88c5871a78adda0d8255769d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: LocalModelsSideloadResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsSideloadResponse'
+      description: Successful Response

@@ -1,0 +1,591 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  ConfigDefaultsResponse:
+    additionalProperties: true
+    description: '``get_defaults`` — ``hermes_cli.config.DEFAULT_CONFIG`` verbatim (including
+
+      ``_config_version``); its tree is owned by ``hermes_cli/config_defaults.py``.'
+    properties: {}
+    type: object
+  ConfigResponse:
+    additionalProperties: true
+    description: '``get_config`` — the user''s config tree through ``_normalize_config_for_web`` minus the
+
+      ``_``-prefixed internal keys. The sections are owned by ``DEFAULT_CONFIG`` / config.yaml, so
+
+      only the keys the normaliser itself rewrites are typed.'
+    properties:
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model_context_length:
+        type: integer
+    required:
+    - model_context_length
+    type: object
+  ConfigSchemaField:
+    additionalProperties: false
+    description: 'One ``hermes_cli/web_server_config.py::_build_schema_from_config`` entry, with any
+
+      ``_SCHEMA_OVERRIDES`` layered on (``_select`` adds ``options``/``searchable``/``clearable``).
+
+      Dict values recurse into dotted keys, so ``_infer_type``''s ``"object"`` never reaches the wire.'
+    properties:
+      category:
+        type: string
+      clearable:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      description:
+        type: string
+      options:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      searchable:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      type:
+        enum:
+        - boolean
+        - number
+        - list
+        - string
+        - select
+        type: string
+    required:
+    - type
+    - description
+    - category
+    type: object
+  ConfigSchemaResponse:
+    additionalProperties: false
+    description: '``get_schema`` — ``_schema_with_dynamic_provider_options`` keyed by dotted config path.'
+    properties:
+      category_order:
+        items:
+          type: string
+        type: array
+      fields:
+        additionalProperties:
+          $ref: '#/components/schemas/ConfigSchemaField'
+        type: object
+    required:
+    - fields
+    - category_order
+    type: object
+  CustomEndpointActivateResponse:
+    additionalProperties: false
+    description: '``activate_custom_endpoint``.'
+    properties:
+      model:
+        type: string
+      ok:
+        type: boolean
+      provider:
+        type: string
+    required:
+    - ok
+    - provider
+    - model
+    type: object
+  CustomEndpointCurrentModel:
+    additionalProperties: false
+    properties:
+      base_url:
+        type: string
+      model:
+        type: string
+      provider:
+        type: string
+    required:
+    - provider
+    - model
+    - base_url
+    type: object
+  CustomEndpointDeleteResponse:
+    additionalProperties: false
+    description: '``delete_custom_endpoint`` — the refreshed list.'
+    properties:
+      current:
+        $ref: '#/components/schemas/CustomEndpointCurrentModel'
+      endpoints:
+        items:
+          $ref: '#/components/schemas/CustomEndpointRow'
+        type: array
+      ok:
+        type: boolean
+    required:
+    - endpoints
+    - current
+    - ok
+    type: object
+  CustomEndpointListResponse:
+    additionalProperties: false
+    description: '``list_custom_endpoints`` — ``_custom_endpoint_response``.'
+    properties:
+      current:
+        $ref: '#/components/schemas/CustomEndpointCurrentModel'
+      endpoints:
+        items:
+          $ref: '#/components/schemas/CustomEndpointRow'
+        type: array
+    required:
+    - endpoints
+    - current
+    type: object
+  CustomEndpointRow:
+    additionalProperties: false
+    description: One ``_endpoint_row``.
+    properties:
+      api_key_preview:
+        anyOf:
+        - type: string
+        - type: 'null'
+      api_mode:
+        enum:
+        - ''
+        - chat_completions
+        - codex_responses
+        - anthropic_messages
+        type: string
+      base_url:
+        type: string
+      context_length:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      discover_models:
+        type: boolean
+      has_api_key:
+        type: boolean
+      id:
+        type: string
+      is_current:
+        type: boolean
+      model:
+        type: string
+      models:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      source:
+        enum:
+        - providers
+        - custom_providers
+        - direct-config
+        type: string
+    required:
+    - id
+    - name
+    - base_url
+    - model
+    - models
+    - api_mode
+    - context_length
+    - discover_models
+    - has_api_key
+    - api_key_preview
+    - is_current
+    - source
+    type: object
+  CustomEndpointUpsertResponse:
+    additionalProperties: false
+    description: '``upsert_custom_endpoint`` — the refreshed list plus the saved endpoint''s id.'
+    properties:
+      current:
+        $ref: '#/components/schemas/CustomEndpointCurrentModel'
+      endpoints:
+        items:
+          $ref: '#/components/schemas/CustomEndpointRow'
+        type: array
+      id:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - endpoints
+    - current
+    - ok
+    - id
+    type: object
+  CustomEndpointValidateResponse:
+    additionalProperties: false
+    description: '``validate_custom_endpoint`` — the early failures carry only the first four keys.'
+    properties:
+      message:
+        type: string
+      model_details:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/ProviderModelEntry'
+          type: array
+        - type: 'null'
+      models:
+        items:
+          type: string
+        type: array
+      ok:
+        type: boolean
+      reachable:
+        type: boolean
+      resolved_base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      transport_checked:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    - reachable
+    - message
+    - models
+    type: object
+  EgressStatusResponse:
+    additionalProperties: false
+    description: '``get_egress_status`` — ``hermes_cli/proxy_cli.py::format_status_text``.'
+    properties:
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  EnvVarRemoveResponse:
+    additionalProperties: false
+    description: '``remove_env_var`` — ``credential_lifecycle.py::remove_provider_env_credential`` (the
+
+      handler 404s when ``found`` is false, so a 200 always carries ``found: true``).'
+    properties:
+      config_scrubbed:
+        items:
+          type: string
+        type: array
+      found:
+        type: boolean
+      key:
+        type: string
+      ok:
+        type: boolean
+      pool_pruned:
+        items:
+          type: string
+        type: array
+      providers:
+        items:
+          type: string
+        type: array
+      removed:
+        type: boolean
+    required:
+    - ok
+    - key
+    - removed
+    - pool_pruned
+    - providers
+    - config_scrubbed
+    - found
+    type: object
+  EnvVarRevealResponse:
+    additionalProperties: false
+    description: '``reveal_env_var``.'
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+    required:
+    - key
+    - value
+    type: object
+  EnvVarSaveResponse:
+    additionalProperties: false
+    description: '``set_env_var`` — ``hermes_cli/credential_lifecycle.py::save_provider_env_credential``.'
+    properties:
+      config_updates:
+        items:
+          type: string
+        type: array
+      key:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - key
+    - config_updates
+    type: object
+  ProviderCredentialValidateResponse:
+    additionalProperties: false
+    description: '``validate_provider_credential``; ``models``/``model_details``/``resolved_base_url`` only on
+
+      the ``OPENAI_BASE_URL`` connectivity branch.'
+    properties:
+      message:
+        type: string
+      model_details:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/ProviderModelEntry'
+          type: array
+        - type: 'null'
+      models:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      ok:
+        type: boolean
+      reachable:
+        type: boolean
+      resolved_base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    - reachable
+    - message
+    type: object
+  ProviderModelEntry:
+    additionalProperties: false
+    description: 'One ``hermes_cli/web_server_profiles.py::_parse_model_entries`` row; the alias metadata is
+
+      only present when the endpoint advertised it.'
+    properties:
+      canonical_model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: string
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    type: object
+operations:
+- method: DELETE
+  path: /api/env
+  x-source: hermes_cli/web_routers/config_env.py:957
+  x-handler-hash: 3061519d6f75ac718e5246cf0037ec767b28d6b77ef84a288343edd6bc0fafb9
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: EnvVarRemoveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvVarRemoveResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/providers/custom-endpoints/{endpoint_id}
+  x-source: hermes_cli/web_routers/config_env.py:746
+  x-handler-hash: a7ab98613c86f441742b6547fb315694cdab3758a8840562075a869f817a2898
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CustomEndpointDeleteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomEndpointDeleteResponse'
+      description: Successful Response
+- method: GET
+  path: /api/config
+  x-source: hermes_cli/web_routers/config_env.py:81
+  x-handler-hash: f71bf23b7068798bb30a94a3c8534c7d8397317b04b8588144ac0b804b03ca3f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ConfigResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConfigResponse'
+      description: Successful Response
+- method: GET
+  path: /api/config/defaults
+  x-source: hermes_cli/web_routers/config_env.py:95
+  x-handler-hash: 773f84c9f53b3b1e4268776373229cd464aba45259e789e6dd950510e404be23
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ConfigDefaultsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConfigDefaultsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/config/schema
+  x-source: hermes_cli/web_routers/config_env.py:100
+  x-handler-hash: 2ccbd35b0a27e52eb11c23f2bfb414f6f807182c4686e5a909b07cc966ffede4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ConfigSchemaResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConfigSchemaResponse'
+      description: Successful Response
+- method: GET
+  path: /api/egress/status
+  x-source: hermes_cli/web_routers/config_env.py:110
+  x-handler-hash: 0f6eb6ed9cf43dfa60db52a593a123bd35466c99f00f0a9ba257b3b3aa7d1f61
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: EgressStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EgressStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/env
+  x-source: hermes_cli/web_routers/config_env.py:232
+  x-handler-hash: 40dcd1368efea080d1022585bb92b91d1741070818d2202caa5294299bb99580
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"additionalProperties": {"$ref": "#/components/schemas/EnvVarInfo"}, "type": "object"}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            additionalProperties:
+              $ref: '#/components/schemas/EnvVarInfo'
+            type: object
+      description: Successful Response
+- method: GET
+  path: /api/providers/custom-endpoints
+  x-source: hermes_cli/web_routers/config_env.py:664
+  x-handler-hash: 5a8fcf395062fd108a5ddc0668f80d6fa6136d9ef0ba95d726e62054b0c52fd3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CustomEndpointListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomEndpointListResponse'
+      description: Successful Response
+- method: POST
+  path: /api/env/reveal
+  x-source: hermes_cli/web_routers/config_env.py:975
+  x-handler-hash: 807ff4de9ededff968ad409097d19296b3f80783955fe6a0d971676eb5195d29
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: EnvVarRevealResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvVarRevealResponse'
+      description: Successful Response
+- method: POST
+  path: /api/providers/custom-endpoints
+  x-source: hermes_cli/web_routers/config_env.py:677
+  x-handler-hash: aad648389b4bd222ea59ae88d597311d3a4cf69074f7966c54e60a9f6a6aeb4e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CustomEndpointUpsertResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomEndpointUpsertResponse'
+      description: Successful Response
+- method: POST
+  path: /api/providers/custom-endpoints/validate
+  x-source: hermes_cli/web_routers/config_env.py:774
+  x-handler-hash: 51942d7a500692604da0b92f4feb045c26548f7962f4c44be65862d2307aa0fe
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CustomEndpointValidateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomEndpointValidateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/providers/custom-endpoints/{endpoint_id}/activate
+  x-source: hermes_cli/web_routers/config_env.py:694
+  x-handler-hash: 73504d8d49b1a781701acfe6e22502d5884fb1928484deeeb06b4636dbb216f4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CustomEndpointActivateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomEndpointActivateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/providers/validate
+  x-source: hermes_cli/web_routers/config_env.py:887
+  x-handler-hash: 972fab986ef497f0941d72606266ac73933991eccb048937d35b7c92ac21b0ba
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProviderCredentialValidateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProviderCredentialValidateResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/config
+  x-source: hermes_cli/web_routers/config_env.py:118
+  x-handler-hash: 7e90e9d43934451428bc9f012c77f0f73faeb9df10ad6a08a8d7a8668072bde7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/env
+  x-source: hermes_cli/web_routers/config_env.py:292
+  x-handler-hash: 416fb58b87ff42b3d483ab2a1ec584d3088ff02eb8446b187a49eb9fd352c649
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: EnvVarSaveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnvVarSaveResponse'
+      description: Successful Response

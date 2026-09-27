@@ -1,0 +1,134 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  PluginsHubContextOption:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair.'
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - description
+    type: object
+  PluginsHubPluginRow:
+    additionalProperties: false
+    description: One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row.
+    properties:
+      auth_command:
+        type: string
+      auth_required:
+        type: boolean
+      can_remove:
+        type: boolean
+      can_update_git:
+        type: boolean
+      dashboard_manifest:
+        anyOf:
+        - $ref: '#/components/schemas/DashboardPluginManifest'
+        - type: 'null'
+      description:
+        type: string
+      has_dashboard_manifest:
+        type: boolean
+      name:
+        type: string
+      path:
+        type: string
+      removed_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      runtime_status:
+        enum:
+        - enabled
+        - disabled
+        - inactive
+        type: string
+      source:
+        enum:
+        - bundled
+        - user
+        - git
+        - entrypoint
+        type: string
+      user_hidden:
+        type: boolean
+      version:
+        type: string
+    required:
+    - name
+    - version
+    - description
+    - source
+    - runtime_status
+    - has_dashboard_manifest
+    - dashboard_manifest
+    - path
+    - can_remove
+    - can_update_git
+    - auth_required
+    - auth_command
+    - user_hidden
+    - removed_reason
+    type: object
+  PluginsHubProviders:
+    additionalProperties: false
+    description: '``memory_provider`` is ``""`` for the built-in provider; ``context_engine`` defaults to
+
+      ``"compressor"``.'
+    properties:
+      context_engine:
+        type: string
+      context_options:
+        items:
+          $ref: '#/components/schemas/PluginsHubContextOption'
+        type: array
+      memory_options:
+        items:
+          $ref: '#/components/schemas/MemoryProviderStatusRow'
+        type: array
+      memory_provider:
+        type: string
+    required:
+    - memory_provider
+    - memory_options
+    - context_engine
+    - context_options
+    type: object
+  PluginsHubResponse:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_dashboard.py::_merged_plugins_hub``.'
+    properties:
+      orphan_dashboard_plugins:
+        items:
+          $ref: '#/components/schemas/DashboardPluginManifest'
+        type: array
+      plugins:
+        items:
+          $ref: '#/components/schemas/PluginsHubPluginRow'
+        type: array
+      providers:
+        $ref: '#/components/schemas/PluginsHubProviders'
+    required:
+    - plugins
+    - orphan_dashboard_plugins
+    - providers
+    type: object
+operations:
+- method: GET
+  path: /api/dashboard/plugins/hub
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PluginsHubResponse'
+      description: Successful Response
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: PluginsHubResponse
+  x-handler-hash: 6d03941b00882732147bc783e852a1ad8fc435b7a253db702f7f4735cb4b9718
+  x-source: hermes_cli/web_routers/dashboard_ui.py:156

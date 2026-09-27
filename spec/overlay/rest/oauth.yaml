@@ -1,0 +1,30 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  OAuthDisconnectResponse:
+    additionalProperties: false
+    description: '``disconnect_oauth_provider``; ``ok`` is whether any credential was actually cleared.'
+    properties:
+      ok:
+        type: boolean
+      provider:
+        type: string
+    required:
+    - ok
+    - provider
+    type: object
+operations:
+- method: DELETE
+  path: /api/providers/oauth/{provider_id}
+  x-source: hermes_cli/web_routers/oauth.py:665
+  x-handler-hash: b3b75b42c82b9cedf73e5b9258de5d90aea35fc003417a665663a0b3ad6b182d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OAuthDisconnectResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OAuthDisconnectResponse'

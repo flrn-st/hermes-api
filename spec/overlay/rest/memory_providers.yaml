@@ -1,0 +1,30 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  MemoryProviderSetupInfo:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_memory.py::_memory_provider_setup_info``: the manifest''s ``pip_dependencies``
+      / ``external_dependencies`` / ``requires_env`` plus ``dependencies_installed`` (every pip dependency importable
+      and every external ``check`` command exits 0).'
+    properties:
+      dependencies_installed:
+        type: boolean
+      external_dependencies:
+        items:
+          $ref: '#/components/schemas/MemoryProviderExternalDependency'
+        type: array
+      pip_dependencies:
+        items:
+          type: string
+        type: array
+      required_env:
+        items:
+          type: string
+        type: array
+    required:
+    - pip_dependencies
+    - external_dependencies
+    - required_env
+    - dependencies_installed
+    type: object
+operations: []

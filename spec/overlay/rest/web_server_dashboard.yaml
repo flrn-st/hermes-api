@@ -1,0 +1,33 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+operations:
+- method: GET
+  path: /assets/{filename}.css
+  x-source: hermes_cli/web_server_dashboard.py:188
+  x-handler-hash: 5a75d3588829f0ee287382ae89cc5cab8cfcc0a823ebb045480ea0b2f4237d62
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 text/css
+  responses:
+    '200':
+      description: Built CSS; asset ``url()``s rewritten under ``X-Forwarded-Prefix``.
+      content:
+        text/css:
+          schema:
+            type: string
+- method: GET
+  path: /{full_path}
+  x-source: hermes_cli/web_server_dashboard.py:217
+  x-handler-hash: 0d71bb78fbb583a9f51851afb655ba14c5c354958e9ae6e4f0299fbc7a7dc005
+  responses:
+    '200':
+      description: A built file under the dist (favicon, fonts, ...) served with the MIME type guessed from its
+        name, else the SPA ``index.html`` with the bootstrap script injected (``no-store``).
+      content:
+        text/html:
+          schema:
+            type: string
+        '*/*':
+          schema:
+            type: string
+            format: binary

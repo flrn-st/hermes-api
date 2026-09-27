@@ -12,6 +12,14 @@ from fastapi.routing import APIRoute
 from hermes_cli.web_server import _get_dashboard_plugins, app
 
 
+def _body(lines: list[str]) -> list[str]:
+    """The handler source from its ``def`` line on, so decorators (route, responses) do not count."""
+    for index, text in enumerate(lines):
+        if text.lstrip().startswith(("def ", "async def ")):
+            return lines[index:]
+    raise ValueError(f"Handler source has no def line: {lines[:1]}")
+
+
 def render(source_repo: Path, output_dir: Path) -> dict[str, object]:
     source_repo = source_repo.resolve()
     openapi = app.openapi()
@@ -65,6 +73,7 @@ def render(source_repo: Path, output_dir: Path) -> dict[str, object]:
             hashes[key] = {
                 "source": f"{relative.as_posix()}:{line}",
                 "handler_sha256": hashlib.sha256("".join(lines).encode()).hexdigest(),
+                "body_sha256": hashlib.sha256("".join(_body(lines)).encode()).hexdigest(),
             }
 
     output_dir.mkdir(parents=True, exist_ok=True)

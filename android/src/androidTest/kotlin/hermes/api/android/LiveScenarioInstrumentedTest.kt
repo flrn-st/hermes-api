@@ -33,7 +33,8 @@ class LiveScenarioInstrumentedTest {
     fun taggedHermes() {
         val environment = environment()
         // Scenarios wait on real sockets and server restarts, so they run off the virtual-time dispatcher.
-        runTest(timeout = 5.minutes) {
+        // The REST scenario adds some 300 calls, each a round trip through adb reverse on an emulator.
+        runTest(timeout = 15.minutes) {
             withContext(Dispatchers.Default) { LiveScenarios.run(environment) }
         }
     }

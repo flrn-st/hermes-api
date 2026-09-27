@@ -94,6 +94,9 @@ public actor HermesGateway: GatewayCalling {
     private var draining: [String: ContinuousClock.Instant] = [:]
     private var drainTask: Task<Void, Never>?
 
+    /// The desktop contract Hermes last reported in a session result, or `nil` before the first one.
+    public private(set) var backendContract: Int?
+
     public init(configuration: HermesGatewayConfiguration) {
         self.configuration = configuration
     }
@@ -747,9 +750,9 @@ public actor HermesGateway: GatewayCalling {
     private func validateContract(_ result: JSONValue) throws {
         guard case .object(let fields) = result else { return }
         let candidate = fields["desktop_contract"] ?? fields["info"]?.objectValue?["desktop_contract"]
-        let contract = candidate?.integerValue ?? candidate?.stringValue.flatMap(Int.init)
-        if let contract,
-           !HermesGatewayContract.supportedContractRange.contains(contract) {
+        guard let contract = candidate?.integerValue ?? candidate?.stringValue.flatMap(Int.init) else { return }
+        backendContract = contract
+        if contract < configuration.minimumContract {
             throw HermesGatewayError.incompatibleServer(contract)
         }
     }

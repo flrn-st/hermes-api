@@ -141,17 +141,20 @@ private let offline = GatewayNetworkPath(isAvailable: false, interface: nil)
 
 private func client(
     _ transport: SequenceTransport, timeout: Duration = .seconds(1), monitor: TestNetworkMonitor? = nil,
-    reconnectDelay: Duration = .zero, heartbeat: Duration = .seconds(60), deadline: Duration = .seconds(120)
+    reconnectDelay: Duration = .zero, heartbeat: Duration = .seconds(60), deadline: Duration = .seconds(120),
+    minimumContract: Int = HermesGatewayContract.desktopContract
 ) -> HermesGateway {
     HermesGateway(configuration: .init(
         baseURL: URL(string: "https://example.test")!, auth: TestAuth(), transport: transport,
         networkMonitor: monitor, requestTimeout: timeout, reconnectDelay: { _ in reconnectDelay },
-        heartbeatInterval: heartbeat, heartbeatDeadline: deadline
+        heartbeatInterval: heartbeat, heartbeatDeadline: deadline, minimumContract: minimumContract
     ))
 }
 
-private func client(socket: TestSocket, timeout: Duration = .seconds(1)) -> HermesGateway {
-    client(SequenceTransport([socket]), timeout: timeout)
+private func client(
+    socket: TestSocket, timeout: Duration = .seconds(1), minimumContract: Int = HermesGatewayContract.desktopContract
+) -> HermesGateway {
+    client(SequenceTransport([socket]), timeout: timeout, minimumContract: minimumContract)
 }
 
 private func sentCall(_ frame: Data) throws -> (String, Int) {
@@ -228,15 +231,37 @@ private func createSession(
     await gateway.disconnect()
 }
 
-@Test func rejectsIncompatibleDesktopContract() async throws {
-    let socket = TestSocket()
-    let gateway = client(socket: socket)
-    try await gateway.connect()
+/// Answers one call with a session result that reports `contract`.
+private func callReporting(contract: Int, through gateway: HermesGateway, on socket: TestSocket) async throws -> PingResult {
     var sent = socket.sent.makeAsyncIterator()
     let request = Task { try await gateway.call("contract", params: PingParams(), as: PingResult.self) }
     let (_, id) = try sentCall(try #require(await sent.next()))
-    await socket.inject(result(id, #"{"info":{"desktop_contract":9999}}"#))
-    await #expect(throws: HermesGatewayError.incompatibleServer(9999)) { try await request.value }
+    await socket.inject(result(id, #"{"pong":true,"info":{"desktop_contract":\#(contract)}}"#))
+    return try await request.value
+}
+
+@Test func rejectsABackendBelowTheMinimumContract() async throws {
+    let socket = TestSocket()
+    let gateway = client(socket: socket)
+    try await gateway.connect()
+    let older = HermesGatewayContract.desktopContract - 1
+    await #expect(throws: HermesGatewayError.incompatibleServer(older)) {
+        try await callReporting(contract: older, through: gateway, on: socket)
+    }
+    #expect(await gateway.backendContract == older)
+    await gateway.disconnect()
+}
+
+@Test func acceptsNewerContractsAndOlderOnesTheAppAllows() async throws {
+    let socket = TestSocket()
+    let older = HermesGatewayContract.desktopContract - 1
+    let gateway = client(socket: socket, minimumContract: older)
+    try await gateway.connect()
+    #expect(await gateway.backendContract == nil)
+    #expect(try await callReporting(contract: HermesGatewayContract.desktopContract + 1, through: gateway, on: socket).pong)
+    #expect(await gateway.backendContract == HermesGatewayContract.desktopContract + 1)
+    #expect(try await callReporting(contract: older, through: gateway, on: socket).pong)
+    #expect(await gateway.backendContract == older)
     await gateway.disconnect()
 }
 

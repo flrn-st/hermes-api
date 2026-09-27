@@ -6,8 +6,9 @@ public enum HermesGatewayContract {
     public static let upstreamVersion = "0.21.5"
     /// The upstream git tag of this release.
     public static let upstreamTag = "v2026.9.24"
+    /// The desktop contract of this release. Hermes raises it whenever clients need something new from
+    /// the backend, so a backend reporting it or higher offers everything this package relies on.
     public static let desktopContract = 8
-    public static let supportedContractRange: ClosedRange<Int> = 8...8
     /// Methods that only read state (`spec/gateway-read-only.yaml`); the gateway repeats them after a
     /// reconnect when a dropped connection lost their response.
     public static let readOnlyMethods: Set<String> = ["agents.list", "approval.pending", "billing.charge_status", "billing.state", "commands.catalog", "complete.path", "complete.slash", "config.get", "config.show", "connectors.accounts", "connectors.catalog", "connectors.list", "connectors.operation.status", "connectors.policy.get", "connectors.tools", "delegation.status", "display.status", "free_tier.status", "gateway.capabilities", "groups.capabilities", "groups.list", "groups.log", "groups.state", "handoff.state", "insights.get", "learning.detail", "learning.frames", "mcp.catalog", "mcp.servers.list", "mcp.servers.status", "model.options", "pet.gallery", "pet.info", "pet.info.meta", "ping", "plugins.list", "process.list", "profiles.list", "projects.for_cwd", "projects.get", "projects.list", "projects.project_sessions", "projects.tree", "rollback.diff", "rollback.list", "session.active_list", "session.context_breakdown", "session.control.read", "session.events.since", "session.events.stats", "session.foreign.list", "session.foreign.preview", "session.history", "session.list", "session.most_recent", "session.status", "session.usage", "setup.status", "spawn_tree.list", "subagent.list", "subagent.tail", "subscription.preview", "subscription.state", "system.battery", "tools.list", "tools.show", "toolsets.list", "usage.bars", "vault.list", "vault.sources", "verification.status", "wake.status"]

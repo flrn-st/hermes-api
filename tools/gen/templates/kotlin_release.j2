@@ -7,8 +7,9 @@ public object HermesGatewayContract {
     public const val upstreamVersion: String = {{ version_literal }}
     /** The upstream git tag of this release. */
     public const val upstreamTag: String = {{ tag_literal }}
+    /** The desktop contract of this release. Hermes raises it whenever clients need something new from
+     *  the backend, so a backend reporting it or higher offers everything this package relies on. */
     public const val desktopContract: Int = {{ desktop_contract }}
-    public val supportedContractRange: IntRange = {{ desktop_contract }}..{{ desktop_contract }}
     /** Methods that only read state (`spec/gateway-read-only.yaml`); the gateway repeats them after a
      *  reconnect when a dropped connection lost their response. */
     public val readOnlyMethods: Set<String> = setOf({{ read_only }})

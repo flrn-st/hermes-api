@@ -22,6 +22,7 @@ import kotlinx.serialization.json.long
 import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
 import hermes.api.generated.gateway.GatewayEventPayload
+import hermes.api.generated.gateway.HermesGatewayContract
 import hermes.api.generated.gateway.PingParams
 import hermes.api.generated.gateway.PingResult
 import hermes.api.generated.gateway.ServerRequestResult
@@ -120,10 +121,11 @@ class HermesGatewayTest {
     private fun TestScope.client(
         transport: SequenceTransport, monitor: GatewayNetworkMonitor? = null, reconnectDelay: Long = 0,
         heartbeat: Long = 60_000, deadline: Long = 120_000, timeout: Long = 3_000,
+        minimumContract: Int = HermesGatewayContract.desktopContract,
     ) = HermesGateway(HermesGatewayConfiguration(
         URI("http://localhost:3000"), LocalTokenAuth("secret"), transport, networkMonitor = monitor,
         requestTimeoutMillis = timeout, reconnectDelayMillis = { reconnectDelay },
-        heartbeatIntervalMillis = heartbeat, heartbeatDeadlineMillis = deadline,
+        heartbeatIntervalMillis = heartbeat, heartbeatDeadlineMillis = deadline, minimumContract = minimumContract,
     ), scope = backgroundScope)
 
     private fun sockets(vararg sockets: FakeSocket) = SequenceTransport(sockets.map { Step.Socket(it) })
@@ -195,6 +197,41 @@ class HermesGatewayTest {
         socket.inbound.send(error(socket.sent(), 4015, "missing session"))
         val failure = assertFailsWith<HermesGatewayException.RPC> { request.await().getOrThrow() }
         assertEquals(4015, failure.code)
+        gateway.disconnect()
+    }
+
+    /** Answers one ping with a session result that reports [contract]. */
+    private suspend fun TestScope.pingReporting(contract: Int, gateway: HermesGateway, socket: FakeSocket): Result<PingResult> {
+        val request = async { runCatching { gateway.methods.ping(PingParams()) } }
+        socket.inbound.send(result(socket.sent(), """{"pong":true,"info":{"desktop_contract":$contract}}"""))
+        return request.await()
+    }
+
+    @Test
+    fun rejectsABackendBelowTheMinimumContract() = runTest {
+        val socket = FakeSocket()
+        val gateway = client(sockets(socket))
+        gateway.connect()
+        val older = HermesGatewayContract.desktopContract - 1
+        val failure = assertFailsWith<HermesGatewayException.IncompatibleServer> {
+            pingReporting(older, gateway, socket).getOrThrow()
+        }
+        assertEquals(older, failure.contract)
+        assertEquals(older, gateway.backendContract)
+        gateway.disconnect()
+    }
+
+    @Test
+    fun acceptsNewerContractsAndOlderOnesTheAppAllows() = runTest {
+        val socket = FakeSocket()
+        val older = HermesGatewayContract.desktopContract - 1
+        val gateway = client(sockets(socket), minimumContract = older)
+        gateway.connect()
+        assertEquals(null, gateway.backendContract)
+        assertTrue(pingReporting(HermesGatewayContract.desktopContract + 1, gateway, socket).getOrThrow().pong)
+        assertEquals(HermesGatewayContract.desktopContract + 1, gateway.backendContract)
+        assertTrue(pingReporting(older, gateway, socket).getOrThrow().pong)
+        assertEquals(older, gateway.backendContract)
         gateway.disconnect()
     }
 

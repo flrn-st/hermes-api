@@ -238,6 +238,7 @@ def _check_committed_evidence(ref: str, reports: dict[str, dict[str, list[str]]]
     for client, report in reports.items():
         expected = dict(claimed.get(EVIDENCE_PLATFORM[client], {}))
         expected["rest"] = evidence.get("live_rest", {}).get(EVIDENCE_PLATFORM[client], [])
+        expected["errors"] = evidence.get("live_errors", {}).get(EVIDENCE_PLATFORM[client], [])
         missing = {kind: sorted(set(names) - set(report[kind])) for kind, names in expected.items()}
         missing = {kind: names for kind, names in missing.items() if names}
         if missing:
@@ -347,9 +348,12 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                     "rest": sorted({entry["name"] for entry in recorded if entry["kind"] == "rest"}),
                     # Gateway items each client exercised, measured on the wire by its live scenarios.
                     "live_gateway": {platform: {kind: names for kind, names in reports[platform].items()
-                                                if kind != "rest"} for platform in ("swift", "kotlin")},
+                                                if kind not in ("rest", "errors")}
+                                     for platform in ("swift", "kotlin")},
                     # REST operations whose generated method each client completed against the server.
                     "live_rest": {platform: reports[platform]["rest"] for platform in ("swift", "kotlin")},
+                    # Named gateway errors each client received and classified (spec/gateway-errors.yaml).
+                    "live_errors": {platform: reports[platform]["errors"] for platform in ("swift", "kotlin")},
                     "decode_swift": True,
                     "decode_kotlin": True,
                 }

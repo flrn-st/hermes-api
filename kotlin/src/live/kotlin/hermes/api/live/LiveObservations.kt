@@ -9,28 +9,34 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 import hermes.api.generated.gateway.GatewayEventPayload
+import hermes.api.generated.gateway.GatewayKnownError
 import hermes.api.generated.gateway.ServerRequest
 import hermes.api.runtime.GatewayConnection
 import hermes.api.runtime.GatewayTransport
+import hermes.api.runtime.HermesGatewayException
+import hermes.api.runtime.known
 
 /** What a live run exercised, measured on the wire and reported to the harness as coverage evidence:
  *  methods that returned a result, events that decoded to their typed payload, and server requests
- *  that decoded and were answered with a result, and REST operations whose typed method succeeded. */
+ *  that decoded and were answered with a result, REST operations whose typed method succeeded, and the
+ *  named errors ([GatewayKnownError]) Hermes answered with. */
 internal class LiveObservations {
     private val methods = sortedSetOf<String>()
     private val events = sortedSetOf<String>()
     private val serverRequests = sortedSetOf<String>()
     private val rest = sortedSetOf<String>()
+    private val errors = sortedSetOf<String>()
 
     fun method(name: String) = synchronized(this) { methods.add(name); Unit }
     fun event(name: String) = synchronized(this) { events.add(name); Unit }
     fun serverRequest(name: String) = synchronized(this) { serverRequests.add(name); Unit }
     fun rest(operation: String) = synchronized(this) { rest.add(operation); Unit }
+    fun error(name: GatewayKnownError) = synchronized(this) { errors.add(name.catalogName); Unit }
 
     fun report(): String = synchronized(this) {
         fun list(values: Set<String>) = JsonArray(values.map(::JsonPrimitive))
         JsonObject(mapOf("methods" to list(methods), "events" to list(events),
-            "server_requests" to list(serverRequests), "rest" to list(rest))).toString()
+            "server_requests" to list(serverRequests), "rest" to list(rest), "errors" to list(errors))).toString()
     }
 }
 
@@ -92,8 +98,14 @@ private class ObservedConnection(
                     .getOrNull()
                 if (request != null && request !is ServerRequest.Unknown) synchronized(requests) { requests[id.content] = method }
             }
-            method == null && id != null && fields["result"] != null ->
-                id.intOrNull?.let { synchronized(calls) { calls.remove(it) } }?.let(observations::method)
+            method == null && id != null && !id.isString -> {
+                val call = id.intOrNull?.let { synchronized(calls) { calls.remove(it) } }
+                if (fields["result"] != null) call?.let(observations::method)
+                val error = fields["error"] as? JsonObject
+                val code = (error?.get("code") as? JsonPrimitive)?.intOrNull
+                val message = (error?.get("message") as? JsonPrimitive)?.takeIf { it.isString }?.content
+                if (code != null && message != null) HermesGatewayException.RPC(code, message, null).known?.let(observations::error)
+            }
         }
         return text
     }

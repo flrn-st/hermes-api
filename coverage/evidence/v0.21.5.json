@@ -18,7 +18,21 @@
     "tool.start"
   ],
   "fixture": "fixtures/v0.21.5/liveness.jsonl",
-  "fixture_sha256": "dc8714d70e4c0f7a76e7ca1520a2f9026f0857e18854cef25cd825ea570dc654",
+  "fixture_sha256": "be80131c8f085f1faa239ceea789337d1bfd67d34709254533266def282061b0",
+  "live_errors": {
+    "kotlin": [
+      "invalidParams",
+      "profileNotFound",
+      "sessionNotFound",
+      "unknownMethod"
+    ],
+    "swift": [
+      "invalidParams",
+      "profileNotFound",
+      "sessionNotFound",
+      "unknownMethod"
+    ]
+  },
   "live_gateway": {
     "kotlin": {
       "events": [

@@ -24,27 +24,29 @@ import kotlinx.serialization.json.jsonPrimitive
 import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
 import hermes.api.generated.gateway.ClarifyResult
+import hermes.api.generated.gateway.GatewayErrorKind
 import hermes.api.generated.gateway.GatewayEventPayload
+import hermes.api.generated.gateway.GatewayKnownError
 import hermes.api.generated.gateway.MessageCompletePayloadText
 import hermes.api.generated.gateway.PingParams
+import hermes.api.generated.gateway.ProfileNameParams
 import hermes.api.generated.gateway.PromptSubmitParams
 import hermes.api.generated.gateway.ServerRequest
 import hermes.api.generated.gateway.ServerRequestResult
+import hermes.api.generated.gateway.SessionActivateParams
 import hermes.api.generated.gateway.SessionCloseParams
 import hermes.api.generated.gateway.SessionCreateParams
 import hermes.api.generated.gateway.SessionListParams
+import hermes.api.generated.gateway.SessionResumeParams
 import hermes.api.generated.rest.ProfileActiveUpdate
 import hermes.api.generated.rest.VoiceLiveStatusResponseMode
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.cookies.HttpCookies
 import hermes.api.runtime.GatewayConnection
 import hermes.api.runtime.GatewayConnectionState
-import hermes.api.runtime.GatewaySessionRecovery
 import hermes.api.runtime.GatewayCredential
 import hermes.api.runtime.GatewayHTTPTransport
 import hermes.api.runtime.GatewayLogger
 import hermes.api.runtime.GatewayNetworkMonitor
+import hermes.api.runtime.GatewaySessionRecovery
 import hermes.api.runtime.GatewayTransport
 import hermes.api.runtime.HermesAuth
 import hermes.api.runtime.HermesGateway
@@ -56,6 +58,11 @@ import hermes.api.runtime.KtorGatewayTransport
 import hermes.api.runtime.KtorRESTTransport
 import hermes.api.runtime.LocalTokenAuth
 import hermes.api.runtime.Patch
+import hermes.api.runtime.kind
+import hermes.api.runtime.known
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.cookies.HttpCookies
 
 /** Live scenario inputs, read from `HERMES_LIVE_*` variables (or Android instrumentation arguments).
  *  Platforms pass their own network monitor and logger so the scenarios exercise them on the device. */
@@ -153,11 +160,48 @@ public object LiveScenarios {
             gateway.connect()
             check(gateway.methods.ping(PingParams()).pong) { "Gateway ping returned false" }
             gateway.methods.gateway.capabilities(PingParams())
+            refusals(gateway)
             if (environment.lifecycle) lifecycle(gateway, environment)
         } finally {
             gateway.disconnect()
             ktor.close()
         }
+    }
+
+    /** Calls Hermes refuses, and the reviewed meaning each refusal must carry (`spec/gateway-errors.yaml`). */
+    private suspend fun refusals(gateway: HermesGateway) {
+        val missing = "hermes-api-missing-session"
+        refused(GatewayKnownError.UNKNOWN_METHOD, GatewayErrorKind.UNSUPPORTED) {
+            gateway.call("hermes.api.no_such_method", PingParams(), PingParams.serializer(), JsonElement.serializer())
+        }
+        refused(GatewayKnownError.INVALID_PARAMS, GatewayErrorKind.INVALID_REQUEST) {
+            val params = JsonObject(mapOf("session_id" to JsonPrimitive(missing), "last_seen" to JsonPrimitive("latest")))
+            gateway.call("session.events.since", params, JsonObject.serializer(), JsonElement.serializer())
+        }
+        refused(GatewayKnownError.SESSION_NOT_FOUND, GatewayErrorKind.NOT_FOUND) {
+            gateway.methods.session.activate(SessionActivateParams(missing, omitMessages = true))
+        }
+        refused(GatewayKnownError.SESSION_NOT_FOUND, GatewayErrorKind.NOT_FOUND) {
+            gateway.methods.session.resume(SessionResumeParams(missing, omitMessages = true))
+        }
+        refused(GatewayKnownError.SESSION_NOT_FOUND, GatewayErrorKind.NOT_FOUND) {
+            gateway.methods.prompt.submit(PromptSubmitParams(sessionId = missing, text = JsonPrimitive("Refused")))
+        }
+        refused(GatewayKnownError.PROFILE_NOT_FOUND, GatewayErrorKind.NOT_FOUND) {
+            gateway.methods.profiles.describe(ProfileNameParams(name = Patch.Value("hermes-api-missing-profile")))
+        }
+    }
+
+    private suspend fun refused(known: GatewayKnownError, kind: GatewayErrorKind, call: suspend () -> Unit) {
+        try {
+            call()
+        } catch (error: HermesGatewayException.RPC) {
+            if (error.known != known || error.kind != kind) {
+                throw LiveScenarioFailure("Expected Hermes to refuse with $known ($kind), got ${error.code} ${error.message}")
+            }
+            return
+        }
+        throw LiveScenarioFailure("Expected Hermes to refuse with $known, but the call succeeded")
     }
 
     private suspend fun lifecycle(gateway: HermesGateway, environment: LiveScenarioEnvironment): Unit = coroutineScope {

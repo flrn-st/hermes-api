@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-REPORT_KINDS = ("methods", "events", "server_requests", "rest")
+REPORT_KINDS = ("methods", "events", "server_requests", "rest", "errors")
 
 
 @dataclass(frozen=True)

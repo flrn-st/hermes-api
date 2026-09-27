@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from tools.fetch_spec import ROOT
+from tools.gateway_errors import load as load_errors
 from tools.ref_policy import require_release
 
 
@@ -102,6 +103,11 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
     for platform in ("swift", "kotlin"):
         if not set(evidence["live_rest"][platform]) <= set(evidence["rest"]):
             raise ValueError(f"{platform} live evidence includes an unrecorded REST operation")
+    names = {name.name for name in load_errors(ref).names}
+    for platform in ("swift", "kotlin"):
+        unknown = set(evidence.get("live_errors", {}).get(platform, [])) - names
+        if unknown:
+            raise ValueError(f"{platform} live evidence names errors the catalog lacks: {sorted(unknown)}")
     # Gateway live credit is what each client's scenarios exercised, measured on the wire.
     report_key = {"gateway_method": "methods", "event": "events", "server_request": "server_requests"}
     known = {(entry["kind"], entry["name"]) for entry in entries}
@@ -149,8 +155,18 @@ def report(ref: str, root: Path = ROOT) -> dict:
                          "fixture": sum(entry["fixture"] for entry in subset),
                          "decode": sum(entry["decode"] for entry in subset),
                          "live_both": sum(entry["live_swift"] and entry["live_kotlin"] for entry in subset)}
-    return {"ref": ref, "summary": by_kind, "entries": entries,
+    return {"ref": ref, "summary": by_kind, "entries": entries, "errors": _error_coverage(ref, root),
             "total": len(entries), "complete": sum(entry["complete"] for entry in entries)}
+
+
+def _error_coverage(ref: str, root: Path) -> dict:
+    """Named gateway errors each client met live. Informational: many cannot be provoked on demand."""
+    names = sorted(name.name for name in load_errors(ref).names)
+    path = root / "coverage/evidence" / f"{ref}.json"
+    live = json.loads(path.read_text(encoding="utf-8")).get("live_errors", {}) if path.exists() else {}
+    swift, kotlin = set(live.get("swift", [])), set(live.get("kotlin", []))
+    return {"named": len(names), "live_both": sorted(swift & kotlin),
+            "not_live": [name for name in names if name not in swift & kotlin]}
 
 
 def write_report(ref: str, root: Path = ROOT) -> dict:
@@ -164,6 +180,10 @@ def write_report(ref: str, root: Path = ROOT) -> dict:
     for kind, counts in data["summary"].items():
         lines.append(f"| {kind} | {counts['complete']} | {counts['typed']} | {counts['generated']} | "
                      f"{counts['fixture']} | {counts['decode']} | {counts['live_both']} | {counts['total']} |")
+    errors = data["errors"]
+    live = ", ".join(errors["live_both"]) or "none"
+    summary = f"**{len(errors['live_both'])} / {errors['named']}** ({live})"
+    lines.extend(["", f"Named gateway errors classified live by both clients: {summary}."])
     lines.extend(["", "Fixture and live credit requires a recorded tag-pinned scenario, both clients passing live calls, and both fixture decode suites passing. The remaining operations require new scenarios and reviewed REST schemas.", ""])
     (output / f"{ref}.md").write_text("\n".join(lines))
     return data

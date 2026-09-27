@@ -291,6 +291,22 @@ public enum LiveScenarios {
             let resumed = try await runTurn(gateway, sessionID: resumedID,
                                             prompt: "Reply with a short greeting.", tool: nil)
             try resumed.expect(reply: Fixture.reply)
+
+            // An outage longer than Hermes' 20 s grace drops the session while its turn keeps writing the
+            // reply to the replay buffer; the gateway resumes the session and still delivers the whole turn.
+            let outageRecoveries = gateway.sessionRecoveries()
+            let outage = try await runTurn(
+                gateway, sessionID: resumedID, prompt: Fixture.reconnectPrompt, tool: nil, deadline: .seconds(120),
+                onFirstDelta: { try await faults.drop(holdMilliseconds: 25_000) })
+            try outage.expect(reply: Fixture.reconnectReply)
+            try outage.expectContiguousSequence()
+            let outageRecovery = try await withDeadline(.seconds(10), "the recovery after the long outage") {
+                for await recovery in outageRecoveries { return Optional(recovery) }
+                return nil
+            }
+            guard case .resumed(let dropped, _, _)? = outageRecovery, dropped == resumedID else {
+                throw LiveScenarioError("Expected \(resumedID) to be resumed after the outage, got \(String(describing: outageRecovery))")
+            }
             await gateway.disconnect()
         } catch {
             await gateway.disconnect()

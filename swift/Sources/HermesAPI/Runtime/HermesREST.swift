@@ -82,7 +82,7 @@ public struct RESTRetryPolicy: Sendable {
     public var maximumDelay: Duration
     public var retryableStatuses: Set<Int>
 
-    public init(maxAttempts: Int = 4, initialDelay: Duration = .milliseconds(250), maximumDelay: Duration = .seconds(8),
+    public init(maxAttempts: Int = 6, initialDelay: Duration = .milliseconds(250), maximumDelay: Duration = .seconds(8),
                 retryableStatuses: Set<Int> = [429, 502, 503, 504]) {
         self.maxAttempts = max(1, maxAttempts)
         self.initialDelay = initialDelay

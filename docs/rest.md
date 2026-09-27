@@ -39,7 +39,7 @@ surfaces. The native sign-in itself is generated: `web.authNativeAuthorize`, `we
 ## Timeouts, retries and cancellation
 
 Each attempt has a deadline (`timeout`, 60 s by default) from sending the request to the last byte of
-the response. `RESTRetryPolicy` (4 attempts by default) sends a request again:
+the response. `RESTRetryPolicy` (6 attempts by default) sends a request again:
 
 - `GET` and `HEAD` after a timeout, a lost connection, 429 or 502/503/504;
 - any method when the connection could not be established, because Hermes never saw the request.

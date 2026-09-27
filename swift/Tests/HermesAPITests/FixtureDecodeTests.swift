@@ -159,7 +159,13 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
             #expect(result.status != nil)
             #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["result"])
         default:
-            Issue.record("Unexpected fixture: \(record.name)")
+            // Every other recorded method decodes through its generated result type and re-encodes to the
+            // same JSON.
+            #expect(GatewayOperations.all.contains(record.name), "Unknown gateway method \(record.name)")
+            let result = frame["result"] ?? .null
+            let decoded = try GatewayOperations.decodeResult(record.name, result)
+            #expect(collapsingOptionalNulls(decoded) == collapsingOptionalNulls(result),
+                    "\(record.name) does not round-trip")
         }
     }
     #expect(Set(["gateway.ready", "ping", "prompt.submit", "clarify", "approval", "tool.start",

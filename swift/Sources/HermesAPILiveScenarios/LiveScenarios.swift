@@ -110,6 +110,7 @@ public enum LiveScenarios {
             let result = try await gateway.ping(PingParams())
             guard result.pong else { throw LiveScenarioError("Gateway ping returned false") }
             _ = try await gateway.gateway.capabilities(PingParams())
+            try await refusals(gateway)
             if environment.lifecycle {
                 try await lifecycle(gateway, environment: environment)
             }
@@ -118,6 +119,44 @@ public enum LiveScenarios {
             await gateway.disconnect()
             throw error
         }
+    }
+
+    /// Calls Hermes refuses, and the reviewed meaning each refusal must carry (`spec/gateway-errors.yaml`).
+    private static func refusals(_ gateway: HermesGateway) async throws {
+        let missing = "hermes-api-missing-session"
+        try await refused(.unknownMethod, .unsupported) {
+            _ = try await gateway.call("hermes.api.no_such_method", params: PingParams(), as: JSONValue.self)
+        }
+        try await refused(.invalidParams, .invalidRequest) {
+            let params: JSONValue = .object(["session_id": .string(missing), "last_seen": .string("latest")])
+            _ = try await gateway.call("session.events.since", params: params, as: JSONValue.self)
+        }
+        try await refused(.sessionNotFound, .notFound) {
+            _ = try await gateway.session.activate(.init(sessionId: missing, omitMessages: true))
+        }
+        try await refused(.sessionNotFound, .notFound) {
+            _ = try await gateway.session.resume(.init(sessionId: missing, omitMessages: true))
+        }
+        try await refused(.sessionNotFound, .notFound) {
+            _ = try await gateway.prompt.submit(.init(sessionId: missing, text: .string("Refused")))
+        }
+        try await refused(.profileNotFound, .notFound) {
+            _ = try await gateway.profiles.describe(.init(name: .value("hermes-api-missing-profile")))
+        }
+    }
+
+    private static func refused(
+        _ known: GatewayKnownError, _ kind: GatewayErrorKind, _ call: () async throws -> Void
+    ) async throws {
+        do {
+            try await call()
+        } catch let error as HermesGatewayError {
+            guard error.known == known, error.kind == kind else {
+                throw LiveScenarioError("Expected Hermes to refuse with \(known) (\(kind)), got \(error)")
+            }
+            return
+        }
+        throw LiveScenarioError("Expected Hermes to refuse with \(known), but the call succeeded")
     }
 
     private static func lifecycle(_ gateway: HermesGateway, environment: LiveScenarioEnvironment) async throws {

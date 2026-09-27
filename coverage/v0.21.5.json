@@ -7587,6 +7587,31 @@
       "typed": true
     }
   ],
+  "errors": {
+    "live_both": [
+      "invalidParams",
+      "profileNotFound",
+      "sessionNotFound",
+      "unknownMethod"
+    ],
+    "named": 18,
+    "not_live": [
+      "backendRetiring",
+      "internalError",
+      "malformedRequest",
+      "messageNotSaved",
+      "paramsRejected",
+      "parseError",
+      "sessionBusy",
+      "sessionNotLive",
+      "sessionSettling",
+      "sessionStarting",
+      "sessionTooLarge",
+      "signInRequired",
+      "storageFull",
+      "storageUnavailable"
+    ]
+  },
   "ref": "v0.21.5",
   "summary": {
     "event": {

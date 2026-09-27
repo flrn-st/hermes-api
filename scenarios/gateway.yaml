@@ -93,10 +93,29 @@ calls:
 - {method: projects.set_active, params: {id: "${project}"}}
 - {method: projects.project_sessions, params: {project_id: "${project}"}}
 - {method: projects.record_repos, params: {repos: ["${@repo}"]}}
+- {method: projects.add_folder, params: {id: "${project}", path: "${@home}"}}
+- {method: projects.set_primary, params: {id: "${project}", path: "${@home}"}}
+- {method: projects.remove_folder, params: {id: "${project}", path: "${@repo}"}}
 - {method: projects.archive, params: {id: "${project}"}}
 - {method: projects.archive, params: {id: "${project}", restore: true}}
 - {method: projects.set_active}
 - {method: projects.delete, params: {id: "${project}"}}
+# A hosted room of two local profiles.
+- {method: groups.create, params: {room_id: "room-${@unique}", name: Scenario room, members: [{member_id: host, profile: default, handle: host, display_name: Host}, {member_id: member, profile: "probe-${@unique}", handle: member, display_name: Member}]}}
+- {method: groups.list}
+- {method: groups.state, params: {room_id: "room-${@unique}"}}
+- {method: groups.send, params: {room_id: "room-${@unique}", event_id: "hello-${@unique}", payload: {text: Hello room, thread_id: main}}}
+- {method: groups.log, params: {room_id: "room-${@unique}"}}
+- {method: groups.rename, params: {room_id: "room-${@unique}", event_id: "rename-${@unique}", name: Scenario room renamed}}
+- {method: groups.stop, params: {room_id: "room-${@unique}"}}
+- {method: groups.disband, params: {room_id: "room-${@unique}"}}
+# Local-only helpers.
+- {method: bot_relay.outbox.drain}
+- {method: bot_relay.roster.sync, params: {agents: []}}
+- {method: cli.exec, params: {argv: [--version]}}
+- {method: shell.exec, params: {command: echo hermes-api}}
+- {method: model.save_key, params: {slug: anthropic, api_key: not-a-real-key}}
+- {method: model.disconnect, params: {slug: anthropic}}
 # A session through its lifecycle, on the stub model.
 - {method: session.create, params: {title: "Scenario ${@unique}", cwd: "${@repo}", close_on_disconnect: false}, capture: {session: session_id, stored: stored_session_id}}
 - {method: prompt.submit, params: {session_id: "${session}", text: Reply with a short greeting.}, wait: message.complete}
@@ -130,6 +149,8 @@ calls:
 - {method: file.attach, params: {session_id: "${session}", path: "${@repo}/README.md"}}
 - {method: image.attach_bytes, params: {session_id: "${session}", filename: dot.png, content_base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="}, capture: {image: path}}
 - {method: image.detach, params: {session_id: "${session}", path: "${image}"}}
+- {method: image.attach, params: {session_id: "${session}", path: "${image}"}}
+- {method: image.detach, params: {session_id: "${session}", path: "${image}"}}
 - {method: slash.exec, params: {session_id: "${session}", command: /help}}
 - {method: prompt.btw, params: {session_id: "${session}", text: "What is two plus two?"}, wait: btw.complete}
 - {method: prompt.background, params: {session_id: "${session}", text: Say hello.}, wait: background.complete}
@@ -145,5 +166,12 @@ calls:
 - {method: session.close, params: {session_id: "${session}"}}
 - {method: session.resume, params: {session_id: "${stored}", omit_messages: true}, capture: {resumed: session_id}}
 - {method: session.close, params: {session_id: "${resumed}"}}
+- {method: session.workspace.move, params: {session_key: "${stored}", cwd: "${@home}"}}
 - {method: session.delete, params: {session_id: "${stored}"}}
+# A turn redirected and interrupted while it streams, in a session of its own.
+- {method: session.create, params: {title: "Scenario ${@unique} interrupted", cwd: "${@repo}", close_on_disconnect: false}, capture: {streaming: session_id}}
+- {method: prompt.submit, params: {session_id: "${streaming}", text: Stream the HermesAPI paced fixture.}}
+- {method: session.redirect, params: {session_id: "${streaming}", text: Reply with a short greeting.}}
+- {method: session.interrupt, params: {session_id: "${streaming}"}}
+- {method: session.close, params: {session_id: "${streaming}"}}
 - {method: session.list}

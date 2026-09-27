@@ -68,7 +68,11 @@ public class ActionsRESTMethods(private val caller: RESTCaller) {
 }
 
 public class AnalyticsRESTMethods(private val caller: RESTCaller) {
-    /** `GET /api/analytics/models` */
+    /**
+     * `GET /api/analytics/models`
+     *
+     * @param days 1 to 365.
+     */
     public suspend fun models(days: Long? = null, profile: String? = null): AnalyticsModelsResponse {
         val query = buildMap<String, String> {
             days?.let { put("days", it.toString()) }
@@ -78,7 +82,11 @@ public class AnalyticsRESTMethods(private val caller: RESTCaller) {
         return response.json(caller.json, serializer<AnalyticsModelsResponse>(), 200)
     }
 
-    /** `GET /api/analytics/usage` */
+    /**
+     * `GET /api/analytics/usage`
+     *
+     * @param days 1 to 365.
+     */
     public suspend fun usage(days: Long? = null, profile: String? = null): AnalyticsUsageResponse {
         val query = buildMap<String, String> {
             days?.let { put("days", it.toString()) }
@@ -1436,7 +1444,11 @@ public class KanbanRESTMethods(private val caller: RESTCaller) {
         return response.json(caller.json, serializer<KanbanHomeSubscriptionResponse>(), 200)
     }
 
-    /** `GET /api/plugins/kanban/tasks/{task_id}/log` */
+    /**
+     * `GET /api/plugins/kanban/tasks/{task_id}/log`
+     *
+     * @param tail 1 to 2000000.
+     */
     public suspend fun tasksLog(taskId: String, tail: Long? = null, board: String? = null): KanbanTaskLogResponse {
         val query = buildMap<String, String> {
             tail?.let { put("tail", it.toString()) }
@@ -2302,7 +2314,12 @@ public class ProfilesRESTMethods(private val caller: RESTCaller) {
         return response.json(caller.json, serializer<ProfileProjectsTreeResponse>(), 200)
     }
 
-    /** `GET /api/profiles/sessions` */
+    /**
+     * `GET /api/profiles/sessions`
+     *
+     * @param limit 0 to 500.
+     * @param offset at least 0.
+     */
     public suspend fun sessions(limit: Long? = null, offset: Long? = null, minMessages: Long? = null, archived: String? = null, order: String? = null, profile: String? = null, source: String? = null, sources: String? = null, excludeSources: String? = null, full: Boolean? = null): ProfileSessionsResponse {
         val query = buildMap<String, String> {
             limit?.let { put("limit", it.toString()) }
@@ -2511,7 +2528,12 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
         return response.json(caller.json, serializer<SessionExportResponse>(), 200)
     }
 
-    /** `GET /api/sessions` */
+    /**
+     * `GET /api/sessions`
+     *
+     * @param limit 0 to 100.
+     * @param offset at least 0.
+     */
     public suspend fun get(limit: Long? = null, offset: Long? = null, minMessages: Long? = null, archived: String? = null, order: String? = null, source: String? = null, sources: String? = null, excludeSources: String? = null, cwdPrefix: String? = null, full: Boolean? = null, profile: String? = null): SessionListResponse {
         val query = buildMap<String, String> {
             limit?.let { put("limit", it.toString()) }
@@ -2555,7 +2577,12 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
         return response.json(caller.json, serializer<SessionLatestDescendantResponse>(), 200)
     }
 
-    /** `GET /api/sessions/{session_id}/messages` */
+    /**
+     * `GET /api/sessions/{session_id}/messages`
+     *
+     * @param limit at least 0.
+     * @param offset at least 0.
+     */
     public suspend fun messages(sessionId: String, profile: String? = null, limit: Long? = null, offset: Long? = null, order: String? = null, includeCompacted: Boolean? = null): SessionMessagesResponse {
         val query = buildMap<String, String> {
             profile?.let { put("profile", it) }
@@ -2568,7 +2595,12 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
         return response.json(caller.json, serializer<SessionMessagesResponse>(), 200)
     }
 
-    /** `GET /api/sessions/{session_id}/messages/around` */
+    /**
+     * `GET /api/sessions/{session_id}/messages/around`
+     *
+     * @param rowId at least 1.
+     * @param limit 1 to 120.
+     */
     public suspend fun messagesAround(sessionId: String, rowId: Long, profile: String? = null, limit: Long? = null): SessionMessagesAroundResponse {
         val query = buildMap<String, String> {
             put("row_id", rowId.toString())
@@ -2623,7 +2655,12 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
         return response.json(caller.json, serializer<SessionStatsResponse>(), 200)
     }
 
-    /** `GET /api/sessions/{session_id}/timeline` */
+    /**
+     * `GET /api/sessions/{session_id}/timeline`
+     *
+     * @param limit 1 to 500.
+     * @param afterRowId at least 0.
+     */
     public suspend fun timeline(sessionId: String, profile: String? = null, limit: Long? = null, afterRowId: Long? = null): SessionTimelineResponse {
         val query = buildMap<String, String> {
             profile?.let { put("profile", it) }

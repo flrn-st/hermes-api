@@ -48,6 +48,8 @@ class Param:
     required: bool
     location: str  # "path", "query" or "form"
     file: bool = False
+    # Value constraints the server enforces (it answers 422 otherwise), for the generated doc comment.
+    constraints: str | None = None
 
 
 @dataclass(frozen=True)
@@ -97,6 +99,28 @@ def _swift(name: str) -> str:
 
 def _kotlin(name: str) -> str:
     return f"`{name}`" if name in KOTLIN_RESERVED else name
+
+
+def _param_constraints(schema: dict) -> str | None:
+    variants = [item for item in schema.get("anyOf", [schema]) if item.get("type") != "null"]
+    if len(variants) != 1:
+        return None
+    value = variants[0]
+    rules = []
+    low, high = value.get("minimum", value.get("exclusiveMinimum")), value.get("maximum", value.get("exclusiveMaximum"))
+    if low is not None and high is not None:
+        rules.append(f"{low} to {high}")
+    elif low is not None:
+        rules.append(f"at least {low}")
+    elif high is not None:
+        rules.append(f"at most {high}")
+    if "minLength" in value or "maxLength" in value:
+        rules.append(f"{value.get('minLength', 0)} to {value.get('maxLength', 'any')} characters")
+    if "pattern" in value:
+        rules.append(f"matches `{value['pattern']}`")
+    if "enum" in value:
+        rules.append("one of " + ", ".join(f"`{item}`" for item in value["enum"]))
+    return "; ".join(rules) or None
 
 
 def _scalar(schema: dict, where: str) -> tuple[str, str, bool]:
@@ -237,12 +261,14 @@ def build(document: dict, reserved: set[str]) -> tuple[SchemaGraph, list[Operati
                 if parameter is None or parameter.get("in") != "path":
                     raise ValueError(f"Undeclared REST path parameter {wire}: {where}")
                 swift, kotlin, _ = _scalar(parameter["schema"], f"{where} {wire}")
-                params.append(Param(wire, camel(wire), swift, kotlin, True, "path"))
+                params.append(Param(wire, camel(wire), swift, kotlin, True, "path",
+                                    constraints=_param_constraints(parameter["schema"])))
             for wire, parameter in declared.items():
                 if parameter.get("in") != "query":
                     raise ValueError(f"Unsupported REST {parameter.get('in')} parameter {wire}: {where}")
                 swift, kotlin, _ = _scalar(parameter["schema"], f"{where} {wire}")
-                params.append(Param(wire, camel(wire), swift, kotlin, parameter.get("required", False), "query"))
+                params.append(Param(wire, camel(wire), swift, kotlin, parameter.get("required", False), "query",
+                                    constraints=_param_constraints(parameter["schema"])))
             body: TypeRef | None = None
             body_required = False
             multipart = False
@@ -342,8 +368,10 @@ def _swift_method(op: Operation) -> list[str]:
     if op.body is not None:
         body_type = op.body.swift + ("" if op.body_required else "?")
         args.insert(_body_index(op), f"body: {body_type}{'' if op.body_required else ' = nil'}")
-    lines = [f"    /// `{op.method} {op.path}`",
-             f"    public func {_swift(op.name)}({', '.join(args)}) async throws -> {op.swift_result} {{"]
+    lines = [f"    /// `{op.method} {op.path}`"]
+    lines += [f"    /// - Parameter {param.name}: {param.constraints.replace('*/', '*\\/')}."
+              for param in op.params if param.constraints]
+    lines += [f"    public func {_swift(op.name)}({', '.join(args)}) async throws -> {op.swift_result} {{"]
     query = [param for param in op.params if param.location == "query"]
     lines.append("        var query: [String: String] = [:]" if query else "        let query: [String: String] = [:]")
     for param in query:
@@ -406,8 +434,14 @@ def _kotlin_method(op: Operation) -> list[str]:
         args.append(f"{_kotlin(param.name)}: {param.kotlin_type}{'' if param.required else '? = null'}")
     if op.body is not None:
         args.insert(_body_index(op), f"body: {op.body.kotlin}{'' if op.body_required else '? = null'}")
-    lines = [f"    /** `{op.method} {op.path}` */",
-             f"    public suspend fun {_kotlin(op.name)}({', '.join(args)}): {op.kotlin_result} {{"]
+    documented = [param for param in op.params if param.constraints]
+    if documented:
+        lines = ["    /**", f"     * `{op.method} {op.path}`", "     *"]
+        lines += [f"     * @param {_kotlin(param.name)} {_kdoc(param.constraints)}." for param in documented]
+        lines += ["     */"]
+    else:
+        lines = [f"    /** `{op.method} {op.path}` */"]
+    lines += [f"    public suspend fun {_kotlin(op.name)}({', '.join(args)}): {op.kotlin_result} {{"]
     query = [param for param in op.params if param.location == "query"]
     if query:
         lines.append("        val query = buildMap<String, String> {")
@@ -580,6 +614,10 @@ def _kotlin_arguments(op: Operation) -> str:
         call = "body" if op.body_required else "optionalBody"
         args.insert(_body_index(op), f"body = arguments.{call}(serializer<{op.body.kotlin}>())")
     return ", ".join(args)
+
+
+def _kdoc(text: str) -> str:
+    return text.replace("*/", "*\\/").replace("/*", "/&#42;")
 
 
 def _swift_encode_result(op: Operation, value: str, indent: str) -> list[str]:

@@ -66,6 +66,7 @@ public struct AnalyticsRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
 
     /// `GET /api/analytics/models`
+    /// - Parameter days: 1 to 365.
     public func models(days: Int? = nil, profile: String? = nil) async throws -> AnalyticsModelsResponse {
         var query: [String: String] = [:]
         if let value = days { query["days"] = String(value) }
@@ -75,6 +76,7 @@ public struct AnalyticsRESTMethods: Sendable {
     }
 
     /// `GET /api/analytics/usage`
+    /// - Parameter days: 1 to 365.
     public func usage(days: Int? = nil, profile: String? = nil) async throws -> AnalyticsUsageResponse {
         var query: [String: String] = [:]
         if let value = days { query["days"] = String(value) }
@@ -1393,6 +1395,7 @@ public struct KanbanRESTMethods: Sendable {
     }
 
     /// `GET /api/plugins/kanban/tasks/{task_id}/log`
+    /// - Parameter tail: 1 to 2000000.
     public func tasksLog(taskId: String, tail: Int? = nil, board: String? = nil) async throws -> KanbanTaskLogResponse {
         var query: [String: String] = [:]
         if let value = tail { query["tail"] = String(value) }
@@ -2232,6 +2235,8 @@ public struct ProfilesRESTMethods: Sendable {
     }
 
     /// `GET /api/profiles/sessions`
+    /// - Parameter limit: 0 to 500.
+    /// - Parameter offset: at least 0.
     public func sessions(limit: Int? = nil, offset: Int? = nil, minMessages: Int? = nil, archived: String? = nil, order: String? = nil, profile: String? = nil, source: String? = nil, sources: String? = nil, excludeSources: String? = nil, full: Bool? = nil) async throws -> ProfileSessionsResponse {
         var query: [String: String] = [:]
         if let value = limit { query["limit"] = String(value) }
@@ -2432,6 +2437,8 @@ public struct SessionsRESTMethods: Sendable {
     }
 
     /// `GET /api/sessions`
+    /// - Parameter limit: 0 to 100.
+    /// - Parameter offset: at least 0.
     public func get(limit: Int? = nil, offset: Int? = nil, minMessages: Int? = nil, archived: String? = nil, order: String? = nil, source: String? = nil, sources: String? = nil, excludeSources: String? = nil, cwdPrefix: String? = nil, full: Bool? = nil, profile: String? = nil) async throws -> SessionListResponse {
         var query: [String: String] = [:]
         if let value = limit { query["limit"] = String(value) }
@@ -2473,6 +2480,8 @@ public struct SessionsRESTMethods: Sendable {
     }
 
     /// `GET /api/sessions/{session_id}/messages`
+    /// - Parameter limit: at least 0.
+    /// - Parameter offset: at least 0.
     public func messages(sessionId: String, profile: String? = nil, limit: Int? = nil, offset: Int? = nil, order: String? = nil, includeCompacted: Bool? = nil) async throws -> SessionMessagesResponse {
         var query: [String: String] = [:]
         if let value = profile { query["profile"] = value }
@@ -2485,6 +2494,8 @@ public struct SessionsRESTMethods: Sendable {
     }
 
     /// `GET /api/sessions/{session_id}/messages/around`
+    /// - Parameter rowId: at least 1.
+    /// - Parameter limit: 1 to 120.
     public func messagesAround(sessionId: String, rowId: Int, profile: String? = nil, limit: Int? = nil) async throws -> SessionMessagesAroundResponse {
         var query: [String: String] = [:]
         query["row_id"] = String(rowId)
@@ -2537,6 +2548,8 @@ public struct SessionsRESTMethods: Sendable {
     }
 
     /// `GET /api/sessions/{session_id}/timeline`
+    /// - Parameter limit: 1 to 500.
+    /// - Parameter afterRowId: at least 0.
     public func timeline(sessionId: String, profile: String? = nil, limit: Int? = nil, afterRowId: Int? = nil) async throws -> SessionTimelineResponse {
         var query: [String: String] = [:]
         if let value = profile { query["profile"] = value }

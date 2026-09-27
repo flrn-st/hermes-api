@@ -549,6 +549,45 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun turnOfADroppedSessionKeepsStreamingFromTheReplayBuffer() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val gateway = client(sockets(first, second))
+        val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
+        val received = backgroundScope.async { gateway.events.take(3).toList() }
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "stored-1")
+        first.inbound.send(event("message.start", "runtime-1", 1))
+        delay(100)
+        first.sever()
+        // Hermes dropped the session while its turn kept writing to the replay buffer.
+        second.inbound.send(error(second.sent(), 4001, "session not found"))
+        val replay = second.sent()
+        assertEquals("session.events.since", replay.method())
+        assertEquals("runtime-1", checkNotNull(replay["params"]).jsonObject["session_id"]?.jsonPrimitive?.content)
+        second.inbound.send(result(replay, """{"events":[{"type":"message.delta","session_id":"runtime-1","seq":2,"payload":{"text":"a"}}],"latest_seq":2,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
+        val resume = second.sent()
+        assertEquals("session.resume", resume.method())
+        second.inbound.send(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":1,"messages":[],"info":{}}"""))
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await() })
+        // Connected again, the client keeps fetching the old id's buffer until the turn completes.
+        val drain = second.sent()
+        assertEquals("session.events.since", drain.method())
+        assertEquals(2L, checkNotNull(drain["params"]).jsonObject["last_seen"]?.jsonPrimitive?.long)
+        second.inbound.send(result(drain, """{"events":[{"type":"message.complete","session_id":"runtime-1","seq":3,"payload":{"text":"ab"}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
+        val events = withTimeout(5_000) { received.await() }
+        assertEquals(listOf("message.start", "message.delta", "message.complete"), events.map { it.type })
+        assertTrue(events.drop(1).all { it.replayed && it.sessionId == "runtime-1" })
+        // The turn is over: the next frame is the caller's own call, not another fetch.
+        val ping = async { gateway.methods.ping(PingParams()) }
+        val next = second.sent()
+        assertEquals("ping", next.method())
+        second.inbound.send(result(next, """{"pong":true}"""))
+        assertTrue(ping.await().pong)
+        gateway.disconnect()
+    }
+
+    @Test
     fun reconnectReportsSessionsItCannotRecover() = runTest {
         val first = FakeSocket()
         val second = FakeSocket()
@@ -561,6 +600,10 @@ class HermesGatewayTest {
         val activate = second.sent()
         assertEquals("session.activate", activate.method())
         second.inbound.send(error(activate, 4001, "session not found"))
+        // Its turn was still running, so the client first fetches what Hermes buffered for it.
+        val replay = second.sent()
+        assertEquals("session.events.since", replay.method())
+        second.inbound.send(result(replay, """{"events":[],"latest_seq":4,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"""))
         // No stored id is known for a session only seen through events, so it cannot be resumed.
         assertEquals(GatewaySessionRecovery.Unavailable("gone", "session not found"), withTimeout(3_000) { recovery.await() })
         val ping = async { gateway.methods.ping(PingParams()) }

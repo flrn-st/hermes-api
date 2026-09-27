@@ -28,9 +28,10 @@ def test_coverage_accounts_for_every_tagged_operation() -> None:
     assert data["summary"]["rest"]["fixture"] >= 4
     prompt = next(item for item in data["entries"] if item["name"] == "prompt.submit")
     assert prompt["typed"] and prompt["complete"]
-    # Reconnect exercises these live, but no recorded scenario calls them, so they lack fixture credit.
+    # The gateway scenario records and runs these in both clients.
     activate = next(item for item in data["entries"] if item["name"] == "session.activate")
-    assert activate["live_swift"] and activate["live_kotlin"] and not activate["fixture"]
+    assert activate["live_swift"] and activate["live_kotlin"] and activate["fixture"] and activate["decode"]
+    assert data["summary"]["gateway_method"]["live_both"] >= 117
     symbols = json.loads((ROOT / f"spec/out/{CURRENT}/generated-rest-symbols.json").read_text())
     assert data["summary"]["rest"]["generated"] == len(symbols)
 

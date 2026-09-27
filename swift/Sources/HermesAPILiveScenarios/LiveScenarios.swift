@@ -77,6 +77,8 @@ public enum LiveScenarios {
             }
         }
         if environment.lifecycle {
+            try await GatewayScenario.run(try await faults.gatewayScenario().calls, environment: environment,
+                                          observations: observations)
             try await reconnect(environment, faults: faults, observations: observations)
         }
         // Only a fully passing run reports what it exercised.
@@ -517,6 +519,16 @@ struct FaultControl: Sendable {
         return try JSONDecoder().decode(StressDataset.self, from: data)
     }
 
+    /// The gateway scenario the harness recorded fixtures from.
+    func gatewayScenario() async throws -> GatewayScenarioDocument {
+        let (data, response) = try await URLSession.shared.data(
+            for: URLRequest(url: base.appendingPathComponent("gateway-scenario"), timeoutInterval: 30))
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw LiveScenarioError("Harness control gateway-scenario failed")
+        }
+        return try JSONDecoder().decode(GatewayScenarioDocument.self, from: data)
+    }
+
     /// The REST scenario the harness recorded fixtures from.
     func restScenario() async throws -> RESTScenarioDocument {
         let (data, response) = try await URLSession.shared.data(
@@ -587,7 +599,7 @@ private struct StaticTicketAuth: HermesAuth {
     }
 }
 
-private func withDeadline<T: Sendable>(
+func withDeadline<T: Sendable>(
     _ limit: Duration, _ waitingFor: String, _ operation: @escaping @Sendable () async throws -> T
 ) async throws -> T {
     try await withThrowingTaskGroup(of: T.self) { group in

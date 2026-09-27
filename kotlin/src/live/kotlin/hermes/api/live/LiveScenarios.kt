@@ -128,7 +128,10 @@ public object LiveScenarios {
                 }
             }
         }
-        if (environment.lifecycle) reconnect(environment, faults, observations)
+        if (environment.lifecycle) {
+            GatewayScenario.run(faults.gatewayScenario().getValue("calls").jsonArray, environment, observations)
+            reconnect(environment, faults, observations)
+        }
         // Only a fully passing run reports what it exercised.
         faults.report(observations.report())
     }
@@ -447,6 +450,9 @@ internal class FaultControl(private val base: URI) {
     /** The REST scenario the harness recorded fixtures from. */
     suspend fun restScenario(): JsonObject = get("rest-scenario")
 
+    /** The gateway scenario the harness recorded fixtures from. */
+    suspend fun gatewayScenario(): JsonObject = get("gateway-scenario")
+
     private suspend fun get(path: String): JsonObject = withContext(Dispatchers.IO) {
         val connection = URL(base.resolve("/$path").toString()).openConnection() as HttpURLConnection
         try {
@@ -480,7 +486,7 @@ internal class FaultControl(private val base: URI) {
     }
 }
 
-private suspend fun <T> deadline(millis: Long, waitingFor: String, block: suspend () -> T): T = try {
+internal suspend fun <T> deadline(millis: Long, waitingFor: String, block: suspend () -> T): T = try {
     withTimeout(millis) { block() }
 } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
     throw LiveScenarioFailure("Timed out waiting for $waitingFor")

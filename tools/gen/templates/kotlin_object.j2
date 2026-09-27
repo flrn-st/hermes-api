@@ -42,11 +42,13 @@ public class {{ model.name }}
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("{{ model.name }} requires an object")
 {% if model.reject_unknown %}
-            val known = setOf<String>({{ model.known_literals }})
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>({{ model.known_literals }})
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
 {% for key in model.required_null %}
-            if (input[{{ key.literal }}] !is JsonNull) throw SerializationException("Field {{ key.name }} must be present and null")
+                if (input[{{ key.literal }}] !is JsonNull) throw SerializationException("Field {{ key.name }} must be present and null")
 {% endfor %}
+            }
 {% endif %}
             return {{ model.name }}(
 {% for field in model.fields %}

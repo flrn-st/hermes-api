@@ -19,17 +19,42 @@ public struct RESTRequest: Sendable, Hashable {
     }
 }
 
+/// How strictly REST responses are decoded against the reviewed contracts.
+public enum RESTDecoding: Sendable, Hashable {
+    /// Fails on a key a closed object does not declare and on an enum value the contract does not list, so
+    /// contract drift surfaces at once.
+    case strict
+    /// Skips undeclared keys and keeps unlisted enum values in their `unknown` case, so a newer Hermes that
+    /// adds fields or values still decodes. A missing required key still fails.
+    case tolerant
+}
+
+extension CodingUserInfoKey {
+    static let restDecoding = CodingUserInfoKey(rawValue: "hermes.api.rest.decoding")
+}
+
+extension Decoder {
+    /// Whether generated REST models skip what their contract does not declare (`RESTDecoding.tolerant`).
+    var decodesTolerantly: Bool {
+        guard let key = CodingUserInfoKey.restDecoding else { return false }
+        return userInfo[key] as? RESTDecoding == .tolerant
+    }
+}
+
 /// A REST response with any status; generated methods decide which statuses succeed.
 public struct RESTResponse: Sendable, Hashable {
     public let status: Int
     /// Header values by lowercased name.
     public let headers: [String: String]
     public let body: Data
+    /// How `json(_:status:)` decodes the body.
+    public let decoding: RESTDecoding
 
-    public init(status: Int, headers: [String: String], body: Data) {
+    public init(status: Int, headers: [String: String], body: Data, decoding: RESTDecoding = .strict) {
         self.status = status
         self.headers = Dictionary(headers.map { ($0.key.lowercased(), $0.value) }, uniquingKeysWith: { first, _ in first })
         self.body = body
+        self.decoding = decoding
     }
 }
 
@@ -195,8 +220,10 @@ public extension RESTResponse {
 
     func json<Result: Decodable>(_ type: Result.Type, status expected: Int) throws -> Result {
         guard status == expected else { throw undocumented() }
+        let decoder = JSONDecoder()
+        if let key = CodingUserInfoKey.restDecoding { decoder.userInfo[key] = decoding }
         do {
-            return try JSONDecoder().decode(type, from: body)
+            return try decoder.decode(type, from: body)
         } catch {
             throw HermesRESTError.decoding(String(describing: error))
         }
@@ -237,6 +264,8 @@ public struct HermesRESTConfiguration: Sendable {
     /// Bounds each attempt, from sending the request to the last byte of the response.
     public let timeout: Duration
     public let retry: RESTRetryPolicy
+    /// `.strict` by default; apps that must keep working with newer Hermes releases choose `.tolerant`.
+    public let decoding: RESTDecoding
     public let logger: Logger
 
     public init(
@@ -246,6 +275,7 @@ public struct HermesRESTConfiguration: Sendable {
         transport: any HTTPTransport = URLSessionHTTPTransport(),
         timeout: Duration = .seconds(60),
         retry: RESTRetryPolicy = RESTRetryPolicy(),
+        decoding: RESTDecoding = .strict,
         logger: Logger = Logger(subsystem: "hermes.api", category: "rest")
     ) {
         self.address = address
@@ -254,6 +284,7 @@ public struct HermesRESTConfiguration: Sendable {
         self.transport = transport
         self.timeout = timeout
         self.retry = retry
+        self.decoding = decoding
         self.logger = logger
     }
 }
@@ -389,7 +420,7 @@ public struct HermesREST: RESTCalling {
         for (name, value) in response.allHeaderFields {
             if let name = name as? String, let value = value as? String { headers[name] = value }
         }
-        return RESTResponse(status: response.statusCode, headers: headers, body: data)
+        return RESTResponse(status: response.statusCode, headers: headers, body: data, decoding: configuration.decoding)
     }
 }
 

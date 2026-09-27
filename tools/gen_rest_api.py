@@ -2,7 +2,8 @@
 
 Every operation that carries a reviewed overlay (``x-handler-hash``) becomes one method. Its models
 come from the same strict type graph the gateway uses: closed objects reject unknown keys, enums
-have no unknown case, and optional nullable request fields distinguish absent from ``null``.
+reject unknown values, and optional nullable request fields distinguish absent from ``null``. A
+client configured for tolerant decoding skips unknown keys and keeps unknown enum values instead.
 """
 
 from __future__ import annotations
@@ -797,7 +798,8 @@ def outputs(ref: str) -> tuple[dict, list[Operation]]:
             "import kotlinx.serialization.encoding.*\n"
             "import kotlinx.serialization.json.*\n"
             "import hermes.api.runtime.EmptyObject\n"
-            "import hermes.api.runtime.Patch\n\n"
+            "import hermes.api.runtime.Patch\n"
+            "import hermes.api.runtime.decodesTolerantly\n\n"
             + "\n\n".join(item[2].strip() for item in batch) + "\n")
     result[SWIFT_OUT / "RESTMethods.swift"] = _swift_methods(ops)
     result[SWIFT_LIVE_OUT] = _swift_operations(ops)

@@ -27,6 +27,7 @@ import hermes.api.runtime.HermesRESTConfiguration
 import hermes.api.runtime.HermesRESTException
 import hermes.api.runtime.LocalTokenAuth
 import hermes.api.runtime.NativeSessionAuth
+import hermes.api.runtime.RESTDecoding
 import hermes.api.runtime.RESTFile
 import hermes.api.runtime.RESTRedirect
 import hermes.api.runtime.RESTResponse
@@ -69,8 +70,9 @@ private val base = URI("https://dashboard.example")
 private val fastRetry = RESTRetryPolicy(maxAttempts = 3, initialDelayMillis = 1, maximumDelayMillis = 5)
 
 private fun client(transport: RESTTransport, auth: HermesRESTAuth? = null, retry: RESTRetryPolicy = fastRetry,
-                   timeoutMillis: Long = 5_000, baseURI: URI = base) =
-    HermesREST(HermesRESTConfiguration(HermesDashboardAddress(baseURI), auth, transport = transport, timeoutMillis = timeoutMillis, retry = retry))
+                   timeoutMillis: Long = 5_000, baseURI: URI = base, decoding: RESTDecoding = RESTDecoding.Strict) =
+    HermesREST(HermesRESTConfiguration(HermesDashboardAddress(baseURI), auth, transport = transport,
+        timeoutMillis = timeoutMillis, retry = retry, decoding = decoding))
 
 class HermesRESTTest {
     @Test
@@ -143,6 +145,23 @@ class HermesRESTTest {
         assertFailsWith<HermesRESTException.Decoding> { rest.methods.auth.wsTicket() }
         val error = assertFailsWith<HermesRESTException.Decoding> { rest.methods.audio.voiceLiveStatus() }
         assertTrue(error.message.orEmpty().contains("telepathy"))
+    }
+
+    @Test
+    fun tolerantDecodingSkipsUnknownFieldsAndKeepsEnumValues() = runTest {
+        val transport = ScriptedTransport(
+            ScriptedTransport.Step.Respond(200, """{"ticket":"fresh","ttl_seconds":30,"surprise":1}"""),
+            ScriptedTransport.Step.Respond(200,
+                """{"ok":true,"mode":"telepathy","available":false,"reason":null,"model":"m","voice":"v"}"""),
+            ScriptedTransport.Step.Respond(200, """{"ttl_seconds":30}"""),
+        )
+        val rest = client(transport, decoding = RESTDecoding.Tolerant)
+        assertEquals("fresh", rest.methods.auth.wsTicket().ticket)
+        val status = rest.methods.audio.voiceLiveStatus()
+        assertEquals(VoiceLiveStatusResponseMode.Unknown("telepathy"), status.mode)
+        assertEquals(JsonPrimitive("telepathy"), rest.json.encodeToJsonElement(VoiceLiveStatusResponseMode.serializer(), status.mode))
+        // Tolerance covers additions, not removals: a missing required key still fails.
+        assertFailsWith<HermesRESTException.Decoding> { rest.methods.auth.wsTicket() }
     }
 
     @Test

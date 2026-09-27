@@ -18,10 +18,12 @@ public struct ConfigSchemaResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["category_order", "fields"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["category_order", "fields"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         categoryOrder = try container.decode([String].self, forKey: .categoryOrder)
@@ -51,10 +53,12 @@ public struct ConfigUpdate: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["config", "profile"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["config", "profile"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         config = try container.decode([String: JSONValue].self, forKey: .config)
@@ -112,10 +116,12 @@ public struct CreateBoardBody: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["color", "default_workdir", "description", "icon", "name", "project_id", "slug", "switch"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["color", "default_workdir", "description", "icon", "name", "project_id", "slug", "switch"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if !container.contains(.color) {
@@ -265,10 +271,12 @@ public struct CreateTaskBody: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["assignee", "body", "goal_max_turns", "goal_mode", "idempotency_key", "max_runtime_seconds", "model_override", "parents", "priority", "project_id", "provider_override", "reasoning_effort", "skills", "tenant", "title", "triage", "workspace_kind", "workspace_path"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["assignee", "body", "goal_max_turns", "goal_mode", "idempotency_key", "max_runtime_seconds", "model_override", "parents", "priority", "project_id", "provider_override", "reasoning_effort", "skills", "tenant", "title", "triage", "workspace_kind", "workspace_path"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if !container.contains(.assignee) {
@@ -463,10 +471,12 @@ public struct CredentialPoolAdd: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["api_key", "label", "provider"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["api_key", "label", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         apiKey = try container.decode(String.self, forKey: .apiKey)
@@ -512,10 +522,12 @@ public struct CredentialPoolAddResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["count", "ok", "provider"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["count", "ok", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         count = try container.decode(Int.self, forKey: .count)
@@ -572,10 +584,12 @@ public struct CredentialPoolEntrySummary: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["auth_type", "has_refresh", "id", "index", "label", "last_status", "priority", "request_count", "source", "token_preview"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["auth_type", "has_refresh", "id", "index", "label", "last_status", "priority", "request_count", "source", "token_preview"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         authType = try container.decode(String.self, forKey: .authType)
@@ -619,10 +633,12 @@ public struct CredentialPoolListResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["providers"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["providers"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         providers = try container.decode([CredentialPoolProvider].self, forKey: .providers)
@@ -650,10 +666,12 @@ public struct CredentialPoolProvider: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["entries", "provider"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["entries", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         entries = try container.decode([CredentialPoolEntrySummary].self, forKey: .entries)
@@ -693,10 +711,12 @@ public struct CredentialPoolRemoveResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["cleaned", "count", "hints", "ok", "provider"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["cleaned", "count", "hints", "ok", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         cleaned = try container.decode([String].self, forKey: .cleaned)
@@ -760,10 +780,12 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["appUrl", "category", "command", "description", "fields", "key", "schedule", "scheduleHuman", "tags", "title"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["appUrl", "category", "command", "description", "fields", "key", "schedule", "scheduleHuman", "tags", "title"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         appUrl = try container.decode(String.self, forKey: .appUrl)
@@ -829,10 +851,12 @@ public struct CronBlueprintField: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["default", "help", "label", "name", "optional", "options", "strict", "type"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["default", "help", "label", "name", "optional", "options", "strict", "type"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         `default` = try container.decode(Optional<String>.self, forKey: .`default`)
@@ -864,6 +888,7 @@ public enum CronBlueprintFieldType: Codable, Sendable, Hashable {
     case `enum`
     case text
     case weekdays
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -872,7 +897,11 @@ public enum CronBlueprintFieldType: Codable, Sendable, Hashable {
         case "enum": self = .`enum`
         case "text": self = .text
         case "weekdays": self = .weekdays
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronBlueprintFieldType value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronBlueprintFieldType value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -883,6 +912,7 @@ public enum CronBlueprintFieldType: Codable, Sendable, Hashable {
         case .`enum`: try container.encode("enum")
         case .text: try container.encode("text")
         case .weekdays: try container.encode("weekdays")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -901,10 +931,12 @@ public struct CronBlueprintsResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["blueprints"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["blueprints"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         blueprints = try container.decode([CronBlueprint].self, forKey: .blueprints)
@@ -939,10 +971,12 @@ public struct CronDeliveryTarget: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["home_env_var", "home_target_set", "id", "name"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["home_env_var", "home_target_set", "id", "name"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         homeEnvVar = try container.decode(Optional<String>.self, forKey: .homeEnvVar)
@@ -974,10 +1008,12 @@ public struct CronDeliveryTargetsResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["targets"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["targets"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         targets = try container.decode([CronDeliveryTarget].self, forKey: .targets)
@@ -1003,10 +1039,12 @@ public struct CronFireRequest: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["job_id"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["job_id"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         jobId = try container.decode(String.self, forKey: .jobId)
@@ -1042,10 +1080,12 @@ public struct CronFireResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["detail", "job_id", "profile", "status"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["detail", "job_id", "profile", "status"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         detail = try container.decodeIfPresent(String.self, forKey: .detail)
@@ -1384,10 +1424,12 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "schedule", "script", "skills", "workdir"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "schedule", "script", "skills", "workdir"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if !container.contains(.baseUrl) {
@@ -1573,10 +1615,12 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["claimed_at", "delivery_outcome", "error", "finished_at", "handoff_pending", "handoff_started_at", "id", "job_id", "pid", "process_id", "process_started_at", "scheduled_instant", "source", "started_at", "status"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["claimed_at", "delivery_outcome", "error", "finished_at", "handoff_pending", "handoff_started_at", "id", "job_id", "pid", "process_id", "process_started_at", "scheduled_instant", "source", "started_at", "status"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         claimedAt = try container.decode(String.self, forKey: .claimedAt)
@@ -1622,7 +1666,8 @@ public enum CronJobExecutionStatus: Codable, Sendable, Hashable {
     case running
     case completed
     case failed
-    case unknown
+    case knownUnknown
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1631,8 +1676,12 @@ public enum CronJobExecutionStatus: Codable, Sendable, Hashable {
         case "running": self = .running
         case "completed": self = .completed
         case "failed": self = .failed
-        case "unknown": self = .unknown
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronJobExecutionStatus value: \(raw)")
+        case "unknown": self = .knownUnknown
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronJobExecutionStatus value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -1643,7 +1692,8 @@ public enum CronJobExecutionStatus: Codable, Sendable, Hashable {
         case .running: try container.encode("running")
         case .completed: try container.encode("completed")
         case .failed: try container.encode("failed")
-        case .unknown: try container.encode("unknown")
+        case .knownUnknown: try container.encode("unknown")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -1665,10 +1715,12 @@ public struct CronJobFireError: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["at", "detail"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["at", "detail"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         at = try container.decode(String.self, forKey: .at)
@@ -1699,10 +1751,12 @@ public struct CronJobMonitorState: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["last_changed_at", "last_output_hash"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["last_changed_at", "last_output_hash"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         lastChangedAt = try container.decode(String.self, forKey: .lastChangedAt)
@@ -1733,10 +1787,12 @@ public struct CronJobRepeat: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["completed", "times"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["completed", "times"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         completed = try container.decode(Int.self, forKey: .completed)
@@ -2120,10 +2176,12 @@ public struct CronJobRunsResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["limit", "runs"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["limit", "runs"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         limit = try container.decode(Int.self, forKey: .limit)
@@ -2203,6 +2261,7 @@ public enum CronJobScheduleKind: Codable, Sendable, Hashable {
     case once
     case interval
     case cron
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -2210,7 +2269,11 @@ public enum CronJobScheduleKind: Codable, Sendable, Hashable {
         case "once": self = .once
         case "interval": self = .interval
         case "cron": self = .cron
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronJobScheduleKind value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronJobScheduleKind value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -2220,6 +2283,7 @@ public enum CronJobScheduleKind: Codable, Sendable, Hashable {
         case .once: try container.encode("once")
         case .interval: try container.encode("interval")
         case .cron: try container.encode("cron")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -2237,10 +2301,12 @@ public struct CronJobUpdate: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["updates"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["updates"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         updates = try container.decode([String: JSONValue].self, forKey: .updates)
@@ -2265,10 +2331,12 @@ public struct CuratorPause: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["paused"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["paused"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         paused = try container.decode(Bool.self, forKey: .paused)
@@ -2297,10 +2365,12 @@ public struct CuratorPausedResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["ok", "paused"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["ok", "paused"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         ok = try container.decode(Bool.self, forKey: .ok)
@@ -2346,10 +2416,12 @@ public struct CuratorStatusResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["archive_after_days", "enabled", "interval_hours", "last_run_at", "min_idle_hours", "paused", "stale_after_days"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["archive_after_days", "enabled", "interval_hours", "last_run_at", "min_idle_hours", "paused", "stale_after_days"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         archiveAfterDays = try container.decode(Optional<Int>.self, forKey: .archiveAfterDays)
@@ -2393,10 +2465,12 @@ public struct CustomEndpointActivateResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["model", "ok", "provider"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["model", "ok", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         model = try container.decode(String.self, forKey: .model)
@@ -2431,10 +2505,12 @@ public struct CustomEndpointCurrentModel: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["base_url", "model", "provider"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["base_url", "model", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         baseUrl = try container.decode(String.self, forKey: .baseUrl)

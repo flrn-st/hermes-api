@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = OAuthSessionPollResponseStatus.Serializer::class)
@@ -17,6 +18,7 @@ public sealed interface OAuthSessionPollResponseStatus {
     public data object Expired : OAuthSessionPollResponseStatus
     public data object Error : OAuthSessionPollResponseStatus
     public data object Cancelled : OAuthSessionPollResponseStatus
+    public data class Unknown(public val raw: kotlin.String) : OAuthSessionPollResponseStatus
 
     public object Serializer : KSerializer<OAuthSessionPollResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OAuthSessionPollResponseStatus", PrimitiveKind.STRING)
@@ -28,7 +30,7 @@ public sealed interface OAuthSessionPollResponseStatus {
             "expired" -> Expired
             "error" -> Error
             "cancelled" -> Cancelled
-            else -> throw SerializationException("Unexpected OAuthSessionPollResponseStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected OAuthSessionPollResponseStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: OAuthSessionPollResponseStatus) {
@@ -39,6 +41,7 @@ public sealed interface OAuthSessionPollResponseStatus {
                 Expired -> "expired"
                 Error -> "error"
                 Cancelled -> "cancelled"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -159,8 +162,10 @@ public data class OrchestrationSettingsBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("OrchestrationSettingsBody requires an object")
-            val known = setOf<String>("auto_decompose", "auto_promote_children", "default_assignee", "orchestrator_profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("auto_decompose", "auto_promote_children", "default_assignee", "orchestrator_profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return OrchestrationSettingsBody(
                 autoDecompose = when (val raw = input["auto_decompose"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
                 autoPromoteChildren = when (val raw = input["auto_promote_children"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
@@ -217,8 +222,10 @@ public data class PairingApprove(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("PairingApprove requires an object")
-            val known = setOf<String>("code", "platform", "profile", "request_id")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("code", "platform", "profile", "request_id")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return PairingApprove(
                 code = input["code"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 platform = json.decodeFromJsonElement<String>((input["platform"] ?: throw SerializationException("Missing platform"))),
@@ -262,8 +269,10 @@ public data class PairingRevoke(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("PairingRevoke requires an object")
-            val known = setOf<String>("platform", "profile", "user_id")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("platform", "profile", "user_id")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return PairingRevoke(
                 platform = json.decodeFromJsonElement<String>((input["platform"] ?: throw SerializationException("Missing platform"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -366,6 +375,7 @@ public sealed interface PluginCatalogEntryRowCategory {
     public data object Automation : PluginCatalogEntryRowCategory
     public data object Models : PluginCatalogEntryRowCategory
     public data object General : PluginCatalogEntryRowCategory
+    public data class Unknown(public val raw: kotlin.String) : PluginCatalogEntryRowCategory
 
     public object Serializer : KSerializer<PluginCatalogEntryRowCategory> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginCatalogEntryRowCategory", PrimitiveKind.STRING)
@@ -380,7 +390,7 @@ public sealed interface PluginCatalogEntryRowCategory {
             "automation" -> Automation
             "models" -> Models
             "general" -> General
-            else -> throw SerializationException("Unexpected PluginCatalogEntryRowCategory value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected PluginCatalogEntryRowCategory value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: PluginCatalogEntryRowCategory) {
@@ -394,6 +404,7 @@ public sealed interface PluginCatalogEntryRowCategory {
                 Automation -> "automation"
                 Models -> "models"
                 General -> "general"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -406,6 +417,7 @@ public sealed interface PluginCatalogEntryRowRuntimeStatus {
     public data object Enabled : PluginCatalogEntryRowRuntimeStatus
     public data object Disabled : PluginCatalogEntryRowRuntimeStatus
     public data object Inactive : PluginCatalogEntryRowRuntimeStatus
+    public data class Unknown(public val raw: kotlin.String) : PluginCatalogEntryRowRuntimeStatus
 
     public object Serializer : KSerializer<PluginCatalogEntryRowRuntimeStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginCatalogEntryRowRuntimeStatus", PrimitiveKind.STRING)
@@ -414,7 +426,7 @@ public sealed interface PluginCatalogEntryRowRuntimeStatus {
             "enabled" -> Enabled
             "disabled" -> Disabled
             "inactive" -> Inactive
-            else -> throw SerializationException("Unexpected PluginCatalogEntryRowRuntimeStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected PluginCatalogEntryRowRuntimeStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: PluginCatalogEntryRowRuntimeStatus) {
@@ -422,6 +434,7 @@ public sealed interface PluginCatalogEntryRowRuntimeStatus {
                 Enabled -> "enabled"
                 Disabled -> "disabled"
                 Inactive -> "inactive"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -433,6 +446,7 @@ public sealed interface PluginCatalogEntryRowRuntimeStatus {
 public sealed interface PluginCatalogEntryRowTier {
     public data object Official : PluginCatalogEntryRowTier
     public data object Community : PluginCatalogEntryRowTier
+    public data class Unknown(public val raw: kotlin.String) : PluginCatalogEntryRowTier
 
     public object Serializer : KSerializer<PluginCatalogEntryRowTier> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginCatalogEntryRowTier", PrimitiveKind.STRING)
@@ -440,13 +454,14 @@ public sealed interface PluginCatalogEntryRowTier {
         override fun deserialize(decoder: Decoder): PluginCatalogEntryRowTier = when (val raw = decoder.decodeString()) {
             "official" -> Official
             "community" -> Community
-            else -> throw SerializationException("Unexpected PluginCatalogEntryRowTier value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected PluginCatalogEntryRowTier value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: PluginCatalogEntryRowTier) {
             val raw: kotlin.String = when (value) {
                 Official -> "official"
                 Community -> "community"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -536,6 +551,7 @@ public sealed interface PluginsHubPluginRowRuntimeStatus {
     public data object Enabled : PluginsHubPluginRowRuntimeStatus
     public data object Disabled : PluginsHubPluginRowRuntimeStatus
     public data object Inactive : PluginsHubPluginRowRuntimeStatus
+    public data class Unknown(public val raw: kotlin.String) : PluginsHubPluginRowRuntimeStatus
 
     public object Serializer : KSerializer<PluginsHubPluginRowRuntimeStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginsHubPluginRowRuntimeStatus", PrimitiveKind.STRING)
@@ -544,7 +560,7 @@ public sealed interface PluginsHubPluginRowRuntimeStatus {
             "enabled" -> Enabled
             "disabled" -> Disabled
             "inactive" -> Inactive
-            else -> throw SerializationException("Unexpected PluginsHubPluginRowRuntimeStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected PluginsHubPluginRowRuntimeStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: PluginsHubPluginRowRuntimeStatus) {
@@ -552,6 +568,7 @@ public sealed interface PluginsHubPluginRowRuntimeStatus {
                 Enabled -> "enabled"
                 Disabled -> "disabled"
                 Inactive -> "inactive"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -565,6 +582,7 @@ public sealed interface PluginsHubPluginRowSource {
     public data object User : PluginsHubPluginRowSource
     public data object Git : PluginsHubPluginRowSource
     public data object Entrypoint : PluginsHubPluginRowSource
+    public data class Unknown(public val raw: kotlin.String) : PluginsHubPluginRowSource
 
     public object Serializer : KSerializer<PluginsHubPluginRowSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginsHubPluginRowSource", PrimitiveKind.STRING)
@@ -574,7 +592,7 @@ public sealed interface PluginsHubPluginRowSource {
             "user" -> User
             "git" -> Git
             "entrypoint" -> Entrypoint
-            else -> throw SerializationException("Unexpected PluginsHubPluginRowSource value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected PluginsHubPluginRowSource value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: PluginsHubPluginRowSource) {
@@ -583,6 +601,7 @@ public sealed interface PluginsHubPluginRowSource {
                 User -> "user"
                 Git -> "git"
                 Entrypoint -> "entrypoint"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -686,8 +705,10 @@ public data class ProfileCreate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ProfileCreate requires an object")
-            val known = setOf<String>("clone_all", "clone_channels", "clone_from", "clone_from_default", "description", "hub_skills", "keep_skills", "mcp_servers", "model", "name", "no_skills", "provider")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("clone_all", "clone_channels", "clone_from", "clone_from_default", "description", "hub_skills", "keep_skills", "mcp_servers", "model", "name", "no_skills", "provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ProfileCreate(
                 cloneAll = input["clone_all"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 cloneChannels = input["clone_channels"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },

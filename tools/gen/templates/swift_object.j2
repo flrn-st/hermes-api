@@ -36,16 +36,18 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
 
     public init(from decoder: Decoder) throws {
 {% if model.reject_unknown %}
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = [{{ model.known_literals }}]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-        }
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = [{{ model.known_literals }}]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
 {% for key in model.required_null %}
-        guard keys.contains(DynamicCodingKey({{ key.literal }})), try keys.decodeNil(forKey: DynamicCodingKey({{ key.literal }})) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Field {{ key.name }} must be present and null"))
-        }
+            guard keys.contains(DynamicCodingKey({{ key.literal }})), try keys.decodeNil(forKey: DynamicCodingKey({{ key.literal }})) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Field {{ key.name }} must be present and null"))
+            }
 {% endfor %}
+        }
 {% endif %}
 {% if model.fields %}
         let container = try decoder.container(keyedBy: CodingKeys.self)

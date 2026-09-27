@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``validate_provider_credential``; ``models``/``model_details``/``resolved_base_url`` only on the ``OPENAI_BASE_URL`` connectivity branch. */
 @Serializable
@@ -51,8 +52,10 @@ public data class QuickstartBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("QuickstartBody requires an object")
-            val known = setOf<String>("model_id")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("model_id")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return QuickstartBody(
                 modelId = when (val raw = input["model_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -326,8 +329,10 @@ public data class RawConfigUpdate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("RawConfigUpdate requires an object")
-            val known = setOf<String>("profile", "yaml_text")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("profile", "yaml_text")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return RawConfigUpdate(
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 yamlText = json.decodeFromJsonElement<String>((input["yaml_text"] ?: throw SerializationException("Missing yaml_text"))),
@@ -376,8 +381,10 @@ public data class ReassignBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ReassignBody requires an object")
-            val known = setOf<String>("profile", "reason", "reclaim_first")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("profile", "reason", "reclaim_first")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ReassignBody(
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 reason = when (val raw = input["reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -421,8 +428,10 @@ public data class ReclaimBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ReclaimBody requires an object")
-            val known = setOf<String>("reason")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("reason")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ReclaimBody(
                 reason = when (val raw = input["reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -474,8 +483,10 @@ public data class RenameBoardBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("RenameBoardBody requires an object")
-            val known = setOf<String>("color", "default_workdir", "description", "icon", "name", "project_id")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("color", "default_workdir", "description", "icon", "name", "project_id")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return RenameBoardBody(
                 color = when (val raw = input["color"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 defaultWorkdir = when (val raw = input["default_workdir"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -541,8 +552,10 @@ public data class RuntimeInstallBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("RuntimeInstallBody requires an object")
-            val known = setOf<String>("backend")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("backend")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return RuntimeInstallBody(
                 backend = when (val raw = input["backend"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -1166,8 +1179,10 @@ public data class SessionImportRequest(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SessionImportRequest requires an object")
-            val known = setOf<String>("profile", "sessions")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("profile", "sessions")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SessionImportRequest(
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 sessions = json.decodeFromJsonElement<List<SessionExportResponse>>((input["sessions"] ?: throw SerializationException("Missing sessions"))),
@@ -1445,6 +1460,7 @@ public data class SessionMessagesPagination(
 public sealed interface SessionMessagesPaginationOrder {
     public data object Oldest : SessionMessagesPaginationOrder
     public data object Latest : SessionMessagesPaginationOrder
+    public data class Unknown(public val raw: kotlin.String) : SessionMessagesPaginationOrder
 
     public object Serializer : KSerializer<SessionMessagesPaginationOrder> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionMessagesPaginationOrder", PrimitiveKind.STRING)
@@ -1452,13 +1468,14 @@ public sealed interface SessionMessagesPaginationOrder {
         override fun deserialize(decoder: Decoder): SessionMessagesPaginationOrder = when (val raw = decoder.decodeString()) {
             "oldest" -> Oldest
             "latest" -> Latest
-            else -> throw SerializationException("Unexpected SessionMessagesPaginationOrder value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SessionMessagesPaginationOrder value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: SessionMessagesPaginationOrder) {
             val raw: kotlin.String = when (value) {
                 Oldest -> "oldest"
                 Latest -> "latest"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -1493,8 +1510,10 @@ public data class SessionOwnerBackfill(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SessionOwnerBackfill requires an object")
-            val known = setOf<String>("profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SessionOwnerBackfill(
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -1571,8 +1590,10 @@ public data class SessionPrune(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SessionPrune requires an object")
-            val known = setOf<String>("branch_like", "chat_id", "chat_type", "cwd_prefix", "dry_run", "end_reason", "include_archived", "max_cost", "max_messages", "max_tokens", "max_tool_calls", "min_cost", "min_messages", "min_tokens", "min_tool_calls", "model_like", "older_than_days", "profile", "provider", "source", "started_after", "started_before", "title_like", "user_id")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("branch_like", "chat_id", "chat_type", "cwd_prefix", "dry_run", "end_reason", "include_archived", "max_cost", "max_messages", "max_tokens", "max_tool_calls", "min_cost", "min_messages", "min_tokens", "min_tool_calls", "model_like", "older_than_days", "profile", "provider", "source", "started_after", "started_before", "title_like", "user_id")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SessionPrune(
                 branchLike = when (val raw = input["branch_like"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 chatId = when (val raw = input["chat_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },

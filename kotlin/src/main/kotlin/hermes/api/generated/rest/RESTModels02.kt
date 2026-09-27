@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``get_schema`` — ``_schema_with_dynamic_provider_options`` keyed by dotted config path. */
 @Serializable
@@ -33,8 +34,10 @@ public data class ConfigUpdate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ConfigUpdate requires an object")
-            val known = setOf<String>("config", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("config", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ConfigUpdate(
                 config = json.decodeFromJsonElement<Map<String, JsonElement>>((input["config"] ?: throw SerializationException("Missing config"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -79,8 +82,10 @@ public data class CreateBoardBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CreateBoardBody requires an object")
-            val known = setOf<String>("color", "default_workdir", "description", "icon", "name", "project_id", "slug", "switch")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("color", "default_workdir", "description", "icon", "name", "project_id", "slug", "switch")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return CreateBoardBody(
                 color = when (val raw = input["color"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 defaultWorkdir = when (val raw = input["default_workdir"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -167,8 +172,10 @@ public data class CreateTaskBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CreateTaskBody requires an object")
-            val known = setOf<String>("assignee", "body", "goal_max_turns", "goal_mode", "idempotency_key", "max_runtime_seconds", "model_override", "parents", "priority", "project_id", "provider_override", "reasoning_effort", "skills", "tenant", "title", "triage", "workspace_kind", "workspace_path")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("assignee", "body", "goal_max_turns", "goal_mode", "idempotency_key", "max_runtime_seconds", "model_override", "parents", "priority", "project_id", "provider_override", "reasoning_effort", "skills", "tenant", "title", "triage", "workspace_kind", "workspace_path")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return CreateTaskBody(
                 assignee = when (val raw = input["assignee"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 body = when (val raw = input["body"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -288,8 +295,10 @@ public data class CredentialPoolAdd(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CredentialPoolAdd requires an object")
-            val known = setOf<String>("api_key", "label", "provider")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("api_key", "label", "provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return CredentialPoolAdd(
                 apiKey = json.decodeFromJsonElement<String>((input["api_key"] ?: throw SerializationException("Missing api_key"))),
                 label = when (val raw = input["label"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -438,6 +447,7 @@ public sealed interface CronBlueprintFieldType {
     public data object Enum : CronBlueprintFieldType
     public data object Text : CronBlueprintFieldType
     public data object Weekdays : CronBlueprintFieldType
+    public data class Unknown(public val raw: kotlin.String) : CronBlueprintFieldType
 
     public object Serializer : KSerializer<CronBlueprintFieldType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronBlueprintFieldType", PrimitiveKind.STRING)
@@ -447,7 +457,7 @@ public sealed interface CronBlueprintFieldType {
             "enum" -> Enum
             "text" -> Text
             "weekdays" -> Weekdays
-            else -> throw SerializationException("Unexpected CronBlueprintFieldType value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CronBlueprintFieldType value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: CronBlueprintFieldType) {
@@ -456,6 +466,7 @@ public sealed interface CronBlueprintFieldType {
                 Enum -> "enum"
                 Text -> "text"
                 Weekdays -> "weekdays"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -714,8 +725,10 @@ public data class CronJobCreate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CronJobCreate requires an object")
-            val known = setOf<String>("base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "schedule", "script", "skills", "workdir")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "schedule", "script", "skills", "workdir")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return CronJobCreate(
                 baseUrl = when (val raw = input["base_url"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 contextFrom = when (val raw = input["context_from"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<JsonElement>(raw)) },
@@ -838,7 +851,8 @@ public sealed interface CronJobExecutionStatus {
     public data object Running : CronJobExecutionStatus
     public data object Completed : CronJobExecutionStatus
     public data object Failed : CronJobExecutionStatus
-    public data object Unknown : CronJobExecutionStatus
+    public data object KnownUnknown : CronJobExecutionStatus
+    public data class Unknown(public val raw: kotlin.String) : CronJobExecutionStatus
 
     public object Serializer : KSerializer<CronJobExecutionStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronJobExecutionStatus", PrimitiveKind.STRING)
@@ -848,8 +862,8 @@ public sealed interface CronJobExecutionStatus {
             "running" -> Running
             "completed" -> Completed
             "failed" -> Failed
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected CronJobExecutionStatus value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CronJobExecutionStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: CronJobExecutionStatus) {
@@ -858,7 +872,8 @@ public sealed interface CronJobExecutionStatus {
                 Running -> "running"
                 Completed -> "completed"
                 Failed -> "failed"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -1184,6 +1199,7 @@ public sealed interface CronJobScheduleKind {
     public data object Once : CronJobScheduleKind
     public data object Interval : CronJobScheduleKind
     public data object Cron : CronJobScheduleKind
+    public data class Unknown(public val raw: kotlin.String) : CronJobScheduleKind
 
     public object Serializer : KSerializer<CronJobScheduleKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronJobScheduleKind", PrimitiveKind.STRING)
@@ -1192,7 +1208,7 @@ public sealed interface CronJobScheduleKind {
             "once" -> Once
             "interval" -> Interval
             "cron" -> Cron
-            else -> throw SerializationException("Unexpected CronJobScheduleKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CronJobScheduleKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: CronJobScheduleKind) {
@@ -1200,6 +1216,7 @@ public sealed interface CronJobScheduleKind {
                 Once -> "once"
                 Interval -> "interval"
                 Cron -> "cron"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

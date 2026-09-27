@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.branch_list`` row: local heads, then remote-tracking refs without a local head. */
 @Serializable
@@ -96,8 +97,10 @@ public data class GitFileBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("GitFileBody requires an object")
-            val known = setOf<String>("file", "path")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("file", "path")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return GitFileBody(
                 file = when (val raw = input["file"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 path = json.decodeFromJsonElement<String>((input["path"] ?: throw SerializationException("Missing path"))),
@@ -289,8 +292,10 @@ public data class GitWorktreeAddBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("GitWorktreeAddBody requires an object")
-            val known = setOf<String>("base", "branch", "existingBranch", "name", "path")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("base", "branch", "existingBranch", "name", "path")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return GitWorktreeAddBody(
                 base = when (val raw = input["base"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 branch = when (val raw = input["branch"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -402,6 +407,7 @@ public sealed interface HealthIdleResponseReason {
     public data object TurnInFlight : HealthIdleResponseReason
     public data object InputProbeUnavailable : HealthIdleResponseReason
     public data object AwaitingHumanInput : HealthIdleResponseReason
+    public data class Unknown(public val raw: kotlin.String) : HealthIdleResponseReason
 
     public object Serializer : KSerializer<HealthIdleResponseReason> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("HealthIdleResponseReason", PrimitiveKind.STRING)
@@ -411,7 +417,7 @@ public sealed interface HealthIdleResponseReason {
             "turn_in_flight" -> TurnInFlight
             "input_probe_unavailable" -> InputProbeUnavailable
             "awaiting_human_input" -> AwaitingHumanInput
-            else -> throw SerializationException("Unexpected HealthIdleResponseReason value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected HealthIdleResponseReason value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: HealthIdleResponseReason) {
@@ -420,6 +426,7 @@ public sealed interface HealthIdleResponseReason {
                 TurnInFlight -> "turn_in_flight"
                 InputProbeUnavailable -> "input_probe_unavailable"
                 AwaitingHumanInput -> "awaiting_human_input"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -452,6 +459,7 @@ public sealed interface HealthRetirementRequestAction {
     public data object Prepare : HealthRetirementRequestAction
     public data object Commit : HealthRetirementRequestAction
     public data object Cancel : HealthRetirementRequestAction
+    public data class Unknown(public val raw: kotlin.String) : HealthRetirementRequestAction
 
     public object Serializer : KSerializer<HealthRetirementRequestAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("HealthRetirementRequestAction", PrimitiveKind.STRING)
@@ -460,7 +468,7 @@ public sealed interface HealthRetirementRequestAction {
             "prepare" -> Prepare
             "commit" -> Commit
             "cancel" -> Cancel
-            else -> throw SerializationException("Unexpected HealthRetirementRequestAction value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected HealthRetirementRequestAction value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: HealthRetirementRequestAction) {
@@ -468,6 +476,7 @@ public sealed interface HealthRetirementRequestAction {
                 Prepare -> "prepare"
                 Commit -> "commit"
                 Cancel -> "cancel"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

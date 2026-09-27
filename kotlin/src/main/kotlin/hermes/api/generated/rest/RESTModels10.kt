@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``_managed_write_result`` (upload, upload-stream, mkdir). */
 @Serializable
@@ -41,6 +42,7 @@ public data class McpCatalogDiagnostic(
 public sealed interface McpCatalogDiagnosticKind {
     public data object FutureManifest : McpCatalogDiagnosticKind
     public data object Invalid : McpCatalogDiagnosticKind
+    public data class Unknown(public val raw: kotlin.String) : McpCatalogDiagnosticKind
 
     public object Serializer : KSerializer<McpCatalogDiagnosticKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpCatalogDiagnosticKind", PrimitiveKind.STRING)
@@ -48,13 +50,14 @@ public sealed interface McpCatalogDiagnosticKind {
         override fun deserialize(decoder: Decoder): McpCatalogDiagnosticKind = when (val raw = decoder.decodeString()) {
             "future_manifest" -> FutureManifest
             "invalid" -> Invalid
-            else -> throw SerializationException("Unexpected McpCatalogDiagnosticKind value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpCatalogDiagnosticKind value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpCatalogDiagnosticKind) {
             val raw: kotlin.String = when (value) {
                 FutureManifest -> "future_manifest"
                 Invalid -> "invalid"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -99,6 +102,7 @@ public sealed interface McpCatalogDiscoveryScope {
 public sealed interface McpCatalogDiscoveryStatus {
     public data object Ok : McpCatalogDiscoveryStatus
     public data object Unavailable : McpCatalogDiscoveryStatus
+    public data class Unknown(public val raw: kotlin.String) : McpCatalogDiscoveryStatus
 
     public object Serializer : KSerializer<McpCatalogDiscoveryStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpCatalogDiscoveryStatus", PrimitiveKind.STRING)
@@ -106,13 +110,14 @@ public sealed interface McpCatalogDiscoveryStatus {
         override fun deserialize(decoder: Decoder): McpCatalogDiscoveryStatus = when (val raw = decoder.decodeString()) {
             "ok" -> Ok
             "unavailable" -> Unavailable
-            else -> throw SerializationException("Unexpected McpCatalogDiscoveryStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpCatalogDiscoveryStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpCatalogDiscoveryStatus) {
             val raw: kotlin.String = when (value) {
                 Ok -> "ok"
                 Unavailable -> "unavailable"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -171,6 +176,7 @@ public sealed interface McpCatalogEntryRowAuthType {
     public data object ApiKey : McpCatalogEntryRowAuthType
     public data object Oauth : McpCatalogEntryRowAuthType
     public data object None : McpCatalogEntryRowAuthType
+    public data class Unknown(public val raw: kotlin.String) : McpCatalogEntryRowAuthType
 
     public object Serializer : KSerializer<McpCatalogEntryRowAuthType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpCatalogEntryRowAuthType", PrimitiveKind.STRING)
@@ -179,7 +185,7 @@ public sealed interface McpCatalogEntryRowAuthType {
             "api_key" -> ApiKey
             "oauth" -> Oauth
             "none" -> None
-            else -> throw SerializationException("Unexpected McpCatalogEntryRowAuthType value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpCatalogEntryRowAuthType value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpCatalogEntryRowAuthType) {
@@ -187,6 +193,7 @@ public sealed interface McpCatalogEntryRowAuthType {
                 ApiKey -> "api_key"
                 Oauth -> "oauth"
                 None -> "none"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -198,6 +205,7 @@ public sealed interface McpCatalogEntryRowAuthType {
 public sealed interface McpCatalogEntryRowTransport {
     public data object Stdio : McpCatalogEntryRowTransport
     public data object Http : McpCatalogEntryRowTransport
+    public data class Unknown(public val raw: kotlin.String) : McpCatalogEntryRowTransport
 
     public object Serializer : KSerializer<McpCatalogEntryRowTransport> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpCatalogEntryRowTransport", PrimitiveKind.STRING)
@@ -205,13 +213,14 @@ public sealed interface McpCatalogEntryRowTransport {
         override fun deserialize(decoder: Decoder): McpCatalogEntryRowTransport = when (val raw = decoder.decodeString()) {
             "stdio" -> Stdio
             "http" -> Http
-            else -> throw SerializationException("Unexpected McpCatalogEntryRowTransport value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpCatalogEntryRowTransport value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpCatalogEntryRowTransport) {
             val raw: kotlin.String = when (value) {
                 Stdio -> "stdio"
                 Http -> "http"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -284,6 +293,7 @@ public sealed interface McpOAuthCancelResponseStatus {
     public data object Expired : McpOAuthCancelResponseStatus
     public data object Approved : McpOAuthCancelResponseStatus
     public data object Error : McpOAuthCancelResponseStatus
+    public data class Unknown(public val raw: kotlin.String) : McpOAuthCancelResponseStatus
 
     public object Serializer : KSerializer<McpOAuthCancelResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpOAuthCancelResponseStatus", PrimitiveKind.STRING)
@@ -292,7 +302,7 @@ public sealed interface McpOAuthCancelResponseStatus {
             "expired" -> Expired
             "approved" -> Approved
             "error" -> Error
-            else -> throw SerializationException("Unexpected McpOAuthCancelResponseStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpOAuthCancelResponseStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpOAuthCancelResponseStatus) {
@@ -300,6 +310,7 @@ public sealed interface McpOAuthCancelResponseStatus {
                 Expired -> "expired"
                 Approved -> "approved"
                 Error -> "error"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -328,6 +339,7 @@ public sealed interface McpOAuthFlowResponseStatus {
     public data object AuthorizationRequired : McpOAuthFlowResponseStatus
     public data object Approved : McpOAuthFlowResponseStatus
     public data object Error : McpOAuthFlowResponseStatus
+    public data class Unknown(public val raw: kotlin.String) : McpOAuthFlowResponseStatus
 
     public object Serializer : KSerializer<McpOAuthFlowResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpOAuthFlowResponseStatus", PrimitiveKind.STRING)
@@ -337,7 +349,7 @@ public sealed interface McpOAuthFlowResponseStatus {
             "authorization_required" -> AuthorizationRequired
             "approved" -> Approved
             "error" -> Error
-            else -> throw SerializationException("Unexpected McpOAuthFlowResponseStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpOAuthFlowResponseStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpOAuthFlowResponseStatus) {
@@ -346,6 +358,7 @@ public sealed interface McpOAuthFlowResponseStatus {
                 AuthorizationRequired -> "authorization_required"
                 Approved -> "approved"
                 Error -> "error"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -376,6 +389,7 @@ public sealed interface McpOAuthFlowStatusResponseStatus {
     public data object AuthorizationRequired : McpOAuthFlowStatusResponseStatus
     public data object Approved : McpOAuthFlowStatusResponseStatus
     public data object Error : McpOAuthFlowStatusResponseStatus
+    public data class Unknown(public val raw: kotlin.String) : McpOAuthFlowStatusResponseStatus
 
     public object Serializer : KSerializer<McpOAuthFlowStatusResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpOAuthFlowStatusResponseStatus", PrimitiveKind.STRING)
@@ -385,7 +399,7 @@ public sealed interface McpOAuthFlowStatusResponseStatus {
             "authorization_required" -> AuthorizationRequired
             "approved" -> Approved
             "error" -> Error
-            else -> throw SerializationException("Unexpected McpOAuthFlowStatusResponseStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpOAuthFlowStatusResponseStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpOAuthFlowStatusResponseStatus) {
@@ -394,6 +408,7 @@ public sealed interface McpOAuthFlowStatusResponseStatus {
                 AuthorizationRequired -> "authorization_required"
                 Approved -> "approved"
                 Error -> "error"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -435,6 +450,7 @@ public data class McpServerAddResponse(
 public sealed interface McpServerAddResponseSource {
     public data object Config : McpServerAddResponseSource
     public data object Plugin : McpServerAddResponseSource
+    public data class Unknown(public val raw: kotlin.String) : McpServerAddResponseSource
 
     public object Serializer : KSerializer<McpServerAddResponseSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerAddResponseSource", PrimitiveKind.STRING)
@@ -442,13 +458,14 @@ public sealed interface McpServerAddResponseSource {
         override fun deserialize(decoder: Decoder): McpServerAddResponseSource = when (val raw = decoder.decodeString()) {
             "config" -> Config
             "plugin" -> Plugin
-            else -> throw SerializationException("Unexpected McpServerAddResponseSource value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerAddResponseSource value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpServerAddResponseSource) {
             val raw: kotlin.String = when (value) {
                 Config -> "config"
                 Plugin -> "plugin"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -460,7 +477,8 @@ public sealed interface McpServerAddResponseSource {
 public sealed interface McpServerAddResponseTransport {
     public data object Http : McpServerAddResponseTransport
     public data object Stdio : McpServerAddResponseTransport
-    public data object Unknown : McpServerAddResponseTransport
+    public data object KnownUnknown : McpServerAddResponseTransport
+    public data class Unknown(public val raw: kotlin.String) : McpServerAddResponseTransport
 
     public object Serializer : KSerializer<McpServerAddResponseTransport> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerAddResponseTransport", PrimitiveKind.STRING)
@@ -468,15 +486,16 @@ public sealed interface McpServerAddResponseTransport {
         override fun deserialize(decoder: Decoder): McpServerAddResponseTransport = when (val raw = decoder.decodeString()) {
             "http" -> Http
             "stdio" -> Stdio
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected McpServerAddResponseTransport value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerAddResponseTransport value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpServerAddResponseTransport) {
             val raw: kotlin.String = when (value) {
                 Http -> "http"
                 Stdio -> "stdio"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -518,6 +537,7 @@ public data class McpServerConfigSummary(
 public sealed interface McpServerConfigSummarySource {
     public data object Config : McpServerConfigSummarySource
     public data object Plugin : McpServerConfigSummarySource
+    public data class Unknown(public val raw: kotlin.String) : McpServerConfigSummarySource
 
     public object Serializer : KSerializer<McpServerConfigSummarySource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerConfigSummarySource", PrimitiveKind.STRING)
@@ -525,13 +545,14 @@ public sealed interface McpServerConfigSummarySource {
         override fun deserialize(decoder: Decoder): McpServerConfigSummarySource = when (val raw = decoder.decodeString()) {
             "config" -> Config
             "plugin" -> Plugin
-            else -> throw SerializationException("Unexpected McpServerConfigSummarySource value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerConfigSummarySource value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpServerConfigSummarySource) {
             val raw: kotlin.String = when (value) {
                 Config -> "config"
                 Plugin -> "plugin"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -543,7 +564,8 @@ public sealed interface McpServerConfigSummarySource {
 public sealed interface McpServerConfigSummaryTransport {
     public data object Http : McpServerConfigSummaryTransport
     public data object Stdio : McpServerConfigSummaryTransport
-    public data object Unknown : McpServerConfigSummaryTransport
+    public data object KnownUnknown : McpServerConfigSummaryTransport
+    public data class Unknown(public val raw: kotlin.String) : McpServerConfigSummaryTransport
 
     public object Serializer : KSerializer<McpServerConfigSummaryTransport> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerConfigSummaryTransport", PrimitiveKind.STRING)
@@ -551,15 +573,16 @@ public sealed interface McpServerConfigSummaryTransport {
         override fun deserialize(decoder: Decoder): McpServerConfigSummaryTransport = when (val raw = decoder.decodeString()) {
             "http" -> Http
             "stdio" -> Stdio
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected McpServerConfigSummaryTransport value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerConfigSummaryTransport value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: McpServerConfigSummaryTransport) {
             val raw: kotlin.String = when (value) {
                 Http -> "http"
                 Stdio -> "stdio"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -654,6 +677,7 @@ public data class MemoryOAuthStartResponse(
 public sealed interface MemoryOAuthStartResponseAuth {
     public data object Oauth : MemoryOAuthStartResponseAuth
     public data object Apikey : MemoryOAuthStartResponseAuth
+    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStartResponseAuth
 
     public object Serializer : KSerializer<MemoryOAuthStartResponseAuth> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStartResponseAuth", PrimitiveKind.STRING)
@@ -661,13 +685,14 @@ public sealed interface MemoryOAuthStartResponseAuth {
         override fun deserialize(decoder: Decoder): MemoryOAuthStartResponseAuth = when (val raw = decoder.decodeString()) {
             "oauth" -> Oauth
             "apikey" -> Apikey
-            else -> throw SerializationException("Unexpected MemoryOAuthStartResponseAuth value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStartResponseAuth value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MemoryOAuthStartResponseAuth) {
             val raw: kotlin.String = when (value) {
                 Oauth -> "oauth"
                 Apikey -> "apikey"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -681,6 +706,7 @@ public sealed interface MemoryOAuthStartResponseState {
     public data object Pending : MemoryOAuthStartResponseState
     public data object Connected : MemoryOAuthStartResponseState
     public data object Error : MemoryOAuthStartResponseState
+    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStartResponseState
 
     public object Serializer : KSerializer<MemoryOAuthStartResponseState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStartResponseState", PrimitiveKind.STRING)
@@ -690,7 +716,7 @@ public sealed interface MemoryOAuthStartResponseState {
             "pending" -> Pending
             "connected" -> Connected
             "error" -> Error
-            else -> throw SerializationException("Unexpected MemoryOAuthStartResponseState value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStartResponseState value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: MemoryOAuthStartResponseState) {
@@ -699,6 +725,7 @@ public sealed interface MemoryOAuthStartResponseState {
                 Pending -> "pending"
                 Connected -> "connected"
                 Error -> "error"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

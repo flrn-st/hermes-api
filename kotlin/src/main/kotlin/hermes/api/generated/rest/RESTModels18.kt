@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``get_system_stats``; every psutil-derived key is absent when psutil (or that probe) is unavailable. */
 @Serializable
@@ -79,8 +80,10 @@ public data class TelegramOnboardingApply(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("TelegramOnboardingApply requires an object")
-            val known = setOf<String>("allowed_user_ids", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("allowed_user_ids", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return TelegramOnboardingApply(
                 allowedUserIds = json.decodeFromJsonElement<List<String>>((input["allowed_user_ids"] ?: throw SerializationException("Missing allowed_user_ids"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -183,8 +186,10 @@ public data class TelegramOnboardingStart(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("TelegramOnboardingStart requires an object")
-            val known = setOf<String>("bot_name")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("bot_name")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return TelegramOnboardingStart(
                 botName = when (val raw = input["bot_name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -238,6 +243,7 @@ public data class TelegramOnboardingStatusResponse(
 public sealed interface TelegramOnboardingStatusResponseStatus {
     public data object Waiting : TelegramOnboardingStatusResponseStatus
     public data object Ready : TelegramOnboardingStatusResponseStatus
+    public data class Unknown(public val raw: kotlin.String) : TelegramOnboardingStatusResponseStatus
 
     public object Serializer : KSerializer<TelegramOnboardingStatusResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TelegramOnboardingStatusResponseStatus", PrimitiveKind.STRING)
@@ -245,13 +251,14 @@ public sealed interface TelegramOnboardingStatusResponseStatus {
         override fun deserialize(decoder: Decoder): TelegramOnboardingStatusResponseStatus = when (val raw = decoder.decodeString()) {
             "waiting" -> Waiting
             "ready" -> Ready
-            else -> throw SerializationException("Unexpected TelegramOnboardingStatusResponseStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected TelegramOnboardingStatusResponseStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: TelegramOnboardingStatusResponseStatus) {
             val raw: kotlin.String = when (value) {
                 Waiting -> "waiting"
                 Ready -> "ready"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -292,8 +299,10 @@ public data class TerminalBackendSelect(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("TerminalBackendSelect requires an object")
-            val known = setOf<String>("backend", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("backend", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return TerminalBackendSelect(
                 backend = json.decodeFromJsonElement<String>((input["backend"] ?: throw SerializationException("Missing backend"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -349,8 +358,10 @@ public data class TerminateRunBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("TerminateRunBody requires an object")
-            val known = setOf<String>("reason")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("reason")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return TerminateRunBody(
                 reason = when (val raw = input["reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -429,6 +440,7 @@ public data class ToolsetConfigProvider(
 public sealed interface ToolsetConfigProviderCapabilitiesItem {
     public data object Search : ToolsetConfigProviderCapabilitiesItem
     public data object Extract : ToolsetConfigProviderCapabilitiesItem
+    public data class Unknown(public val raw: kotlin.String) : ToolsetConfigProviderCapabilitiesItem
 
     public object Serializer : KSerializer<ToolsetConfigProviderCapabilitiesItem> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetConfigProviderCapabilitiesItem", PrimitiveKind.STRING)
@@ -436,13 +448,14 @@ public sealed interface ToolsetConfigProviderCapabilitiesItem {
         override fun deserialize(decoder: Decoder): ToolsetConfigProviderCapabilitiesItem = when (val raw = decoder.decodeString()) {
             "search" -> Search
             "extract" -> Extract
-            else -> throw SerializationException("Unexpected ToolsetConfigProviderCapabilitiesItem value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ToolsetConfigProviderCapabilitiesItem value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: ToolsetConfigProviderCapabilitiesItem) {
             val raw: kotlin.String = when (value) {
                 Search -> "search"
                 Extract -> "extract"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -456,6 +469,7 @@ public sealed interface ToolsetConfigProviderStatus {
     public data object NeedsKeys : ToolsetConfigProviderStatus
     public data object NeedsAuth : ToolsetConfigProviderStatus
     public data object NeedsSetup : ToolsetConfigProviderStatus
+    public data class Unknown(public val raw: kotlin.String) : ToolsetConfigProviderStatus
 
     public object Serializer : KSerializer<ToolsetConfigProviderStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetConfigProviderStatus", PrimitiveKind.STRING)
@@ -465,7 +479,7 @@ public sealed interface ToolsetConfigProviderStatus {
             "needs_keys" -> NeedsKeys
             "needs_auth" -> NeedsAuth
             "needs_setup" -> NeedsSetup
-            else -> throw SerializationException("Unexpected ToolsetConfigProviderStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ToolsetConfigProviderStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: ToolsetConfigProviderStatus) {
@@ -474,6 +488,7 @@ public sealed interface ToolsetConfigProviderStatus {
                 NeedsKeys -> "needs_keys"
                 NeedsAuth -> "needs_auth"
                 NeedsSetup -> "needs_setup"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -530,8 +545,10 @@ public data class ToolsetEnvUpdate(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ToolsetEnvUpdate requires an object")
-            val known = setOf<String>("env", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("env", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ToolsetEnvUpdate(
                 env = json.decodeFromJsonElement<Map<String, String>>((input["env"] ?: throw SerializationException("Missing env"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -610,8 +627,10 @@ public data class ToolsetModelSelect(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ToolsetModelSelect requires an object")
-            val known = setOf<String>("model", "profile", "provider")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("model", "profile", "provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ToolsetModelSelect(
                 model = json.decodeFromJsonElement<String>((input["model"] ?: throw SerializationException("Missing model"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -688,8 +707,10 @@ public data class ToolsetPostSetup(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ToolsetPostSetup requires an object")
-            val known = setOf<String>("key", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("key", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ToolsetPostSetup(
                 key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -742,8 +763,10 @@ public data class ToolsetProviderSelect(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ToolsetProviderSelect requires an object")
-            val known = setOf<String>("capability", "profile", "provider")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("capability", "profile", "provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ToolsetProviderSelect(
                 capability = when (val raw = input["capability"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -794,6 +817,7 @@ public data class ToolsetProviderSelectResponse(
 public sealed interface ToolsetProviderSelectResponseCapability {
     public data object Search : ToolsetProviderSelectResponseCapability
     public data object Extract : ToolsetProviderSelectResponseCapability
+    public data class Unknown(public val raw: kotlin.String) : ToolsetProviderSelectResponseCapability
 
     public object Serializer : KSerializer<ToolsetProviderSelectResponseCapability> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetProviderSelectResponseCapability", PrimitiveKind.STRING)
@@ -801,13 +825,14 @@ public sealed interface ToolsetProviderSelectResponseCapability {
         override fun deserialize(decoder: Decoder): ToolsetProviderSelectResponseCapability = when (val raw = decoder.decodeString()) {
             "search" -> Search
             "extract" -> Extract
-            else -> throw SerializationException("Unexpected ToolsetProviderSelectResponseCapability value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ToolsetProviderSelectResponseCapability value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: ToolsetProviderSelectResponseCapability) {
             val raw: kotlin.String = when (value) {
                 Search -> "search"
                 Extract -> "extract"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -830,8 +855,10 @@ public data class ToolsetToggle(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ToolsetToggle requires an object")
-            val known = setOf<String>("enabled", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("enabled", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ToolsetToggle(
                 enabled = json.decodeFromJsonElement<Boolean>((input["enabled"] ?: throw SerializationException("Missing enabled"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },

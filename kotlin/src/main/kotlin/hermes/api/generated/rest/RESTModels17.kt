@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = SkillListRowProvenance.Serializer::class)
@@ -14,6 +15,7 @@ public sealed interface SkillListRowProvenance {
     public data object Hub : SkillListRowProvenance
     public data object Bundled : SkillListRowProvenance
     public data object Agent : SkillListRowProvenance
+    public data class Unknown(public val raw: kotlin.String) : SkillListRowProvenance
 
     public object Serializer : KSerializer<SkillListRowProvenance> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillListRowProvenance", PrimitiveKind.STRING)
@@ -22,7 +24,7 @@ public sealed interface SkillListRowProvenance {
             "hub" -> Hub
             "bundled" -> Bundled
             "agent" -> Agent
-            else -> throw SerializationException("Unexpected SkillListRowProvenance value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SkillListRowProvenance value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: SkillListRowProvenance) {
@@ -30,6 +32,7 @@ public sealed interface SkillListRowProvenance {
                 Hub -> "hub"
                 Bundled -> "bundled"
                 Agent -> "agent"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -53,8 +56,10 @@ public data class SkillToggle(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SkillToggle requires an object")
-            val known = setOf<String>("enabled", "name", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("enabled", "name", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SkillToggle(
                 enabled = json.decodeFromJsonElement<Boolean>((input["enabled"] ?: throw SerializationException("Missing enabled"))),
                 name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
@@ -106,8 +111,10 @@ public data class SkillUninstallRequest(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SkillUninstallRequest requires an object")
-            val known = setOf<String>("name", "profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("name", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SkillUninstallRequest(
                 name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -152,8 +159,10 @@ public data class SkillsUpdateRequest(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SkillsUpdateRequest requires an object")
-            val known = setOf<String>("profile")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SkillsUpdateRequest(
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -189,8 +198,10 @@ public data class SpecifyBody(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("SpecifyBody requires an object")
-            val known = setOf<String>("author")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("author")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return SpecifyBody(
                 author = when (val raw = input["author"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
@@ -264,25 +275,27 @@ public data class StatusDashboardComponent(
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = StatusDashboardComponentSelftest.Serializer::class)
 public sealed interface StatusDashboardComponentSelftest {
-    public data object Unknown : StatusDashboardComponentSelftest
+    public data object KnownUnknown : StatusDashboardComponentSelftest
     public data object Ok : StatusDashboardComponentSelftest
     public data object Failing : StatusDashboardComponentSelftest
+    public data class Unknown(public val raw: kotlin.String) : StatusDashboardComponentSelftest
 
     public object Serializer : KSerializer<StatusDashboardComponentSelftest> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDashboardComponentSelftest", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): StatusDashboardComponentSelftest = when (val raw = decoder.decodeString()) {
-            "unknown" -> Unknown
+            "unknown" -> KnownUnknown
             "ok" -> Ok
             "failing" -> Failing
-            else -> throw SerializationException("Unexpected StatusDashboardComponentSelftest value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusDashboardComponentSelftest value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusDashboardComponentSelftest) {
             val raw: kotlin.String = when (value) {
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
                 Ok -> "ok"
                 Failing -> "failing"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -294,6 +307,7 @@ public sealed interface StatusDashboardComponentSelftest {
 public sealed interface StatusDashboardComponentStatus {
     public data object Ok : StatusDashboardComponentStatus
     public data object Degraded : StatusDashboardComponentStatus
+    public data class Unknown(public val raw: kotlin.String) : StatusDashboardComponentStatus
 
     public object Serializer : KSerializer<StatusDashboardComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDashboardComponentStatus", PrimitiveKind.STRING)
@@ -301,13 +315,14 @@ public sealed interface StatusDashboardComponentStatus {
         override fun deserialize(decoder: Decoder): StatusDashboardComponentStatus = when (val raw = decoder.decodeString()) {
             "ok" -> Ok
             "degraded" -> Degraded
-            else -> throw SerializationException("Unexpected StatusDashboardComponentStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusDashboardComponentStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusDashboardComponentStatus) {
             val raw: kotlin.String = when (value) {
                 Ok -> "ok"
                 Degraded -> "degraded"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -333,7 +348,8 @@ public sealed interface StatusDiskPressurePressure {
     public data object Ok : StatusDiskPressurePressure
     public data object Elevated : StatusDiskPressurePressure
     public data object Critical : StatusDiskPressurePressure
-    public data object Unknown : StatusDiskPressurePressure
+    public data object KnownUnknown : StatusDiskPressurePressure
+    public data class Unknown(public val raw: kotlin.String) : StatusDiskPressurePressure
 
     public object Serializer : KSerializer<StatusDiskPressurePressure> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDiskPressurePressure", PrimitiveKind.STRING)
@@ -342,8 +358,8 @@ public sealed interface StatusDiskPressurePressure {
             "ok" -> Ok
             "elevated" -> Elevated
             "critical" -> Critical
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected StatusDiskPressurePressure value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusDiskPressurePressure value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusDiskPressurePressure) {
@@ -351,7 +367,8 @@ public sealed interface StatusDiskPressurePressure {
                 Ok -> "ok"
                 Elevated -> "elevated"
                 Critical -> "critical"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -385,6 +402,7 @@ public data class StatusGatewayComponent(
 public sealed interface StatusGatewayComponentStatus {
     public data object Ok : StatusGatewayComponentStatus
     public data object Degraded : StatusGatewayComponentStatus
+    public data class Unknown(public val raw: kotlin.String) : StatusGatewayComponentStatus
 
     public object Serializer : KSerializer<StatusGatewayComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusGatewayComponentStatus", PrimitiveKind.STRING)
@@ -392,13 +410,14 @@ public sealed interface StatusGatewayComponentStatus {
         override fun deserialize(decoder: Decoder): StatusGatewayComponentStatus = when (val raw = decoder.decodeString()) {
             "ok" -> Ok
             "degraded" -> Degraded
-            else -> throw SerializationException("Unexpected StatusGatewayComponentStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusGatewayComponentStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusGatewayComponentStatus) {
             val raw: kotlin.String = when (value) {
                 Ok -> "ok"
                 Degraded -> "degraded"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -507,7 +526,8 @@ public sealed interface StatusMemoryPressurePressure {
     public data object Ok : StatusMemoryPressurePressure
     public data object Elevated : StatusMemoryPressurePressure
     public data object Critical : StatusMemoryPressurePressure
-    public data object Unknown : StatusMemoryPressurePressure
+    public data object KnownUnknown : StatusMemoryPressurePressure
+    public data class Unknown(public val raw: kotlin.String) : StatusMemoryPressurePressure
 
     public object Serializer : KSerializer<StatusMemoryPressurePressure> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusMemoryPressurePressure", PrimitiveKind.STRING)
@@ -516,8 +536,8 @@ public sealed interface StatusMemoryPressurePressure {
             "ok" -> Ok
             "elevated" -> Elevated
             "critical" -> Critical
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected StatusMemoryPressurePressure value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusMemoryPressurePressure value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusMemoryPressurePressure) {
@@ -525,7 +545,8 @@ public sealed interface StatusMemoryPressurePressure {
                 Ok -> "ok"
                 Elevated -> "elevated"
                 Critical -> "critical"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -548,6 +569,7 @@ public data class StatusPlatformsComponent(
 public sealed interface StatusPlatformsComponentStatus {
     public data object Ok : StatusPlatformsComponentStatus
     public data object Degraded : StatusPlatformsComponentStatus
+    public data class Unknown(public val raw: kotlin.String) : StatusPlatformsComponentStatus
 
     public object Serializer : KSerializer<StatusPlatformsComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusPlatformsComponentStatus", PrimitiveKind.STRING)
@@ -555,13 +577,14 @@ public sealed interface StatusPlatformsComponentStatus {
         override fun deserialize(decoder: Decoder): StatusPlatformsComponentStatus = when (val raw = decoder.decodeString()) {
             "ok" -> Ok
             "degraded" -> Degraded
-            else -> throw SerializationException("Unexpected StatusPlatformsComponentStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusPlatformsComponentStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusPlatformsComponentStatus) {
             val raw: kotlin.String = when (value) {
                 Ok -> "ok"
                 Degraded -> "degraded"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -653,6 +676,7 @@ public data class StatusResponse(
 public sealed interface StatusResponseAuthFlowsItem {
     public data object Cookie : StatusResponseAuthFlowsItem
     public data object NativePkce : StatusResponseAuthFlowsItem
+    public data class Unknown(public val raw: kotlin.String) : StatusResponseAuthFlowsItem
 
     public object Serializer : KSerializer<StatusResponseAuthFlowsItem> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseAuthFlowsItem", PrimitiveKind.STRING)
@@ -660,13 +684,14 @@ public sealed interface StatusResponseAuthFlowsItem {
         override fun deserialize(decoder: Decoder): StatusResponseAuthFlowsItem = when (val raw = decoder.decodeString()) {
             "cookie" -> Cookie
             "native_pkce" -> NativePkce
-            else -> throw SerializationException("Unexpected StatusResponseAuthFlowsItem value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseAuthFlowsItem value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseAuthFlowsItem) {
             val raw: kotlin.String = when (value) {
                 Cookie -> "cookie"
                 NativePkce -> "native_pkce"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -680,7 +705,8 @@ public sealed interface StatusResponseGatewayMode {
     public data object Single : StatusResponseGatewayMode
     public data object Multiple : StatusResponseGatewayMode
     public data object None : StatusResponseGatewayMode
-    public data object Unknown : StatusResponseGatewayMode
+    public data object KnownUnknown : StatusResponseGatewayMode
+    public data class Unknown(public val raw: kotlin.String) : StatusResponseGatewayMode
 
     public object Serializer : KSerializer<StatusResponseGatewayMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseGatewayMode", PrimitiveKind.STRING)
@@ -690,8 +716,8 @@ public sealed interface StatusResponseGatewayMode {
             "single" -> Single
             "multiple" -> Multiple
             "none" -> None
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected StatusResponseGatewayMode value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseGatewayMode value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseGatewayMode) {
@@ -700,7 +726,8 @@ public sealed interface StatusResponseGatewayMode {
                 Single -> "single"
                 Multiple -> "multiple"
                 None -> "none"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -712,7 +739,8 @@ public sealed interface StatusResponseGatewayMode {
 public sealed interface StatusResponseNousSessionValid {
     public data object Valid : StatusResponseNousSessionValid
     public data object Terminal : StatusResponseNousSessionValid
-    public data object Unknown : StatusResponseNousSessionValid
+    public data object KnownUnknown : StatusResponseNousSessionValid
+    public data class Unknown(public val raw: kotlin.String) : StatusResponseNousSessionValid
 
     public object Serializer : KSerializer<StatusResponseNousSessionValid> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseNousSessionValid", PrimitiveKind.STRING)
@@ -720,15 +748,16 @@ public sealed interface StatusResponseNousSessionValid {
         override fun deserialize(decoder: Decoder): StatusResponseNousSessionValid = when (val raw = decoder.decodeString()) {
             "valid" -> Valid
             "terminal" -> Terminal
-            "unknown" -> Unknown
-            else -> throw SerializationException("Unexpected StatusResponseNousSessionValid value: $raw")
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseNousSessionValid value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseNousSessionValid) {
             val raw: kotlin.String = when (value) {
                 Valid -> "valid"
                 Terminal -> "terminal"
-                Unknown -> "unknown"
+                KnownUnknown -> "unknown"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -740,6 +769,7 @@ public sealed interface StatusResponseNousSessionValid {
 public sealed interface StatusResponseOverall {
     public data object Ok : StatusResponseOverall
     public data object Degraded : StatusResponseOverall
+    public data class Unknown(public val raw: kotlin.String) : StatusResponseOverall
 
     public object Serializer : KSerializer<StatusResponseOverall> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseOverall", PrimitiveKind.STRING)
@@ -747,13 +777,14 @@ public sealed interface StatusResponseOverall {
         override fun deserialize(decoder: Decoder): StatusResponseOverall = when (val raw = decoder.decodeString()) {
             "ok" -> Ok
             "degraded" -> Degraded
-            else -> throw SerializationException("Unexpected StatusResponseOverall value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseOverall value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseOverall) {
             val raw: kotlin.String = when (value) {
                 Ok -> "ok"
                 Degraded -> "degraded"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }
@@ -796,6 +827,7 @@ public sealed interface StatusStorageComponentReason {
 public sealed interface StatusStorageComponentStatus {
     public data object Ok : StatusStorageComponentStatus
     public data object Degraded : StatusStorageComponentStatus
+    public data class Unknown(public val raw: kotlin.String) : StatusStorageComponentStatus
 
     public object Serializer : KSerializer<StatusStorageComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusStorageComponentStatus", PrimitiveKind.STRING)
@@ -803,13 +835,14 @@ public sealed interface StatusStorageComponentStatus {
         override fun deserialize(decoder: Decoder): StatusStorageComponentStatus = when (val raw = decoder.decodeString()) {
             "ok" -> Ok
             "degraded" -> Degraded
-            else -> throw SerializationException("Unexpected StatusStorageComponentStatus value: $raw")
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusStorageComponentStatus value: $raw")
         }
 
         override fun serialize(encoder: Encoder, value: StatusStorageComponentStatus) {
             val raw: kotlin.String = when (value) {
                 Ok -> "ok"
                 Degraded -> "degraded"
+                is Unknown -> value.raw
             }
             encoder.encodeString(raw)
         }

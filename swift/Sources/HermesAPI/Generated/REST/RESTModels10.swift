@@ -30,10 +30,12 @@ public struct ManagedFileWriteResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["can_change_path", "entry", "locked_root", "ok", "path", "root"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["can_change_path", "entry", "locked_root", "ok", "path", "root"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         canChangePath = try container.decode(Bool.self, forKey: .canChangePath)
@@ -75,10 +77,12 @@ public struct McpCatalogDiagnostic: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["kind", "message", "name"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["kind", "message", "name"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         kind = try container.decode(McpCatalogDiagnosticKind.self, forKey: .kind)
@@ -98,13 +102,18 @@ public struct McpCatalogDiagnostic: Codable, Sendable, Hashable {
 public enum McpCatalogDiagnosticKind: Codable, Sendable, Hashable {
     case futureManifest
     case invalid
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "future_manifest": self = .futureManifest
         case "invalid": self = .invalid
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogDiagnosticKind value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogDiagnosticKind value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -113,6 +122,7 @@ public enum McpCatalogDiagnosticKind: Codable, Sendable, Hashable {
         switch self {
         case .futureManifest: try container.encode("future_manifest")
         case .invalid: try container.encode("invalid")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -137,10 +147,12 @@ public struct McpCatalogDiscovery: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["platform", "scope", "status"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["platform", "scope", "status"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         platform = try container.decode(String.self, forKey: .platform)
@@ -180,13 +192,18 @@ public enum McpCatalogDiscoveryScope: Codable, Sendable, Hashable {
 public enum McpCatalogDiscoveryStatus: Codable, Sendable, Hashable {
     case ok
     case unavailable
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "ok": self = .ok
         case "unavailable": self = .unavailable
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogDiscoveryStatus value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogDiscoveryStatus value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -195,6 +212,7 @@ public enum McpCatalogDiscoveryStatus: Codable, Sendable, Hashable {
         switch self {
         case .ok: try container.encode("ok")
         case .unavailable: try container.encode("unavailable")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -271,10 +289,12 @@ public struct McpCatalogEntryRow: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["args", "auth_type", "bootstrap", "command", "connector_slug", "default_enabled", "description", "detected_apps", "enabled", "install_ref", "install_url", "installed", "name", "needs_install", "post_install", "required_env", "source", "suggest", "transport", "url"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["args", "auth_type", "bootstrap", "command", "connector_slug", "default_enabled", "description", "detected_apps", "enabled", "install_ref", "install_url", "installed", "name", "needs_install", "post_install", "required_env", "source", "suggest", "transport", "url"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         args = try container.decode([String].self, forKey: .args)
@@ -329,6 +349,7 @@ public enum McpCatalogEntryRowAuthType: Codable, Sendable, Hashable {
     case apiKey
     case oauth
     case none
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -336,7 +357,11 @@ public enum McpCatalogEntryRowAuthType: Codable, Sendable, Hashable {
         case "api_key": self = .apiKey
         case "oauth": self = .oauth
         case "none": self = .none
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogEntryRowAuthType value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogEntryRowAuthType value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -346,6 +371,7 @@ public enum McpCatalogEntryRowAuthType: Codable, Sendable, Hashable {
         case .apiKey: try container.encode("api_key")
         case .oauth: try container.encode("oauth")
         case .none: try container.encode("none")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -354,13 +380,18 @@ public enum McpCatalogEntryRowAuthType: Codable, Sendable, Hashable {
 public enum McpCatalogEntryRowTransport: Codable, Sendable, Hashable {
     case stdio
     case http
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "stdio": self = .stdio
         case "http": self = .http
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogEntryRowTransport value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpCatalogEntryRowTransport value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -369,6 +400,7 @@ public enum McpCatalogEntryRowTransport: Codable, Sendable, Hashable {
         switch self {
         case .stdio: try container.encode("stdio")
         case .http: try container.encode("http")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -397,10 +429,12 @@ public struct McpCatalogInstallResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["action", "background", "name", "ok"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["action", "background", "name", "ok"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         action = try container.decodeIfPresent(String.self, forKey: .action)
@@ -438,10 +472,12 @@ public struct McpCatalogRequiredEnv: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["name", "prompt", "required"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["name", "prompt", "required"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         name = try container.decode(String.self, forKey: .name)
@@ -477,10 +513,12 @@ public struct McpCatalogResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["diagnostics", "discovery", "entries"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["diagnostics", "discovery", "entries"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         diagnostics = try container.decode([McpCatalogDiagnostic].self, forKey: .diagnostics)
@@ -522,10 +560,12 @@ public struct McpCatalogSuggest: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["applications", "examples", "hosts", "keywords", "requires_app"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["applications", "examples", "hosts", "keywords", "requires_app"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         applications = try container.decode([String].self, forKey: .applications)
@@ -562,10 +602,12 @@ public struct McpOAuthCancelResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["ok", "status"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["ok", "status"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         ok = try container.decode(Bool.self, forKey: .ok)
@@ -584,6 +626,7 @@ public enum McpOAuthCancelResponseStatus: Codable, Sendable, Hashable {
     case expired
     case approved
     case error
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -591,7 +634,11 @@ public enum McpOAuthCancelResponseStatus: Codable, Sendable, Hashable {
         case "expired": self = .expired
         case "approved": self = .approved
         case "error": self = .error
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpOAuthCancelResponseStatus value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpOAuthCancelResponseStatus value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -601,6 +648,7 @@ public enum McpOAuthCancelResponseStatus: Codable, Sendable, Hashable {
         case .expired: try container.encode("expired")
         case .approved: try container.encode("approved")
         case .error: try container.encode("error")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -631,10 +679,12 @@ public struct McpOAuthFlowResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["authorization_url", "error", "flow_id", "server_name", "status"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["authorization_url", "error", "flow_id", "server_name", "status"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         authorizationUrl = try container.decode(Optional<String>.self, forKey: .authorizationUrl)
@@ -660,6 +710,7 @@ public enum McpOAuthFlowResponseStatus: Codable, Sendable, Hashable {
     case authorizationRequired
     case approved
     case error
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -668,7 +719,11 @@ public enum McpOAuthFlowResponseStatus: Codable, Sendable, Hashable {
         case "authorization_required": self = .authorizationRequired
         case "approved": self = .approved
         case "error": self = .error
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpOAuthFlowResponseStatus value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpOAuthFlowResponseStatus value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -679,6 +734,7 @@ public enum McpOAuthFlowResponseStatus: Codable, Sendable, Hashable {
         case .authorizationRequired: try container.encode("authorization_required")
         case .approved: try container.encode("approved")
         case .error: try container.encode("error")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -712,10 +768,12 @@ public struct McpOAuthFlowStatusResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["authorization_url", "error", "flow_id", "server_name", "status", "tools"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["authorization_url", "error", "flow_id", "server_name", "status", "tools"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         authorizationUrl = try container.decode(Optional<String>.self, forKey: .authorizationUrl)
@@ -743,6 +801,7 @@ public enum McpOAuthFlowStatusResponseStatus: Codable, Sendable, Hashable {
     case authorizationRequired
     case approved
     case error
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -751,7 +810,11 @@ public enum McpOAuthFlowStatusResponseStatus: Codable, Sendable, Hashable {
         case "authorization_required": self = .authorizationRequired
         case "approved": self = .approved
         case "error": self = .error
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpOAuthFlowStatusResponseStatus value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpOAuthFlowStatusResponseStatus value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -762,6 +825,7 @@ public enum McpOAuthFlowStatusResponseStatus: Codable, Sendable, Hashable {
         case .authorizationRequired: try container.encode("authorization_required")
         case .approved: try container.encode("approved")
         case .error: try container.encode("error")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -813,10 +877,12 @@ public struct McpServerAddResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["args", "auth", "command", "enabled", "env", "name", "plugin", "source", "tools", "transport", "url"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["args", "auth", "command", "enabled", "env", "name", "plugin", "source", "tools", "transport", "url"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         args = try container.decode([String].self, forKey: .args)
@@ -852,13 +918,18 @@ public struct McpServerAddResponse: Codable, Sendable, Hashable {
 public enum McpServerAddResponseSource: Codable, Sendable, Hashable {
     case config
     case plugin
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "config": self = .config
         case "plugin": self = .plugin
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerAddResponseSource value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerAddResponseSource value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -867,6 +938,7 @@ public enum McpServerAddResponseSource: Codable, Sendable, Hashable {
         switch self {
         case .config: try container.encode("config")
         case .plugin: try container.encode("plugin")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -875,15 +947,20 @@ public enum McpServerAddResponseSource: Codable, Sendable, Hashable {
 public enum McpServerAddResponseTransport: Codable, Sendable, Hashable {
     case http
     case stdio
-    case unknown
+    case knownUnknown
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "http": self = .http
         case "stdio": self = .stdio
-        case "unknown": self = .unknown
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerAddResponseTransport value: \(raw)")
+        case "unknown": self = .knownUnknown
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerAddResponseTransport value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -892,7 +969,8 @@ public enum McpServerAddResponseTransport: Codable, Sendable, Hashable {
         switch self {
         case .http: try container.encode("http")
         case .stdio: try container.encode("stdio")
-        case .unknown: try container.encode("unknown")
+        case .knownUnknown: try container.encode("unknown")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -944,10 +1022,12 @@ public struct McpServerConfigSummary: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["args", "auth", "command", "enabled", "env", "name", "plugin", "source", "tools", "transport", "url"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["args", "auth", "command", "enabled", "env", "name", "plugin", "source", "tools", "transport", "url"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         args = try container.decode([String].self, forKey: .args)
@@ -983,13 +1063,18 @@ public struct McpServerConfigSummary: Codable, Sendable, Hashable {
 public enum McpServerConfigSummarySource: Codable, Sendable, Hashable {
     case config
     case plugin
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "config": self = .config
         case "plugin": self = .plugin
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerConfigSummarySource value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerConfigSummarySource value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -998,6 +1083,7 @@ public enum McpServerConfigSummarySource: Codable, Sendable, Hashable {
         switch self {
         case .config: try container.encode("config")
         case .plugin: try container.encode("plugin")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -1006,15 +1092,20 @@ public enum McpServerConfigSummarySource: Codable, Sendable, Hashable {
 public enum McpServerConfigSummaryTransport: Codable, Sendable, Hashable {
     case http
     case stdio
-    case unknown
+    case knownUnknown
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "http": self = .http
         case "stdio": self = .stdio
-        case "unknown": self = .unknown
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerConfigSummaryTransport value: \(raw)")
+        case "unknown": self = .knownUnknown
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected McpServerConfigSummaryTransport value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -1023,7 +1114,8 @@ public enum McpServerConfigSummaryTransport: Codable, Sendable, Hashable {
         switch self {
         case .http: try container.encode("http")
         case .stdio: try container.encode("stdio")
-        case .unknown: try container.encode("unknown")
+        case .knownUnknown: try container.encode("unknown")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -1048,10 +1140,12 @@ public struct McpServerEnabledResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["enabled", "name", "ok"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["enabled", "name", "ok"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         enabled = try container.decode(Bool.self, forKey: .enabled)
@@ -1081,10 +1175,12 @@ public struct McpServerListResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["servers"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["servers"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         servers = try container.decode([McpServerConfigSummary].self, forKey: .servers)
@@ -1116,10 +1212,12 @@ public struct McpServerProbeTool: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["description", "name", "schema_chars"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["description", "name", "schema_chars"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         description = try container.decode(String.self, forKey: .description)
@@ -1161,10 +1259,12 @@ public struct McpServerTestResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["error", "ok", "prompts", "resources", "tools"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["error", "ok", "prompts", "resources", "tools"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         error = try container.decodeIfPresent(String.self, forKey: .error)
@@ -1201,10 +1301,12 @@ public struct McpToolSummary: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["description", "name"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["description", "name"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         description = try container.decode(String.self, forKey: .description)
@@ -1232,10 +1334,12 @@ public struct MediaDataUrlResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["data_url"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["data_url"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         dataUrl = try container.decode(String.self, forKey: .dataUrl)
@@ -1264,10 +1368,12 @@ public struct MemoryBuiltinFileSizes: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["memory", "user"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["memory", "user"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         memory = try container.decode(Int.self, forKey: .memory)
@@ -1304,10 +1410,12 @@ public struct MemoryOAuthStartResponse: Codable, Sendable, Hashable {
     }
 
     public init(from decoder: Decoder) throws {
-        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["auth", "connected", "detail", "state"]
-        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["auth", "connected", "detail", "state"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         auth = try container.decodeIfPresent(MemoryOAuthStartResponseAuth.self, forKey: .auth)
@@ -1329,13 +1437,18 @@ public struct MemoryOAuthStartResponse: Codable, Sendable, Hashable {
 public enum MemoryOAuthStartResponseAuth: Codable, Sendable, Hashable {
     case oauth
     case apikey
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         switch raw {
         case "oauth": self = .oauth
         case "apikey": self = .apikey
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected MemoryOAuthStartResponseAuth value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected MemoryOAuthStartResponseAuth value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -1344,6 +1457,7 @@ public enum MemoryOAuthStartResponseAuth: Codable, Sendable, Hashable {
         switch self {
         case .oauth: try container.encode("oauth")
         case .apikey: try container.encode("apikey")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }
@@ -1354,6 +1468,7 @@ public enum MemoryOAuthStartResponseState: Codable, Sendable, Hashable {
     case pending
     case connected
     case error
+    case unknown(String)
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1362,7 +1477,11 @@ public enum MemoryOAuthStartResponseState: Codable, Sendable, Hashable {
         case "pending": self = .pending
         case "connected": self = .connected
         case "error": self = .error
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected MemoryOAuthStartResponseState value: \(raw)")
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected MemoryOAuthStartResponseState value: \(raw)")
+            }
+            self = .unknown(raw)
         }
     }
 
@@ -1373,6 +1492,7 @@ public enum MemoryOAuthStartResponseState: Codable, Sendable, Hashable {
         case .pending: try container.encode("pending")
         case .connected: try container.encode("connected")
         case .error: try container.encode("error")
+        case .unknown(let raw): try container.encode(raw)
         }
     }
 }

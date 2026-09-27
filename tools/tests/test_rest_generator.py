@@ -60,8 +60,9 @@ def test_nested_objects_arrays_enums_tuples_and_maps_become_named_types() -> Non
     assert (fields["items"].swift, fields["items"].kotlin) == ("[Item]", "List<Item>")
     assert (fields["by_id"].swift, fields["by_id"].kotlin) == ("[String: Item]", "Map<String, Item>")
     assert graph.objects["Item"].reject_unknown
-    # Strict enums: no unknown case; odd wire values still get case names.
-    assert graph.enums["ItemState"].closed
+    # Strict enums reject unknown values unless the client decodes tolerantly, so they keep an unknown case;
+    # odd wire values still get case names.
+    assert graph.enums["ItemState"].strict and not graph.enums["ItemState"].closed
     assert graph.tuples["ItemPair"].items[1].kotlin == "Long"
 
 

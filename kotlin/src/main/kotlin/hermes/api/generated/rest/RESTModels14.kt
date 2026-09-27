@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.*
 import kotlinx.serialization.json.*
 import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
+import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``update_profile_description_endpoint``. */
 @Serializable
@@ -78,8 +79,10 @@ public data class ProfileImport(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ProfileImport requires an object")
-            val known = setOf<String>("archive", "name")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("archive", "name")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
             return ProfileImport(
                 archive = json.decodeFromJsonElement<String>((input["archive"] ?: throw SerializationException("Missing archive"))),
                 name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
@@ -286,9 +289,11 @@ public data class ProfileProjectsTreeResponse(
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("ProfileProjectsTreeResponse requires an object")
-            val known = setOf<String>("errors", "projects", "scoped_session_ids", "active_id")
-            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            if (input["active_id"] !is JsonNull) throw SerializationException("Field active_id must be present and null")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("errors", "projects", "scoped_session_ids", "active_id")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+                if (input["active_id"] !is JsonNull) throw SerializationException("Field active_id must be present and null")
+            }
             return ProfileProjectsTreeResponse(
                 errors = json.decodeFromJsonElement<List<ProfileReadError>>((input["errors"] ?: throw SerializationException("Missing errors"))),
                 projects = json.decodeFromJsonElement<List<ProfileProjectTreeNode>>((input["projects"] ?: throw SerializationException("Missing projects"))),

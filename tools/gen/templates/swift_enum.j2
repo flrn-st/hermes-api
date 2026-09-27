@@ -17,6 +17,12 @@ public enum {{ enum.name }}: Codable, Sendable, Hashable {
         default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
 {% elif enum.closed %}
         default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected {{ enum.name }} value: \(raw)")
+{% elif enum.strict %}
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected {{ enum.name }} value: \(raw)")
+            }
+            self = .unknown(raw)
 {% else %}
         default: self = .unknown(raw)
 {% endif %}

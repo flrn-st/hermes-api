@@ -324,6 +324,7 @@ public object LiveScenarios {
             completion.invokeOnCompletion { resubmit.cancel() }
         }
         val states = launch { gateway.connectionStates.collect { turn.notes += "state $it" } }
+        val recoveries = launch { gateway.sessionRecoveries.collect { turn.notes += "recovery $it" } }
         try {
             completion.await()
         } catch (error: LiveScenarioFailure) {
@@ -331,6 +332,7 @@ public object LiveScenarios {
             throw error
         } finally {
             states.cancel()
+            recoveries.cancel()
         }
         turn
     }

@@ -18,6 +18,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
 import hermes.api.generated.gateway.GatewayEventPayload
@@ -463,6 +464,35 @@ class HermesGatewayTest {
         val events = withTimeout(3_000) { received.await() }
         assertEquals(listOf(1L, 2L, 3L), events.map { it.seq })
         assertEquals(listOf(false, true, false), events.map { it.replayed })
+        gateway.disconnect()
+    }
+
+    @Test
+    fun failedReplayRetriesTheGapInsteadOfSkippingIt() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val third = FakeSocket()
+        val gateway = client(sockets(first, second, third))
+        val received = backgroundScope.async { gateway.events.take(3).toList() }
+        gateway.connect()
+        first.inbound.send(event("message.start", "s", 1))
+        delay(100)
+        first.sever()
+        val activate = second.sent()
+        second.inbound.send(event("message.delta", "s", 3, """{"text":"b"}"""))
+        second.inbound.send(result(activate, """{"session_id":"s"}"""))
+        val replay = second.sent()
+        // The socket stays up but the replay is unusable: releasing seq 3 now would skip seq 2 for good.
+        second.inbound.send(result(replay, """{"unexpected":true}"""))
+        val retryActivate = third.sent()
+        assertEquals("session.activate", retryActivate.method())
+        third.inbound.send(result(retryActivate, """{"session_id":"s"}"""))
+        val retryReplay = third.sent()
+        assertEquals("session.events.since", retryReplay.method())
+        assertEquals(1L, retryReplay["params"]?.jsonObject?.get("last_seen")?.jsonPrimitive?.long)
+        third.inbound.send(result(retryReplay, """{"events":[{"type":"message.delta","session_id":"s","seq":2,"payload":{"text":"a"}},{"type":"message.delta","session_id":"s","seq":3,"payload":{"text":"b"}}],"latest_seq":3,"truncated":false,"count":2,"epoch":"same","open_requests":[]}"""))
+        val events = withTimeout(3_000) { received.await() }
+        assertEquals(listOf(1L, 2L, 3L), events.map { it.seq })
         gateway.disconnect()
     }
 

@@ -263,7 +263,7 @@ public actor HermesGateway: GatewayCalling {
                 throw HermesGatewayError.transport("Connection ended during handshake")
             }
             if hasConnected {
-                await recoverSessions(socket: socket, generation: current)
+                try await recoverSessions(socket: socket, generation: current)
             }
             guard current == generation, activeSocket != nil else {
                 throw HermesGatewayError.transport("Connection ended during session recovery")
@@ -786,36 +786,48 @@ public actor HermesGateway: GatewayCalling {
     private enum Rebind {
         case bound
         case gone(String)
-        case retryLater
+        /// Hermes is still interrupting the turn it orphaned; no live event of the session reaches this socket.
+        case settling
     }
 
-    private func recoverSessions(socket: any GatewayConnection, generation current: Int) async {
-        defer {
-            let remaining = replayHold.sorted(by: { $0.key < $1.key })
+    /// Throws when a session could not be brought up to date over this socket; the attempt then fails and the
+    /// next one replays from the same watermark. Releasing live events past an unreplayed gap would skip it.
+    private func recoverSessions(socket: any GatewayConnection, generation current: Int) async throws {
+        do {
+            for sessionID in trackedSessionIDs.sorted() {
+                guard current == generation else { return }
+                try await recover(sessionID, socket: socket, generation: current)
+            }
+        } catch {
+            // Held events sit past the gap the next attempt replays.
             replayHold.removeAll()
-            for (_, held) in remaining {
-                for event in held { handleEvent(.object(event), replayed: false) }
+            throw error
+        }
+        // Sessions created while recovering were never replayed, so their events need no hold.
+        let remaining = replayHold.sorted(by: { $0.key < $1.key })
+        replayHold.removeAll()
+        for (_, held) in remaining {
+            for event in held { handleEvent(.object(event), replayed: false) }
+        }
+    }
+
+    private func recover(_ sessionID: String, socket: any GatewayConnection, generation current: Int) async throws {
+        let session = sessions[sessionID] ?? TrackedSession()
+        if session.closeOnDisconnect {
+            forgetSession(sessionID)
+            recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: "Closed on disconnect"))
+        } else {
+            switch try await rebind(sessionID) {
+            case .bound: try await replay(sessionID, socket: socket, generation: current)
+            case .gone(let reason): try await resume(sessionID, session: session, reason: reason)
+            case .settling: break
             }
         }
-        for sessionID in trackedSessionIDs.sorted() {
-            guard current == generation else { return }
-            let session = sessions[sessionID] ?? TrackedSession()
-            if session.closeOnDisconnect {
-                forgetSession(sessionID)
-                recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: "Closed on disconnect"))
-            } else {
-                switch await rebind(sessionID) {
-                case .bound: await replay(sessionID, socket: socket, generation: current)
-                case .gone(let reason): await resume(sessionID, session: session, reason: reason)
-                case .retryLater: break
-                }
-            }
-            releaseHeldEvents(for: sessionID)
-        }
+        releaseHeldEvents(for: sessionID)
     }
 
     /// Rebinding cancels Hermes' orphan reap and routes the session's live events to this socket.
-    private func rebind(_ sessionID: String) async -> Rebind {
+    private func rebind(_ sessionID: String) async throws -> Rebind {
         for attempt in 1...3 {
             do {
                 _ = try await call(
@@ -826,20 +838,19 @@ public actor HermesGateway: GatewayCalling {
             } catch HermesGatewayError.rpc(HermesGatewayErrorCode.sessionSettling, _, _) where attempt < 3 {
                 // Hermes is still settling the disconnect interrupt.
                 try? await Task.sleep(for: .milliseconds(500 * attempt))
-            } catch HermesGatewayError.rpc(let code, let message, _)
-                where [HermesGatewayErrorCode.sessionNotFound, HermesGatewayErrorCode.sessionNotLive,
-                       HermesGatewayErrorCode.sessionUnavailable].contains(code) {
+            } catch HermesGatewayError.rpc(HermesGatewayErrorCode.sessionSettling, _, _) {
+                return .settling
+            } catch HermesGatewayError.rpc(_, let message, _) {
+                // Not found, not live, unavailable, or refused otherwise: this runtime id is no longer ours.
                 return .gone(message)
-            } catch {
-                return .retryLater
             }
         }
-        return .retryLater
+        return .settling
     }
 
     /// Hermes reclaims a session 20 s after its socket closes (and every session on restart), but keeps it
     /// in storage. Resuming by the stored id rebuilds it under a new runtime id.
-    private func resume(_ sessionID: String, session: TrackedSession, reason: String) async {
+    private func resume(_ sessionID: String, session: TrackedSession, reason: String) async throws {
         guard configuration.resumesReclaimedSessions, let storedID = session.storedID else {
             forgetSession(sessionID)
             recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: reason))
@@ -862,35 +873,37 @@ public actor HermesGateway: GatewayCalling {
         } catch HermesGatewayError.rpc(_, let message, _) {
             forgetSession(sessionID)
             recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: message))
-        } catch {
-            // Keep the session; the next reconnect tries again.
         }
     }
 
-    private func replay(_ sessionID: String, socket: any GatewayConnection, generation current: Int) async {
+    private func replay(_ sessionID: String, socket: any GatewayConnection, generation current: Int) async throws {
+        let result: SessionEventsSinceResult
         do {
-            let result: SessionEventsSinceResult = try await call(
+            result = try await call(
                 "session.events.since",
                 params: SessionEventsSinceParams(sessionId: sessionID, lastSeen: .value(lastSequence[sessionID] ?? 0)),
                 as: SessionEventsSinceResult.self, timeout: Self.recoveryTimeout, waitsForConnection: false
             )
-            if let epoch = replayEpoch, epoch != result.epoch {
-                resetWatermarks()
-                replayEpoch = result.epoch
-            } else if result.truncated {
-                lastSequence[sessionID] = result.latestSeq
-                recoveryBroadcast.yield(.replayTruncated(sessionID: sessionID))
-            } else {
-                for event in result.events { handleEvent(.object(event), replayed: true) }
-            }
-            for request in result.openRequests {
-                await handleServerRequest(
-                    id: request.id, method: request.method, params: .object(request.params),
-                    socket: socket, generation: current
-                )
-            }
-        } catch {
-            // Keep the watermark; the next reconnect replays the gap.
+        } catch HermesGatewayError.rpc(_, let message, _) {
+            // Hermes answered but cannot replay; the caller must reload what it shows.
+            configuration.logger.error("Replay refused: \(message, privacy: .public)")
+            recoveryBroadcast.yield(.replayTruncated(sessionID: sessionID))
+            return
+        }
+        if let epoch = replayEpoch, epoch != result.epoch {
+            resetWatermarks()
+            replayEpoch = result.epoch
+        } else if result.truncated {
+            lastSequence[sessionID] = result.latestSeq
+            recoveryBroadcast.yield(.replayTruncated(sessionID: sessionID))
+        } else {
+            for event in result.events { handleEvent(.object(event), replayed: true) }
+        }
+        for request in result.openRequests {
+            await handleServerRequest(
+                id: request.id, method: request.method, params: .object(request.params),
+                socket: socket, generation: current
+            )
         }
     }
 

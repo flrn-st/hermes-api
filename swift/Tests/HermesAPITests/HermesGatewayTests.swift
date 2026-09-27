@@ -531,6 +531,37 @@ private func createSession(
     await gateway.disconnect()
 }
 
+@Test func failedReplayRetriesTheGapInsteadOfSkippingIt() async throws {
+    let first = TestSocket()
+    let second = TestSocket()
+    let third = TestSocket()
+    let gateway = client(SequenceTransport([first, second, third]))
+    try await gateway.connect()
+    var events = gateway.events().makeAsyncIterator()
+    await first.inject(event("message.start", session: "s", seq: 1))
+    #expect(await events.next()?.seq == 1)
+    var secondSent = second.sent.makeAsyncIterator()
+    var thirdSent = third.sent.makeAsyncIterator()
+    await first.sever()
+    let (_, activateID) = try sentCall(try #require(await secondSent.next()))
+    await second.inject(event("message.delta", session: "s", seq: 3, payload: #"{"text":"b"}"#))
+    await second.inject(result(activateID, #"{"session_id":"s"}"#))
+    let (_, replayID) = try sentCall(try #require(await secondSent.next()))
+    // The socket stays up but the replay is unusable: releasing seq 3 now would skip seq 2 for good.
+    await second.inject(result(replayID, #"{"unexpected":true}"#))
+    let (activate, retryActivateID) = try sentCall(try #require(await thirdSent.next()))
+    #expect(activate == "session.activate")
+    await third.inject(result(retryActivateID, #"{"session_id":"s"}"#))
+    let replay = try #require(await thirdSent.next())
+    let (_, retryReplayID) = try sentCall(replay)
+    #expect(try sentParams(replay)["last_seen"] as? Int == 1)
+    await third.inject(result(retryReplayID, #"{"events":[{"type":"message.delta","session_id":"s","seq":2,"payload":{"text":"a"}},{"type":"message.delta","session_id":"s","seq":3,"payload":{"text":"b"}}],"latest_seq":3,"truncated":false,"count":2,"epoch":"same","open_requests":[]}"#))
+    #expect(await events.next()?.seq == 2)
+    #expect(await events.next()?.seq == 3)
+    try await state(of: gateway) { $0 == .connected }
+    await gateway.disconnect()
+}
+
 @Test func reconnectRebindsCreatedSessionsWithoutEvents() async throws {
     let first = TestSocket()
     let second = TestSocket()
@@ -695,11 +726,12 @@ private func createSession(
 
 @Test func streamingTrafficNeedsNoHeartbeat() async throws {
     let socket = TestSocket()
-    // Events arrive ten times faster than the heartbeat interval, leaving room for a slow CI runner.
-    let gateway = client(SequenceTransport([socket]), heartbeat: .milliseconds(500), deadline: .seconds(2))
+    // Events arrive forty times faster than the heartbeat interval and keep arriving for twice as long, so a
+    // loaded simulator that stalls the test for a second still sees no silent interval.
+    let gateway = client(SequenceTransport([socket]), heartbeat: .seconds(2), deadline: .seconds(6))
     try await gateway.connect()
     let stream = Task {
-        for seq in 1...30 {
+        for seq in 1...80 {
             await socket.inject(event("message.delta", session: "s", seq: seq, payload: #"{"text":"x"}"#))
             try await Task.sleep(for: .milliseconds(50))
         }

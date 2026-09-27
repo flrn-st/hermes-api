@@ -264,10 +264,17 @@ public enum LiveScenarios {
         let events = gateway.events()
         let started = TurnStarted()
         let states = gateway.connectionStates()
+        let recoveries = gateway.sessionRecoveries()
         let stateWatch = Task {
             for await state in states { await started.state(String(describing: state)) }
         }
-        defer { stateWatch.cancel() }
+        let recoveryWatch = Task {
+            for await recovery in recoveries { await started.note("recovery \(recovery)") }
+        }
+        defer {
+            stateWatch.cancel()
+            recoveryWatch.cancel()
+        }
         do {
             let submission = try await gateway.prompt.submit(.init(sessionId: sessionID, text: .string(prompt)))
             guard submission.status != nil else { throw LiveScenarioError("Gateway rejected the prompt") }
@@ -301,7 +308,9 @@ public enum LiveScenarios {
             var turn = Turn(tool: tool)
             for await event in events {
                 guard event.sessionID == sessionID else {
-                    turn.otherSessions.insert(event.sessionID ?? "none")
+                    if turn.otherSessions.insert(event.sessionID ?? "none").inserted {
+                        await started.note("\(event.type) for another session")
+                    }
                     continue
                 }
                 turn.types[event.type, default: 0] += 1
@@ -341,6 +350,8 @@ private actor TurnStarted {
     private var finishers: [@Sendable () -> Void] = []
     private var log: [String] = []
     private var counts: [String: Int] = [:]
+    private var lastSeq: Int?
+    private var replayedCount = 0
 
     func mark() { value = true }
 
@@ -350,12 +361,14 @@ private actor TurnStarted {
 
     func event(_ type: String, seq: Int?, replayed: Bool) {
         counts[type, default: 0] += 1
+        lastSeq = seq ?? lastSeq
+        if replayed { replayedCount += 1 }
         if type != "message.delta" { log.append("\(type) seq \(seq.map(String.init) ?? "-")\(replayed ? " replayed" : "")") }
     }
 
     var trace: String {
         let tally = counts.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
-        return "events [\(tally)]; last: \(log.suffix(25).joined(separator: " | "))"
+        return "events [\(tally)], \(replayedCount) replayed, last seq \(lastSeq.map(String.init) ?? "-"); last: \(log.suffix(25).joined(separator: " | "))"
     }
 
     func onFinish(_ action: @escaping @Sendable () -> Void) { finishers.append(action) }

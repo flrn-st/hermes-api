@@ -1,4 +1,4 @@
-/// Generated from the Hermes gateway contract. Do not edit.
+/// Generated from the {{ origin }}. Do not edit.
 public enum {{ union.name }}: Codable, Sendable, Hashable {
 {% for variant in union.variants %}
     case {{ variant.swift_name }}({{ variant.swift_type }})

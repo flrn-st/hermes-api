@@ -24,16 +24,25 @@ import hermes.api.generated.gateway.SessionCreateResult
 import hermes.api.generated.gateway.SessionListResult
 import hermes.api.generated.gateway.SessionCloseResult
 import hermes.api.runtime.Patch
-import hermes.api.generated.rest.SessionsEmptyCountResponse
-import hermes.api.generated.rest.AudioVoiceLiveStatusResponse
-import hermes.api.generated.rest.ProfilesActiveResponse
-import hermes.api.generated.rest.ProfilesSetActiveResponse
+import hermes.api.live.generated.RESTOperations
+import hermes.api.runtime.RESTResponse
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.int
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class FixtureDecodeTest {
+    /** Optional nulls collapsed and numbers compared by value, so `1700000000` equals a re-encoded `1.7E9`. */
+    private fun normalized(value: JsonElement): JsonElement = when (value) {
+        is JsonObject -> JsonObject(value.filterValues { it != JsonNull }.mapValues { normalized(it.value) })
+        is JsonArray -> JsonArray(value.map(::normalized))
+        is JsonPrimitive -> if (value.isString) value else value.content.toBigDecimalOrNull()
+            ?.let { JsonPrimitive(it.stripTrailingZeros().toPlainString()) } ?: value
+    }
+
     private fun collapsingOptionalNulls(value: JsonElement): JsonElement = when (value) {
         is JsonObject -> JsonObject(value.filterValues { it != JsonNull }
             .mapValues { collapsingOptionalNulls(it.value) })
@@ -48,6 +57,7 @@ class FixtureDecodeTest {
         val lines = Files.readAllLines(Path.of("../fixtures/$ref/liveness.jsonl"))
         assertTrue(lines.size >= 8)
         val seen = mutableSetOf<String>()
+        val restSeen = mutableSetOf<String>()
         for (line in lines) {
             val record = json.parseToJsonElement(line).jsonObject
             val name = record.getValue("name").jsonPrimitive.content
@@ -78,33 +88,28 @@ class FixtureDecodeTest {
                 continue
             }
             if (record.getValue("kind").jsonPrimitive.content == "rest") {
-                assertEquals(200, frame.getValue("status").jsonPrimitive.content.toInt())
-                val body = frame.getValue("body")
-                when (name) {
-                    "GET /api/audio/voice-live/status" -> {
-                        val result = json.decodeFromJsonElement(AudioVoiceLiveStatusResponse.serializer(), body)
-                        assertTrue(result.ok && result.mode == "chained")
-                        assertEquals(body, json.encodeToJsonElement(AudioVoiceLiveStatusResponse.serializer(), result))
-                    }
-                    "GET /api/sessions/empty/count" -> {
-                        val result = json.decodeFromJsonElement(SessionsEmptyCountResponse.serializer(), body)
-                        assertTrue(result.count >= 0)
-                        assertEquals(body, json.encodeToJsonElement(SessionsEmptyCountResponse.serializer(), result))
-                    }
-                    "GET /api/profiles/active" -> {
-                        val result = json.decodeFromJsonElement(ProfilesActiveResponse.serializer(), body)
-                        assertEquals("default", result.active)
-                        assertEquals("default", result.current)
-                        assertEquals(body, json.encodeToJsonElement(ProfilesActiveResponse.serializer(), result))
-                    }
-                    "POST /api/profiles/active" -> {
-                        val result = json.decodeFromJsonElement(ProfilesSetActiveResponse.serializer(), body)
-                        assertTrue(result.ok)
-                        assertEquals("default", result.active)
-                        assertEquals(body, json.encodeToJsonElement(ProfilesSetActiveResponse.serializer(), result))
-                    }
-                    else -> error("Unexpected REST fixture: $name")
+                // Every recorded operation decodes through its generated model and re-encodes to the same JSON.
+                val status = frame.getValue("status").jsonPrimitive.int
+                val headers = buildMap {
+                    frame["media"]?.jsonPrimitive?.contentOrNull?.let { put("content-type", it) }
+                    frame["location"]?.jsonPrimitive?.contentOrNull?.let { put("location", it) }
                 }
+                val jsonBody = frame["body"]
+                val text = frame["text"]?.jsonPrimitive?.contentOrNull
+                val bytes = jsonBody?.toString()?.encodeToByteArray() ?: text?.encodeToByteArray() ?: ByteArray(0)
+                assertTrue(name in RESTOperations.all, "Unknown REST operation $name")
+                val decoded = RESTOperations.decode(name, RESTResponse(status, headers, bytes), json)
+                if (jsonBody != null) {
+                    val expected = normalized(jsonBody)
+                    val actual = normalized(decoded)
+                    assertTrue(actual == expected ||
+                        actual == JsonObject(mapOf("status" to JsonPrimitive(status), "value" to expected)),
+                        "$name does not round-trip")
+                } else if (text != null) {
+                    assertTrue(decoded == JsonPrimitive(text) ||
+                        decoded == JsonObject(mapOf("status" to JsonPrimitive(status), "value" to JsonPrimitive(text))))
+                }
+                restSeen += name
                 continue
             }
             if (record.getValue("kind").jsonPrimitive.content == "event") {
@@ -181,10 +186,7 @@ class FixtureDecodeTest {
         }
         assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "clarify", "approval",
             "tool.start", "tool.complete", "message.delta",
-            "GET /api/audio/voice-live/status",
-            "GET /api/sessions/empty/count",
-            "GET /api/profiles/active",
-            "POST /api/profiles/active",
             "message.complete", "session.create", "session.list", "session.close")))
+        assertTrue(restSeen.size >= 4)
     }
 }

@@ -8,3 +8,4 @@ spec/.upstream/
 spec/.upstream-rest/
 .DS_Store
 *.pyc
+.kotlin/

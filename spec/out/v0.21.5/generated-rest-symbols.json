@@ -1,44 +1,2347 @@
 [
   {
     "method": "GET",
+    "path": "/api/actions/{name}/status",
+    "public_name": "actions.status",
+    "request": null,
+    "response": "ActionStatusResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/analytics/models",
+    "public_name": "analytics.models",
+    "request": null,
+    "response": "AnalyticsModelsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/analytics/usage",
+    "public_name": "analytics.usage",
+    "request": null,
+    "response": "AnalyticsUsageResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/audio/elevenlabs/voices",
+    "public_name": "audio.elevenlabsVoices",
+    "request": null,
+    "response": "ElevenLabsVoicesResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/audio/speak",
+    "public_name": "audio.speak",
+    "request": "TTSSpeakRequest",
+    "response": "AudioSpeakResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/audio/transcribe",
+    "public_name": "audio.transcribe",
+    "request": "AudioTranscriptionRequest",
+    "response": "AudioTranscriptionResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/audio/tts-lease",
+    "public_name": "audio.ttsLease",
+    "request": "TTSLeaseRequest",
+    "response": "TtsLeaseResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/audio/voice-config",
+    "public_name": "audio.voiceConfig",
+    "request": null,
+    "response": "VoiceClientConfigResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/audio/voice-live/session",
+    "public_name": "audio.voiceLiveSession",
+    "request": "VoiceLiveSessionRequest",
+    "response": "VoiceLiveSessionResponse"
+  },
+  {
+    "method": "GET",
     "path": "/api/audio/voice-live/status",
     "public_name": "audio.voiceLiveStatus",
     "request": null,
-    "response": "AudioVoiceLiveStatusResponse"
+    "response": "VoiceLiveStatusResponse"
   },
   {
     "method": "GET",
     "path": "/api/auth/me",
     "public_name": "auth.me",
     "request": null,
-    "response": "AuthMeResponse"
+    "response": "DashboardAuthMeResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/providers",
+    "public_name": "auth.providers",
+    "request": null,
+    "response": "DashboardAuthProvidersResponse"
   },
   {
     "method": "POST",
     "path": "/api/auth/ws-ticket",
     "public_name": "auth.wsTicket",
     "request": null,
-    "response": "AuthWsTicketResponse"
+    "response": "DashboardAuthWsTicketResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/chat/image-upload",
+    "public_name": "chat.imageUpload",
+    "request": "ChatImageUpload",
+    "response": "ChatImageUploadResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/chat/workspaces",
+    "public_name": "chat.workspaces",
+    "request": null,
+    "response": "ChatWorkspacesResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/config",
+    "public_name": "config.get",
+    "request": null,
+    "response": "ConfigResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/config",
+    "public_name": "config.update",
+    "request": "ConfigUpdate",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/config/defaults",
+    "public_name": "config.defaults",
+    "request": null,
+    "response": "ConfigDefaultsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/config/raw",
+    "public_name": "config.raw",
+    "request": null,
+    "response": "RawConfigYamlResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/config/raw",
+    "public_name": "config.updateRaw",
+    "request": "RawConfigUpdate",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/config/schema",
+    "public_name": "config.schema",
+    "request": null,
+    "response": "ConfigSchemaResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/credentials/pool",
+    "public_name": "credentials.pool",
+    "request": null,
+    "response": "CredentialPoolListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/credentials/pool",
+    "public_name": "credentials.setPool",
+    "request": "CredentialPoolAdd",
+    "response": "CredentialPoolAddResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/credentials/pool/{provider}/{index}",
+    "public_name": "credentials.deletePool",
+    "request": null,
+    "response": "CredentialPoolRemoveResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/cron/blueprints",
+    "public_name": "cron.blueprints",
+    "request": null,
+    "response": "CronBlueprintsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/cron/blueprints/instantiate",
+    "public_name": "cron.blueprintsInstantiate",
+    "request": "AutomationBlueprintInstantiate",
+    "response": "CronJob"
+  },
+  {
+    "method": "GET",
+    "path": "/api/cron/delivery-targets",
+    "public_name": "cron.deliveryTargets",
+    "request": null,
+    "response": "CronDeliveryTargetsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/cron/fire",
+    "public_name": "cron.fire",
+    "request": "CronFireRequest",
+    "response": "CronFireResult"
+  },
+  {
+    "method": "GET",
+    "path": "/api/cron/jobs",
+    "public_name": "cron.jobs",
+    "request": null,
+    "response": "[CronJob]"
+  },
+  {
+    "method": "POST",
+    "path": "/api/cron/jobs",
+    "public_name": "cron.setJobs",
+    "request": "CronJobCreate",
+    "response": "CronJob"
+  },
+  {
+    "method": "GET",
+    "path": "/api/cron/jobs/{job_id}",
+    "public_name": "cron.jobsByJobId",
+    "request": null,
+    "response": "CronJob"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/cron/jobs/{job_id}",
+    "public_name": "cron.updateJobs",
+    "request": "CronJobUpdate",
+    "response": "CronJob"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/cron/jobs/{job_id}",
+    "public_name": "cron.deleteJobs",
+    "request": null,
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/cron/jobs/{job_id}/pause",
+    "public_name": "cron.jobsPause",
+    "request": null,
+    "response": "CronJob"
+  },
+  {
+    "method": "POST",
+    "path": "/api/cron/jobs/{job_id}/resume",
+    "public_name": "cron.jobsResume",
+    "request": null,
+    "response": "CronJob"
+  },
+  {
+    "method": "GET",
+    "path": "/api/cron/jobs/{job_id}/runs",
+    "public_name": "cron.jobsRuns",
+    "request": null,
+    "response": "CronJobRunsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/cron/jobs/{job_id}/trigger",
+    "public_name": "cron.jobsTrigger",
+    "request": null,
+    "response": "CronJob"
+  },
+  {
+    "method": "GET",
+    "path": "/api/curator",
+    "public_name": "curator.get",
+    "request": null,
+    "response": "CuratorStatusResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/curator/paused",
+    "public_name": "curator.paused",
+    "request": "CuratorPause",
+    "response": "CuratorPausedResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/curator/run",
+    "public_name": "curator.run",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/dashboard/agent-plugins/activate",
+    "public_name": "dashboard.agentPluginsActivate",
+    "request": "AgentPluginActivateRequest",
+    "response": "AgentPluginActivateResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/dashboard/agent-plugins/install",
+    "public_name": "dashboard.agentPluginsInstall",
+    "request": "_AgentPluginInstallBody",
+    "response": "AgentPluginInstallResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/dashboard/agent-plugins/{name}",
+    "public_name": "dashboard.agentPlugins",
+    "request": null,
+    "response": "AgentPluginRemoveResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/dashboard/agent-plugins/{name}/disable",
+    "public_name": "dashboard.agentPluginsDisable",
+    "request": null,
+    "response": "AgentPluginToggleResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/dashboard/agent-plugins/{name}/enable",
+    "public_name": "dashboard.agentPluginsEnable",
+    "request": null,
+    "response": "AgentPluginToggleResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/dashboard/agent-plugins/{name}/update",
+    "public_name": "dashboard.agentPluginsUpdate",
+    "request": "AgentPluginUpdateRequest",
+    "response": "AgentPluginUpdateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/dashboard/font",
+    "public_name": "dashboard.font",
+    "request": null,
+    "response": "DashboardFontResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/dashboard/font",
+    "public_name": "dashboard.updateFont",
+    "request": "FontSetBody",
+    "response": "DashboardFontSetResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/dashboard/plugin-providers",
+    "public_name": "dashboard.pluginProviders",
+    "request": "_PluginProvidersPutBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/dashboard/plugins",
+    "public_name": "dashboard.plugins",
+    "request": null,
+    "response": "[DashboardPluginManifest]"
+  },
+  {
+    "method": "GET",
+    "path": "/api/dashboard/plugins/catalog",
+    "public_name": "dashboard.pluginsCatalog",
+    "request": null,
+    "response": "PluginCatalogResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/dashboard/plugins/hub",
+    "public_name": "dashboard.pluginsHub",
+    "request": null,
+    "response": "PluginsHubResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/dashboard/plugins/rescan",
+    "public_name": "dashboard.pluginsRescan",
+    "request": null,
+    "response": "DashboardPluginsRescanResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/dashboard/plugins/{name}/visibility",
+    "public_name": "dashboard.pluginsVisibility",
+    "request": "_PluginVisibilityBody",
+    "response": "PluginVisibilityResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/dashboard/theme",
+    "public_name": "dashboard.theme",
+    "request": "ThemeSetBody",
+    "response": "DashboardThemeSetResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/dashboard/themes",
+    "public_name": "dashboard.themes",
+    "request": null,
+    "response": "DashboardThemesResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/egress/status",
+    "public_name": "egress.status",
+    "request": null,
+    "response": "EgressStatusResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/env",
+    "public_name": "env.get",
+    "request": null,
+    "response": "[String: EnvVarInfo]"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/env",
+    "public_name": "env.update",
+    "request": "EnvVarUpdate",
+    "response": "EnvVarSaveResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/env",
+    "public_name": "env.delete",
+    "request": "EnvVarDelete",
+    "response": "EnvVarRemoveResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/env/reveal",
+    "public_name": "env.reveal",
+    "request": "EnvVarReveal",
+    "response": "EnvVarRevealResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/files",
+    "public_name": "files.get",
+    "request": null,
+    "response": "ManagedFileListResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/files",
+    "public_name": "files.delete",
+    "request": "ManagedFileDelete",
+    "response": "ManagedFileDeleteResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/files/download",
+    "public_name": "files.download",
+    "request": null,
+    "response": "RESTBinary"
+  },
+  {
+    "method": "POST",
+    "path": "/api/files/mkdir",
+    "public_name": "files.mkdir",
+    "request": "ManagedDirectoryCreate",
+    "response": "ManagedFileWriteResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/files/read",
+    "public_name": "files.read",
+    "request": null,
+    "response": "ManagedFileReadResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/files/stream",
+    "public_name": "files.stream",
+    "request": null,
+    "response": "RESTBinary"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/files/stream",
+    "public_name": "files.headStream",
+    "request": null,
+    "response": "Void"
+  },
+  {
+    "method": "POST",
+    "path": "/api/files/upload",
+    "public_name": "files.upload",
+    "request": "ManagedFileUpload",
+    "response": "ManagedFileWriteResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/files/upload-stream",
+    "public_name": "files.uploadStream",
+    "request": "multipart",
+    "response": "ManagedFileWriteResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/fs/default-cwd",
+    "public_name": "fs.defaultCwd",
+    "request": null,
+    "response": "FsDefaultCwdResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/fs/download",
+    "public_name": "fs.download",
+    "request": null,
+    "response": "RESTBinary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/fs/git-root",
+    "public_name": "fs.gitRoot",
+    "request": null,
+    "response": "FsGitRootResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/fs/list",
+    "public_name": "fs.list",
+    "request": null,
+    "response": "FsListResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/fs/read-data-url",
+    "public_name": "fs.readDataUrl",
+    "request": null,
+    "response": "FsDataUrlResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/fs/read-text",
+    "public_name": "fs.readText",
+    "request": null,
+    "response": "FsReadTextResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/fs/write-text",
+    "public_name": "fs.writeText",
+    "request": "FsWriteText",
+    "response": "FsWriteTextResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/gateway/drain",
+    "public_name": "gateway.drain",
+    "request": "GatewayDrainRequest",
+    "response": "GatewayDrainResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/gateway/migrate",
+    "public_name": "gateway.migrate",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/gateway/migrate/plan",
+    "public_name": "gateway.migratePlan",
+    "request": null,
+    "response": "GatewayMigrationPlanResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/gateway/restart",
+    "public_name": "gateway.restart",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/gateway/start",
+    "public_name": "gateway.start",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/gateway/stop",
+    "public_name": "gateway.stop",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/base-branches",
+    "public_name": "git.baseBranches",
+    "request": null,
+    "response": "GitBaseBranchesResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/branch/switch",
+    "public_name": "git.branchSwitch",
+    "request": "GitBranchSwitchBody",
+    "response": "GitBranchSwitchResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/branches",
+    "public_name": "git.branches",
+    "request": null,
+    "response": "GitBranchesResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/file-diff",
+    "public_name": "git.fileDiff",
+    "request": null,
+    "response": "GitDiffResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/gh-auth",
+    "public_name": "git.ghAuth",
+    "request": null,
+    "response": "GitHubCliAuthResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/review/commit",
+    "public_name": "git.reviewCommit",
+    "request": "GitCommitBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/review/commit-context",
+    "public_name": "git.reviewCommitContext",
+    "request": null,
+    "response": "GitCommitContextResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/review/create-pr",
+    "public_name": "git.reviewCreatePr",
+    "request": "GitPathBody",
+    "response": "GitCreatePrResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/review/diff",
+    "public_name": "git.reviewDiff",
+    "request": null,
+    "response": "GitDiffResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/review/list",
+    "public_name": "git.reviewList",
+    "request": null,
+    "response": "GitReviewListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/review/pr-list",
+    "public_name": "git.reviewPrList",
+    "request": "GitPrListBody",
+    "response": "GitPrListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/review/push",
+    "public_name": "git.reviewPush",
+    "request": "GitPathBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/review/rev-parse",
+    "public_name": "git.reviewRevParse",
+    "request": null,
+    "response": "GitRevParseResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/review/revert",
+    "public_name": "git.reviewRevert",
+    "request": "GitFileBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/review/ship-info",
+    "public_name": "git.reviewShipInfo",
+    "request": null,
+    "response": "GitShipInfoResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/review/stage",
+    "public_name": "git.reviewStage",
+    "request": "GitFileBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/review/unstage",
+    "public_name": "git.reviewUnstage",
+    "request": "GitFileBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/status",
+    "public_name": "git.status",
+    "request": null,
+    "response": "GitRepoStatusResponse?"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/worktree/add",
+    "public_name": "git.worktreeAdd",
+    "request": "GitWorktreeAddBody",
+    "response": "GitWorktreeAddResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/git/worktree/remove",
+    "public_name": "git.worktreeRemove",
+    "request": "GitWorktreeRemoveBody",
+    "response": "GitWorktreeRemoveResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/git/worktrees",
+    "public_name": "git.worktrees",
+    "request": null,
+    "response": "GitWorktreesResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/health",
+    "public_name": "health.get",
+    "request": null,
+    "response": "HealthResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/health/idle",
+    "public_name": "health.idle",
+    "request": null,
+    "response": "HealthIdleResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/health/retirement",
+    "public_name": "health.retirement",
+    "request": "HealthRetirementRequest",
+    "response": "HealthRetirementResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/hermes/update",
+    "public_name": "hermes.update",
+    "request": null,
+    "response": "HermesUpdateStartResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/hermes/update/check",
+    "public_name": "hermes.updateCheck",
+    "request": null,
+    "response": "HermesUpdateCheckResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/hermes/update/receipt",
+    "public_name": "hermes.updateReceipt",
+    "request": null,
+    "response": "UpdateReceiptResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/host/identity",
+    "public_name": "host.identity",
+    "request": null,
+    "response": "HostIdentityResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/learning/graph",
+    "public_name": "learning.graph",
+    "request": null,
+    "response": "LearningGraphResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/learning/node",
+    "public_name": "learning.node",
+    "request": null,
+    "response": "LearningNodeDetailResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/learning/node",
+    "public_name": "learning.updateNode",
+    "request": "LearningNodeEdit",
+    "response": "LearningNodeMutationResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/learning/node",
+    "public_name": "learning.deleteNode",
+    "request": "LearningNodeRef",
+    "response": "LearningNodeMutationResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/activate",
+    "public_name": "localModels.activate",
+    "request": "ModelActivateBody",
+    "response": "LocalModelsActivateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/local-models/catalog",
+    "public_name": "localModels.catalog",
+    "request": null,
+    "response": "LocalModelsCatalogResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/download",
+    "public_name": "localModels.download",
+    "request": "ModelDownloadBody",
+    "response": "LocalModelsDownloadResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/download-browsed",
+    "public_name": "localModels.downloadBrowsed",
+    "request": "BrowsedDownloadBody",
+    "response": "LocalModelsDownloadResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/eject",
+    "public_name": "localModels.eject",
+    "request": "ModelEjectBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/local-models/hardware",
+    "public_name": "localModels.hardware",
+    "request": null,
+    "response": "LocalModelsHardwareResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/local-models/jobs",
+    "public_name": "localModels.jobs",
+    "request": null,
+    "response": "LocalModelsJobsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/local-models/jobs/{job_id}",
+    "public_name": "localModels.jobsByJobId",
+    "request": null,
+    "response": "LocalModelJob"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/local-models/models/{model_id}",
+    "public_name": "localModels.models",
+    "request": null,
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/quickstart",
+    "public_name": "localModels.quickstart",
+    "request": "QuickstartBody",
+    "response": "LocalModelsQuickstartResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/runtime/install",
+    "public_name": "localModels.runtimeInstall",
+    "request": "RuntimeInstallBody",
+    "response": "LocalModelsRuntimeInstallResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/local-models/search",
+    "public_name": "localModels.search",
+    "request": null,
+    "response": "LocalModelsSearchResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/local-models/search/files",
+    "public_name": "localModels.searchFiles",
+    "request": null,
+    "response": "LocalModelsSearchFilesResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/server",
+    "public_name": "localModels.server",
+    "request": "ServerActionBody",
+    "response": "LocalModelsServerResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/local-models/sideload",
+    "public_name": "localModels.sideload",
+    "request": "SideloadBody",
+    "response": "LocalModelsSideloadResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/local-models/status",
+    "public_name": "localModels.status",
+    "request": null,
+    "response": "LocalModelsStatusResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/logs",
+    "public_name": "logs.get",
+    "request": null,
+    "response": "LogsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mcp/catalog",
+    "public_name": "mcp.catalog",
+    "request": null,
+    "response": "McpCatalogResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/mcp/catalog/install",
+    "public_name": "mcp.catalogInstall",
+    "request": "MCPCatalogInstall",
+    "response": "McpCatalogInstallResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mcp/oauth/callback/{server_name}",
+    "public_name": "mcp.oauthCallback",
+    "request": null,
+    "response": "String"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mcp/oauth/flows/{flow_id}",
+    "public_name": "mcp.oauthFlows",
+    "request": null,
+    "response": "McpOAuthFlowStatusResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/mcp/oauth/flows/{flow_id}",
+    "public_name": "mcp.deleteOauthFlows",
+    "request": null,
+    "response": "McpOAuthCancelResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mcp/servers",
+    "public_name": "mcp.servers",
+    "request": null,
+    "response": "McpServerListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/mcp/servers",
+    "public_name": "mcp.setServers",
+    "request": "MCPServerCreate",
+    "response": "McpServerAddResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/mcp/servers",
+    "public_name": "mcp.updateServers",
+    "request": "MCPServersReplace",
+    "response": "OkResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/mcp/servers/{name}",
+    "public_name": "mcp.deleteServers",
+    "request": null,
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/mcp/servers/{name}/auth",
+    "public_name": "mcp.serversAuth",
+    "request": null,
+    "response": "McpOAuthFlowResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/mcp/servers/{name}/enabled",
+    "public_name": "mcp.serversEnabled",
+    "request": "MCPEnabledToggle",
+    "response": "McpServerEnabledResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/mcp/servers/{name}/test",
+    "public_name": "mcp.serversTest",
+    "request": null,
+    "response": "McpServerTestResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/media",
+    "public_name": "media.get",
+    "request": null,
+    "response": "MediaDataUrlResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/memory",
+    "public_name": "memory.get",
+    "request": null,
+    "response": "MemoryStatusResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/memory/provider",
+    "public_name": "memory.provider",
+    "request": "MemoryProviderSelect",
+    "response": "MemoryProviderSelectResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/memory/providers/{name}/config",
+    "public_name": "memory.providersConfig",
+    "request": null,
+    "response": "MemoryProvidersConfigResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/memory/providers/{name}/config",
+    "public_name": "memory.updateProvidersConfig",
+    "request": "MemoryProviderConfigUpdate",
+    "response": "MemoryProviderConfigSaveResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/memory/providers/{name}/setup",
+    "public_name": "memory.providersSetup",
+    "request": "MemoryProviderSetupRequest",
+    "response": "MemoryProviderSetupResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/memory/providers/{provider}/oauth/start",
+    "public_name": "memory.providersOauthStart",
+    "request": null,
+    "response": "MemoryOAuthStartResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/memory/providers/{provider}/oauth/status",
+    "public_name": "memory.providersOauthStatus",
+    "request": null,
+    "response": "MemoryOAuthStatusResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/memory/reset",
+    "public_name": "memory.reset",
+    "request": "MemoryReset",
+    "response": "MemoryResetResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/messaging/platforms",
+    "public_name": "messaging.platforms",
+    "request": null,
+    "response": "MessagingPlatformsResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/messaging/platforms/{platform_id}",
+    "public_name": "messaging.updatePlatforms",
+    "request": "MessagingPlatformUpdate",
+    "response": "MessagingPlatformUpdateResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/messaging/platforms/{platform_id}/test",
+    "public_name": "messaging.platformsTest",
+    "request": null,
+    "response": "MessagingPlatformTestResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/messaging/telegram/onboarding/start",
+    "public_name": "messaging.telegramOnboardingStart",
+    "request": "TelegramOnboardingStart",
+    "response": "TelegramOnboardingStartResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/messaging/telegram/onboarding/{pairing_id}",
+    "public_name": "messaging.telegramOnboarding",
+    "request": null,
+    "response": "TelegramOnboardingStatusResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/messaging/telegram/onboarding/{pairing_id}",
+    "public_name": "messaging.deleteTelegramOnboarding",
+    "request": null,
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/messaging/telegram/onboarding/{pairing_id}/apply",
+    "public_name": "messaging.telegramOnboardingApply",
+    "request": "TelegramOnboardingApply",
+    "response": "TelegramOnboardingApplyResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/messaging/whatsapp/onboarding/start",
+    "public_name": "messaging.whatsappOnboardingStart",
+    "request": "WhatsAppOnboardingStart",
+    "response": "WhatsAppOnboardingResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/messaging/whatsapp/onboarding/{pairing_id}",
+    "public_name": "messaging.whatsappOnboarding",
+    "request": null,
+    "response": "WhatsAppOnboardingResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/messaging/whatsapp/onboarding/{pairing_id}",
+    "public_name": "messaging.deleteWhatsappOnboarding",
+    "request": null,
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/messaging/whatsapp/onboarding/{pairing_id}/apply",
+    "public_name": "messaging.whatsappOnboardingApply",
+    "request": "WhatsAppOnboardingApply",
+    "response": "WhatsAppOnboardingApplyResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/model/auxiliary",
+    "public_name": "model.auxiliary",
+    "request": null,
+    "response": "AuxiliaryModelsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/model/info",
+    "public_name": "model.info",
+    "request": null,
+    "response": "ModelInfoResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/model/moa",
+    "public_name": "model.moa",
+    "request": null,
+    "response": "MoaConfigResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/model/moa",
+    "public_name": "model.updateMoa",
+    "request": "MoaConfigPayload",
+    "response": "MoaConfigSaveResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/model/options",
+    "public_name": "model.options",
+    "request": null,
+    "response": "ModelOptionsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/model/recommended-default",
+    "public_name": "model.recommendedDefault",
+    "request": null,
+    "response": "RecommendedDefaultModelResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/model/set",
+    "public_name": "model.set",
+    "request": "ModelAssignment",
+    "response": "ModelAssignmentResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/backup",
+    "public_name": "ops.backup",
+    "request": "BackupRequest",
+    "response": "OpsBackupResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ops/backup/download",
+    "public_name": "ops.backupDownload",
+    "request": null,
+    "response": "RESTBinary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ops/checkpoints",
+    "public_name": "ops.checkpoints",
+    "request": null,
+    "response": "OpsCheckpointListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/checkpoints/prune",
+    "public_name": "ops.checkpointsPrune",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/config-migrate",
+    "public_name": "ops.configMigrate",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/debug-share",
+    "public_name": "ops.debugShare",
+    "request": "DebugShareRequest",
+    "response": "DebugShareResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/doctor",
+    "public_name": "ops.doctor",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/dump",
+    "public_name": "ops.dump",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ops/hooks",
+    "public_name": "ops.hooks",
+    "request": null,
+    "response": "OpsShellHookListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/hooks",
+    "public_name": "ops.setHooks",
+    "request": "HookCreate",
+    "response": "OpsShellHookCreateResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/ops/hooks",
+    "public_name": "ops.deleteHooks",
+    "request": "HookDelete",
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/import",
+    "public_name": "ops.import",
+    "request": "ImportRequest",
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/import-upload",
+    "public_name": "ops.importUpload",
+    "request": "multipart",
+    "response": "OpsImportUploadResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/prompt-size",
+    "public_name": "ops.promptSize",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ops/security-audit",
+    "public_name": "ops.securityAudit",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/pairing",
+    "public_name": "pairing.get",
+    "request": null,
+    "response": "UserPairingListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/pairing/approve",
+    "public_name": "pairing.approve",
+    "request": "PairingApprove",
+    "response": "UserPairingApproveResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/pairing/clear-pending",
+    "public_name": "pairing.clearPending",
+    "request": null,
+    "response": "UserPairingClearResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/pairing/revoke",
+    "public_name": "pairing.revoke",
+    "request": "PairingRevoke",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/hermes-achievements/achievements",
+    "public_name": "hermesAchievements.achievements",
+    "request": null,
+    "response": "AchievementsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/hermes-achievements/recent-unlocks",
+    "public_name": "hermesAchievements.recentUnlocks",
+    "request": null,
+    "response": "[AchievementItem]"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/hermes-achievements/rescan",
+    "public_name": "hermesAchievements.rescan",
+    "request": null,
+    "response": "AchievementRescanResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/hermes-achievements/reset-state",
+    "public_name": "hermesAchievements.resetState",
+    "request": null,
+    "response": "AchievementResetResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/hermes-achievements/scan-status",
+    "public_name": "hermesAchievements.scanStatus",
+    "request": null,
+    "response": "AchievementScanStatus"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/hermes-achievements/sessions/{session_id}/badges",
+    "public_name": "hermesAchievements.sessionsBadges",
+    "request": null,
+    "response": "AchievementSessionBadgesResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/assignees",
+    "public_name": "kanban.assignees",
+    "request": null,
+    "response": "KanbanAssigneesResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/attachments/{attachment_id}",
+    "public_name": "kanban.attachments",
+    "request": null,
+    "response": "RESTBinary"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/plugins/kanban/attachments/{attachment_id}",
+    "public_name": "kanban.deleteAttachments",
+    "request": null,
+    "response": "KanbanAttachmentDeleteResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/board",
+    "public_name": "kanban.board",
+    "request": null,
+    "response": "KanbanBoardResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/boards",
+    "public_name": "kanban.boards",
+    "request": null,
+    "response": "KanbanBoardListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/boards",
+    "public_name": "kanban.setBoards",
+    "request": "CreateBoardBody",
+    "response": "KanbanBoardCreateResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/boards/import",
+    "public_name": "kanban.boardsImport",
+    "request": "ImportBoardBody",
+    "response": "KanbanBoardImportResponse"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/plugins/kanban/boards/{slug}",
+    "public_name": "kanban.patchBoards",
+    "request": "RenameBoardBody",
+    "response": "KanbanBoardUpdateResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/plugins/kanban/boards/{slug}",
+    "public_name": "kanban.deleteBoards",
+    "request": null,
+    "response": "KanbanBoardDeleteResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/boards/{slug}/export",
+    "public_name": "kanban.boardsExport",
+    "request": "ExportBoardBody",
+    "response": "KanbanBoardExportResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/boards/{slug}/switch",
+    "public_name": "kanban.boardsSwitch",
+    "request": null,
+    "response": "KanbanBoardSwitchResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/config",
+    "public_name": "kanban.config",
+    "request": null,
+    "response": "KanbanDashboardConfigResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/diagnostics",
+    "public_name": "kanban.diagnostics",
+    "request": null,
+    "response": "KanbanDiagnosticsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/dispatch",
+    "public_name": "kanban.dispatch",
+    "request": null,
+    "response": "KanbanDispatchResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/estimate",
+    "public_name": "kanban.estimate",
+    "request": "EstimateBody",
+    "response": "KanbanEstimateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/home-channels",
+    "public_name": "kanban.homeChannels",
+    "request": null,
+    "response": "KanbanHomeChannelsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/links",
+    "public_name": "kanban.links",
+    "request": "LinkBody",
+    "response": "KanbanLinkAddResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/plugins/kanban/links",
+    "public_name": "kanban.deleteLinks",
+    "request": null,
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/model-options",
+    "public_name": "kanban.modelOptions",
+    "request": null,
+    "response": "KanbanModelOptionsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/orchestration",
+    "public_name": "kanban.orchestration",
+    "request": null,
+    "response": "KanbanOrchestrationResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/plugins/kanban/orchestration",
+    "public_name": "kanban.updateOrchestration",
+    "request": "OrchestrationSettingsBody",
+    "response": "KanbanOrchestrationResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/profiles",
+    "public_name": "kanban.profiles",
+    "request": null,
+    "response": "KanbanProfilesResponse"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/plugins/kanban/profiles/{profile_name}",
+    "public_name": "kanban.patchProfiles",
+    "request": "DescribeBody",
+    "response": "KanbanProfileDescriptionResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/profiles/{profile_name}/describe-auto",
+    "public_name": "kanban.profilesDescribeAuto",
+    "request": "DescribeAutoBody",
+    "response": "KanbanProfileAutoDescribeResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/projects",
+    "public_name": "kanban.projects",
+    "request": null,
+    "response": "KanbanProjectsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/runs/{run_id}",
+    "public_name": "kanban.runs",
+    "request": null,
+    "response": "KanbanRunResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/runs/{run_id}/inspect",
+    "public_name": "kanban.runsInspect",
+    "request": null,
+    "response": "KanbanRunInspectResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/runs/{run_id}/terminate",
+    "public_name": "kanban.runsTerminate",
+    "request": "TerminateRunBody",
+    "response": "KanbanRunTerminateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/stats",
+    "public_name": "kanban.stats",
+    "request": null,
+    "response": "KanbanStatsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks",
+    "public_name": "kanban.setTasks",
+    "request": "CreateTaskBody",
+    "response": "KanbanTaskCreateResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/bulk",
+    "public_name": "kanban.tasksBulk",
+    "request": "BulkTaskBody",
+    "response": "KanbanBulkUpdateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/tasks/{task_id}",
+    "public_name": "kanban.tasks",
+    "request": null,
+    "response": "KanbanTaskDetailResponse"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/plugins/kanban/tasks/{task_id}",
+    "public_name": "kanban.patchTasks",
+    "request": "UpdateTaskBody",
+    "response": "KanbanTaskUpdateResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/plugins/kanban/tasks/{task_id}",
+    "public_name": "kanban.deleteTasks",
+    "request": null,
+    "response": "KanbanTaskDeleteResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/tasks/{task_id}/attachments",
+    "public_name": "kanban.tasksAttachments",
+    "request": null,
+    "response": "KanbanAttachmentListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/attachments",
+    "public_name": "kanban.setTasksAttachments",
+    "request": "multipart",
+    "response": "KanbanAttachmentUploadResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/comments",
+    "public_name": "kanban.tasksComments",
+    "request": "CommentBody",
+    "response": "OkResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/decompose",
+    "public_name": "kanban.tasksDecompose",
+    "request": "DecomposeBody",
+    "response": "KanbanDecomposeResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/estimate",
+    "public_name": "kanban.tasksEstimate",
+    "request": null,
+    "response": "KanbanEstimateResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}",
+    "public_name": "kanban.tasksHomeSubscribe",
+    "request": null,
+    "response": "KanbanHomeSubscriptionResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}",
+    "public_name": "kanban.deleteTasksHomeSubscribe",
+    "request": null,
+    "response": "KanbanHomeSubscriptionResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/tasks/{task_id}/log",
+    "public_name": "kanban.tasksLog",
+    "request": null,
+    "response": "KanbanTaskLogResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/reassign",
+    "public_name": "kanban.tasksReassign",
+    "request": "ReassignBody",
+    "response": "KanbanReassignResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/reclaim",
+    "public_name": "kanban.tasksReclaim",
+    "request": "ReclaimBody",
+    "response": "KanbanTaskAckResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/plugins/kanban/tasks/{task_id}/specify",
+    "public_name": "kanban.tasksSpecify",
+    "request": "SpecifyBody",
+    "response": "KanbanSpecifyResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/plugins/kanban/workers/active",
+    "public_name": "kanban.workersActive",
+    "request": null,
+    "response": "KanbanActiveWorkersResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/portal",
+    "public_name": "portal.get",
+    "request": null,
+    "response": "PortalStatusResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/profiles",
+    "public_name": "profiles.get",
+    "request": null,
+    "response": "ProfileListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/profiles",
+    "public_name": "profiles.create",
+    "request": "ProfileCreate",
+    "response": "ProfileCreateResponse"
   },
   {
     "method": "GET",
     "path": "/api/profiles/active",
     "public_name": "profiles.active",
     "request": null,
-    "response": "ProfilesActiveResponse"
+    "response": "ProfileActiveResponse"
   },
   {
     "method": "POST",
     "path": "/api/profiles/active",
     "public_name": "profiles.setActive",
-    "request": "ProfilesSetActiveRequest",
-    "response": "ProfilesSetActiveResponse"
+    "request": "ProfileActiveUpdate",
+    "response": "ProfileSetActiveResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/profiles/import",
+    "public_name": "profiles.import",
+    "request": "ProfileImport",
+    "response": "ProfileImportResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/profiles/projects/tree",
+    "public_name": "profiles.projectsTree",
+    "request": null,
+    "response": "ProfileProjectsTreeResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/profiles/sessions",
+    "public_name": "profiles.sessions",
+    "request": null,
+    "response": "ProfileSessionsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/profiles/sessions/pull-requests",
+    "public_name": "profiles.sessionsPullRequests",
+    "request": "SessionPrScanBody",
+    "response": "ProfileSessionPullRequestsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/profiles/sessions/sidebar",
+    "public_name": "profiles.sessionsSidebar",
+    "request": null,
+    "response": "ProfileSessionsSidebarResponse"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/profiles/{name}",
+    "public_name": "profiles.patch",
+    "request": "ProfileRename",
+    "response": "ProfileRenameResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/profiles/{name}",
+    "public_name": "profiles.delete",
+    "request": null,
+    "response": "ProfileDeleteResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/profiles/{name}/describe-auto",
+    "public_name": "profiles.describeAuto",
+    "request": "ProfileDescribeAuto",
+    "response": "ProfileDescribeAutoResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/profiles/{name}/description",
+    "public_name": "profiles.description",
+    "request": "ProfileDescriptionUpdate",
+    "response": "ProfileDescriptionResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/profiles/{name}/desktop-overlay",
+    "public_name": "profiles.desktopOverlay",
+    "request": null,
+    "response": "ProfileDesktopOverlayResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/profiles/{name}/export",
+    "public_name": "profiles.export",
+    "request": "ProfileExport",
+    "response": "ProfileExportResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/profiles/{name}/model",
+    "public_name": "profiles.model",
+    "request": "ProfileModelUpdate",
+    "response": "ProfileModelResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/profiles/{name}/open-terminal",
+    "public_name": "profiles.openTerminal",
+    "request": null,
+    "response": "ProfileOpenTerminalResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/profiles/{name}/setup-command",
+    "public_name": "profiles.setupCommand",
+    "request": null,
+    "response": "ProfileSetupCommandResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/profiles/{name}/soul",
+    "public_name": "profiles.soul",
+    "request": null,
+    "response": "ProfileSoulResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/profiles/{name}/soul",
+    "public_name": "profiles.updateSoul",
+    "request": "ProfileSoulUpdate",
+    "response": "OkResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/providers/custom-endpoints",
+    "public_name": "providers.customEndpoints",
+    "request": null,
+    "response": "CustomEndpointListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/providers/custom-endpoints",
+    "public_name": "providers.setCustomEndpoints",
+    "request": "CustomEndpointUpdate",
+    "response": "CustomEndpointUpsertResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/providers/custom-endpoints/validate",
+    "public_name": "providers.customEndpointsValidate",
+    "request": "CustomEndpointUpdate",
+    "response": "CustomEndpointValidateResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/providers/custom-endpoints/{endpoint_id}",
+    "public_name": "providers.deleteCustomEndpoints",
+    "request": null,
+    "response": "CustomEndpointDeleteResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/providers/custom-endpoints/{endpoint_id}/activate",
+    "public_name": "providers.customEndpointsActivate",
+    "request": null,
+    "response": "CustomEndpointActivateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/providers/oauth",
+    "public_name": "providers.oauth",
+    "request": null,
+    "response": "OAuthProviderListResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/providers/oauth/sessions/{session_id}",
+    "public_name": "providers.oauthSessions",
+    "request": null,
+    "response": "OAuthSessionCancelResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/providers/oauth/{provider_id}",
+    "public_name": "providers.deleteOauth",
+    "request": null,
+    "response": "OAuthDisconnectResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/providers/oauth/{provider_id}/poll/{session_id}",
+    "public_name": "providers.oauthPoll",
+    "request": null,
+    "response": "OAuthSessionPollResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/providers/oauth/{provider_id}/start",
+    "public_name": "providers.oauthStart",
+    "request": null,
+    "response": "OAuthDeviceCodeStartResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/providers/validate",
+    "public_name": "providers.validate",
+    "request": "EnvVarUpdate",
+    "response": "ProviderCredentialValidateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions",
+    "public_name": "sessions.get",
+    "request": null,
+    "response": "SessionListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/bulk-delete",
+    "public_name": "sessions.bulkDelete",
+    "request": "BulkDeleteSessions",
+    "response": "SessionDeletedCountResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/sessions/empty",
+    "public_name": "sessions.empty",
+    "request": null,
+    "response": "SessionDeletedCountResponse"
   },
   {
     "method": "GET",
     "path": "/api/sessions/empty/count",
     "public_name": "sessions.emptyCount",
     "request": null,
-    "response": "SessionsEmptyCountResponse"
+    "response": "SessionEmptyCountResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/import",
+    "public_name": "sessions.import",
+    "request": "SessionImportRequest",
+    "response": "SessionImportResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/owner-backfill",
+    "public_name": "sessions.ownerBackfill",
+    "request": "SessionOwnerBackfill",
+    "response": "SessionOwnerBackfillResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/prune",
+    "public_name": "sessions.prune",
+    "request": "SessionPrune",
+    "response": "SessionPruneResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/search",
+    "public_name": "sessions.search",
+    "request": null,
+    "response": "SessionSearchResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/stats",
+    "public_name": "sessions.stats",
+    "request": null,
+    "response": "SessionStatsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/{session_id}",
+    "public_name": "sessions.getBySessionId",
+    "request": null,
+    "response": "SessionDetailResponse"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/sessions/{session_id}",
+    "public_name": "sessions.patch",
+    "request": "SessionRename",
+    "response": "SessionRenameResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/sessions/{session_id}",
+    "public_name": "sessions.delete",
+    "request": null,
+    "response": "SessionDeleteResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/{session_id}/export",
+    "public_name": "sessions.export",
+    "request": null,
+    "response": "SessionExportResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/{session_id}/latest-descendant",
+    "public_name": "sessions.latestDescendant",
+    "request": null,
+    "response": "SessionLatestDescendantResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/{session_id}/messages",
+    "public_name": "sessions.messages",
+    "request": null,
+    "response": "SessionMessagesResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/{session_id}/messages/around",
+    "public_name": "sessions.messagesAround",
+    "request": null,
+    "response": "SessionMessagesAroundResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/{session_id}/timeline",
+    "public_name": "sessions.timeline",
+    "request": null,
+    "response": "SessionTimelineResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills",
+    "public_name": "skills.get",
+    "request": null,
+    "response": "[SkillListRow]"
+  },
+  {
+    "method": "POST",
+    "path": "/api/skills",
+    "public_name": "skills.create",
+    "request": "SkillCreate",
+    "response": "SkillCreateResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills/content",
+    "public_name": "skills.content",
+    "request": null,
+    "response": "SkillContentResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/skills/content",
+    "public_name": "skills.updateContent",
+    "request": "SkillContentUpdate",
+    "response": "SkillContentUpdateResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/skills/hub/install",
+    "public_name": "skills.hubInstall",
+    "request": "SkillInstallRequest",
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills/hub/official",
+    "public_name": "skills.hubOfficial",
+    "request": null,
+    "response": "SkillHubOfficialResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills/hub/preview",
+    "public_name": "skills.hubPreview",
+    "request": null,
+    "response": "SkillHubPreviewResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills/hub/scan",
+    "public_name": "skills.hubScan",
+    "request": null,
+    "response": "SkillHubScanResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills/hub/search",
+    "public_name": "skills.hubSearch",
+    "request": null,
+    "response": "SkillHubSearchResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills/hub/sources",
+    "public_name": "skills.hubSources",
+    "request": null,
+    "response": "SkillHubSourcesResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/skills/hub/uninstall",
+    "public_name": "skills.hubUninstall",
+    "request": "SkillUninstallRequest",
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/skills/hub/update",
+    "public_name": "skills.hubUpdate",
+    "request": "SkillsUpdateRequest",
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/skills/toggle",
+    "public_name": "skills.toggle",
+    "request": "SkillToggle",
+    "response": "SkillToggleResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ssh/ownership",
+    "public_name": "ssh.ownership",
+    "request": null,
+    "response": "SshOwnershipResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/status",
+    "public_name": "status.get",
+    "request": null,
+    "response": "StatusResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/system/stats",
+    "public_name": "system.stats",
+    "request": null,
+    "response": "SystemStatsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/tools/computer-use/permissions/grant",
+    "public_name": "tools.computerUsePermissionsGrant",
+    "request": null,
+    "response": "ActionSpawnResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/tools/computer-use/status",
+    "public_name": "tools.computerUseStatus",
+    "request": null,
+    "response": "ComputerUseStatusResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/tools/terminal/backend",
+    "public_name": "tools.terminalBackend",
+    "request": "TerminalBackendSelect",
+    "response": "TerminalBackendSelectResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/tools/terminal/backends",
+    "public_name": "tools.terminalBackends",
+    "request": null,
+    "response": "TerminalBackendsResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/tools/toolsets",
+    "public_name": "tools.toolsets",
+    "request": null,
+    "response": "[ToolsetListRow]"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/tools/toolsets/{name}",
+    "public_name": "tools.updateToolsets",
+    "request": "ToolsetToggle",
+    "response": "ToolsetToggleResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/tools/toolsets/{name}/config",
+    "public_name": "tools.toolsetsConfig",
+    "request": null,
+    "response": "ToolsetConfigResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/tools/toolsets/{name}/env",
+    "public_name": "tools.toolsetsEnv",
+    "request": "ToolsetEnvUpdate",
+    "response": "ToolsetEnvSaveResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/tools/toolsets/{name}/model",
+    "public_name": "tools.toolsetsModel",
+    "request": "ToolsetModelSelect",
+    "response": "ToolsetModelSelectResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/tools/toolsets/{name}/models",
+    "public_name": "tools.toolsetsModels",
+    "request": null,
+    "response": "ToolsetModelsResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/tools/toolsets/{name}/post-setup",
+    "public_name": "tools.toolsetsPostSetup",
+    "request": "ToolsetPostSetup",
+    "response": "ToolsetPostSetupResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/tools/toolsets/{name}/provider",
+    "public_name": "tools.toolsetsProvider",
+    "request": "ToolsetProviderSelect",
+    "response": "ToolsetProviderSelectResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/api/webhooks",
+    "public_name": "webhooks.get",
+    "request": null,
+    "response": "WebhookListResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks",
+    "public_name": "webhooks.create",
+    "request": "WebhookCreate",
+    "response": "WebhookCreateResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks/enable",
+    "public_name": "webhooks.enable",
+    "request": null,
+    "response": "WebhookEnableResponse"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/webhooks/{name}",
+    "public_name": "webhooks.delete",
+    "request": null,
+    "response": "OkResponse"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/webhooks/{name}/enabled",
+    "public_name": "webhooks.enabled",
+    "request": "WebhookEnabledToggle",
+    "response": "WebhookEnabledToggleResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/assets/{filename}.css",
+    "public_name": "web.assetsCss",
+    "request": null,
+    "response": "String"
+  },
+  {
+    "method": "GET",
+    "path": "/auth/callback",
+    "public_name": "web.authCallback",
+    "request": null,
+    "response": "RESTRedirect"
+  },
+  {
+    "method": "GET",
+    "path": "/auth/login",
+    "public_name": "web.authLogin",
+    "request": null,
+    "response": "RESTRedirect"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/logout",
+    "public_name": "web.authLogout",
+    "request": null,
+    "response": "RESTRedirect"
+  },
+  {
+    "method": "GET",
+    "path": "/auth/native/authorize",
+    "public_name": "web.authNativeAuthorize",
+    "request": null,
+    "response": "WebAuthNativeAuthorizeResult"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/native/refresh",
+    "public_name": "web.authNativeRefresh",
+    "request": "_NativeRefreshBody",
+    "response": "DashboardAuthBearerTokenResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/native/token",
+    "public_name": "web.authNativeToken",
+    "request": "_NativeTokenBody",
+    "response": "DashboardAuthBearerTokenResponse"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/password-login",
+    "public_name": "web.authPasswordLogin",
+    "request": "_PasswordLoginBody",
+    "response": "DashboardAuthPasswordLoginResponse"
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard-plugins/{plugin_name}/{file_path}",
+    "public_name": "web.dashboardPlugins",
+    "request": null,
+    "response": "RESTBinary"
+  },
+  {
+    "method": "GET",
+    "path": "/login",
+    "public_name": "web.login",
+    "request": null,
+    "response": "String"
+  },
+  {
+    "method": "GET",
+    "path": "/{full_path}",
+    "public_name": "web.get",
+    "request": null,
+    "response": "RESTBinary"
   }
 ]

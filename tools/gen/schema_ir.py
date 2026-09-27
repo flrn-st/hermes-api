@@ -27,6 +27,7 @@ class Field:
     constraints: str | None = None
     # An integer the field always holds; decoding any other value fails.
     const: int | None = None
+    description: str | None = None
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,13 @@ class ObjectDecl:
     open: bool
     # Wire names of properties that are always null (Hermes redacts them); they carry no value.
     always_null: tuple[str, ...] = ()
+    # The always-null properties that are always present (strict models require and emit them).
+    required_null: tuple[str, ...] = ()
+    # Decoding fails on a key the closed object does not declare.
+    reject_unknown: bool = False
+    description: str | None = None
+    # The type of undeclared keys' values in an open object; None means any JSON value.
+    extra: TypeRef | None = None
 
 
 @dataclass(frozen=True)
@@ -43,6 +51,16 @@ class EnumDecl:
     name: str
     values: tuple[str, ...]
     constant: bool
+    # No case for unknown values: decoding one fails.
+    closed: bool = False
+
+
+@dataclass(frozen=True)
+class TupleDecl:
+    """A fixed-length JSON array whose items have positional types (``prefixItems``)."""
+
+    name: str
+    items: tuple[TypeRef, ...]
 
 
 @dataclass(frozen=True)
@@ -63,20 +81,43 @@ class SchemaGraph:
     def __init__(self, contract: dict[str, Any]) -> None:
         audit_contract(contract)
         self.contract = contract
-        self.schemas: dict[str, dict[str, Any]] = contract["components"]["schemas"]
-        self.param_reachable = self._param_reachable()
-        self.objects: dict[str, ObjectDecl] = {}
-        self.enums: dict[str, EnumDecl] = {}
-        self.unions: dict[str, UnionDecl] = {}
-        for name, schema in self.schemas.items():
-            self._named(name, schema)
-        self._check_unique_names()
-
-    def _param_reachable(self) -> set[str]:
+        self._setup(contract["components"]["schemas"], strict=False, rename={})
         roots: list[dict[str, Any]] = []
         for section in ("methods", "x-server-requests"):
             for method in self.contract[section]:
                 roots.extend(item["schema"] for item in method.get("params", []))
+        self.param_reachable = self._reachable(roots)
+        for name, schema in self.schemas.items():
+            self._named(name, schema)
+        self._check_unique_names()
+
+    @classmethod
+    def for_rest(cls, schemas: dict[str, dict[str, Any]], roots: list[dict[str, Any]],
+                 request_roots: list[dict[str, Any]], rename: dict[str, str]) -> SchemaGraph:
+        """The components the REST operations reach, strictly: closed objects reject unknown keys,
+        enums have no unknown case, and inline objects and tuples get names from their position."""
+        graph = cls.__new__(cls)
+        graph.contract = {}
+        graph._setup(schemas, strict=True, rename=rename)
+        graph.param_reachable = graph._reachable(request_roots)
+        for name in sorted(graph._reachable(roots)):
+            graph._named(name, schemas[name])
+        graph._check_unique_names()
+        return graph
+
+    def _setup(self, schemas: dict[str, dict[str, Any]], *, strict: bool, rename: dict[str, str]) -> None:
+        self.schemas: dict[str, dict[str, Any]] = schemas
+        self.strict = strict
+        self.rename = rename
+        self.objects: dict[str, ObjectDecl] = {}
+        self.enums: dict[str, EnumDecl] = {}
+        self.unions: dict[str, UnionDecl] = {}
+        self.tuples: dict[str, TupleDecl] = {}
+
+    def type_name(self, component: str) -> str:
+        return self.rename.get(component, component)
+
+    def _reachable(self, roots: list[dict[str, Any]]) -> set[str]:
         visited: set[str] = set()
 
         def walk(schema: dict[str, Any]) -> None:
@@ -88,7 +129,7 @@ class SchemaGraph:
                 walk(self.schemas[name])
             for value in schema.get("properties", {}).values():
                 walk(value)
-            for key in ("anyOf", "oneOf"):
+            for key in ("anyOf", "oneOf", "prefixItems"):
                 for value in schema.get(key, []):
                     walk(value)
             if "items" in schema:
@@ -101,11 +142,13 @@ class SchemaGraph:
         return visited
 
     def _check_unique_names(self) -> None:
-        names = list(self.objects) + list(self.enums) + list(self.unions)
+        names = list(self.objects) + list(self.enums) + list(self.unions) + list(self.tuples)
         if len(names) != len(set(names)):
             raise ValueError("Generated type name collision")
 
-    def _named(self, name: str, schema: dict[str, Any]) -> None:
+    def _named(self, component: str, schema: dict[str, Any], declared: str | None = None) -> None:
+        """Declare a named type; ``declared`` names an inline schema, else the component names it."""
+        name = declared or self.type_name(component)
         if schema.get("type") == "object":
             props = schema.get("properties", {})
             required = set(schema.get("required", []))
@@ -113,7 +156,7 @@ class SchemaGraph:
             always_null: list[str] = []
             for wire_name, value in props.items():
                 if value.get("type") == "null" and not set(value) - {"type", "title", "description", "default"}:
-                    if wire_name in required:
+                    if wire_name in required and not self.strict:
                         raise ValueError(f"Required always-null property {name}.{wire_name}")
                     always_null.append(wire_name)
                     continue
@@ -122,20 +165,32 @@ class SchemaGraph:
                 fields.append(Field(
                     name=camel(wire_name), wire_name=wire_name, type=typ,
                     required=wire_name in required,
-                    patch=(wire_name not in required and typ.nullable and name in self.param_reachable),
+                    patch=(wire_name not in required and typ.nullable and component in self.param_reachable),
                     constraints=_constraints(value), const=const,
+                    description=_one_line(value.get("description")) if self.strict else None,
                 ))
+            additional = schema.get("additionalProperties")
+            is_open = additional is True or (self.strict and isinstance(additional, dict))
+            extra = self.resolve(additional, f"{name}Extra") if isinstance(additional, dict) and self.strict else None
+            if self.strict and "additionalProperties" not in schema and component not in self.param_reachable:
+                # JSON Schema leaves an object without the keyword open; only request models,
+                # which are encoded and never decoded, may omit it.
+                is_open = True
             self.objects[name] = ObjectDecl(
-                name, tuple(fields), schema.get("additionalProperties") is True, tuple(always_null)
+                name, tuple(fields), is_open, tuple(always_null),
+                reject_unknown=self.strict and not is_open,
+                description=_one_line(schema.get("description")) if self.strict else None,
+                extra=extra,
+                required_null=tuple(key for key in always_null if key in required),
             )
         elif schema.get("type") == "string" and "enum" in schema:
-            self.enums[name] = EnumDecl(name, tuple(schema["enum"]), False)
+            self.enums[name] = EnumDecl(name, tuple(schema["enum"]), False, closed=self.strict)
         else:
             raise ValueError(f"Unsupported named component {name}")
 
     def resolve(self, schema: dict[str, Any], name: str) -> TypeRef:
         if "$ref" in schema:
-            ref = schema["$ref"].rsplit("/", 1)[-1]
+            ref = self.type_name(schema["$ref"].rsplit("/", 1)[-1])
             return TypeRef(ref, ref)
         if "anyOf" in schema:
             variants = [item for item in schema["anyOf"] if item.get("type") != "null"]
@@ -155,7 +210,14 @@ class SchemaGraph:
             raise ValueError(f"Unsupported integer const outside an object field: {name}")
         if kind == "string" and ("enum" in schema or "const" in schema):
             values = tuple(schema.get("enum", [schema.get("const")]))
-            self.enums[name] = EnumDecl(name, values, "const" in schema)
+            self.enums[name] = EnumDecl(name, values, "const" in schema, closed=self.strict or "const" in schema)
+            return TypeRef(name, name)
+        if self.strict and kind == "array" and "prefixItems" in schema:
+            items = tuple(self.resolve(item, f"{name}{index}") for index, item in enumerate(schema["prefixItems"]))
+            count = len(items)
+            if schema.get("minItems") != count or schema.get("maxItems") != count or "items" in schema:
+                raise ValueError(f"Only fixed-length tuples are supported: {name}")
+            self.tuples[name] = TupleDecl(name, items)
             return TypeRef(name, name)
         primitives = {
             "string": ("String", "String"),
@@ -173,8 +235,11 @@ class SchemaGraph:
             return TypeRef(swift, kotlin)
         if kind == "object":
             if schema.get("properties"):
-                raise ValueError(f"Inline object needs a named component: {name}")
-            additional = schema.get("additionalProperties", False)
+                if not self.strict:
+                    raise ValueError(f"Inline object needs a named component: {name}")
+                self._named(name, schema, declared=name)
+                return TypeRef(name, name)
+            additional = schema.get("additionalProperties", self.strict)
             if additional is False:
                 return TypeRef("EmptyObject", "EmptyObject")
             if additional is True:
@@ -225,6 +290,13 @@ class SchemaGraph:
         )
 
 
+
+
+def _one_line(text: object) -> str | None:
+    """A description as one documentation line (Swift ``///`` and KDoc render it verbatim)."""
+    if not isinstance(text, str) or not text.strip():
+        return None
+    return " ".join(text.split())
 
 
 def _constraints(schema: dict[str, Any]) -> str | None:

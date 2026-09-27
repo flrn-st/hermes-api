@@ -15,7 +15,9 @@ public interface HermesAuth {
     public suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential
 }
 
-public class DashboardTicketAuth(private val headers: suspend () -> Map<String, String>) : HermesAuth {
+public class DashboardTicketAuth(private val headers: suspend () -> Map<String, String>) : HermesAuth, HermesRESTAuth {
+    override suspend fun authorizationHeaders(): Map<String, String> = headers()
+
     override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential {
         val currentHeaders = headers()
         val (status, body) = http.post(baseURI.resolve("/api/auth/ws-ticket"), currentHeaders)
@@ -30,7 +32,9 @@ public class DashboardTicketAuth(private val headers: suspend () -> Map<String, 
     }
 }
 
-public class LocalTokenAuth(private val token: String, private val headers: Map<String, String> = emptyMap()) : HermesAuth {
+public class LocalTokenAuth(private val token: String, private val headers: Map<String, String> = emptyMap()) : HermesAuth, HermesRESTAuth {
+    override suspend fun authorizationHeaders(): Map<String, String> = headers + ("X-Hermes-Session-Token" to token)
+
     override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential =
         GatewayCredential.LocalToken(token, headers)
 }

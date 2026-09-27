@@ -15,20 +15,22 @@ import hermes.api.runtime.GatewayTransport
 
 /** What a live run exercised, measured on the wire and reported to the harness as coverage evidence:
  *  methods that returned a result, events that decoded to their typed payload, and server requests
- *  that decoded and were answered with a result. */
+ *  that decoded and were answered with a result, and REST operations whose typed method succeeded. */
 internal class LiveObservations {
     private val methods = sortedSetOf<String>()
     private val events = sortedSetOf<String>()
     private val serverRequests = sortedSetOf<String>()
+    private val rest = sortedSetOf<String>()
 
     fun method(name: String) = synchronized(this) { methods.add(name); Unit }
     fun event(name: String) = synchronized(this) { events.add(name); Unit }
     fun serverRequest(name: String) = synchronized(this) { serverRequests.add(name); Unit }
+    fun rest(operation: String) = synchronized(this) { rest.add(operation); Unit }
 
     fun report(): String = synchronized(this) {
         fun list(values: Set<String>) = JsonArray(values.map(::JsonPrimitive))
         JsonObject(mapOf("methods" to list(methods), "events" to list(events),
-            "server_requests" to list(serverRequests))).toString()
+            "server_requests" to list(serverRequests), "rest" to list(rest))).toString()
     }
 }
 

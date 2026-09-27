@@ -559,20 +559,6 @@ operations:
             $ref: '#/components/schemas/ActionSpawnResponse'
       description: Successful Response
 - method: POST
-  path: /api/health/retirement
-  x-source: hermes_cli/web_routers/status.py:149
-  x-handler-hash: 3bf36964298d230a5b4c11d0e46082ac4c3561a12cc3d56f73c80a210299c7fc
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: HealthRetirementResponse
-  responses:
-    '200':
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/HealthRetirementResponse'
-      description: Successful Response
-- method: POST
   path: /api/ops/config-migrate
   x-source: hermes_cli/web_routers/status.py:774
   x-handler-hash: 9a1f3ddfec8b66432e785300d9acdbca7befe1a88805283cf5066c2cbc6b4b17

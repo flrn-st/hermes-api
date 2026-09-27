@@ -12,9 +12,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
@@ -28,7 +31,8 @@ import hermes.api.generated.gateway.ServerRequestResult
 import hermes.api.generated.gateway.SessionCloseParams
 import hermes.api.generated.gateway.SessionCreateParams
 import hermes.api.generated.gateway.SessionListParams
-import hermes.api.generated.rest.ProfilesSetActiveRequest
+import hermes.api.generated.rest.ProfileActiveUpdate
+import hermes.api.generated.rest.VoiceLiveStatusResponseMode
 import hermes.api.runtime.GatewayConnection
 import hermes.api.runtime.GatewayConnectionState
 import hermes.api.runtime.GatewaySessionRecovery
@@ -92,6 +96,12 @@ public object LiveScenarios {
         smoke(environment, observations)
         val control = environment.control ?: return
         val faults = FaultControl(control)
+        environment.token?.let { token ->
+            KtorRESTTransport().use { transport ->
+                val rest = HermesREST(HermesRESTConfiguration(environment.url, LocalTokenAuth(token), transport = transport))
+                RESTScenario.run(faults.restScenario(), rest, observations)
+            }
+        }
         if (environment.lifecycle) reconnect(environment, faults, observations)
         // Only a fully passing run reports what it exercised.
         faults.report(observations.report())
@@ -154,15 +164,15 @@ public object LiveScenarios {
         val token = environment.token ?: throw LiveScenarioFailure("REST smoke needs the local token")
         val restTransport = KtorRESTTransport()
         try {
-            val rest = HermesREST(HermesRESTConfiguration(environment.url,
-                headers = { mapOf("X-Hermes-Session-Token" to token) }, transport = restTransport))
+            val rest = HermesREST(HermesRESTConfiguration(environment.url, LocalTokenAuth(token), transport = restTransport))
             val voice = rest.methods.audio.voiceLiveStatus(profile = "default")
-            check(voice.ok && voice.mode == "chained" && voice.model.isNotEmpty() && voice.voice.isNotEmpty()) {
+            check(voice.ok && voice.mode == VoiceLiveStatusResponseMode.Chained && voice.model.isNotEmpty() &&
+                voice.voice.isNotEmpty()) {
                 "Unexpected voice status"
             }
             val profile = rest.methods.profiles.active()
             check(profile.active == "default" && profile.current == "default") { "Unexpected active profile" }
-            val selected = rest.methods.profiles.setActive(ProfilesSetActiveRequest("default"))
+            val selected = rest.methods.profiles.setActive(ProfileActiveUpdate("default"))
             check(selected.ok && selected.active == "default") { "Could not select the default profile" }
             check(rest.methods.sessions.emptyCount(profile = "default").count >= 0) { "Invalid empty session count" }
         } finally {
@@ -322,6 +332,19 @@ private class FaultControl(private val base: URI) {
 
     /** Sends the run's measured coverage evidence. */
     suspend fun report(json: String) = post("report", json)
+
+    /** The REST scenario the harness recorded fixtures from. */
+    suspend fun restScenario(): JsonArray = withContext(Dispatchers.IO) {
+        val connection = URL(base.resolve("/rest-scenario").toString()).openConnection() as HttpURLConnection
+        try {
+            connection.connectTimeout = 10_000
+            connection.readTimeout = 30_000
+            if (connection.responseCode != 200) throw LiveScenarioFailure("Harness control rest-scenario failed")
+            Json.parseToJsonElement(connection.inputStream.use { it.readBytes().decodeToString() }).jsonArray
+        } finally {
+            connection.disconnect()
+        }
+    }
 
     private suspend fun post(path: String, json: String? = null): Unit = withContext(Dispatchers.IO) {
         val connection = URL(base.resolve("/$path").toString()).openConnection() as HttpURLConnection

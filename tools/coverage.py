@@ -99,8 +99,9 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
                 set(evidence["events"]) | set(evidence["rest"]))
     if recorded != declared:
         raise ValueError("Coverage evidence does not match recorded frame names")
-    if not set(evidence["live_rest"]) <= set(evidence["rest"]):
-        raise ValueError("Live evidence includes an unrecorded REST operation")
+    for platform in ("swift", "kotlin"):
+        if not set(evidence["live_rest"][platform]) <= set(evidence["rest"]):
+            raise ValueError(f"{platform} live evidence includes an unrecorded REST operation")
     # Gateway live credit is what each client's scenarios exercised, measured on the wire.
     report_key = {"gateway_method": "methods", "event": "events", "server_request": "server_requests"}
     known = {(entry["kind"], entry["name"]) for entry in entries}
@@ -118,9 +119,8 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
             entry["live_kotlin"] = entry["name"] in live_gateway["kotlin"][key]
         else:
             entry["fixture"] = entry["name"] in evidence["rest"]
-            live = entry["name"] in evidence["live_rest"]
-            entry["live_swift"] = live and evidence["live_swift"]
-            entry["live_kotlin"] = live and evidence["live_kotlin"]
+            entry["live_swift"] = entry["name"] in evidence["live_rest"]["swift"]
+            entry["live_kotlin"] = entry["name"] in evidence["live_rest"]["kotlin"]
         entry["decode"] = entry["fixture"] and evidence["decode_swift"] and evidence["decode_kotlin"]
 
 

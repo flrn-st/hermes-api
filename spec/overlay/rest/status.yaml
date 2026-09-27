@@ -16,6 +16,21 @@ components:
     - version
     - auth_required
     type: object
+  HealthRetirementRequest:
+    type: object
+    additionalProperties: false
+    required:
+    - action
+    description: '``post_health_retirement``: ``token`` (from ``prepare``) is required to ``commit`` or ``cancel``.'
+    properties:
+      action:
+        type: string
+        enum:
+        - prepare
+        - commit
+        - cancel
+      token:
+        type: string
   LearningGraphMemoryCard:
     additionalProperties: false
     description: '``agent/learning_graph.py::_memory_cards``: one non-empty ``\n§\n`` chunk of ``MEMORY.md`` (``memory``)
@@ -597,6 +612,24 @@ operations:
         application/json:
           schema:
             $ref: '#/components/schemas/HealthResponse'
+- method: POST
+  path: /api/health/retirement
+  x-source: hermes_cli/web_routers/status.py:149
+  x-handler-hash: 3bf36964298d230a5b4c11d0e46082ac4c3561a12cc3d56f73c80a210299c7fc
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: HealthRetirementResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthRetirementResponse'
+      description: Successful Response
+  request:
+    required: true
+    schema:
+      $ref: '#/components/schemas/HealthRetirementRequest'
 - method: GET
   path: /api/status
   x-source: hermes_cli/web_routers/status.py:456

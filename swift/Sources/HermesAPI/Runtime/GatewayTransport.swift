@@ -17,17 +17,28 @@ public protocol HTTPTransport: Sendable {
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse)
 }
 
+/// Returns redirects as responses instead of following them: a REST operation that redirects
+/// (dashboard login, OAuth) documents the redirect as its result.
 public struct URLSessionHTTPTransport: HTTPTransport {
     public let session: URLSession
 
     public init(session: URLSession = .shared) { self.session = session }
 
     public func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request, delegate: RedirectRefusal.shared)
         guard let response = response as? HTTPURLResponse else {
             throw HermesGatewayError.transport("HTTP response has no status")
         }
         return (data, response)
+    }
+}
+
+private final class RedirectRefusal: NSObject, URLSessionTaskDelegate, Sendable {
+    static let shared = RedirectRefusal()
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest) async -> URLRequest? {
+        nil
     }
 }
 

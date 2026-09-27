@@ -1,5 +1,6 @@
 import Foundation
 import HermesAPI
+import HermesAPILiveScenarios
 import Testing
 
 private struct FixtureRecord: Decodable {
@@ -33,6 +34,7 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
     #expect(lines.count >= 8)
     let decoder = JSONDecoder()
     var seen = Set<String>()
+    var restSeen = Set<String>()
     for line in lines {
         let record = try decoder.decode(FixtureRecord.self, from: Data(line.utf8))
         seen.insert(record.name)
@@ -65,31 +67,30 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
             continue
         }
         if record.kind == "rest" {
-            #expect(frame["status"] == .integer(200))
-            switch record.name {
-            case "GET /api/audio/voice-live/status":
-                let result = try decoder.decode(AudioVoiceLiveStatusResponse.self,
-                                                from: JSONEncoder().encode(frame["body"]))
-                #expect(result.ok && result.mode == "chained")
-                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
-            case "GET /api/sessions/empty/count":
-                let result = try decoder.decode(SessionsEmptyCountResponse.self,
-                                                from: JSONEncoder().encode(frame["body"]))
-                #expect(result.count >= 0)
-                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
-            case "GET /api/profiles/active":
-                let result = try decoder.decode(ProfilesActiveResponse.self,
-                                                from: JSONEncoder().encode(frame["body"]))
-                #expect(result.active == "default" && result.current == "default")
-                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
-            case "POST /api/profiles/active":
-                let result = try decoder.decode(ProfilesSetActiveResponse.self,
-                                                from: JSONEncoder().encode(frame["body"]))
-                #expect(result.ok && result.active == "default")
-                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["body"])
-            default:
-                Issue.record("Unexpected REST fixture: \(record.name)")
+            // Every recorded operation decodes through its generated model and re-encodes to the same JSON.
+            guard case .integer(let status)? = frame["status"] else { throw HermesRESTError.decoding("No status") }
+            var headers: [String: String] = [:]
+            if case .string(let media)? = frame["media"] { headers["content-type"] = media }
+            if case .string(let location)? = frame["location"] { headers["location"] = location }
+            let body: Data
+            if let json = frame["body"] {
+                body = try JSONEncoder().encode(json)
+            } else if case .string(let text)? = frame["text"] {
+                body = Data(text.utf8)
+            } else {
+                body = Data()
             }
+            #expect(RESTOperations.all.contains(record.name), "Unknown REST operation \(record.name)")
+            let decoded = try RESTOperations.decode(record.name, RESTResponse(status: status, headers: headers, body: body))
+            if let json = frame["body"] {
+                let expected = collapsingOptionalNulls(json)
+                let actual = collapsingOptionalNulls(decoded)
+                #expect(actual == expected || actual == .object(["status": .integer(status), "value": expected]),
+                        "\(record.name) does not round-trip")
+            } else if case .string(let text)? = frame["text"] {
+                #expect(decoded == .string(text) || decoded == .object(["status": .integer(status), "value": .string(text)]))
+            }
+            restSeen.insert(record.name)
             continue
         }
         if record.kind == "event" {
@@ -163,9 +164,6 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
     }
     #expect(Set(["gateway.ready", "ping", "prompt.submit", "clarify", "approval", "tool.start",
                  "tool.complete", "message.delta", "message.complete",
-                 "GET /api/audio/voice-live/status",
-                 "GET /api/sessions/empty/count",
-                 "GET /api/profiles/active",
-                 "POST /api/profiles/active",
                  "session.create", "session.list", "session.close"]).isSubset(of: seen))
+    #expect(restSeen.count >= 4)
 }

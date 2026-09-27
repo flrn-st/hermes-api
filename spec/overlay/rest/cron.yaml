@@ -1,6 +1,16 @@
 # Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
 # components whose producer drifted. These win over spec/overlay/rest/contracts/.
 components:
+  CronFireRequest:
+    type: object
+    additionalProperties: false
+    required:
+    - job_id
+    description: '``cron_fire_webhook`` reads ``job_id`` from the JSON body; the caller authenticates with a Chronos
+      fire token (``Authorization: Bearer``).'
+    properties:
+      job_id:
+        type: string
   CronJobRunSession:
     additionalProperties: true
     description: 'One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression
@@ -298,4 +308,28 @@ components:
     - runs
     - limit
     type: object
-operations: []
+operations:
+- method: POST
+  path: /api/cron/fire
+  x-source: hermes_cli/web_routers/cron.py:302
+  x-handler-hash: b222191afbb175e46b4fa0df17fd519e4167c18b8c7c490adf6becd34dbc54a4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronFireResponse, CronFireResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronFireResponse'
+      description: Successful Response
+    '202':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronFireResponse'
+      description: Accepted
+  request:
+    required: true
+    schema:
+      $ref: '#/components/schemas/CronFireRequest'

@@ -935,20 +935,6 @@ operations:
             type: string
       description: A static file from the plugin's ``dashboard/`` directory.
 - method: POST
-  path: /api/dashboard/agent-plugins/activate
-  x-source: hermes_cli/web_routers/dashboard_ui.py:290
-  x-handler-hash: 7a8c7656977731c29d6f41a641e1d6c2fba20ed88eab050d6edbbb0265860fec
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: AgentPluginActivateResponse
-  responses:
-    '200':
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/AgentPluginActivateResponse'
-      description: Successful Response
-- method: POST
   path: /api/dashboard/agent-plugins/install
   x-source: hermes_cli/web_routers/dashboard_ui.py:222
   x-handler-hash: e0d1759056ffbcc0dcba64751fd9150339e4c7496a74c008f7ed919788e87aa6
@@ -989,20 +975,6 @@ operations:
         application/json:
           schema:
             $ref: '#/components/schemas/AgentPluginToggleResponse'
-      description: Successful Response
-- method: POST
-  path: /api/dashboard/agent-plugins/{name}/update
-  x-source: hermes_cli/web_routers/dashboard_ui.py:269
-  x-handler-hash: fd1834ade1b1fcd050e2ceec563d49629d9cac985e96013653c49f6ef5f766e7
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: AgentPluginUpdateResponse
-  responses:
-    '200':
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/AgentPluginUpdateResponse'
       description: Successful Response
 - method: POST
   path: /api/dashboard/plugins/{name}/visibility

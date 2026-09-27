@@ -1,10 +1,10 @@
-/** Generated from the Hermes gateway contract. Do not edit. */
+/** Generated from the {{ origin }}. Do not edit. */
 @Serializable(with = {{ enum.name }}.Serializer::class)
 public sealed interface {{ enum.name }} {
 {% for case in enum.cases %}
     public data object {{ case.kotlin_name }} : {{ enum.name }}
 {% endfor %}
-{% if not enum.constant %}
+{% if not enum.closed %}
     public data class Unknown(public val raw: kotlin.String) : {{ enum.name }}
 {% endif %}
 
@@ -17,6 +17,8 @@ public sealed interface {{ enum.name }} {
 {% endfor %}
 {% if enum.constant %}
             else -> throw SerializationException("Unexpected const value: $raw")
+{% elif enum.closed %}
+            else -> throw SerializationException("Unexpected {{ enum.name }} value: $raw")
 {% else %}
             else -> Unknown(raw)
 {% endif %}
@@ -27,7 +29,7 @@ public sealed interface {{ enum.name }} {
 {% for case in enum.cases %}
                 {{ case.kotlin_name }} -> {{ case.wire_literal }}
 {% endfor %}
-{% if not enum.constant %}
+{% if not enum.closed %}
                 is Unknown -> value.raw
 {% endif %}
             }

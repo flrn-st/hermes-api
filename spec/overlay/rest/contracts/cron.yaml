@@ -594,26 +594,6 @@ operations:
             $ref: '#/components/schemas/CronJob'
       description: Successful Response
 - method: POST
-  path: /api/cron/fire
-  x-source: hermes_cli/web_routers/cron.py:302
-  x-handler-hash: b222191afbb175e46b4fa0df17fd519e4167c18b8c7c490adf6becd34dbc54a4
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: CronFireResponse, CronFireResponse
-  responses:
-    '200':
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CronFireResponse'
-      description: Successful Response
-    '202':
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CronFireResponse'
-      description: Accepted
-- method: POST
   path: /api/cron/jobs
   x-source: hermes_cli/web_routers/cron.py:248
   x-handler-hash: b9e36c32818fb251f255ab7090d63d0dee154b76b17b9de63267bdf2bd30f7b1

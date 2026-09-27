@@ -818,20 +818,6 @@ operations:
             $ref: '#/components/schemas/SessionDeletedCountResponse'
       description: Successful Response
 - method: POST
-  path: /api/sessions/import
-  x-source: hermes_cli/web_routers/sessions.py:432
-  x-handler-hash: 70eef2119abcea3b483b0a1e95c6ebfb89ceb9a81cfeba5d3932831aa005330b
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: SessionImportResponse
-  responses:
-    '200':
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SessionImportResponse'
-      description: Successful Response
-- method: POST
   path: /api/sessions/owner-backfill
   x-source: hermes_cli/web_routers/sessions.py:711
   x-handler-hash: f6ad28a3e92663f9a18a40807ff18a28bc27e1726778cb9c142b61fdc512a571

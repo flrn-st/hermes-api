@@ -55,6 +55,10 @@ public enum LiveScenarios {
         try await smoke(environment, observations: observations)
         guard let control = environment.control else { return }
         let faults = FaultControl(base: control)
+        if let token = environment.token {
+            let rest = HermesREST(configuration: .init(baseURL: environment.url, auth: LocalTokenAuth(token: token)))
+            try await RESTScenario.run(try await faults.restScenario(), rest: rest, observations: observations)
+        }
         if environment.lifecycle {
             try await reconnect(environment, faults: faults, observations: observations)
         }
@@ -129,10 +133,9 @@ public enum LiveScenarios {
         let closed = try await gateway.session.close(.init(sessionId: session.sessionId))
         guard closed.closed else { throw LiveScenarioError("Gateway session did not close") }
         guard let token = environment.token else { throw LiveScenarioError("REST smoke needs the local token") }
-        let rest = HermesREST(configuration: .init(
-            baseURL: environment.url, headers: { ["X-Hermes-Session-Token": token] }))
+        let rest = HermesREST(configuration: .init(baseURL: environment.url, auth: LocalTokenAuth(token: token)))
         let voice = try await rest.audio.voiceLiveStatus(profile: "default")
-        guard voice.ok, voice.mode == "chained", !voice.model.isEmpty, !voice.voice.isEmpty else {
+        guard voice.ok, voice.mode == .chained, !voice.model.isEmpty, !voice.voice.isEmpty else {
             throw LiveScenarioError("Unexpected voice status")
         }
         let profile = try await rest.profiles.active()
@@ -329,6 +332,16 @@ struct FaultControl: Sendable {
     /// Sends the run's measured coverage evidence.
     func report(_ observations: [String: [String]]) async throws {
         try await post("report", query: [], body: JSONEncoder().encode(observations))
+    }
+
+    /// The REST scenario the harness recorded fixtures from.
+    func restScenario() async throws -> [RESTScenarioCall] {
+        let (data, response) = try await URLSession.shared.data(
+            for: URLRequest(url: base.appendingPathComponent("rest-scenario"), timeoutInterval: 30))
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw LiveScenarioError("Harness control rest-scenario failed")
+        }
+        return try JSONDecoder().decode([RESTScenarioCall].self, from: data)
     }
 
     private func post(_ path: String, query: [URLQueryItem], body: Data? = nil) async throws {

@@ -214,7 +214,7 @@ public sealed class HermesRESTException(message: String) : Exception(message) {
  */
 public data class RESTRetryPolicy(
     /** Attempts per request, including the first. `1` disables retries. */
-    val maxAttempts: Int = 4,
+    val maxAttempts: Int = 6,
     val initialDelayMillis: Long = 250,
     val maximumDelayMillis: Long = 8_000,
     val retryableStatuses: Set<Int> = setOf(429, 502, 503, 504),

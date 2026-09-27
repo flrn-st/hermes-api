@@ -57,8 +57,9 @@ def test_profiles_delay_and_throttle_without_corrupting() -> None:
         proxy.set_profile("test")
         received, shaped = _round_trip(proxy, payload)
         assert received == payload
-        # Two one-way delays plus 51 KB each way at 200 KB/s.
-        assert shaped >= 0.2 + 2 * len(payload) / 200_000 * 0.9
+        # Both one-way delays plus 51 KB at 200 KB/s; the echo streams back while it receives, so the
+        # two directions overlap.
+        assert shaped >= 0.2 + len(payload) / 200_000 * 0.9
         assert shaped > fast
     finally:
         PROFILES.pop("test", None)

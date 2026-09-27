@@ -37,6 +37,7 @@ import hermes.api.runtime.GatewayNetworkMonitor
 import hermes.api.runtime.GatewayNetworkPath
 import hermes.api.runtime.GatewaySessionRecovery
 import hermes.api.runtime.GatewayTransport
+import hermes.api.runtime.HermesAuth
 import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
@@ -424,6 +425,47 @@ class HermesGatewayTest {
         assertFailsWith<HermesGatewayException.AuthenticationFailed> {
             DashboardTicketAuth { emptyMap() }.credential(URI("https://dashboard.example"), http)
         }
+    }
+
+    /** A credential that renews on every rejection, counting the renewals. */
+    private class RenewingAuth : HermesAuth {
+        @Volatile var renewals = 0
+
+        override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential =
+            GatewayCredential.LocalToken("secret", emptyMap())
+
+        override suspend fun renew(failure: HermesGatewayException.AuthenticationFailed): Boolean {
+            renewals++
+            return true
+        }
+    }
+
+    @Test
+    fun aRenewedCredentialRetriesTheRejectedAttempt() = runTest {
+        val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 401")
+        val transport = SequenceTransport(listOf(Step.Failure(rejected), Step.Socket(FakeSocket())))
+        val auth = RenewingAuth()
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress(URI("http://localhost:3000")), auth, transport, requestTimeoutMillis = 3_000,
+            reconnectDelayMillis = { 60_000 },
+        ), scope = backgroundScope)
+        gateway.connect()
+        assertEquals(2, transport.attempts)
+        assertEquals(1, auth.renewals)
+        gateway.disconnect()
+    }
+
+    @Test
+    fun aCredentialRenewsOncePerAttempt() = runTest {
+        val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 403")
+        val transport = SequenceTransport(listOf(Step.Failure(rejected), Step.Failure(rejected)))
+        val auth = RenewingAuth()
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress(URI("http://localhost:3000")), auth, transport, requestTimeoutMillis = 3_000,
+        ), scope = backgroundScope)
+        assertFailsWith<HermesGatewayException.AuthenticationFailed> { gateway.connect() }
+        assertEquals(2, transport.attempts)
+        assertEquals(1, auth.renewals)
     }
 
     @Test

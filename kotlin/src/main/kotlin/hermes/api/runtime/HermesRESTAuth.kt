@@ -75,11 +75,12 @@ public class NativeSessionAuth(
         return refresh(token).accessToken != token
     }
 
-    override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential = try {
+    override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential =
         DashboardTicketAuth { authorizationHeaders() }.credential(baseURI, http)
-    } catch (error: HermesGatewayException.AuthenticationFailed) {
-        refresh(tokens.accessToken)
-        DashboardTicketAuth { authorizationHeaders() }.credential(baseURI, http)
+
+    override suspend fun renew(failure: HermesGatewayException.AuthenticationFailed): Boolean {
+        val rejected = tokens.accessToken
+        return refresh(rejected).accessToken != rejected
     }
 
     /** Refreshes unless another caller already replaced [rejected]; every caller waits for the same refresh. */

@@ -250,13 +250,7 @@ public actor HermesGateway: GatewayCalling {
         let current = generation
         do {
             let baseURL = try await configuration.address.resolve(previousFailure: previousFailure)
-            let credential = try await configuration.auth.credential(
-                baseURL: baseURL, http: configuration.httpTransport
-            )
-            let (url, headers, protocols) = try Self.socketRequest(baseURL: baseURL, credential: credential)
-            let socket = try await configuration.transport.connect(
-                url: url, headers: headers, subprotocols: protocols
-            )
+            let socket = try await openSocket(baseURL: baseURL)
             guard current == generation, wantsConnection, !Task.isCancelled else {
                 await socket.close()
                 throw HermesGatewayError.cancelled
@@ -294,6 +288,26 @@ public actor HermesGateway: GatewayCalling {
                 await closeConnection(error: failure)
             }
             throw failure
+        }
+    }
+
+    /// Opens the WebSocket with a fresh credential. When Hermes rejects it, the credential may renew itself
+    /// once and the socket is opened again with the new one.
+    private func openSocket(baseURL: URL) async throws -> any GatewayConnection {
+        var renewed = false
+        while true {
+            do {
+                let credential = try await configuration.auth.credential(
+                    baseURL: baseURL, http: configuration.httpTransport
+                )
+                let (url, headers, protocols) = try Self.socketRequest(baseURL: baseURL, credential: credential)
+                return try await configuration.transport.connect(url: url, headers: headers, subprotocols: protocols)
+            } catch let error as HermesGatewayError {
+                guard case .authenticationFailed = error, !renewed,
+                      try await configuration.auth.renew(after: error) else { throw error }
+                renewed = true
+                configuration.logger.info("Hermes rejected the credential; retrying with the renewed one")
+            }
         }
     }
 

@@ -264,12 +264,7 @@ public class HermesGateway(
             catch (error: Exception) {
                 throw HermesGatewayException.Transport("Cannot resolve the dashboard address: ${error.message}")
             }
-            val credential = configuration.auth.credential(baseURI, configuration.httpTransport)
-            val (uri, headers, protocols) = socketRequest(baseURI, credential)
-            val connection = try { configuration.transport.connect(uri, headers, protocols) }
-            catch (error: CancellationException) { throw error }
-            catch (error: HermesGatewayException) { throw error }
-            catch (error: Exception) { throw HermesGatewayException.Transport(error.message ?: "WebSocket connect failed") }
+            val connection = openSocket(baseURI)
             if (current != generation || !wantsConnection) {
                 connection.close()
                 throw CancellationException("Connection attempt superseded")
@@ -299,6 +294,26 @@ public class HermesGateway(
             throw error
         } finally {
             opening = false
+        }
+    }
+
+    /** Opens the WebSocket with a fresh credential. When Hermes rejects it, the credential may renew itself
+     *  once and the socket is opened again with the new one. */
+    private suspend fun openSocket(baseURI: URI): GatewayConnection {
+        var renewed = false
+        while (true) {
+            try {
+                val credential = configuration.auth.credential(baseURI, configuration.httpTransport)
+                val (uri, headers, protocols) = socketRequest(baseURI, credential)
+                return try { configuration.transport.connect(uri, headers, protocols) }
+                catch (error: CancellationException) { throw error }
+                catch (error: HermesGatewayException) { throw error }
+                catch (error: Exception) { throw HermesGatewayException.Transport(error.message ?: "WebSocket connect failed") }
+            } catch (error: HermesGatewayException.AuthenticationFailed) {
+                if (renewed || !configuration.auth.renew(error)) throw error
+                renewed = true
+                logger.log(GatewayLogLevel.INFO, "Hermes rejected the credential; retrying with the renewed one")
+            }
         }
     }
 

@@ -95,12 +95,12 @@ public actor NativeSessionAuth: HermesRESTAuth, HermesAuth {
     }
 
     public func credential(baseURL: URL, http: any HTTPTransport) async throws -> GatewayCredential {
-        do {
-            return try await DashboardTicketAuth(headers: { try await self.authorizationHeaders() }).credential(baseURL: baseURL, http: http)
-        } catch HermesGatewayError.authenticationFailed {
-            _ = try await refresh(replacing: tokens.accessToken)
-            return try await DashboardTicketAuth(headers: { try await self.authorizationHeaders() }).credential(baseURL: baseURL, http: http)
-        }
+        try await DashboardTicketAuth(headers: { try await self.authorizationHeaders() }).credential(baseURL: baseURL, http: http)
+    }
+
+    public func renew(after failure: HermesGatewayError) async throws -> Bool {
+        let rejected = tokens.accessToken
+        return try await refresh(replacing: rejected).accessToken != rejected
     }
 
     /// Refreshes unless another caller already replaced `rejected`; every caller waits for the same refresh.

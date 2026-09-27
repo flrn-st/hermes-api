@@ -9,6 +9,15 @@ public enum GatewayCredential: Sendable {
 /// Supplies a fresh WebSocket credential for every connection or reconnect.
 public protocol HermesAuth: Sendable {
     func credential(baseURL: URL, http: any HTTPTransport) async throws -> GatewayCredential
+    /// Called once per connection attempt after Hermes rejected its credential: the ticket request or the
+    /// WebSocket upgrade answered 401 or 403 (`authenticationFailed`). Sign in again or refresh a token (or
+    /// wait for another caller doing so) and return `true` to retry the attempt with a new credential;
+    /// `false` makes the rejection final.
+    func renew(after failure: HermesGatewayError) async throws -> Bool
+}
+
+public extension HermesAuth {
+    func renew(after failure: HermesGatewayError) async throws -> Bool { false }
 }
 
 /// Authenticated dashboard ticket flow. A ticket is single-use and expires after 30 seconds.

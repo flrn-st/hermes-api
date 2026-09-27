@@ -110,8 +110,9 @@ public enum LiveScenarios {
             let result = try await gateway.ping(PingParams())
             guard result.pong else { throw LiveScenarioError("Gateway ping returned false") }
             _ = try await gateway.gateway.capabilities(PingParams())
-            try await refusals(gateway)
             if environment.lifecycle {
+                // Only against the tagged server: the ticket probe answers every method as unknown.
+                try await refusals(gateway)
                 try await lifecycle(gateway, environment: environment)
             }
             await gateway.disconnect()

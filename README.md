@@ -44,7 +44,8 @@ messaging-bot sources, a 3,000-message chat, extra profiles and a large kanban b
 both clients through paging, search, exports, concurrent requests and turns, long streamed
 replies, and degraded networks (3G, and a flaky link that resets every connection every few
 seconds) with timing budgets (`SCALE=5` for a larger dataset). `make bench` measures decoding of
-large payloads in optimized builds against budgets. `make coverage` writes the per-operation coverage report. The scheduled
+large payloads in optimized builds against budgets. Both depend on timing and randomized faults, so
+they run locally rather than in CI. `make coverage` writes the per-operation coverage report. The scheduled
 release watcher checks published Hermes releases only (reading each new tag's version) and opens an update PR with
 contract changes, REST breaking changes, and the coverage report. Publication
 is gated on complete evidence for every tracked operation.

@@ -160,8 +160,11 @@ public object LiveScenarios {
             gateway.connect()
             check(gateway.methods.ping(PingParams()).pong) { "Gateway ping returned false" }
             gateway.methods.gateway.capabilities(PingParams())
-            refusals(gateway)
-            if (environment.lifecycle) lifecycle(gateway, environment)
+            if (environment.lifecycle) {
+                // Only against the tagged server: the ticket probe answers every method as unknown.
+                refusals(gateway)
+                lifecycle(gateway, environment)
+            }
         } finally {
             gateway.disconnect()
             ktor.close()

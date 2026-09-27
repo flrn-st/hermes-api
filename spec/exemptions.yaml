@@ -1,2 +1,700 @@
 # Coverage exemptions require a human-authored reason and review.
+#
+# `exemptions` count toward the release gate and need `reviewed_by`. `proposed` entries carry a reason
+# but no reviewer yet; they count only in `tools.coverage --assume-proposed`. To accept one, move it to
+# `exemptions` and add `reviewed_by`.
 exemptions: []
+proposed:
+- kind: event
+  name: "agent.terminal.output"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "billing.step_up.verification"
+  reason: "Emitted by billing flows that need a billing account."
+- kind: event
+  name: "bot_relay.outbox.pending"
+  reason: "Emitted by messaging platforms and cross-gateway relay."
+- kind: event
+  name: "browser.controller.cancel"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "browser.controller.command"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "browser.progress"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "connection.request"
+  reason: "Emitted by hosted connector flows."
+- kind: event
+  name: "connection.update"
+  reason: "Emitted by hosted connector flows."
+- kind: event
+  name: "display.install.done"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "display.install.log"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "display.lease"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "display.status"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "error"
+  reason: "Emitted on turn failures; the recorder treats an error event as a failed recording."
+- kind: event
+  name: "layout.apply"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "message.interim"
+  reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
+- kind: event
+  name: "message.reaction"
+  reason: "Broadcast to the other viewers of a session; the scenario has a single viewer."
+- kind: event
+  name: "moa.aggregating"
+  reason: "Emitted by mixture-of-agents turns, which need several provider models."
+- kind: event
+  name: "moa.phase"
+  reason: "Emitted by mixture-of-agents turns, which need several provider models."
+- kind: event
+  name: "moa.progress"
+  reason: "Emitted by mixture-of-agents turns, which need several provider models."
+- kind: event
+  name: "moa.reference"
+  reason: "Emitted by mixture-of-agents turns, which need several provider models."
+- kind: event
+  name: "notice"
+  reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
+- kind: event
+  name: "notification.clear"
+  reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
+- kind: event
+  name: "notification.show"
+  reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
+- kind: event
+  name: "pairing.changed"
+  reason: "Emitted by messaging platforms and cross-gateway relay."
+- kind: event
+  name: "pane.reveal"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "pet.changed"
+  reason: "Emitted by pet features that need an image provider or an installed pet."
+- kind: event
+  name: "pet.generate.progress"
+  reason: "Emitted by pet features that need an image provider or an installed pet."
+- kind: event
+  name: "pet.hatch.progress"
+  reason: "Emitted by pet features that need an image provider or an installed pet."
+- kind: event
+  name: "platforms.changed"
+  reason: "Emitted by messaging platforms and cross-gateway relay."
+- kind: event
+  name: "preview.close"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "preview.open"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "preview.restart.complete"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "preview.restart.progress"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "reaction"
+  reason: "Broadcast to the other viewers of a session; the scenario has a single viewer."
+- kind: event
+  name: "request.cancel"
+  reason: "Emitted when an open server request times out, which takes minutes."
+- kind: event
+  name: "review.summary"
+  reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
+- kind: event
+  name: "session.reclaimed"
+  reason: "Emitted on idle reclaim and slow cold resumes, which take minutes or large sessions."
+- kind: event
+  name: "session.resume_progress"
+  reason: "Emitted on idle reclaim and slow cold resumes, which take minutes or large sessions."
+- kind: event
+  name: "session.usage"
+  reason: "Emitted only when a turn's usage counters change while it runs, which the fixture model's short turns rarely do: recorded once, not reliably received live."
+- kind: event
+  name: "setup.ready"
+  reason: "Emitted by the free-tier setup bootstrap."
+- kind: event
+  name: "skin.changed"
+  reason: "Not provoked yet: needs a skin change. Could be covered by setting a skin."
+- kind: event
+  name: "subagent.progress"
+  reason: "Not provoked yet: needs a subagent that streams progress or calls tools. Could be covered with a scripted subagent turn."
+- kind: event
+  name: "subagent.spawn_requested"
+  reason: "Not provoked yet: needs a subagent that streams progress or calls tools. Could be covered with a scripted subagent turn."
+- kind: event
+  name: "subagent.tool"
+  reason: "Not provoked yet: needs a subagent that streams progress or calls tools. Could be covered with a scripted subagent turn."
+- kind: event
+  name: "terminal.close"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "tip.show"
+  reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
+- kind: event
+  name: "todo.updated"
+  reason: "Not provoked yet: the fixture model's todo tool call does not reach the todo event path. Could be covered once that path is understood."
+- kind: event
+  name: "tool.output_risk"
+  reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
+- kind: event
+  name: "voice.interrupted"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "voice.status"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "voice.transcript"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: event
+  name: "wake.detected"
+  reason: "Emitted by desktop, screen, browser or audio features on the host."
+- kind: gateway_method
+  name: "approval.received"
+  reason: "Answers an open server request by method; the scenario clients answer through their handlers. Could be covered by a client without a handler."
+- kind: gateway_method
+  name: "approval.respond"
+  reason: "Answers an open server request by method; the scenario clients answer through their handlers. Could be covered by a client without a handler."
+- kind: gateway_method
+  name: "billing.auto_reload"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "billing.charge"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "billing.charge_status"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "billing.state"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "billing.step_up"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "bot_relay.deliver"
+  reason: "Relays messages between gateways of different connections."
+- kind: gateway_method
+  name: "bot_relay.reply"
+  reason: "Relays messages between gateways of different connections."
+- kind: gateway_method
+  name: "browser.controller.detach"
+  reason: "Controls a browser on the host through the browser extension or CDP."
+- kind: gateway_method
+  name: "browser.controller.heartbeat"
+  reason: "Controls a browser on the host through the browser extension or CDP."
+- kind: gateway_method
+  name: "browser.controller.register"
+  reason: "Controls a browser on the host through the browser extension or CDP."
+- kind: gateway_method
+  name: "browser.controller.result"
+  reason: "Controls a browser on the host through the browser extension or CDP."
+- kind: gateway_method
+  name: "browser.manage"
+  reason: "Controls a browser on the host through the browser extension or CDP."
+- kind: gateway_method
+  name: "clarify.lock"
+  reason: "Answers an open server request by method; the scenario clients answer through their handlers. Could be covered by a client without a handler."
+- kind: gateway_method
+  name: "clipboard.paste"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "command.dispatch"
+  reason: "Runs quick, plugin or skill commands, none of which the isolated home defines. Could be covered by configuring a quick command."
+- kind: gateway_method
+  name: "connection.respond"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.accounts"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.accounts.remove"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.catalog"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.connect"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.list"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.operation.status"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.operation.wake"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.policy.get"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.policy.set"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "connectors.tools"
+  reason: "Needs a hosted connectors account."
+- kind: gateway_method
+  name: "diagnostics.share_nous"
+  reason: "Uploads a diagnostics bundle to Nous."
+- kind: gateway_method
+  name: "display.install"
+  reason: "Installs packages and runs a desktop session (Xvnc) on the Linux host."
+- kind: gateway_method
+  name: "display.lease.acquire"
+  reason: "Installs packages and runs a desktop session (Xvnc) on the Linux host."
+- kind: gateway_method
+  name: "display.lease.release"
+  reason: "Installs packages and runs a desktop session (Xvnc) on the Linux host."
+- kind: gateway_method
+  name: "display.observe"
+  reason: "Installs packages and runs a desktop session (Xvnc) on the Linux host."
+- kind: gateway_method
+  name: "display.start"
+  reason: "Installs packages and runs a desktop session (Xvnc) on the Linux host."
+- kind: gateway_method
+  name: "display.stop"
+  reason: "Installs packages and runs a desktop session (Xvnc) on the Linux host."
+- kind: gateway_method
+  name: "display.thumbnail"
+  reason: "Installs packages and runs a desktop session (Xvnc) on the Linux host."
+- kind: gateway_method
+  name: "free_tier.ack_notice"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "free_tier.provision"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "groups.approve"
+  reason: "Needs a room task that raised an approval or ended indeterminately. Could be covered by a room scenario with a tool-calling member."
+- kind: gateway_method
+  name: "groups.demote"
+  reason: "Needs a second gateway: room replication, promotion and peer grants."
+- kind: gateway_method
+  name: "groups.peer.invite"
+  reason: "Needs a second gateway: room replication, promotion and peer grants."
+- kind: gateway_method
+  name: "groups.peer.register"
+  reason: "Needs a second gateway: room replication, promotion and peer grants."
+- kind: gateway_method
+  name: "groups.peer.revoke"
+  reason: "Needs a second gateway: room replication, promotion and peer grants."
+- kind: gateway_method
+  name: "groups.promote"
+  reason: "Needs a second gateway: room replication, promotion and peer grants."
+- kind: gateway_method
+  name: "groups.replica_state"
+  reason: "Needs a second gateway: room replication, promotion and peer grants."
+- kind: gateway_method
+  name: "groups.replicate"
+  reason: "Needs a second gateway: room replication, promotion and peer grants."
+- kind: gateway_method
+  name: "groups.retry"
+  reason: "Needs a room task that raised an approval or ended indeterminately. Could be covered by a room scenario with a tool-calling member."
+- kind: gateway_method
+  name: "handoff.fail"
+  reason: "Hands the session to a configured messaging platform."
+- kind: gateway_method
+  name: "handoff.request"
+  reason: "Hands the session to a configured messaging platform."
+- kind: gateway_method
+  name: "image.generate"
+  reason: "Needs an image generation provider."
+- kind: gateway_method
+  name: "learning.delete"
+  reason: "Needs a skill or memory node to edit. Could be covered once a scenario writes one."
+- kind: gateway_method
+  name: "learning.edit"
+  reason: "Needs a skill or memory node to edit. Could be covered once a scenario writes one."
+- kind: gateway_method
+  name: "mcp.servers.oauth.callback"
+  reason: "Connects to a real MCP server or its OAuth provider."
+- kind: gateway_method
+  name: "mcp.servers.oauth.cancel"
+  reason: "Connects to a real MCP server or its OAuth provider."
+- kind: gateway_method
+  name: "mcp.servers.oauth.poll"
+  reason: "Connects to a real MCP server or its OAuth provider."
+- kind: gateway_method
+  name: "mcp.servers.oauth.start"
+  reason: "Connects to a real MCP server or its OAuth provider."
+- kind: gateway_method
+  name: "mcp.servers.test"
+  reason: "Connects to a real MCP server or its OAuth provider."
+- kind: gateway_method
+  name: "pdf.attach"
+  reason: "Needs poppler's pdftoppm on the host."
+- kind: gateway_method
+  name: "pet.cancel"
+  reason: "Needs an image generation provider."
+- kind: gateway_method
+  name: "pet.cells"
+  reason: "Needs an installed pet, which only the pet gallery download provides."
+- kind: gateway_method
+  name: "pet.export"
+  reason: "Needs an installed pet, which only the pet gallery download provides."
+- kind: gateway_method
+  name: "pet.generate"
+  reason: "Needs an image generation provider."
+- kind: gateway_method
+  name: "pet.hatch"
+  reason: "Needs an image generation provider."
+- kind: gateway_method
+  name: "pet.remove"
+  reason: "Needs an installed pet, which only the pet gallery download provides."
+- kind: gateway_method
+  name: "pet.rename"
+  reason: "Needs an installed pet, which only the pet gallery download provides."
+- kind: gateway_method
+  name: "pet.select"
+  reason: "Needs an installed pet, which only the pet gallery download provides."
+- kind: gateway_method
+  name: "pet.thumb"
+  reason: "Needs an installed pet, which only the pet gallery download provides."
+- kind: gateway_method
+  name: "preview.restart"
+  reason: "Starts a development server on the host."
+- kind: gateway_method
+  name: "process.kill"
+  reason: "Needs a background process started by the terminal tool. Could be covered with a scripted terminal turn."
+- kind: gateway_method
+  name: "projects.discover_repos"
+  reason: "Scans the host's disk for repositories."
+- kind: gateway_method
+  name: "request.answer"
+  reason: "Answers an open server request by method; the scenario clients answer through their handlers. Could be covered by a client without a handler."
+- kind: gateway_method
+  name: "rollback.diff"
+  reason: "Needs file checkpoints, which the isolated config does not enable. Could be covered by enabling checkpoints and editing a file."
+- kind: gateway_method
+  name: "rollback.restore"
+  reason: "Needs file checkpoints, which the isolated config does not enable. Could be covered by enabling checkpoints and editing a file."
+- kind: gateway_method
+  name: "session.foreign.import"
+  reason: "Reads other agents' session histories (Claude Code, Codex) from the host's home directory."
+- kind: gateway_method
+  name: "session.foreign.list"
+  reason: "Reads other agents' session histories (Claude Code, Codex) from the host's home directory."
+- kind: gateway_method
+  name: "session.foreign.preview"
+  reason: "Reads other agents' session histories (Claude Code, Codex) from the host's home directory."
+- kind: gateway_method
+  name: "session.steer"
+  reason: "The fixture model's agent does not support steering (Hermes answers 4010)."
+- kind: gateway_method
+  name: "subagent.interrupt"
+  reason: "Needs a long-running subagent. Could be covered with a paced subagent turn."
+- kind: gateway_method
+  name: "subagent.steer"
+  reason: "Needs a long-running subagent. Could be covered with a paced subagent turn."
+- kind: gateway_method
+  name: "subscription.change"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "subscription.preview"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "subscription.resume"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "subscription.state"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "subscription.upgrade"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "usage.bars"
+  reason: "Needs a Nous billing account and the billing portal."
+- kind: gateway_method
+  name: "vault.add"
+  reason: "Reads and unlocks password managers on the host."
+- kind: gateway_method
+  name: "vault.list"
+  reason: "Reads and unlocks password managers on the host."
+- kind: gateway_method
+  name: "vault.lock"
+  reason: "Reads and unlocks password managers on the host."
+- kind: gateway_method
+  name: "vault.remove"
+  reason: "Reads and unlocks password managers on the host."
+- kind: gateway_method
+  name: "vault.source.set"
+  reason: "Reads and unlocks password managers on the host."
+- kind: gateway_method
+  name: "vault.sources"
+  reason: "Reads and unlocks password managers on the host."
+- kind: gateway_method
+  name: "vault.unlock"
+  reason: "Reads and unlocks password managers on the host."
+- kind: gateway_method
+  name: "voice.record"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "voice.toggle"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "voice.tts"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "wake.feed"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "wake.pause"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "wake.resume"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "wake.start"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: gateway_method
+  name: "wake.stop"
+  reason: "Uses the host's microphone, speakers or clipboard."
+- kind: rest
+  name: "DELETE /api/dashboard/agent-plugins/{name}"
+  reason: "Installs, updates or removes agent plugins from the network."
+- kind: rest
+  name: "DELETE /api/local-models/models/{model_id}"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "DELETE /api/mcp/oauth/flows/{flow_id}"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "DELETE /api/messaging/telegram/onboarding/{pairing_id}"
+  reason: "Pairs a Telegram or WhatsApp account; needs the external messaging service."
+- kind: rest
+  name: "DELETE /api/messaging/whatsapp/onboarding/{pairing_id}"
+  reason: "Pairs a Telegram or WhatsApp account; needs the external messaging service."
+- kind: rest
+  name: "DELETE /api/providers/oauth/sessions/{session_id}"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "GET /api/hermes/update/receipt"
+  reason: "Exists only after an update ran on the installation."
+- kind: rest
+  name: "GET /api/local-models/jobs/{job_id}"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "GET /api/local-models/search"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "GET /api/local-models/search/files"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "GET /api/mcp/oauth/callback/{server_name}"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "GET /api/mcp/oauth/flows/{flow_id}"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "GET /api/messaging/telegram/onboarding/{pairing_id}"
+  reason: "Pairs a Telegram or WhatsApp account; needs the external messaging service."
+- kind: rest
+  name: "GET /api/messaging/whatsapp/onboarding/{pairing_id}"
+  reason: "Pairs a Telegram or WhatsApp account; needs the external messaging service."
+- kind: rest
+  name: "GET /api/plugins/kanban/runs/{run_id}"
+  reason: "Needs a running kanban worker to create runs."
+- kind: rest
+  name: "GET /api/plugins/kanban/runs/{run_id}/inspect"
+  reason: "Needs a running kanban worker to create runs."
+- kind: rest
+  name: "GET /api/providers/oauth/{provider_id}/poll/{session_id}"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "GET /api/skills/hub/preview"
+  reason: "Needs the remote skills hub."
+- kind: rest
+  name: "GET /api/skills/hub/scan"
+  reason: "Needs the remote skills hub."
+- kind: rest
+  name: "GET /api/ssh/ownership"
+  reason: "Inspects the host's SSH configuration."
+- kind: rest
+  name: "GET /assets/{filename}.css"
+  reason: "Serves the built web UI, which the isolated server does not bundle."
+- kind: rest
+  name: "GET /auth/callback"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "GET /{full_path}"
+  reason: "Serves the built web UI, which the isolated server does not bundle."
+- kind: rest
+  name: "POST /api/audio/speak"
+  reason: "Needs a speech or live-voice provider account."
+- kind: rest
+  name: "POST /api/audio/transcribe"
+  reason: "Needs a speech or live-voice provider account."
+- kind: rest
+  name: "POST /api/audio/voice-live/session"
+  reason: "Needs a speech or live-voice provider account."
+- kind: rest
+  name: "POST /api/cron/fire"
+  reason: "Authenticated by a scheduler service token the isolated server does not have."
+- kind: rest
+  name: "POST /api/dashboard/agent-plugins/activate"
+  reason: "Installs, updates or removes agent plugins from the network."
+- kind: rest
+  name: "POST /api/dashboard/agent-plugins/install"
+  reason: "Installs, updates or removes agent plugins from the network."
+- kind: rest
+  name: "POST /api/dashboard/agent-plugins/{name}/update"
+  reason: "Installs, updates or removes agent plugins from the network."
+- kind: rest
+  name: "POST /api/gateway/migrate"
+  reason: "Restarts or migrates the host's installed Hermes gateway service, outside the isolated home (it restarted the real gateway once during authoring)."
+- kind: rest
+  name: "POST /api/gateway/restart"
+  reason: "Restarts or migrates the host's installed Hermes gateway service, outside the isolated home (it restarted the real gateway once during authoring)."
+- kind: rest
+  name: "POST /api/gateway/start"
+  reason: "Restarts or migrates the host's installed Hermes gateway service, outside the isolated home (it restarted the real gateway once during authoring)."
+- kind: rest
+  name: "POST /api/gateway/stop"
+  reason: "Restarts or migrates the host's installed Hermes gateway service, outside the isolated home (it restarted the real gateway once during authoring)."
+- kind: rest
+  name: "POST /api/git/review/create-pr"
+  reason: "Pushes to a git remote and opens a pull request on GitHub."
+- kind: rest
+  name: "POST /api/git/review/push"
+  reason: "Pushes to a git remote and opens a pull request on GitHub."
+- kind: rest
+  name: "POST /api/hermes/update"
+  reason: "Updates the Hermes installation itself."
+- kind: rest
+  name: "POST /api/local-models/activate"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "POST /api/local-models/download"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "POST /api/local-models/download-browsed"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "POST /api/local-models/eject"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "POST /api/local-models/quickstart"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "POST /api/local-models/runtime/install"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "POST /api/local-models/sideload"
+  reason: "Downloads, installs or runs local models on the host: large downloads and a local model runtime."
+- kind: rest
+  name: "POST /api/mcp/catalog/install"
+  reason: "Installs an MCP server package from the network."
+- kind: rest
+  name: "POST /api/mcp/servers/{name}/auth"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "POST /api/memory/providers/{name}/setup"
+  reason: "Needs an external memory provider account."
+- kind: rest
+  name: "POST /api/memory/providers/{provider}/oauth/start"
+  reason: "Needs an external memory provider account."
+- kind: rest
+  name: "POST /api/messaging/telegram/onboarding/start"
+  reason: "Pairs a Telegram or WhatsApp account; needs the external messaging service."
+- kind: rest
+  name: "POST /api/messaging/telegram/onboarding/{pairing_id}/apply"
+  reason: "Restarts or migrates the host's installed Hermes gateway service, outside the isolated home (it restarted the real gateway once during authoring)."
+- kind: rest
+  name: "POST /api/messaging/whatsapp/onboarding/start"
+  reason: "Pairs a Telegram or WhatsApp account; needs the external messaging service."
+- kind: rest
+  name: "POST /api/messaging/whatsapp/onboarding/{pairing_id}/apply"
+  reason: "Restarts or migrates the host's installed Hermes gateway service, outside the isolated home (it restarted the real gateway once during authoring)."
+- kind: rest
+  name: "POST /api/ops/debug-share"
+  reason: "Uploads a debug bundle to an external service."
+- kind: rest
+  name: "POST /api/ops/import"
+  reason: "Replaces the whole Hermes home from a backup: a destructive restore the scenario cannot run between clients."
+- kind: rest
+  name: "POST /api/ops/import-upload"
+  reason: "Replaces the whole Hermes home from a backup: a destructive restore the scenario cannot run between clients."
+- kind: rest
+  name: "POST /api/pairing/approve"
+  reason: "Needs a pending pairing request from a messaging platform user."
+- kind: rest
+  name: "POST /api/pairing/revoke"
+  reason: "Needs a pending pairing request from a messaging platform user."
+- kind: rest
+  name: "POST /api/plugins/kanban/runs/{run_id}/terminate"
+  reason: "Needs a running kanban worker to create runs."
+- kind: rest
+  name: "POST /api/plugins/kanban/tasks/{task_id}/reclaim"
+  reason: "Needs a running kanban worker to create runs."
+- kind: rest
+  name: "POST /api/profiles/{name}/open-terminal"
+  reason: "Opens a terminal window on the host."
+- kind: rest
+  name: "POST /api/providers/oauth/{provider_id}/start"
+  reason: "Needs a real OAuth provider round trip."
+- kind: rest
+  name: "POST /api/providers/oauth/{provider_id}/submit"
+  reason: "Answers 400 for every request at this release and documents no success response."
+- kind: rest
+  name: "POST /api/skills/hub/install"
+  reason: "Needs the remote skills hub."
+- kind: rest
+  name: "POST /api/skills/hub/update"
+  reason: "Needs the remote skills hub."
+- kind: rest
+  name: "POST /api/tools/computer-use/permissions/grant"
+  reason: "Requests macOS privacy permissions on the host."
+- kind: rest
+  name: "POST /api/tools/toolsets/{name}/post-setup"
+  reason: "Runs a toolset's installer on the host."
+- kind: rest
+  name: "POST /api/webhooks/enable"
+  reason: "Restarts or migrates the host's installed Hermes gateway service, outside the isolated home (it restarted the real gateway once during authoring)."
+- kind: rest
+  name: "PUT /api/tools/toolsets/{name}/model"
+  reason: "No toolset offers model choices without provider keys at this release."
+- kind: server_request
+  name: "display.install.sudo"
+  reason: "Asks for the host's sudo password."
+- kind: server_request
+  name: "preview.act"
+  reason: "Asked by desktop tools that read or drive the user's own terminal, windows, preview pane or guided tour."
+- kind: server_request
+  name: "preview.read"
+  reason: "Asked by desktop tools that read or drive the user's own terminal, windows, preview pane or guided tour."
+- kind: server_request
+  name: "secret"
+  reason: "Asked by a tool that needs a secret the user types in, such as an API key. Could be covered with a scripted tool turn."
+- kind: server_request
+  name: "sudo"
+  reason: "Asks for the host's sudo password."
+- kind: server_request
+  name: "terminal.read"
+  reason: "Asked by desktop tools that read or drive the user's own terminal, windows, preview pane or guided tour."
+- kind: server_request
+  name: "tour"
+  reason: "Asked by desktop tools that read or drive the user's own terminal, windows, preview pane or guided tour."
+- kind: server_request
+  name: "vault.code"
+  reason: "Asks the user to unlock or use a password manager."
+- kind: server_request
+  name: "vault.save_login"
+  reason: "Asks the user to unlock or use a password manager."
+- kind: server_request
+  name: "vault.unlock_prompt"
+  reason: "Asks the user to unlock or use a password manager."
+- kind: server_request
+  name: "window.read"
+  reason: "Asked by desktop tools that read or drive the user's own terminal, windows, preview pane or guided tour."

@@ -1,0 +1,36 @@
+/** Generated from the {{ origin }}. Do not edit. A JSON array of exactly {{ tuple.elements | length }} items. */
+@Serializable(with = {{ tuple.name }}.Serializer::class)
+public data class {{ tuple.name }}(
+{% for item in tuple.elements %}
+    public val {{ item.name }}: {{ item.kotlin_type }},
+{% endfor %}
+) {
+    public object Serializer : KSerializer<{{ tuple.name }}> {
+        override val descriptor: SerialDescriptor = JsonArray.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): {{ tuple.name }} {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("{{ tuple.name }} requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonArray
+                ?: throw SerializationException("{{ tuple.name }} requires an array")
+            if (input.size != {{ tuple.elements | length }}) throw SerializationException("{{ tuple.name }} requires {{ tuple.elements | length }} items")
+            return {{ tuple.name }}(
+{% for item in tuple.elements %}
+                json.decodeFromJsonElement<{{ item.kotlin_type }}>(input[{{ loop.index0 }}]),
+{% endfor %}
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: {{ tuple.name }}) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("{{ tuple.name }} requires JSON")
+            val json = jsonEncoder.json
+            jsonEncoder.encodeJsonElement(JsonArray(listOf(
+{% for item in tuple.elements %}
+                json.encodeToJsonElement(value.{{ item.name }}),
+{% endfor %}
+            )))
+        }
+    }
+}

@@ -1,4 +1,7 @@
-/// Generated from the Hermes gateway contract. Do not edit.
+/// Generated from the {{ origin }}. Do not edit.
+{% if model.description %}
+/// {{ model.description }}
+{% endif %}
 {% if model.always_null %}
 /// Omits {{ model.always_null }}, which Hermes always sends as null.
 {% endif %}
@@ -10,10 +13,10 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
     public var {{ field.swift_name }}: {{ field.swift_type }}
 {% endfor %}
 {% if model.open %}
-    public var additionalProperties: [String: JSONValue]
+    public var additionalProperties: [String: {{ model.extra_swift }}]
 {% endif %}
 
-    public init({% for field in model.fields %}{{ field.swift_name }}: {{ field.swift_type }}{% if field.swift_init_default %} = {{ field.swift_init_default }}{% endif %}{% if not loop.last or model.open %}, {% endif %}{% endfor %}{% if model.open %}additionalProperties: [String: JSONValue] = [:]{% endif %}) {
+    public init({% for field in model.fields %}{{ field.swift_name }}: {{ field.swift_type }}{% if field.swift_init_default %} = {{ field.swift_init_default }}{% endif %}{% if not loop.last or model.open %}, {% endif %}{% endfor %}{% if model.open %}additionalProperties: [String: {{ model.extra_swift }}] = [:]{% endif %}) {
 {% for field in model.fields %}
         self.{{ field.swift_name }} = {{ field.swift_name }}
 {% endfor %}
@@ -21,7 +24,7 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
         self.additionalProperties = additionalProperties
 {% endif %}
     }
-{% if model.fields or model.open %}
+{% if model.fields or model.open or model.reject_unknown %}
 
 {% if model.fields %}
     private enum CodingKeys: String, CodingKey {
@@ -32,6 +35,18 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
 {% endif %}
 
     public init(from decoder: Decoder) throws {
+{% if model.reject_unknown %}
+        let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = [{{ model.known_literals }}]
+        if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+        }
+{% for key in model.required_null %}
+        guard keys.contains(DynamicCodingKey({{ key.literal }})), try keys.decodeNil(forKey: DynamicCodingKey({{ key.literal }})) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Field {{ key.name }} must be present and null"))
+        }
+{% endfor %}
+{% endif %}
 {% if model.fields %}
         let container = try decoder.container(keyedBy: CodingKeys.self)
 {% endif %}
@@ -61,9 +76,9 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
 {% if model.open %}
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
         let known: Set<String> = [{% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %}]
-        var extra: [String: JSONValue] = [:]
+        var extra: [String: {{ model.extra_swift }}] = [:]
         for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
+            extra[key.stringValue] = try dynamic.decode({{ model.extra_swift }}.self, forKey: key)
         }
         additionalProperties = extra
 {% endif %}
@@ -86,6 +101,12 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
         try container.encodeIfPresent({{ field.swift_name }}, forKey: .{{ field.swift_name }})
 {% endif %}
 {% endfor %}
+{% if model.required_null %}
+        var nulls = encoder.container(keyedBy: DynamicCodingKey.self)
+{% for key in model.required_null %}
+        try nulls.encodeNil(forKey: DynamicCodingKey({{ key.literal }}))
+{% endfor %}
+{% endif %}
 {% if model.open %}
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
         let known: Set<String> = [{% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %}]

@@ -1,6 +1,19 @@
 # Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
 # components whose producer drifted. These win over spec/overlay/rest/contracts/.
 components:
+  GatewayDrainRequest:
+    type: object
+    additionalProperties: false
+    description: '``post_gateway_drain``: ``action`` defaults to ``drain``; ``suppress_notification`` only applies
+      to a drain.'
+    properties:
+      action:
+        type: string
+        enum:
+        - drain
+        - cancel
+      suppress_notification:
+        type: boolean
   HermesUpdateCheckResponse:
     additionalProperties: false
     description: '``check_hermes_update``. ``behind``: commits behind, ``0`` up to date, ``-1`` behind by an unknown
@@ -193,6 +206,24 @@ components:
         - type: 'null'
     type: object
 operations:
+- method: POST
+  path: /api/gateway/drain
+  x-source: hermes_cli/web_routers/actions.py:165
+  x-handler-hash: a4368bc614b8f1b747536fad22df9fbb4e1e5a9fd21148bfb855d9105f734c8a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GatewayDrainResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GatewayDrainResponse'
+      description: Successful Response
+  request:
+    required: false
+    schema:
+      $ref: '#/components/schemas/GatewayDrainRequest'
 - method: POST
   path: /api/hermes/update
   x-source: hermes_cli/web_routers/actions.py:219

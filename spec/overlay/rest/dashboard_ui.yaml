@@ -1,6 +1,26 @@
 # Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
 # components whose producer drifted. These win over spec/overlay/rest/contracts/.
 components:
+  AgentPluginActivateRequest:
+    type: object
+    additionalProperties: false
+    required:
+    - name
+    - home
+    description: '``post_agent_plugin_activate``: load plugin ``name`` for the profile whose home is ``home``.'
+    properties:
+      name:
+        type: string
+      home:
+        type: string
+  AgentPluginUpdateRequest:
+    type: object
+    additionalProperties: false
+    description: '``post_agent_plugin_update``: ``accept_capabilities: true`` applies a re-pin the user confirmed
+      after a ``consent_required`` answer.'
+    properties:
+      accept_capabilities:
+        type: boolean
   PluginsHubContextOption:
     additionalProperties: false
     description: '``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair.'
@@ -118,6 +138,42 @@ components:
     - providers
     type: object
 operations:
+- method: POST
+  path: /api/dashboard/agent-plugins/activate
+  x-source: hermes_cli/web_routers/dashboard_ui.py:290
+  x-handler-hash: 7a8c7656977731c29d6f41a641e1d6c2fba20ed88eab050d6edbbb0265860fec
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginActivateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginActivateResponse'
+      description: Successful Response
+  request:
+    required: true
+    schema:
+      $ref: '#/components/schemas/AgentPluginActivateRequest'
+- method: POST
+  path: /api/dashboard/agent-plugins/{name}/update
+  x-source: hermes_cli/web_routers/dashboard_ui.py:269
+  x-handler-hash: fd1834ade1b1fcd050e2ceec563d49629d9cac985e96013653c49f6ef5f766e7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginUpdateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginUpdateResponse'
+      description: Successful Response
+  request:
+    required: false
+    schema:
+      $ref: '#/components/schemas/AgentPluginUpdateRequest'
 - method: GET
   path: /api/dashboard/plugins/hub
   responses:

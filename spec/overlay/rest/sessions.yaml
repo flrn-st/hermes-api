@@ -542,6 +542,22 @@ components:
     - git_metadata_generation
     - messages
     type: object
+  SessionImportRequest:
+    type: object
+    additionalProperties: false
+    required:
+    - sessions
+    description: '``hermes_cli/web_models.py::SessionImport``, streamed and validated by ``import_sessions_endpoint``:
+      sessions as ``GET /api/sessions/{session_id}/export`` returns them.'
+    properties:
+      sessions:
+        type: array
+        items:
+          $ref: '#/components/schemas/SessionExportResponse'
+      profile:
+        anyOf:
+        - type: string
+        - type: 'null'
   SessionListResponse:
     additionalProperties: false
     description: '``get_sessions``. ``storage`` maps the serving profile to ``"corrupt"`` when its store is
@@ -990,6 +1006,24 @@ operations:
         application/json:
           schema:
             $ref: '#/components/schemas/SessionListResponse'
+- method: POST
+  path: /api/sessions/import
+  x-source: hermes_cli/web_routers/sessions.py:432
+  x-handler-hash: 70eef2119abcea3b483b0a1e95c6ebfb89ceb9a81cfeba5d3932831aa005330b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SessionImportResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionImportResponse'
+      description: Successful Response
+  request:
+    required: true
+    schema:
+      $ref: '#/components/schemas/SessionImportRequest'
 - method: GET
   path: /api/sessions/{session_id}/export
   x-source: hermes_cli/web_routers/sessions.py:787

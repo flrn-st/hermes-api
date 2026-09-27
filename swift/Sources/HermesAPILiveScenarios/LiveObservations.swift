@@ -3,18 +3,21 @@ import HermesAPI
 
 /// What a live run exercised, measured on the wire and reported to the harness as coverage evidence:
 /// methods that returned a result, events that decoded to their typed payload, and server requests
-/// that decoded and were answered with a result.
+/// that decoded and were answered with a result, and REST operations whose typed method succeeded.
 actor LiveObservations {
     private var methods: Set<String> = []
     private var events: Set<String> = []
     private var serverRequests: Set<String> = []
+    private var rest: Set<String> = []
 
     func method(_ name: String) { methods.insert(name) }
     func event(_ name: String) { events.insert(name) }
     func serverRequest(_ name: String) { serverRequests.insert(name) }
+    func rest(_ operation: String) { rest.insert(operation) }
 
     func report() -> [String: [String]] {
-        ["methods": methods.sorted(), "events": events.sorted(), "server_requests": serverRequests.sorted()]
+        ["methods": methods.sorted(), "events": events.sorted(), "server_requests": serverRequests.sorted(),
+         "rest": rest.sorted()]
     }
 }
 

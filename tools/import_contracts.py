@@ -108,9 +108,11 @@ def _model(responses: dict[str, dict]) -> str:
     return ", ".join(names)
 
 
-def _manual_overlays(root: Path) -> tuple[set[str], dict[str, dict]]:
+def _manual_overlays(root: Path) -> tuple[set[str], dict[str, dict], set[str]]:
+    """Hand-written operations, their components, and the component names their entries reference."""
     operations: set[str] = set()
     components: dict[str, dict] = {}
+    references: set[str] = set()
     directory = root / "spec/overlay/rest"
     for path in sorted(directory.rglob("*.yaml")):
         if path.is_relative_to(root / CONTRACTS):
@@ -118,12 +120,13 @@ def _manual_overlays(root: Path) -> tuple[set[str], dict[str, dict]]:
         overlay = yaml.safe_load(path.read_text(encoding="utf-8"))
         operations |= {f"{entry['method'].upper()} {entry['path']}" for entry in overlay["operations"]}
         components.update(overlay.get("components", {}))
-    return operations, components
+        references |= _refs(overlay)
+    return operations, components, references
 
 
 def plan(tag: dict, tag_hashes: dict, branch: dict, branch_hashes: dict, commit: str,
-         modules: dict[str, str], manual_ops: set[str], manual_components: dict[str, dict]
-         ) -> tuple[dict[str, dict], dict[str, list[str]]]:
+         modules: dict[str, str], manual_ops: set[str], manual_components: dict[str, dict],
+         manual_references: frozenset[str] = frozenset()) -> tuple[dict[str, dict], dict[str, list[str]]]:
     """Overlay documents by file stem, and a report of what was not imported."""
     tag_schemas = tag.get("components", {}).get("schemas", {})
     branch_schemas = {name: _strip_titles(schema)
@@ -163,6 +166,11 @@ def plan(tag: dict, tag_hashes: dict, branch: dict, branch_hashes: dict, commit:
         files.setdefault(stem, {"components": {}, "operations": []})["operations"].append(entry)
         for name in _closure(_refs(responses), {**branch_schemas, **manual_components}):
             owners.setdefault(name, stem)
+    # Hand-written entries may reference contract components that no imported entry needs.
+    everything = {**branch_schemas, **manual_components}
+    for name in sorted(_closure({ref for ref in manual_references if ref in everything}, everything)):
+        if name not in manual_components:
+            owners.setdefault(name, overlay_file(modules[name]) if name in modules else "shared")
     for name in sorted(owners):
         if name not in branch_schemas:
             continue  # defined only by a hand-written overlay
@@ -236,9 +244,9 @@ def main() -> None:
     tag = json.loads((output / "openapi.raw.json").read_text(encoding="utf-8"))
     tag_hashes = json.loads((output / "rest-hashes.json").read_text(encoding="utf-8"))
     branch, branch_hashes, commit, modules = render_branch(args.contracts_repo.resolve())
-    manual_ops, manual_components = _manual_overlays(ROOT)
+    manual_ops, manual_components, manual_references = _manual_overlays(ROOT)
     files, report = plan(tag, tag_hashes, branch, branch_hashes, commit, modules,
-                         manual_ops, manual_components)
+                         manual_ops, manual_components, frozenset(manual_references))
     write(files)
     imported = sum(len(document["operations"]) for document in files.values())
     summary = {"commit": commit, "imported": imported, **{key: len(value) for key, value in report.items()}}

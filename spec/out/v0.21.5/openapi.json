@@ -730,6 +730,23 @@
         ],
         "type": "object"
       },
+      "AgentPluginActivateRequest": {
+        "additionalProperties": false,
+        "description": "``post_agent_plugin_activate``: load plugin ``name`` for the profile whose home is ``home``.",
+        "properties": {
+          "home": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "home"
+        ],
+        "type": "object"
+      },
       "AgentPluginActivateResponse": {
         "additionalProperties": false,
         "description": "``post_agent_plugin_activate`` — ``activation`` is ``None`` when the plugin did not load.",
@@ -1005,6 +1022,16 @@
           "unchanged",
           "restart_required"
         ],
+        "type": "object"
+      },
+      "AgentPluginUpdateRequest": {
+        "additionalProperties": false,
+        "description": "``post_agent_plugin_update``: ``accept_capabilities: true`` applies a re-pin the user confirmed after a ``consent_required`` answer.",
+        "properties": {
+          "accept_capabilities": {
+            "type": "boolean"
+          }
+        },
         "type": "object"
       },
       "AgentPluginUpdateResponse": {
@@ -3398,6 +3425,19 @@
         },
         "required": [
           "targets"
+        ],
+        "type": "object"
+      },
+      "CronFireRequest": {
+        "additionalProperties": false,
+        "description": "``cron_fire_webhook`` reads ``job_id`` from the JSON body; the caller authenticates with a Chronos fire token (``Authorization: Bearer``).",
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
         ],
         "type": "object"
       },
@@ -6590,6 +6630,23 @@
         ],
         "type": "object"
       },
+      "GatewayDrainRequest": {
+        "additionalProperties": false,
+        "description": "``post_gateway_drain``: ``action`` defaults to ``drain``; ``suppress_notification`` only applies to a drain.",
+        "properties": {
+          "action": {
+            "enum": [
+              "drain",
+              "cancel"
+            ],
+            "type": "string"
+          },
+          "suppress_notification": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
       "GatewayDrainResponse": {
         "additionalProperties": false,
         "description": "``gateway_drain``: ``cancel`` answers ``was_draining``; ``drain`` echoes the marker it wrote\n(``gateway/drain_control.py::write_drain_request``) and whether a drain is now active.",
@@ -7634,6 +7691,27 @@
           "ok",
           "version",
           "auth_required"
+        ],
+        "type": "object"
+      },
+      "HealthRetirementRequest": {
+        "additionalProperties": false,
+        "description": "``post_health_retirement``: ``token`` (from ``prepare``) is required to ``commit`` or ``cancel``.",
+        "properties": {
+          "action": {
+            "enum": [
+              "prepare",
+              "commit",
+              "cancel"
+            ],
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
         ],
         "type": "object"
       },
@@ -20629,6 +20707,32 @@
         ],
         "type": "object"
       },
+      "SessionImportRequest": {
+        "additionalProperties": false,
+        "description": "``hermes_cli/web_models.py::SessionImport``, streamed and validated by ``import_sessions_endpoint``: sessions as ``GET /api/sessions/{session_id}/export`` returns them.",
+        "properties": {
+          "profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/SessionExportResponse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sessions"
+        ],
+        "type": "object"
+      },
       "SessionImportResponse": {
         "additionalProperties": false,
         "description": "``SessionDB.import_sessions`` success result (``ok: false`` is raised as a 400).",
@@ -28889,6 +28993,16 @@
       "post": {
         "description": "Chronos managed-cron fire webhook (NAS -> agent) — gateway forwarder.\n\nGated by the NAS-minted JWT (path is in ``PUBLIC_API_PATHS``), not the\ndashboard cookie. Execution belongs to the GATEWAY process (it owns the live\nplatform adapters relay-fronted and E2EE targets need), so the fire is\nforwarded to the gateway api_server's own ``/api/cron/fire`` on loopback\nand its response passed through (the gateway re-verifies the JWT). Gateway\nunreachable -> 503 so NAS retries; deliberately NO local-execution fallback.",
         "operationId": "cron_fire_webhook_api_cron_fire_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CronFireRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -29643,6 +29757,16 @@
       "post": {
         "description": "``hermes plugins install`` / ``enable`` in another process asks this backend to load the plugin\nfor ``home`` and hand its MCP servers and skills to that profile's open chats\n(``hermes_cli.plugins_activation.load_and_go_live``). ``home`` must be a profile this host serves.",
         "operationId": "post_agent_plugin_activate_api_dashboard_agent_plugins_activate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentPluginActivateRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -29857,6 +29981,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentPluginUpdateRequest"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
@@ -31465,6 +31599,16 @@
       "post": {
         "description": "Begin or cancel an external (NAS-driven) gateway drain.\n\nAuthenticated by the non-interactive token-auth seam (the ``dashboard_auth/drain``\nplugin registers this path as a token route and verifies the bearer secret);\nwithout that plugin the cookie gate covers a gated bind and the legacy\nsession-token gate a loopback bind — never unauthenticated on a network bind.\n\nBody ``{\"action\": \"drain\"|\"cancel\"}``. Only the ``.drain_request.json`` marker is\nwritten/removed here — the gateway's ``_drain_control_watcher`` owns the state\ntransition (the marker IS the control channel). Idempotent on both sides;\n``POST /api/gateway/restart`` is the force-override that supersedes a drain.",
         "operationId": "gateway_drain_api_gateway_drain_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayDrainRequest"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
@@ -32786,6 +32930,16 @@
     "/api/health/retirement": {
       "post": {
         "operationId": "post_health_retirement_api_health_retirement_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HealthRetirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -42427,6 +42581,16 @@
       "post": {
         "description": "Import sessions exported from the dashboard or CLI (session rows only —\n``/api/ops/import`` restores a whole backup archive).",
         "operationId": "import_sessions_endpoint_api_sessions_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

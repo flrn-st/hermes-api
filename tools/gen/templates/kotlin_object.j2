@@ -1,4 +1,4 @@
-/** Generated from the Hermes gateway contract. Do not edit.{% if model.always_null %} Omits {{ model.always_null }}, which Hermes always sends as null.{% endif %} */
+/** Generated from the {{ origin }}. Do not edit.{% if model.description %} {{ model.description }}{% endif %}{% if model.always_null %} Omits {{ model.always_null }}, which Hermes always sends as null.{% endif %} */
 {% if model.custom %}
 @Serializable(with = {{ model.name }}.Serializer::class)
 {% else %}
@@ -16,7 +16,7 @@ public data class {{ model.name }}(
     public val {{ field.kotlin_name }}: {{ field.kotlin_type }}{% if field.kotlin_init_default %} = {{ field.kotlin_init_default }}{% endif %},
 {% endfor %}
 {% if model.open %}
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+    public val additionalProperties: Map<String, {{ model.extra_kotlin }}> = emptyMap(),
 {% endif %}
 )
 {% else %}
@@ -41,15 +41,22 @@ public class {{ model.name }}
 {% endif %}
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("{{ model.name }} requires an object")
+{% if model.reject_unknown %}
+            val known = setOf<String>({{ model.known_literals }})
+            input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+{% for key in model.required_null %}
+            if (input[{{ key.literal }}] !is JsonNull) throw SerializationException("Field {{ key.name }} must be present and null")
+{% endfor %}
+{% endif %}
             return {{ model.name }}(
 {% for field in model.fields %}
                 {{ field.kotlin_name }} = {{ field.decode_expression }},
 {% endfor %}
 {% if model.open %}
 {% if model.fields %}
-                additionalProperties = input.filterKeys { it !in setOf({% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %}) },
+                additionalProperties = input.filterKeys { it !in setOf({% for field in model.fields %}{{ field.wire_literal }}{% if not loop.last %}, {% endif %}{% endfor %}) }{% if model.extra_kotlin != "JsonElement" %}.mapValues { json.decodeFromJsonElement<{{ model.extra_kotlin }}>(it.value) }{% endif %},
 {% else %}
-                additionalProperties = input,
+                additionalProperties = input{% if model.extra_kotlin != "JsonElement" %}.mapValues { json.decodeFromJsonElement<{{ model.extra_kotlin }}>(it.value) }{% endif %},
 {% endif %}
 {% endif %}
             )
@@ -69,10 +76,13 @@ public class {{ model.name }}
                 throw SerializationException("Additional property conflicts with a known field")
             }
 {% endif %}
-            output.putAll(value.additionalProperties)
+            output.putAll(value.additionalProperties{% if model.extra_kotlin != "JsonElement" %}.mapValues { json.encodeToJsonElement(it.value) }{% endif %})
 {% endif %}
 {% for field in model.fields %}
 {{ field.encode_statement | indent(12, true) }}
+{% endfor %}
+{% for key in model.required_null %}
+            output[{{ key.literal }}] = JsonNull
 {% endfor %}
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }

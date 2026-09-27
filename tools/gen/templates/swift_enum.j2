@@ -1,9 +1,9 @@
-/// Generated from the Hermes gateway contract. Do not edit.
+/// Generated from the {{ origin }}. Do not edit.
 public enum {{ enum.name }}: Codable, Sendable, Hashable {
 {% for case in enum.cases %}
     case {{ case.swift_name }}
 {% endfor %}
-{% if not enum.constant %}
+{% if not enum.closed %}
     case unknown(String)
 {% endif %}
 
@@ -15,6 +15,8 @@ public enum {{ enum.name }}: Codable, Sendable, Hashable {
 {% endfor %}
 {% if enum.constant %}
         default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
+{% elif enum.closed %}
+        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected {{ enum.name }} value: \(raw)")
 {% else %}
         default: self = .unknown(raw)
 {% endif %}
@@ -27,7 +29,7 @@ public enum {{ enum.name }}: Codable, Sendable, Hashable {
 {% for case in enum.cases %}
         case .{{ case.swift_name }}: try container.encode({{ case.wire_literal }})
 {% endfor %}
-{% if not enum.constant %}
+{% if not enum.closed %}
         case .unknown(let raw): try container.encode(raw)
 {% endif %}
         }

@@ -150,6 +150,21 @@ def _template_literals(template: str | None) -> dict[str, str] | None:
             "kotlin": "listOf(" + ", ".join(_literal(part).replace("$", "\\$") for part in parts) + ")"}
 
 
+# The operation tables the data-driven live scenario and the fixture decode tests call every method through.
+SWIFT_LIVE_OUT = ROOT / "swift/Sources/HermesAPILiveScenarios/Generated"
+KOTLIN_LIVE_OUT = ROOT / "kotlin/src/live/kotlin/hermes/api/live/generated"
+
+
+def _operation_views(methods: dict[str, object]) -> list[dict[str, str]]:
+    """Every method with the member path that reaches it on a gateway, sorted by wire name."""
+    views = [{**item, "swift_path": f"{namespace['swift_name']}.{item['swift_name']}",
+              "kotlin_path": f"{namespace['kotlin_name']}.{item['kotlin_name']}"}
+             for namespace in methods["namespaces"] for item in namespace["methods"]]
+    views += [{**item, "swift_path": item["swift_name"], "kotlin_path": item["kotlin_name"]}
+              for item in methods["root_methods"]]
+    return sorted(views, key=lambda item: item["wire_name"])
+
+
 def _constant(name: str) -> str:
     """A Kotlin enum constant: ``sessionNotFound`` becomes ``SESSION_NOT_FOUND``."""
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).upper()
@@ -195,6 +210,10 @@ def generate(ref: str, *, check: bool = False) -> int:
         KOTLIN_OUT / "GatewayMethods.kt": env.get_template("kotlin_methods.j2").render(**methods),
         SWIFT_OUT / "GatewayEvents.swift": env.get_template("swift_events.j2").render(**events),
         KOTLIN_OUT / "GatewayEvents.kt": env.get_template("kotlin_events.j2").render(**events),
+        SWIFT_LIVE_OUT / "GatewayOperations.swift": env.get_template("swift_gateway_operations.j2").render(
+            methods=_operation_views(methods)),
+        KOTLIN_LIVE_OUT / "GatewayOperations.kt": env.get_template("kotlin_gateway_operations.j2").render(
+            methods=_operation_views(methods)),
         SWIFT_OUT / "GatewayErrors.swift": env.get_template("swift_errors.j2").render(**errors),
         KOTLIN_OUT / "GatewayErrors.kt": env.get_template("kotlin_errors.j2").render(**errors),
         SWIFT_OUT / "GatewayRelease.swift": env.get_template("swift_release.j2").render(

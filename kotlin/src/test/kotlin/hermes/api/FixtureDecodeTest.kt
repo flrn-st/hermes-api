@@ -24,6 +24,7 @@ import hermes.api.generated.gateway.SessionCreateResult
 import hermes.api.generated.gateway.SessionListResult
 import hermes.api.generated.gateway.SessionCloseResult
 import hermes.api.runtime.Patch
+import hermes.api.live.generated.GatewayOperations
 import hermes.api.live.generated.RESTOperations
 import hermes.api.runtime.RESTResponse
 import kotlinx.serialization.json.JsonPrimitive
@@ -53,6 +54,9 @@ class FixtureDecodeTest {
     @Test
     fun recordedLivenessFramesDecodeInKotlin() {
         val json = Json { ignoreUnknownKeys = false }
+        // The gateway runtime tolerates keys a model omits (Hermes adds fields between releases, and some
+        // are always null); the round trip below still fails when a value is dropped.
+        val gatewayJson = Json { ignoreUnknownKeys = true; explicitNulls = true }
         val ref = Files.readString(Path.of("../spec/current-release.txt")).trim()
         val lines = Files.readAllLines(Path.of("../fixtures/$ref/liveness.jsonl"))
         assertTrue(lines.size >= 8)
@@ -181,7 +185,14 @@ class FixtureDecodeTest {
                     assertTrue(result.status != null)
                     assertEquals(frame.getValue("result"), json.encodeToJsonElement(PromptSubmitResult.serializer(), result))
                 }
-                else -> error("Unexpected fixture: $name")
+                else -> {
+                    // Every other recorded method decodes through its generated result type, with the gateway
+                    // runtime's settings, and re-encodes to the same JSON: nothing Hermes sent is lost.
+                    assertTrue(name in GatewayOperations.all, "Unknown gateway method $name")
+                    val result = frame.getValue("result")
+                    assertEquals(normalized(result), normalized(GatewayOperations.decodeResult(name, result, gatewayJson)),
+                        "$name does not round-trip")
+                }
             }
         }
         assertTrue(seen.containsAll(setOf("gateway.ready", "ping", "prompt.submit", "clarify", "approval",

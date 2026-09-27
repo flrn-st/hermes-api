@@ -150,7 +150,7 @@ private func client(
     httpTransport: any HTTPTransport = TicketHTTPTransport()
 ) -> HermesGateway {
     HermesGateway(configuration: .init(
-        baseURL: baseURL, auth: auth, transport: transport, httpTransport: httpTransport,
+        address: HermesDashboardAddress(baseURL), auth: auth, transport: transport, httpTransport: httpTransport,
         networkMonitor: monitor, requestTimeout: timeout, reconnectDelay: { _ in reconnectDelay },
         heartbeatInterval: heartbeat, heartbeatDeadline: deadline, minimumContract: minimumContract
     ))
@@ -416,6 +416,42 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
     try await gateway.connect()
     #expect(await transport.urls.map(\.absoluteString) == ["wss://relay.example/agents/box/api/ws"])
     #expect(await transport.subprotocols == [["hermes-gateway-v1", "hermes-gateway-ticket.fresh-ticket"]])
+    await gateway.disconnect()
+}
+
+/// Hands out dashboard addresses in order, keeping the last, and records the failure each resolve was given.
+private actor AddressBook {
+    private var urls: [URL]
+    private(set) var failures: [HermesGatewayError?] = []
+
+    init(_ urls: [String]) { self.urls = urls.compactMap(URL.init(string:)) }
+
+    func next(after failure: (any Error)?) -> URL {
+        failures.append(failure.map { $0 as? HermesGatewayError ?? .transport("unexpected \($0)") })
+        return urls.count > 1 ? urls.removeFirst() : urls[0]
+    }
+}
+
+@Test func everyConnectionAttemptResolvesTheAddressAfterThePreviousFailure() async throws {
+    let first = TestSocket()
+    let second = TestSocket()
+    let transport = SequenceTransport([.failure(.transport("primary unreachable")), .socket(first), .socket(second)])
+    let book = AddressBook(["https://primary.example", "https://fallback.example", "https://primary.example"])
+    let gateway = HermesGateway(configuration: .init(
+        address: HermesDashboardAddress { await book.next(after: $0) }, auth: TestAuth(), transport: transport,
+        networkMonitor: nil, requestTimeout: .seconds(1), reconnectDelay: { _ in .zero }
+    ))
+    try await gateway.connect()
+    let states = gateway.connectionStates()
+    await first.sever(.transport("connection reset"))
+    var reconnected = false
+    for await state in states {
+        if isReconnecting(state) { reconnected = true }
+        if reconnected && state == .connected { break }
+    }
+    #expect(await transport.urls.map(\.absoluteString)
+            == ["wss://primary.example/api/ws", "wss://fallback.example/api/ws", "wss://primary.example/api/ws"])
+    #expect(await book.failures == [nil, .transport("primary unreachable"), .transport("connection reset")])
     await gateway.disconnect()
 }
 

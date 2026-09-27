@@ -49,6 +49,7 @@ import hermes.api.runtime.GatewayNetworkMonitor
 import hermes.api.runtime.GatewaySessionRecovery
 import hermes.api.runtime.GatewayTransport
 import hermes.api.runtime.HermesAuth
+import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
 import hermes.api.runtime.HermesGatewayException
@@ -139,7 +140,7 @@ public object LiveScenarios {
     private suspend fun smoke(environment: LiveScenarioEnvironment, observations: LiveObservations) {
         val ktor = KtorGatewayTransport()
         val gateway = HermesGateway(HermesGatewayConfiguration(
-            environment.url, environment.auth, ObservingTransport(ktor, observations), httpTransport = ktor,
+            HermesDashboardAddress(environment.url), environment.auth, ObservingTransport(ktor, observations), httpTransport = ktor,
             networkMonitor = environment.networkMonitor, logger = environment.logger,
         ))
         gateway.setServerRequestHandler { request ->
@@ -233,7 +234,7 @@ public object LiveScenarios {
         val token = environment.token ?: throw LiveScenarioFailure("REST smoke needs the local token")
         val restTransport = KtorRESTTransport()
         try {
-            val rest = HermesREST(HermesRESTConfiguration(environment.url, LocalTokenAuth(token), transport = restTransport))
+            val rest = HermesREST(HermesRESTConfiguration(HermesDashboardAddress(environment.url), LocalTokenAuth(token), transport = restTransport))
             val voice = rest.methods.audio.voiceLiveStatus(profile = "default")
             check(voice.ok && voice.mode == VoiceLiveStatusResponseMode.Chained && voice.model.isNotEmpty() &&
                 voice.voice.isNotEmpty()) {
@@ -257,7 +258,7 @@ public object LiveScenarios {
         val ktor = KtorGatewayTransport()
         val transport = ObservingTransport(ktor, observations)
         val gateway = HermesGateway(HermesGatewayConfiguration(
-            environment.url, environment.auth, transport, httpTransport = ktor, reconnectDelayMillis = { 250 },
+            HermesDashboardAddress(environment.url), environment.auth, transport, httpTransport = ktor, reconnectDelayMillis = { 250 },
             heartbeatIntervalMillis = 1_000, heartbeatDeadlineMillis = 4_000,
             networkMonitor = environment.networkMonitor, logger = environment.logger,
         ))

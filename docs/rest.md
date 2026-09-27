@@ -8,19 +8,21 @@ become labelled arguments; an operation whose name another operation of its name
 gets a verb prefix (`setActive`, `deleteJobs`) or a `By<Parameter>` suffix (`getBySessionId`).
 
 ```swift
-let rest = HermesREST(configuration: .init(baseURL: url, auth: LocalTokenAuth(token: token)))
+let rest = HermesREST(configuration: .init(address: HermesDashboardAddress(url), auth: LocalTokenAuth(token: token)))
 let sessions = try await rest.sessions.get(limit: 20)
 let detail = try await rest.sessions.getBySessionId(sessionId: sessions.sessions[0].id)
 try await rest.profiles.setActive(body: .init(name: "work"))
 ```
 
 ```kotlin
-val rest = HermesREST(HermesRESTConfiguration(uri, LocalTokenAuth(token)))
+val rest = HermesREST(HermesRESTConfiguration(HermesDashboardAddress(uri), LocalTokenAuth(token)))
 val sessions = rest.methods.sessions.get(limit = 20)
 ```
 
 The base URL may carry a path, for a dashboard behind a reverse proxy (`https://host/hermes/`) or a relay
-(`https://relay/agents/<id>`): every route is appended to it.
+(`https://relay/agents/<id>`): every route is appended to it. The address is resolved before every attempt,
+with the previous attempt's failure, so an app can fail over between addresses (see `HermesDashboardAddress`
+and [the gateway guide](gateway.md#moving-between-addresses)).
 
 ## Authentication
 

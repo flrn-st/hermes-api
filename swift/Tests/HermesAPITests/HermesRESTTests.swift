@@ -44,7 +44,7 @@ private let fastRetry = RESTRetryPolicy(maxAttempts: 3, initialDelay: .milliseco
 private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? = nil,
                     retry: RESTRetryPolicy = fastRetry, timeout: Duration = .seconds(5),
                     baseURL: URL = base) -> HermesREST {
-    HermesREST(configuration: .init(baseURL: baseURL, auth: auth, transport: transport, timeout: timeout, retry: retry))
+    HermesREST(configuration: .init(address: HermesDashboardAddress(baseURL), auth: auth, transport: transport, timeout: timeout, retry: retry))
 }
 
 @Test func queryValuesAndPathSegmentsArePercentEncoded() async throws {
@@ -70,6 +70,32 @@ private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? 
     let requests = await transport.requests
     #expect(requests[0].url?.absoluteString == "https://relay.example/agents/box%201/api/sessions/empty/count?profile=default")
     #expect(requests[1].url?.absoluteString == "https://proxy.example/hermes/api/sessions/empty/count")
+}
+
+/// Records the failure each resolve was given and moves to the fallback after one.
+private actor FailoverAddress {
+    private(set) var failures: [HermesRESTError?] = []
+
+    func resolve(after failure: (any Error)?) -> URL {
+        failures.append(failure.map { $0 as? HermesRESTError ?? .transport("unexpected \($0)") })
+        return URL(string: failure == nil ? "https://primary.example" : "https://fallback.example")!
+    }
+}
+
+@Test func everyAttemptResolvesTheAddressAfterThePreviousFailure() async throws {
+    let transport = ScriptedTransport([.fail(.cannotConnectToHost), .respond(200, #"{"count":2}"#)])
+    let address = FailoverAddress()
+    let rest = HermesREST(configuration: .init(
+        address: HermesDashboardAddress { await address.resolve(after: $0) }, transport: transport, retry: fastRetry
+    ))
+    #expect(try await rest.sessions.emptyCount().count == 2)
+    #expect(await transport.requests.map { $0.url?.host } == ["primary.example", "fallback.example"])
+    let failures = await address.failures
+    #expect(failures.count == 2 && failures[0] == nil)
+    guard case .transport? = failures[1] else {
+        Issue.record("The retry should see the transport failure, not \(String(describing: failures[1]))")
+        return
+    }
 }
 
 @Test func localTokenAuthenticatesAndJSONBodiesAreSent() async throws {
@@ -206,7 +232,7 @@ private let issued = #"{"access_token":"a2","refresh_token":"r2","token_type":"B
 @Test func nativeSessionRefreshesOnceForConcurrentRejections() async throws {
     let refresh = ScriptedTransport([.respond(200, issued)])
     let rotated = RotationLog()
-    let auth = NativeSessionAuth(baseURL: base, tokens: .init(accessToken: "a1", refreshToken: "r1", provider: "oidc"),
+    let auth = NativeSessionAuth(address: HermesDashboardAddress(base), tokens: .init(accessToken: "a1", refreshToken: "r1", provider: "oidc"),
                                  transport: refresh, onRotate: { await rotated.record($0) })
     let response = RESTResponse(status: 401, headers: [:], body: Data())
     let rejected = ["Authorization": "Bearer a1"]
@@ -226,7 +252,7 @@ private let issued = #"{"access_token":"a2","refresh_token":"r2","token_type":"B
 
 @Test func nativeSessionRefreshesBeforeExpiry() async throws {
     let refresh = ScriptedTransport([.respond(200, issued)])
-    let auth = NativeSessionAuth(baseURL: base, tokens: .init(accessToken: "a1", refreshToken: "r1", expiresAt: 0),
+    let auth = NativeSessionAuth(address: HermesDashboardAddress(base), tokens: .init(accessToken: "a1", refreshToken: "r1", expiresAt: 0),
                                  transport: refresh)
     #expect(try await auth.authorizationHeaders() == ["Authorization": "Bearer a2"])
     #expect(try await auth.authorizationHeaders() == ["Authorization": "Bearer a2"])

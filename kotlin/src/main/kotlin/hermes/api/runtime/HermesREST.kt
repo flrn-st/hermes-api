@@ -237,7 +237,8 @@ public data class RESTRetryPolicy(
 }
 
 public data class HermesRESTConfiguration(
-    val baseURI: URI,
+    /** Resolved before every attempt; see [HermesDashboardAddress]. */
+    val address: HermesDashboardAddress,
     /** Authenticates every request; `null` for public routes or cookie sessions the transport carries. */
     val auth: HermesRESTAuth? = null,
     /** Extra headers on every request, for example a reverse proxy's credential. */
@@ -266,12 +267,13 @@ public class HermesREST(
     }
 
     override suspend fun send(request: RESTRequest): RESTResponse {
-        val uri = uri(request)
         val retry = configuration.retry
         val safe = RESTRetryPolicy.isSafe(request.method)
         var attempt = 1
         var renewed = false
+        var previousFailure: HermesRESTException? = null
         while (true) {
+            val uri = uri(request, resolveAddress(previousFailure))
             val credential = configuration.auth?.authorizationHeaders() ?: emptyMap()
             val headers = configuration.headers() + credential
             var retryAfterMillis: Long? = null
@@ -280,6 +282,7 @@ public class HermesREST(
                 val auth = configuration.auth
                 if (response.status == 401 && !renewed && auth != null && auth.renew(credential, response)) {
                     renewed = true
+                    previousFailure = null
                     continue
                 }
                 if (response.status !in retry.retryableStatuses || !safe || attempt >= retry.maxAttempts) return response
@@ -294,20 +297,31 @@ public class HermesREST(
                 failure
             }
             attempt += 1
+            previousFailure = failure
             configuration.logger.log(GatewayLogLevel.INFO,
                 "Retrying ${request.method} (attempt $attempt) after ${failure.message}")
             delay(retry.delayMillis(attempt, retryAfterMillis))
         }
     }
 
-    private fun uri(request: RESTRequest): URI {
+    private suspend fun resolveAddress(previousFailure: HermesRESTException?): URI = try {
+        configuration.address.resolve(previousFailure)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: HermesRESTException) {
+        throw error
+    } catch (error: Exception) {
+        throw HermesRESTException.Transport("Cannot resolve the dashboard address: ${error.message}")
+    }
+
+    private fun uri(request: RESTRequest, base: URI): URI {
         if (!request.path.startsWith("/") || request.path.startsWith("//")) {
             throw HermesRESTException.Transport("Invalid REST path")
         }
         val suffix = request.query.toSortedMap().entries.joinToString("&") { (name, value) ->
             "${RESTPath.segment(name)}=${RESTPath.segment(value)}"
         }
-        return dashboardURI(configuration.baseURI, request.path, suffix)
+        return dashboardURI(base, request.path, suffix)
             ?: throw HermesRESTException.Transport("Invalid REST path")
     }
 

@@ -20,6 +20,7 @@ import hermes.api.generated.rest.LearningGraphStatsTopCategoriesItem
 import hermes.api.generated.rest.ProfileActiveUpdate
 import hermes.api.generated.rest.VoiceLiveStatusResponse
 import hermes.api.generated.rest.VoiceLiveStatusResponseMode
+import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesREST
 import hermes.api.runtime.HermesRESTAuth
 import hermes.api.runtime.HermesRESTConfiguration
@@ -69,7 +70,7 @@ private val fastRetry = RESTRetryPolicy(maxAttempts = 3, initialDelayMillis = 1,
 
 private fun client(transport: RESTTransport, auth: HermesRESTAuth? = null, retry: RESTRetryPolicy = fastRetry,
                    timeoutMillis: Long = 5_000, baseURI: URI = base) =
-    HermesREST(HermesRESTConfiguration(baseURI, auth, transport = transport, timeoutMillis = timeoutMillis, retry = retry))
+    HermesREST(HermesRESTConfiguration(HermesDashboardAddress(baseURI), auth, transport = transport, timeoutMillis = timeoutMillis, retry = retry))
 
 class HermesRESTTest {
     @Test
@@ -99,6 +100,24 @@ class HermesRESTTest {
         assertEquals("https://relay.example/agents/box%201/api/sessions/empty/count?profile=default",
             transport.requests[0].uri.toString())
         assertEquals("https://proxy.example/hermes/api/sessions/empty/count", transport.requests[1].uri.toString())
+    }
+
+    @Test
+    fun everyAttemptResolvesTheAddressAfterThePreviousFailure() = runTest {
+        val transport = ScriptedTransport(
+            ScriptedTransport.Step.Fail(ConnectException("primary unreachable")),
+            ScriptedTransport.Step.Respond(200, """{"count":2}"""),
+        )
+        val failures = mutableListOf<Throwable?>()
+        val address = HermesDashboardAddress { failure ->
+            failures += failure
+            URI(if (failure == null) "https://primary.example" else "https://fallback.example")
+        }
+        val rest = HermesREST(HermesRESTConfiguration(address, transport = transport, retry = fastRetry))
+        assertEquals(2, rest.methods.sessions.emptyCount().count)
+        assertEquals(listOf("primary.example", "fallback.example"), transport.requests.map { it.uri.host })
+        assertEquals(null, failures[0])
+        assertIs<HermesRESTException.Transport>(failures[1])
     }
 
     @Test
@@ -245,7 +264,7 @@ class HermesRESTTest {
     fun nativeSessionRefreshesOnceForConcurrentRejections() = runTest {
         val refresh = ScriptedTransport(ScriptedTransport.Step.Respond(200, issued))
         val rotated = mutableListOf<NativeSessionAuth.Tokens>()
-        val auth = NativeSessionAuth(base, NativeSessionAuth.Tokens("a1", "r1", provider = "oidc"), refresh,
+        val auth = NativeSessionAuth(HermesDashboardAddress(base), NativeSessionAuth.Tokens("a1", "r1", provider = "oidc"), refresh,
             onRotate = { rotated += it })
         val rejection = RESTResponse(401, emptyMap(), ByteArray(0))
         val rejected = mapOf("Authorization" to "Bearer a1")
@@ -264,7 +283,7 @@ class HermesRESTTest {
     @Test
     fun nativeSessionRefreshesBeforeExpiry() = runTest {
         val refresh = ScriptedTransport(ScriptedTransport.Step.Respond(200, issued))
-        val auth = NativeSessionAuth(base, NativeSessionAuth.Tokens("a1", "r1", expiresAt = 0), refresh)
+        val auth = NativeSessionAuth(HermesDashboardAddress(base), NativeSessionAuth.Tokens("a1", "r1", expiresAt = 0), refresh)
         assertEquals(mapOf("Authorization" to "Bearer a2"), auth.authorizationHeaders())
         assertEquals(mapOf("Authorization" to "Bearer a2"), auth.authorizationHeaders())
         assertEquals(1, refresh.requests.size)

@@ -22,7 +22,7 @@ enum GatewayScenario {
     static func run(_ calls: [GatewayScenarioCall], environment: LiveScenarioEnvironment,
                     observations: LiveObservations) async throws {
         let gateway = HermesGateway(configuration: .init(
-            baseURL: environment.url, auth: environment.auth,
+            address: HermesDashboardAddress(environment.url), auth: environment.auth,
             transport: ObservingTransport(inner: URLSessionGatewayTransport(), observations: observations)))
         do {
             try await gateway.connect()

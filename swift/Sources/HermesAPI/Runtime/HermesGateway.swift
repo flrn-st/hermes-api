@@ -200,11 +200,14 @@ public actor HermesGateway: GatewayCalling {
         }
     }
 
-    private func startMaintaining(delayFirstAttempt: Bool) {
+    /// `failure` is why the connection before ended, if it failed.
+    private func startMaintaining(delayFirstAttempt: Bool, after failure: HermesGatewayError? = nil) {
         cancelReconnect()
         reconnectRun += 1
         let run = reconnectRun
-        reconnectTask = Task { await self.maintainConnection(delayFirstAttempt: delayFirstAttempt, run: run) }
+        reconnectTask = Task {
+            await self.maintainConnection(delayFirstAttempt: delayFirstAttempt, after: failure, run: run)
+        }
     }
 
     private func cancelReconnect() {
@@ -212,8 +215,9 @@ public actor HermesGateway: GatewayCalling {
         reconnectTask = nil
     }
 
-    private func maintainConnection(delayFirstAttempt: Bool, run: Int) async {
+    private func maintainConnection(delayFirstAttempt: Bool, after failure: HermesGatewayError?, run: Int) async {
         var attempt = 0
+        var previousFailure = failure
         while wantsConnection && !Task.isCancelled {
             if inBackground { publish(.suspended); break }
             // The network monitor restarts this loop when a path appears; nothing polls meanwhile.
@@ -224,32 +228,32 @@ public actor HermesGateway: GatewayCalling {
                 do { try await Task.sleep(for: configuration.reconnectDelay(attempt)) } catch { break }
             }
             do {
-                try await open()
+                try await open(after: previousFailure)
                 break
             } catch let error as HermesGatewayError where error.isTerminal {
                 fail(error)
                 break
             } catch {
                 if Task.isCancelled { break }
+                previousFailure = Self.gatewayError(error)
                 configuration.logger.info("Connection attempt \(attempt) failed: \(String(describing: error), privacy: .public)")
             }
         }
         if run == reconnectRun { reconnectTask = nil }
     }
 
-    /// One connection attempt: socket, capabilities, then session recovery.
-    private func open() async throws {
+    /// One connection attempt: address, credential, socket, capabilities, then session recovery.
+    private func open(after previousFailure: HermesGatewayError?) async throws {
         opening = true
         defer { opening = false }
         generation += 1
         let current = generation
         do {
+            let baseURL = try await configuration.address.resolve(previousFailure: previousFailure)
             let credential = try await configuration.auth.credential(
-                baseURL: configuration.baseURL, http: configuration.httpTransport
+                baseURL: baseURL, http: configuration.httpTransport
             )
-            let (url, headers, protocols) = try Self.socketRequest(
-                baseURL: configuration.baseURL, credential: credential
-            )
+            let (url, headers, protocols) = try Self.socketRequest(baseURL: baseURL, credential: credential)
             let socket = try await configuration.transport.connect(
                 url: url, headers: headers, subprotocols: protocols
             )
@@ -315,7 +319,7 @@ public actor HermesGateway: GatewayCalling {
         if error.isTerminal {
             fail(error)
         } else if !inBackground {
-            startMaintaining(delayFirstAttempt: !retryImmediately)
+            startMaintaining(delayFirstAttempt: !retryImmediately, after: error)
         }
     }
 

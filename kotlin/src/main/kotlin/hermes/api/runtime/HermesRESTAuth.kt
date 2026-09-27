@@ -40,7 +40,7 @@ public class StaticHeadersAuth(private val values: Map<String, String>) : Hermes
  * gateway connections, so one credential serves both surfaces.
  */
 public class NativeSessionAuth(
-    baseURI: URI,
+    address: HermesDashboardAddress,
     tokens: Tokens,
     transport: RESTTransport = KtorRESTTransport(),
     /** Refresh this long before [Tokens.expiresAt], so a request does not race the expiry. */
@@ -57,7 +57,7 @@ public class NativeSessionAuth(
     )
 
     // The refresh endpoint is public; the refresher itself carries no credential.
-    private val refresher = HermesREST(HermesRESTConfiguration(baseURI, transport = transport))
+    private val refresher = HermesREST(HermesRESTConfiguration(address, transport = transport))
     private val lock = Mutex()
     private var tokens = tokens
     private var refreshing: CompletableDeferred<Tokens>? = null

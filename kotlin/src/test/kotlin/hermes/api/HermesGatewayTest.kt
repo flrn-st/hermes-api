@@ -37,6 +37,7 @@ import hermes.api.runtime.GatewayNetworkMonitor
 import hermes.api.runtime.GatewayNetworkPath
 import hermes.api.runtime.GatewaySessionRecovery
 import hermes.api.runtime.GatewayTransport
+import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
 import hermes.api.runtime.HermesGatewayException
@@ -123,7 +124,7 @@ class HermesGatewayTest {
         heartbeat: Long = 60_000, deadline: Long = 120_000, timeout: Long = 3_000,
         minimumContract: Int = HermesGatewayContract.desktopContract,
     ) = HermesGateway(HermesGatewayConfiguration(
-        URI("http://localhost:3000"), LocalTokenAuth("secret"), transport, networkMonitor = monitor,
+        HermesDashboardAddress(URI("http://localhost:3000")), LocalTokenAuth("secret"), transport, networkMonitor = monitor,
         requestTimeoutMillis = timeout, reconnectDelayMillis = { reconnectDelay },
         heartbeatIntervalMillis = heartbeat, heartbeatDeadlineMillis = deadline, minimumContract = minimumContract,
     ), scope = backgroundScope)
@@ -173,7 +174,7 @@ class HermesGatewayTest {
             }
         }
         val gateway = HermesGateway(HermesGatewayConfiguration(
-            URI("http://localhost:3000"), LocalTokenAuth("secret"), transport, requestTimeoutMillis = 3_000,
+            HermesDashboardAddress(URI("http://localhost:3000")), LocalTokenAuth("secret"), transport, requestTimeoutMillis = 3_000,
         ), scope = backgroundScope)
         gateway.connect()
         assertEquals("ws://localhost:3000/api/ws?token=secret", observedURI.toString())
@@ -373,13 +374,45 @@ class HermesGatewayTest {
             }
         }
         val gateway = HermesGateway(HermesGatewayConfiguration(
-            URI("https://relay.example/agents/box/"), DashboardTicketAuth { emptyMap() }, transport, http,
+            HermesDashboardAddress(URI("https://relay.example/agents/box/")), DashboardTicketAuth { emptyMap() }, transport, http,
             requestTimeoutMillis = 3_000,
         ), scope = backgroundScope)
         gateway.connect()
         assertEquals("https://relay.example/agents/box/api/auth/ws-ticket", ticketURI.toString())
         assertEquals("wss://relay.example/agents/box/api/ws", socketURI.toString())
         assertEquals(listOf("hermes-gateway-v1", "hermes-gateway-ticket.single-use"), socketProtocols)
+        gateway.disconnect()
+    }
+
+    @Test
+    fun everyConnectionAttemptResolvesTheAddressAfterThePreviousFailure() = runTest {
+        val first = FakeSocket()
+        val second = FakeSocket()
+        val addresses = ArrayDeque(listOf("http://primary.example", "http://fallback.example", "http://primary.example"))
+        val failures = mutableListOf<String?>()
+        val connected = mutableListOf<String>()
+        val scripted = SequenceTransport(listOf(
+            Step.Failure(HermesGatewayException.Transport("primary unreachable")), Step.Socket(first), Step.Socket(second),
+        ))
+        val transport = object : GatewayTransport {
+            override suspend fun connect(uri: URI, headers: Map<String, String>, protocols: List<String>): GatewayConnection {
+                connected += uri.toString().substringBefore("?")
+                return scripted.connect(uri, headers, protocols)
+            }
+        }
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress { failure ->
+                failures += failure?.message
+                URI(if (addresses.size > 1) addresses.removeFirst() else addresses.first())
+            },
+            LocalTokenAuth("secret"), transport, requestTimeoutMillis = 3_000, reconnectDelayMillis = { 0 },
+        ), scope = backgroundScope)
+        gateway.connect()
+        first.sever()
+        gateway.awaitConnectedAfter(scripted, 3)
+        assertEquals(listOf("ws://primary.example/api/ws", "ws://fallback.example/api/ws", "ws://primary.example/api/ws"),
+            connected)
+        assertEquals(listOf(null, "primary unreachable", "severed"), failures)
         gateway.disconnect()
     }
 

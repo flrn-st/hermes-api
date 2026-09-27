@@ -70,11 +70,11 @@ public actor NativeSessionAuth: HermesRESTAuth, HermesAuth {
     /// Refresh this long before `expiresAt`, so a request does not race the expiry.
     private let leeway: Int
 
-    public init(baseURL: URL, tokens: Tokens, transport: any HTTPTransport = URLSessionHTTPTransport(),
+    public init(address: HermesDashboardAddress, tokens: Tokens, transport: any HTTPTransport = URLSessionHTTPTransport(),
                 leeway: Duration = .seconds(30), onRotate: @escaping @Sendable (Tokens) async -> Void = { _ in }) {
         self.tokens = tokens
         // The refresh endpoint is public; the refresher itself carries no credential.
-        refresher = HermesREST(configuration: .init(baseURL: baseURL, transport: transport))
+        refresher = HermesREST(configuration: .init(address: address, transport: transport))
         self.onRotate = onRotate
         self.leeway = Int(leeway.components.seconds)
     }

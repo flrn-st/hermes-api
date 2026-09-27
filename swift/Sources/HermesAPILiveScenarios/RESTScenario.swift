@@ -42,7 +42,7 @@ enum RESTScenario {
     static func run(_ calls: [RESTScenarioCall], baseURL: URL, auth: (any HermesRESTAuth)?,
                     transport: any HTTPTransport = URLSessionHTTPTransport(),
                     observations: LiveObservations) async throws {
-        let plain = HermesREST(configuration: .init(baseURL: baseURL, auth: auth, transport: transport))
+        let plain = HermesREST(configuration: .init(address: HermesDashboardAddress(baseURL), auth: auth, transport: transport))
         var native: HermesREST?
         var captured: [String: JSONValue] = [:]
         for (index, call) in calls.enumerated() {
@@ -59,10 +59,10 @@ enum RESTScenario {
                     var provider = ""
                     if case .string(let name)? = issued["provider"] { provider = name }
                     let session = NativeSessionAuth(
-                        baseURL: baseURL,
+                        address: HermesDashboardAddress(baseURL),
                         tokens: .init(accessToken: access, refreshToken: refresh, expiresAt: expiresAt, provider: provider),
                         transport: transport)
-                    native = HermesREST(configuration: .init(baseURL: baseURL, auth: session, transport: transport))
+                    native = HermesREST(configuration: .init(address: HermesDashboardAddress(baseURL), auth: session, transport: transport))
                 }
                 rest = native ?? plain
             } else {

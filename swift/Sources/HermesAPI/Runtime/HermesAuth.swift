@@ -21,7 +21,7 @@ public struct DashboardTicketAuth: HermesAuth {
 
     public func credential(baseURL: URL, http: any HTTPTransport) async throws -> GatewayCredential {
         let headers = try await headers()
-        guard let url = URL(string: "/api/auth/ws-ticket", relativeTo: baseURL)?.absoluteURL else {
+        guard let url = DashboardURL.components(base: baseURL, path: "/api/auth/ws-ticket")?.url else {
             throw HermesGatewayError.transport("Invalid dashboard URL")
         }
         var request = URLRequest(url: url)

@@ -536,7 +536,7 @@ public actor HermesGateway: GatewayCalling {
     private static func socketRequest(
         baseURL: URL, credential: GatewayCredential
     ) throws -> (URL, [String: String], [String]) {
-        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
+        guard var components = DashboardURL.components(base: baseURL, path: "/api/ws") else {
             throw HermesGatewayError.transport("Invalid dashboard URL")
         }
         switch components.scheme {
@@ -544,7 +544,6 @@ public actor HermesGateway: GatewayCalling {
         case "https": components.scheme = "wss"
         default: throw HermesGatewayError.transport("Dashboard URL must use HTTP or HTTPS")
         }
-        components.path = "/api/ws"
         switch credential {
         case .ticket(let ticket, let headers):
             guard !ticket.isEmpty else { throw HermesGatewayError.transport("Empty WebSocket ticket") }

@@ -901,17 +901,16 @@ public class HermesGateway(
             "http" -> "ws"; "https" -> "wss"
             else -> throw HermesGatewayException.Transport("Dashboard URL must use HTTP or HTTPS")
         }
-        val base = URI(scheme, configuration.baseURI.userInfo, configuration.baseURI.host,
-            configuration.baseURI.port, "/api/ws", null, null)
+        fun socketURI(rawQuery: String? = null) = dashboardURI(configuration.baseURI, "/api/ws", rawQuery, scheme)
+            ?: throw HermesGatewayException.Transport("Invalid dashboard URL")
         return when (credential) {
             is GatewayCredential.Ticket -> {
                 if (credential.value.isEmpty()) throw HermesGatewayException.Transport("Empty WebSocket ticket")
-                Triple(base, credential.headers, listOf("hermes-gateway-v1", "hermes-gateway-ticket.${credential.value}"))
+                Triple(socketURI(), credential.headers, listOf("hermes-gateway-v1", "hermes-gateway-ticket.${credential.value}"))
             }
             is GatewayCredential.LocalToken -> {
                 if (credential.value.isEmpty()) throw HermesGatewayException.Transport("Empty local token")
-                Triple(URI(base.toString() + "?token=" + URLEncoder.encode(credential.value, "UTF-8")),
-                    credential.headers, emptyList())
+                Triple(socketURI("token=" + URLEncoder.encode(credential.value, "UTF-8")), credential.headers, emptyList())
             }
         }
     }

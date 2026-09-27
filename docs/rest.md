@@ -19,6 +19,9 @@ val rest = HermesREST(HermesRESTConfiguration(uri, LocalTokenAuth(token)))
 val sessions = rest.methods.sessions.get(limit = 20)
 ```
 
+The base URL may carry a path, for a dashboard behind a reverse proxy (`https://host/hermes/`) or a relay
+(`https://relay/agents/<id>`): every route is appended to it.
+
 ## Authentication
 
 | Deployment | Credential |

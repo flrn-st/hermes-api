@@ -68,8 +68,8 @@ private val base = URI("https://dashboard.example")
 private val fastRetry = RESTRetryPolicy(maxAttempts = 3, initialDelayMillis = 1, maximumDelayMillis = 5)
 
 private fun client(transport: RESTTransport, auth: HermesRESTAuth? = null, retry: RESTRetryPolicy = fastRetry,
-                   timeoutMillis: Long = 5_000) =
-    HermesREST(HermesRESTConfiguration(base, auth, transport = transport, timeoutMillis = timeoutMillis, retry = retry))
+                   timeoutMillis: Long = 5_000, baseURI: URI = base) =
+    HermesREST(HermesRESTConfiguration(baseURI, auth, transport = transport, timeoutMillis = timeoutMillis, retry = retry))
 
 class HermesRESTTest {
     @Test
@@ -84,6 +84,21 @@ class HermesRESTTest {
         assertEquals("https://dashboard.example/api/sessions/empty/count?profile=qa%20%26%20mobile%2B1%2F%C3%A9",
             transport.requests[0].uri.toString())
         assertEquals("https://dashboard.example/api/sessions/a%2Fb%20c%3F%23%C3%A9", transport.requests[1].uri.toString())
+    }
+
+    @Test
+    fun routesKeepTheBaseURLPath() = runTest {
+        val transport = ScriptedTransport(
+            ScriptedTransport.Step.Respond(200, """{"count":2}"""),
+            ScriptedTransport.Step.Respond(200, """{"count":3}"""),
+        )
+        val behindRelay = client(transport, baseURI = URI("https://relay.example/agents/box%201/?ignored=1"))
+        assertEquals(2, behindRelay.methods.sessions.emptyCount(profile = "default").count)
+        val behindProxy = client(transport, baseURI = URI("https://proxy.example/hermes"))
+        assertEquals(3, behindProxy.methods.sessions.emptyCount().count)
+        assertEquals("https://relay.example/agents/box%201/api/sessions/empty/count?profile=default",
+            transport.requests[0].uri.toString())
+        assertEquals("https://proxy.example/hermes/api/sessions/empty/count", transport.requests[1].uri.toString())
     }
 
     @Test

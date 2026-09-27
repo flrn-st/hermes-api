@@ -20,7 +20,9 @@ public class DashboardTicketAuth(private val headers: suspend () -> Map<String, 
 
     override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential {
         val currentHeaders = headers()
-        val (status, body) = http.post(baseURI.resolve("/api/auth/ws-ticket"), currentHeaders)
+        val ticketURI = dashboardURI(baseURI, "/api/auth/ws-ticket")
+            ?: throw HermesGatewayException.Transport("Invalid dashboard URL")
+        val (status, body) = http.post(ticketURI, currentHeaders)
         if (status == 401 || status == 403) {
             throw HermesGatewayException.AuthenticationFailed("WebSocket ticket request returned HTTP $status")
         }

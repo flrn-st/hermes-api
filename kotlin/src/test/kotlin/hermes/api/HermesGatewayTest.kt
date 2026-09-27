@@ -354,6 +354,36 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun connectionsKeepTheBaseURLPath() = runTest {
+        val socket = FakeSocket()
+        var ticketURI: URI? = null
+        var socketURI: URI? = null
+        var socketProtocols: List<String> = emptyList()
+        val http = object : GatewayHTTPTransport {
+            override suspend fun post(uri: URI, headers: Map<String, String>): Pair<Int, String> {
+                ticketURI = uri
+                return 200 to """{"ticket":"single-use","ttl_seconds":30}"""
+            }
+        }
+        val transport = object : GatewayTransport {
+            override suspend fun connect(uri: URI, headers: Map<String, String>, protocols: List<String>): GatewayConnection {
+                socketURI = uri
+                socketProtocols = protocols
+                return socket
+            }
+        }
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            URI("https://relay.example/agents/box/"), DashboardTicketAuth { emptyMap() }, transport, http,
+            requestTimeoutMillis = 3_000,
+        ), scope = backgroundScope)
+        gateway.connect()
+        assertEquals("https://relay.example/agents/box/api/auth/ws-ticket", ticketURI.toString())
+        assertEquals("wss://relay.example/agents/box/api/ws", socketURI.toString())
+        assertEquals(listOf("hermes-gateway-v1", "hermes-gateway-ticket.single-use"), socketProtocols)
+        gateway.disconnect()
+    }
+
+    @Test
     fun rejectedTicketIsAnAuthenticationFailure() = runTest {
         val http = object : GatewayHTTPTransport {
             override suspend fun post(uri: URI, headers: Map<String, String>): Pair<Int, String> = 401 to "{}"

@@ -1,0 +1,664 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  GitBaseBranchRow:
+    additionalProperties: false
+    description: '``web_git.base_branch_list`` row.'
+    properties:
+      isDefault:
+        type: boolean
+      isRemote:
+        type: boolean
+      name:
+        type: string
+    required:
+    - name
+    - isRemote
+    - isDefault
+    type: object
+  GitBaseBranchesResponse:
+    additionalProperties: false
+    description: '``git_base_branches_route``.'
+    properties:
+      branches:
+        items:
+          $ref: '#/components/schemas/GitBaseBranchRow'
+        type: array
+    required:
+    - branches
+    type: object
+  GitBranchRow:
+    additionalProperties: false
+    description: '``web_git.branch_list`` row: local heads, then remote-tracking refs without a local head.'
+    properties:
+      checkedOut:
+        type: boolean
+      isDefault:
+        type: boolean
+      isRemote:
+        type: boolean
+      name:
+        type: string
+      worktreePath:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - name
+    - checkedOut
+    - isDefault
+    - isRemote
+    - worktreePath
+    type: object
+  GitBranchSwitchResponse:
+    additionalProperties: false
+    description: '``web_git.branch_switch`` — the sanitized branch that was switched to.'
+    properties:
+      branch:
+        type: string
+    required:
+    - branch
+    type: object
+  GitBranchesResponse:
+    additionalProperties: false
+    description: '``git_branches_route``.'
+    properties:
+      branches:
+        items:
+          $ref: '#/components/schemas/GitBranchRow'
+        type: array
+    required:
+    - branches
+    type: object
+  GitCommitContextResponse:
+    additionalProperties: false
+    description: '``web_git.review_commit_context`` — the diff that will commit plus recent subjects.'
+    properties:
+      diff:
+        type: string
+      recent:
+        type: string
+    required:
+    - diff
+    - recent
+    type: object
+  GitCreatePrResponse:
+    additionalProperties: false
+    description: '``web_git.review_create_pr`` — the last non-empty line ``gh pr create`` printed.'
+    properties:
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  GitDiffResponse:
+    additionalProperties: false
+    description: '``git_review_diff_route`` / ``git_file_diff_route``: unified diff text (``""`` when none).'
+    properties:
+      diff:
+        type: string
+    required:
+    - diff
+    type: object
+  GitHubCliAuthResponse:
+    additionalProperties: false
+    description: '``git._probe_gh_auth`` (cached 5 min by ``gh_auth_status_route``).'
+    properties:
+      authenticated:
+        type: boolean
+      available:
+        type: boolean
+    required:
+    - available
+    - authenticated
+    type: object
+  GitPrListResponse:
+    additionalProperties: false
+    description: '``web_git.review_pr_list``.'
+    properties:
+      ghReady:
+        type: boolean
+      prs:
+        items:
+          $ref: '#/components/schemas/GitPullRequestRow'
+        type: array
+    required:
+    - ghReady
+    - prs
+    type: object
+  GitPullRequestRow:
+    additionalProperties: false
+    description: '``web_git._pr_payload``; ``state`` is GitHub''s PR state lowercased.'
+    properties:
+      branch:
+        type: string
+      draft:
+        type: boolean
+      number:
+        type: integer
+      state:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    required:
+    - branch
+    - draft
+    - number
+    - state
+    - title
+    - url
+    type: object
+  GitRepoStatusResponse:
+    additionalProperties: false
+    description: '``web_git.repo_status`` (the route answers ``null`` for a non-repo). The four flag
+
+      counters and ``changed`` cover every file; ``files`` is capped at 200.'
+    properties:
+      added:
+        type: integer
+      ahead:
+        type: integer
+      behind:
+        type: integer
+      branch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      changed:
+        type: integer
+      conflicted:
+        type: integer
+      defaultBranch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      detached:
+        type: boolean
+      files:
+        items:
+          $ref: '#/components/schemas/GitStatusFile'
+        type: array
+      removed:
+        type: integer
+      staged:
+        type: integer
+      unstaged:
+        type: integer
+      untracked:
+        type: integer
+    required:
+    - branch
+    - defaultBranch
+    - detached
+    - ahead
+    - behind
+    - staged
+    - unstaged
+    - untracked
+    - conflicted
+    - changed
+    - added
+    - removed
+    - files
+    type: object
+  GitRevParseResponse:
+    additionalProperties: false
+    description: '``git_rev_parse_route``; ``null`` when the ref does not resolve.'
+    properties:
+      sha:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - sha
+    type: object
+  GitReviewFile:
+    additionalProperties: false
+    description: '``web_git.review_list`` row. ``status`` is ``"?"`` (untracked), ``"U"`` (conflicted) or
+
+      git''s index/worktree code letter (``M``, ``A``, ``D``, ``R``, ...).'
+    properties:
+      added:
+        type: integer
+      path:
+        type: string
+      removed:
+        type: integer
+      staged:
+        type: boolean
+      status:
+        type: string
+    required:
+    - path
+    - added
+    - removed
+    - status
+    - staged
+    type: object
+  GitReviewListResponse:
+    additionalProperties: false
+    description: '``web_git.review_list``; ``base`` is the resolved base ref for the branch/lastTurn scopes.'
+    properties:
+      base:
+        anyOf:
+        - type: string
+        - type: 'null'
+      files:
+        items:
+          $ref: '#/components/schemas/GitReviewFile'
+        type: array
+    required:
+    - files
+    - base
+    type: object
+  GitShipInfoPr:
+    additionalProperties: false
+    description: The ``gh pr view --json url,state,number`` fields ``web_git.review_ship_info`` keeps.
+    properties:
+      number:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      url:
+        type: string
+    required:
+    - url
+    - state
+    - number
+    type: object
+  GitShipInfoResponse:
+    additionalProperties: false
+    description: '``web_git.review_ship_info``.'
+    properties:
+      ghReady:
+        type: boolean
+      pr:
+        anyOf:
+        - $ref: '#/components/schemas/GitShipInfoPr'
+        - type: 'null'
+    required:
+    - ghReady
+    - pr
+    type: object
+  GitStatusFile:
+    additionalProperties: false
+    description: '``web_git._classify``.'
+    properties:
+      conflicted:
+        type: boolean
+      path:
+        type: string
+      staged:
+        type: boolean
+      unstaged:
+        type: boolean
+      untracked:
+        type: boolean
+    required:
+    - path
+    - staged
+    - unstaged
+    - untracked
+    - conflicted
+    type: object
+  GitWorktreeAddResponse:
+    additionalProperties: false
+    description: '``web_git.worktree_add`` / ``web_git._worktree_for_existing``.'
+    properties:
+      branch:
+        type: string
+      path:
+        type: string
+      repoRoot:
+        type: string
+    required:
+    - path
+    - branch
+    - repoRoot
+    type: object
+  GitWorktreeRemoveResponse:
+    additionalProperties: false
+    description: '``web_git.worktree_remove``.'
+    properties:
+      removed:
+        type: string
+    required:
+    - removed
+    type: object
+  GitWorktreeRow:
+    additionalProperties: false
+    description: '``web_git.worktree_list`` row; the main tree comes first.'
+    properties:
+      branch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      detached:
+        type: boolean
+      isMain:
+        type: boolean
+      locked:
+        type: boolean
+      path:
+        type: string
+    required:
+    - path
+    - branch
+    - isMain
+    - detached
+    - locked
+    type: object
+  GitWorktreesResponse:
+    additionalProperties: false
+    description: '``git_worktrees_route``.'
+    properties:
+      worktrees:
+        items:
+          $ref: '#/components/schemas/GitWorktreeRow'
+        type: array
+    required:
+    - worktrees
+    type: object
+operations:
+- method: GET
+  path: /api/git/base-branches
+  x-source: hermes_cli/web_routers/git.py:118
+  x-handler-hash: 60f3a6727d7c9618b808589290c4405f074e62c367903a967bfd42bab5fdf680
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitBaseBranchesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitBaseBranchesResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/branches
+  x-source: hermes_cli/web_routers/git.py:113
+  x-handler-hash: 3380947bbdd180431413a98d276b00289d805708625617428244ff416ed818a3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitBranchesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitBranchesResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/file-diff
+  x-source: hermes_cli/web_routers/git.py:135
+  x-handler-hash: fdb5b96083e73d7e0f9c122caf9a9518ccb7c20585feb1693af3c1f6af97408a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitDiffResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitDiffResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/gh-auth
+  x-source: hermes_cli/web_routers/git.py:82
+  x-handler-hash: c153aa5c514a3b2f5d60e5e61444dbd1273d79232b54a520254b4c2f3c667713
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitHubCliAuthResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitHubCliAuthResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/review/commit-context
+  x-source: hermes_cli/web_routers/git.py:140
+  x-handler-hash: da0e25e22728286e31bb3f172f1c9a8bba7694809d9d7749e00c10bdffbf8c7a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitCommitContextResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitCommitContextResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/review/diff
+  x-source: hermes_cli/web_routers/git.py:128
+  x-handler-hash: 864ba2caff644066989ad031f86aac58d50bd4005fe30e4bfc57537dce18c44b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitDiffResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitDiffResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/review/list
+  x-source: hermes_cli/web_routers/git.py:123
+  x-handler-hash: 9b8c5c2de64a5d2152e625af422cc03e0666c5df40df599a104233d3c1ca580a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitReviewListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitReviewListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/review/rev-parse
+  x-source: hermes_cli/web_routers/git.py:145
+  x-handler-hash: d68d4bc8e71fae66cf8ff57c7d446c8fcc431a5d7cd9ec5c951d128c15639fc5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitRevParseResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitRevParseResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/review/ship-info
+  x-source: hermes_cli/web_routers/git.py:150
+  x-handler-hash: d2be38da70dc498f4515b750c97125e25e5280142b2f95c46335108f23316111
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitShipInfoResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitShipInfoResponse'
+      description: Successful Response
+- method: GET
+  path: /api/git/status
+  x-source: hermes_cli/web_routers/git.py:48
+  x-handler-hash: 296a03870e08deba7138dcdaee028650770c9e8471bc7b0e910addedc6db2627
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"anyOf": [{"$ref": "#/components/schemas/GitRepoStatusResponse"}, {"type": "null"}]}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/GitRepoStatusResponse'
+            - type: 'null'
+      description: Successful Response
+- method: GET
+  path: /api/git/worktrees
+  x-source: hermes_cli/web_routers/git.py:108
+  x-handler-hash: 800bc06d38e0de0a04a264b25196115f13fb0f533a6e18df84041ff5a7d22f96
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitWorktreesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitWorktreesResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/branch/switch
+  x-source: hermes_cli/web_routers/git.py:207
+  x-handler-hash: 9f52e45a4adc3c77f28ca5bb396dbc1f5c39ae5440c4beac2305b0786237a6ef
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitBranchSwitchResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitBranchSwitchResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/review/commit
+  x-source: hermes_cli/web_routers/git.py:175
+  x-handler-hash: a24abf63a557c141a0efc0c3d771da3a4e382248ecca06e36afa828208f8e426
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/review/create-pr
+  x-source: hermes_cli/web_routers/git.py:185
+  x-handler-hash: 122a2b2c459b02dd6911fbb16a5405daf2f039cd792dbc94f757bb545e3d966f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitCreatePrResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitCreatePrResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/review/pr-list
+  x-source: hermes_cli/web_routers/git.py:155
+  x-handler-hash: 86787a8cc9d6b7315037c4192d2556899303c7041bb9e1eae6d56b11673b965f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitPrListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitPrListResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/review/push
+  x-source: hermes_cli/web_routers/git.py:180
+  x-handler-hash: e51ad088fa613660a21c5f4334043737486fdf4ecf3f39d941edc2edd3d6f5d4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/review/revert
+  x-source: hermes_cli/web_routers/git.py:170
+  x-handler-hash: 321bbe6368a29152ca9671ed6028253ab399c543e5527c053d860b4a84a7f742
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/review/stage
+  x-source: hermes_cli/web_routers/git.py:160
+  x-handler-hash: f03f171025f64c50d00a08f4e6859d875d11902d6af6e26aa626cddde9c0a6f8
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/review/unstage
+  x-source: hermes_cli/web_routers/git.py:165
+  x-handler-hash: e251962a2e98b0fbf3a08573aebbdbd2c1f6f2d70a0fe3482f5f0c6b295371a5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/worktree/add
+  x-source: hermes_cli/web_routers/git.py:190
+  x-handler-hash: 91addb638736aa8864edf8394bb7a022ec13dce991daf129c1fa6880dc4a1bc9
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitWorktreeAddResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitWorktreeAddResponse'
+      description: Successful Response
+- method: POST
+  path: /api/git/worktree/remove
+  x-source: hermes_cli/web_routers/git.py:200
+  x-handler-hash: fa7a4bd8c5b25f499e9c270128c97a89e43bb3777e292f2dfde7cf5846bc1163
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: GitWorktreeRemoveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitWorktreeRemoveResponse'
+      description: Successful Response

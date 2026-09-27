@@ -1,0 +1,645 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  ComputerUseCheck:
+    additionalProperties: false
+    description: 'One ``cua-driver doctor --json`` probe, stringified by
+
+      ``tools/computer_use/permissions.py::_doctor``.'
+    properties:
+      label:
+        type: string
+      message:
+        type: string
+      status:
+        type: string
+    required:
+    - label
+    - status
+    - message
+    type: object
+  ComputerUseStatusResponse:
+    additionalProperties: false
+    description: '``tools/computer_use/permissions.py::computer_use_status``; the TCC booleans are macOS-only
+
+      (``null`` elsewhere or when unknown).'
+    properties:
+      accessibility:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      can_grant:
+        type: boolean
+      checks:
+        items:
+          $ref: '#/components/schemas/ComputerUseCheck'
+        type: array
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      installed:
+        type: boolean
+      platform:
+        type: string
+      platform_supported:
+        type: boolean
+      ready:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+        description: '``null`` = unknown (driver missing or probe failed).'
+      screen_recording:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      screen_recording_capturable:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      source:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+        description: cua-driver's own ``source`` block, verbatim.
+      version:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - platform
+    - platform_supported
+    - installed
+    - version
+    - ready
+    - can_grant
+    - checks
+    - source
+    - error
+    - accessibility
+    - screen_recording
+    - screen_recording_capturable
+    type: object
+  TerminalBackendRow:
+    additionalProperties: false
+    description: 'A built-in (``hermes_cli/web_server_profiles.py::_TERMINAL_BACKENDS``) or plugin backend with
+
+      its health probe.'
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      detail:
+        type: string
+      label:
+        type: string
+      name:
+        type: string
+      status:
+        description: '"ready", "needs_setup" or "unavailable" (plugin backends supply their own probe).'
+        type: string
+    required:
+    - name
+    - label
+    - description
+    - active
+    - status
+    - detail
+    type: object
+  TerminalBackendSelectResponse:
+    additionalProperties: false
+    description: '``select_terminal_backend``.'
+    properties:
+      backend:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - backend
+    type: object
+  TerminalBackendsResponse:
+    additionalProperties: false
+    description: '``get_terminal_backends``.'
+    properties:
+      active:
+        type: string
+      backends:
+        items:
+          $ref: '#/components/schemas/TerminalBackendRow'
+        type: array
+    required:
+    - active
+    - backends
+    type: object
+  ToolsetConfigEnvVar:
+    additionalProperties: false
+    description: A provider row's ``env_vars`` entry annotated with ``is_set`` (never the value).
+    properties:
+      default:
+        anyOf:
+        - type: string
+        - type: 'null'
+      is_set:
+        type: boolean
+      key:
+        type: string
+      prompt:
+        type: string
+      url:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - key
+    - prompt
+    - url
+    - default
+    - is_set
+    type: object
+  ToolsetConfigProvider:
+    additionalProperties: false
+    description: 'One provider picker row (``hermes_cli/tools_config_providers.py::_visible_providers``:
+
+      ``TOOL_CATEGORIES`` rows, then plugin rows).'
+    properties:
+      badge:
+        type: string
+      capabilities:
+        anyOf:
+        - items:
+            enum:
+            - search
+            - extract
+            type: string
+          type: array
+        - type: 'null'
+        description: '``web`` rows only: ``web_provider_capabilities(web_backend)``.'
+      env_vars:
+        items:
+          $ref: '#/components/schemas/ToolsetConfigEnvVar'
+        type: array
+      is_active:
+        type: boolean
+      name:
+        type: string
+      post_setup:
+        anyOf:
+        - type: string
+        - type: 'null'
+      requires_nous_auth:
+        type: boolean
+      status:
+        description: '``hermes_cli/tools_config_providers.py::provider_readiness_status``.'
+        enum:
+        - ready
+        - needs_keys
+        - needs_auth
+        - needs_setup
+        type: string
+      tag:
+        type: string
+      tts_provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: '``tts`` rows only: the ``tts.provider`` value.'
+      web_backend:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: '``web`` rows with a backend key only.'
+    required:
+    - name
+    - badge
+    - tag
+    - env_vars
+    - post_setup
+    - requires_nous_auth
+    - is_active
+    - status
+    type: object
+  ToolsetConfigResponse:
+    additionalProperties: false
+    description: '``get_toolset_config`` — ``has_category: false`` (empty ``providers``) for toolsets without a
+
+      provider category; the active backends are resolved only for ``web``.'
+    properties:
+      active_extract_backend:
+        anyOf:
+        - type: string
+        - type: 'null'
+      active_provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      active_search_backend:
+        anyOf:
+        - type: string
+        - type: 'null'
+      has_category:
+        type: boolean
+      name:
+        type: string
+      providers:
+        items:
+          $ref: '#/components/schemas/ToolsetConfigProvider'
+        type: array
+    required:
+    - name
+    - has_category
+    - providers
+    - active_provider
+    type: object
+  ToolsetEnvSaveResponse:
+    additionalProperties: false
+    description: '``save_toolset_env``.'
+    properties:
+      is_set:
+        additionalProperties:
+          type: boolean
+        description: Every env var the toolset's providers declare -> set?
+        type: object
+      name:
+        type: string
+      ok:
+        type: boolean
+      saved:
+        items:
+          type: string
+        type: array
+      skipped:
+        description: Keys submitted blank (left unchanged).
+        items:
+          type: string
+        type: array
+    required:
+    - ok
+    - name
+    - saved
+    - skipped
+    - is_set
+    type: object
+  ToolsetListRow:
+    additionalProperties: false
+    description: 'One ``get_toolsets`` row per ``hermes_cli/tools_config.py::_get_effective_configurable_toolsets``
+
+      entry (built-ins, then plugin toolsets). ``available`` mirrors ``enabled``.'
+    properties:
+      available:
+        type: boolean
+      configured:
+        type: boolean
+      description:
+        type: string
+      enabled:
+        type: boolean
+      label:
+        type: string
+      name:
+        type: string
+      platform:
+        description: Platform the toggle writes to (``cli`` unless platform-restricted).
+        type: string
+      platform_label:
+        type: string
+      tools:
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    - label
+    - description
+    - platform
+    - platform_label
+    - enabled
+    - available
+    - configured
+    - tools
+    type: object
+  ToolsetModelOption:
+    additionalProperties: false
+    description: One catalog model (``display`` defaults to the id; the other labels to ``""``).
+    properties:
+      display:
+        type: string
+      id:
+        type: string
+      price:
+        type: string
+      speed:
+        type: string
+      strengths:
+        type: string
+    required:
+    - id
+    - display
+    - speed
+    - strengths
+    - price
+    type: object
+  ToolsetModelSelectResponse:
+    additionalProperties: false
+    description: '``select_toolset_model``.'
+    properties:
+      model:
+        type: string
+      name:
+        type: string
+      ok:
+        type: boolean
+      plugin:
+        type: string
+    required:
+    - ok
+    - name
+    - model
+    - plugin
+    type: object
+  ToolsetModelsResponse:
+    additionalProperties: false
+    description: '``get_toolset_models`` — ``_no_models`` (``has_models: false``, no ``provider``/``plugin``)
+
+      when the toolset has no catalog or no model-capable backend resolves.'
+    properties:
+      current:
+        anyOf:
+        - type: string
+        - type: 'null'
+      default:
+        anyOf:
+        - type: string
+        - type: 'null'
+      has_models:
+        type: boolean
+      models:
+        items:
+          $ref: '#/components/schemas/ToolsetModelOption'
+        type: array
+      name:
+        type: string
+      plugin:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - name
+    - has_models
+    - models
+    - current
+    - default
+    type: object
+  ToolsetPostSetupResponse:
+    additionalProperties: false
+    description: '``run_toolset_post_setup`` — ``hermes_cli/web_routers/_common.py::spawn_profile_action`` plus
+
+      the post-setup ``key``; tail via ``GET /api/actions/tools-post-setup/status``.'
+    properties:
+      key:
+        type: string
+      name:
+        type: string
+      ok:
+        type: boolean
+      pid:
+        type: integer
+    required:
+    - ok
+    - pid
+    - name
+    - key
+    type: object
+  ToolsetProviderSelectResponse:
+    additionalProperties: false
+    description: '``select_toolset_provider`` — ``needs_nous_auth`` + ``feature`` only for a managed Nous row the
+
+      account is not entitled to.'
+    properties:
+      capability:
+        anyOf:
+        - enum:
+          - search
+          - extract
+          type: string
+        - type: 'null'
+      feature:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      needs_nous_auth:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      ok:
+        type: boolean
+      provider:
+        type: string
+    required:
+    - ok
+    - name
+    - provider
+    type: object
+  ToolsetToggleResponse:
+    additionalProperties: false
+    description: '``toggle_toolset``.'
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      ok:
+        type: boolean
+      platform:
+        type: string
+      post_setup_started:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Post-setup key whose background install this enable started, else ``null``.
+    required:
+    - ok
+    - name
+    - platform
+    - enabled
+    - post_setup_started
+    type: object
+operations:
+- method: GET
+  path: /api/tools/computer-use/status
+  x-source: hermes_cli/web_routers/tools.py:683
+  x-handler-hash: b8d121ec009a7bd004edf26536120ba5be4df3f593af269eb6eb7544ab16ab62
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ComputerUseStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ComputerUseStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/tools/terminal/backends
+  x-source: hermes_cli/web_routers/tools.py:634
+  x-handler-hash: 5fad15d13fe97162d2a23396c849627a2d857a17c46a21653fc79dd2abb28702
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: TerminalBackendsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TerminalBackendsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/tools/toolsets
+  x-source: hermes_cli/web_routers/tools.py:230
+  x-handler-hash: 4ae278f41c8670ff79fc73c11372b4edec04e2384fa0f7704c1aff307350c36f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"items": {"$ref": "#/components/schemas/ToolsetListRow"}, "type": "array"}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/ToolsetListRow'
+            type: array
+      description: Successful Response
+- method: GET
+  path: /api/tools/toolsets/{name}/config
+  x-source: hermes_cli/web_routers/tools.py:345
+  x-handler-hash: a8951805d82bcce14ddb4f68f942d3647aedcbd40af7dd147ef48dd9670c5935
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ToolsetConfigResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ToolsetConfigResponse'
+      description: Successful Response
+- method: GET
+  path: /api/tools/toolsets/{name}/models
+  x-source: hermes_cli/web_routers/tools.py:421
+  x-handler-hash: 7afec1aafca57c60678fd26a5ca77023a52476c791d146a6bd07f203413a746c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ToolsetModelsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ToolsetModelsResponse'
+      description: Successful Response
+- method: POST
+  path: /api/tools/computer-use/permissions/grant
+  x-source: hermes_cli/web_routers/tools.py:692
+  x-handler-hash: 53211f9ea3015d4be78539a9cea1058d81d7c3618c441ffca81ebf7307065c4c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/tools/toolsets/{name}/post-setup
+  x-source: hermes_cli/web_routers/tools.py:615
+  x-handler-hash: ee90eacf624619e1472942ecf34642157a27768195342bce208e003d4f5feb0e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ToolsetPostSetupResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ToolsetPostSetupResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/tools/terminal/backend
+  x-source: hermes_cli/web_routers/tools.py:661
+  x-handler-hash: b1e557387ce97916724edc727a9d764736e0a898212191c238e77770a3ce4b73
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: TerminalBackendSelectResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TerminalBackendSelectResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/tools/toolsets/{name}
+  x-source: hermes_cli/web_routers/tools.py:280
+  x-handler-hash: aec92387649ce3d544a6b832fa5d90452caccaa6225a4f3ee6e08c706716942e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ToolsetToggleResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ToolsetToggleResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/tools/toolsets/{name}/env
+  x-source: hermes_cli/web_routers/tools.py:574
+  x-handler-hash: e819772c53e092672fa3b60fc96bb59e4ac3e5fc79763f006ad83310e8425d58
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ToolsetEnvSaveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ToolsetEnvSaveResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/tools/toolsets/{name}/model
+  x-source: hermes_cli/web_routers/tools.py:461
+  x-handler-hash: dd4edc192fe6b6944145560cbbb4dd2ac4ee334b1f388e29f40f2bc240b979e3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ToolsetModelSelectResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ToolsetModelSelectResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/tools/toolsets/{name}/provider
+  x-source: hermes_cli/web_routers/tools.py:493
+  x-handler-hash: 41786cb7e69217668d3e382b3a92a080e62be5b17a9e99b72abbab6d210042d7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ToolsetProviderSelectResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ToolsetProviderSelectResponse'
+      description: Successful Response

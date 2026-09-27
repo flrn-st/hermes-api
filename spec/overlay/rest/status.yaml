@@ -1,0 +1,627 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  HealthResponse:
+    additionalProperties: false
+    description: '``get_health``. ``version`` is ``hermes_cli.__version__``.'
+    properties:
+      auth_required:
+        type: boolean
+      ok:
+        type: boolean
+      version:
+        type: string
+    required:
+    - ok
+    - version
+    - auth_required
+    type: object
+  LearningGraphMemoryCard:
+    additionalProperties: false
+    description: '``agent/learning_graph.py::_memory_cards``: one non-empty ``\n§\n`` chunk of ``MEMORY.md`` (``memory``)
+      or ``USER.md`` (``profile``); ``body`` is truncated to 1200 characters.'
+    properties:
+      body:
+        type: string
+      source:
+        enum:
+        - memory
+        - profile
+        type: string
+      timestamp:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      title:
+        type: string
+    required:
+    - source
+    - timestamp
+    - title
+    - body
+    type: object
+  StatusComponents:
+    additionalProperties: false
+    description: '``_component_health``.'
+    properties:
+      dashboard:
+        $ref: '#/components/schemas/StatusDashboardComponent'
+      gateway:
+        $ref: '#/components/schemas/StatusGatewayComponent'
+      platforms:
+        $ref: '#/components/schemas/StatusPlatformsComponent'
+      storage:
+        $ref: '#/components/schemas/StatusStorageComponent'
+    required:
+    - gateway
+    - dashboard
+    - storage
+    - platforms
+    type: object
+  StatusDashboardComponent:
+    additionalProperties: false
+    description: '``hermes_cli/web_server.py::DashboardHealth.snapshot``.'
+    properties:
+      last_error_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      recent_unhandled_errors:
+        type: integer
+      selftest:
+        enum:
+        - unknown
+        - ok
+        - failing
+        type: string
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    - recent_unhandled_errors
+    - last_error_at
+    - selftest
+    type: object
+  StatusDiskPressure:
+    additionalProperties: false
+    description: '``gateway/disk_status.py::collect_disk_status``; only ``pressure`` when the collector
+
+      raised.'
+    properties:
+      free_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      pressure:
+        enum:
+        - ok
+        - elevated
+        - critical
+        - unknown
+        type: string
+      total_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      used_percent:
+        anyOf:
+        - type: number
+        - type: 'null'
+    required:
+    - pressure
+    type: object
+  StatusFtsRebuild:
+    additionalProperties: false
+    description: '``hermes_state_search.py::_rebuild_status``.'
+    properties:
+      indexed:
+        type: integer
+      pending:
+        type: boolean
+      percent:
+        type: integer
+      total:
+        type: integer
+    required:
+    - pending
+    - total
+    - indexed
+    - percent
+    type: object
+  StatusGatewayComponent:
+    additionalProperties: false
+    properties:
+      state:
+        type: string
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    - state
+    type: object
+  StatusGatewayPlatform:
+    additionalProperties: true
+    description: 'One runtime platform entry (``gateway/status.py::_prepare_runtime_status_update``) with the
+
+      writer-identity stamps stripped; mirrored api_server/webhook entries of a served profile add
+
+      ``ingress_url`` / ``mirrored_from`` (``shared_listener_mirror_platforms``).'
+    properties:
+      error_code:
+        anyOf:
+        - type: string
+        - type: 'null'
+      error_message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ingress_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      listener_base:
+        anyOf:
+        - type: string
+        - type: 'null'
+      mirrored_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+      needs_attention:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      retrying_since:
+        anyOf:
+        - type: string
+        - type: 'null'
+      state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      updated_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
+  StatusGatewayTopologyEntry:
+    additionalProperties: false
+    description: One live gateway from ``hermes_cli/web_server_gateway.py::_collect_profile_gateway_topology``.
+    properties:
+      ports:
+        additionalProperties:
+          type: integer
+        type: object
+      profile:
+        type: string
+      served_profiles:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+    required:
+    - profile
+    - ports
+    type: object
+  StatusMemoryPressure:
+    additionalProperties: false
+    description: '``gateway/memory_status.py::collect_memory_status``; only ``pressure`` when the collector
+
+      raised.'
+    properties:
+      boot_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_rss_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      last_boot_suspected_oom:
+        default: false
+        type: boolean
+      last_boot_unclean:
+        default: false
+        type: boolean
+      pressure:
+        enum:
+        - ok
+        - elevated
+        - critical
+        - unknown
+        type: string
+      sampled_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      swap_used_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      system_available_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      system_total_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - pressure
+    type: object
+  StatusPlatformsComponent:
+    additionalProperties: false
+    properties:
+      configured:
+        type: integer
+      connected:
+        type: integer
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    - configured
+    - connected
+    type: object
+  StatusResponse:
+    additionalProperties: false
+    description: '``get_status`` — the public liveness probe. The host-recon keys (``hermes_home`` …
+
+      ``gateways``) are present only when the auth gate is off; ``install_id`` only when it could be
+
+      persisted; ``fts_rebuild`` only while a deferred FTS rebuild is pending.'
+    properties:
+      active_agents:
+        type: integer
+      active_sessions:
+        type: integer
+      auth_flows:
+        items:
+          enum:
+          - cookie
+          - native_pkce
+          type: string
+        type: array
+      auth_providers:
+        items:
+          type: string
+        type: array
+      auth_required:
+        type: boolean
+      can_update_hermes:
+        type: boolean
+      components:
+        $ref: '#/components/schemas/StatusComponents'
+      config_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+      config_version:
+        type: integer
+      disk:
+        $ref: '#/components/schemas/StatusDiskPressure'
+      env_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fts_rebuild:
+        anyOf:
+        - $ref: '#/components/schemas/StatusFtsRebuild'
+        - type: 'null'
+      gateway_busy:
+        type: boolean
+      gateway_drainable:
+        type: boolean
+      gateway_exit_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_health_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_heartbeat_stale_s:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      gateway_mode:
+        enum:
+        - multiplex
+        - single
+        - multiple
+        - none
+        - unknown
+        type: string
+      gateway_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      gateway_platforms:
+        additionalProperties:
+          $ref: '#/components/schemas/StatusGatewayPlatform'
+        description: Plain platform names plus validated "<profile>:<platform>" keys.
+        type: object
+      gateway_running:
+        type: boolean
+      gateway_shared_with:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      gateway_state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_updated_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateways:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/StatusGatewayTopologyEntry'
+          type: array
+        - type: 'null'
+      hermes_home:
+        anyOf:
+        - type: string
+        - type: 'null'
+      install_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      latest_config_version:
+        type: integer
+      memory:
+        $ref: '#/components/schemas/StatusMemoryPressure'
+      multiplex_standalone_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      nous_session_valid:
+        enum:
+        - valid
+        - terminal
+        - unknown
+        type: string
+      overall:
+        enum:
+        - ok
+        - degraded
+        type: string
+      parked_profiles:
+        items:
+          type: string
+        type: array
+      profiles:
+        items:
+          type: string
+        type: array
+      release_date:
+        type: string
+      restart_drain_timeout:
+        type: number
+      version:
+        type: string
+    required:
+    - version
+    - release_date
+    - config_version
+    - latest_config_version
+    - can_update_hermes
+    - gateway_running
+    - gateway_state
+    - gateway_platforms
+    - gateway_exit_reason
+    - gateway_updated_at
+    - gateway_heartbeat_stale_s
+    - gateway_shared_with
+    - active_agents
+    - gateway_busy
+    - gateway_drainable
+    - restart_drain_timeout
+    - active_sessions
+    - auth_required
+    - auth_providers
+    - auth_flows
+    - nous_session_valid
+    - components
+    - overall
+    - memory
+    - disk
+    - profiles
+    - parked_profiles
+    - gateway_mode
+    - multiplex_standalone_reason
+    type: object
+  StatusStorageComponent:
+    additionalProperties: false
+    description: '``gateway/readiness.py::_probe_state_db`` reduced to its status enum.'
+    properties:
+      reason:
+        anyOf:
+        - const: corrupt
+          type: string
+        - type: 'null'
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    type: object
+  SystemStatsDisk:
+    additionalProperties: false
+    properties:
+      free:
+        type: integer
+      percent:
+        type: number
+      total:
+        type: integer
+      used:
+        type: integer
+    required:
+    - total
+    - used
+    - free
+    - percent
+    type: object
+  SystemStatsMemory:
+    additionalProperties: false
+    properties:
+      available:
+        type: integer
+      percent:
+        type: number
+      total:
+        type: integer
+      used:
+        type: integer
+    required:
+    - total
+    - available
+    - used
+    - percent
+    type: object
+  SystemStatsProcess:
+    additionalProperties: false
+    properties:
+      create_time:
+        type: integer
+      num_threads:
+        type: integer
+      pid:
+        type: integer
+      rss:
+        type: integer
+    required:
+    - pid
+    - rss
+    - create_time
+    - num_threads
+    type: object
+  SystemStatsResponse:
+    additionalProperties: false
+    description: '``get_system_stats``; every psutil-derived key is absent when psutil (or that probe) is
+
+      unavailable.'
+    properties:
+      arch:
+        type: string
+      cpu_count:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      cpu_percent:
+        anyOf:
+        - type: number
+        - type: 'null'
+      disk:
+        anyOf:
+        - $ref: '#/components/schemas/SystemStatsDisk'
+        - type: 'null'
+      hermes_version:
+        type: string
+      hostname:
+        type: string
+      load_avg:
+        anyOf:
+        - items:
+            type: number
+          type: array
+        - type: 'null'
+      memory:
+        anyOf:
+        - $ref: '#/components/schemas/SystemStatsMemory'
+        - type: 'null'
+      os:
+        type: string
+      os_release:
+        type: string
+      os_version:
+        type: string
+      platform:
+        type: string
+      process:
+        anyOf:
+        - $ref: '#/components/schemas/SystemStatsProcess'
+        - type: 'null'
+      psutil:
+        type: boolean
+      python_impl:
+        type: string
+      python_version:
+        type: string
+      uptime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - os
+    - os_release
+    - os_version
+    - platform
+    - arch
+    - hostname
+    - python_version
+    - python_impl
+    - hermes_version
+    - cpu_count
+    - psutil
+    type: object
+operations:
+- method: GET
+  path: /api/health
+  x-source: hermes_cli/web_routers/status.py:115
+  x-handler-hash: 3b51672f7760dda50d297223d7159104de4902f24699ac468c41b4ee4622b769
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: HealthResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthResponse'
+- method: GET
+  path: /api/status
+  x-source: hermes_cli/web_routers/status.py:456
+  x-handler-hash: 15af18ef3546448c1c4ac8921165781cd4974f6e45ca6d8d88eee03b2ac0deb3
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: StatusResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StatusResponse'
+- method: GET
+  path: /api/system/stats
+  x-source: hermes_cli/web_routers/status.py:555
+  x-handler-hash: 8b7b9b54aa5c5ebdfc39b0c7fd0a3c681bfc56598302d4fc07a439a674e4ee75
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SystemStatsResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SystemStatsResponse'

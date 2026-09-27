@@ -1,0 +1,56 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  EnvVarInfo:
+    additionalProperties: false
+    description: 'One ``_get_env_vars_sync._row``: ``OPTIONAL_ENV_VARS`` prose layered over the provider
+
+      catalog''s card metadata. ``GET /api/env`` returns ``{VAR_NAME: EnvVarInfo}``. Custom ``.env`` keys
+
+      (in no catalog) carry ``custom: true``, ``category: "custom"`` and ``is_password: true``.'
+    properties:
+      advanced:
+        type: boolean
+      category:
+        type: string
+      channel_managed:
+        type: boolean
+      custom:
+        type: boolean
+      description:
+        type: string
+      is_password:
+        type: boolean
+      is_set:
+        type: boolean
+      provider:
+        type: string
+      provider_label:
+        type: string
+      redacted_value:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tools:
+        items:
+          type: string
+        type: array
+      url:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - is_set
+    - redacted_value
+    - description
+    - url
+    - category
+    - is_password
+    - tools
+    - advanced
+    - channel_managed
+    - provider
+    - provider_label
+    - custom
+    type: object
+operations: []

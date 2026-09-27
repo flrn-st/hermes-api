@@ -1,0 +1,532 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  MessagingHomeChannel:
+    additionalProperties: true
+    description: '``gateway/config.py::HomeChannel.to_dict``; profile-scoped reads pass the config.yaml
+
+      ``platforms.<id>.home_channel`` mapping through as written.'
+    properties:
+      chat_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      platform:
+        anyOf:
+        - type: string
+        - type: 'null'
+      scope_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      thread_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      user_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
+  MessagingPlatform:
+    additionalProperties: false
+    description: '``_messaging_platform_payload`` for one ``_messaging_platform_catalog`` entry.'
+    properties:
+      configured:
+        type: boolean
+      description:
+        type: string
+      docs_url:
+        type: string
+      enabled:
+        type: boolean
+      env_vars:
+        items:
+          $ref: '#/components/schemas/MessagingPlatformEnvVar'
+        type: array
+      error_code:
+        anyOf:
+        - type: string
+        - type: 'null'
+      error_message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_running:
+        type: boolean
+      home_channel:
+        anyOf:
+        - $ref: '#/components/schemas/MessagingHomeChannel'
+        - type: 'null'
+      id:
+        type: string
+      ingress_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      state:
+        type: string
+      updated_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      whatsapp_setup:
+        anyOf:
+        - $ref: '#/components/schemas/MessagingWhatsAppSetup'
+        - type: 'null'
+    required:
+    - id
+    - name
+    - description
+    - docs_url
+    - enabled
+    - configured
+    - gateway_running
+    - state
+    - error_code
+    - error_message
+    - updated_at
+    - home_channel
+    - env_vars
+    - ingress_url
+    type: object
+  MessagingPlatformEnvVar:
+    additionalProperties: false
+    description: One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose).
+    properties:
+      advanced:
+        type: boolean
+      description:
+        type: string
+      help:
+        type: string
+      is_password:
+        type: boolean
+      is_set:
+        type: boolean
+      key:
+        type: string
+      prompt:
+        type: string
+      redacted_value:
+        anyOf:
+        - type: string
+        - type: 'null'
+      required:
+        type: boolean
+      url:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - key
+    - required
+    - is_set
+    - redacted_value
+    - description
+    - prompt
+    - help
+    - url
+    - is_password
+    - advanced
+    type: object
+  MessagingPlatformTestResponse:
+    additionalProperties: false
+    description: '``test_messaging_platform`` — a verdict over the same payload as the platform list.'
+    properties:
+      message:
+        type: string
+      ok:
+        type: boolean
+      state:
+        type: string
+    required:
+    - ok
+    - state
+    - message
+    type: object
+  MessagingPlatformUpdateResponse:
+    additionalProperties: false
+    description: '``update_messaging_platform``.'
+    properties:
+      hot_served:
+        type: boolean
+      ok:
+        type: boolean
+      platform:
+        type: string
+    required:
+    - ok
+    - platform
+    - hot_served
+    type: object
+  MessagingPlatformsResponse:
+    additionalProperties: false
+    description: '``get_messaging_platforms``.'
+    properties:
+      env_path:
+        type: string
+      gateway_start_command:
+        type: string
+      platforms:
+        items:
+          $ref: '#/components/schemas/MessagingPlatform'
+        type: array
+    required:
+    - env_path
+    - gateway_start_command
+    - platforms
+    type: object
+  MessagingWhatsAppSetup:
+    additionalProperties: false
+    properties:
+      allowed_users_set:
+        type: boolean
+      home_channel_set:
+        type: boolean
+      mode:
+        enum:
+        - ''
+        - bot
+        - self-chat
+        type: string
+    required:
+    - mode
+    - allowed_users_set
+    - home_channel_set
+    type: object
+  TelegramOnboardingApplyResponse:
+    additionalProperties: false
+    description: '``apply_telegram_onboarding``.'
+    properties:
+      bot_username:
+        anyOf:
+        - type: string
+        - type: 'null'
+      needs_restart:
+        type: boolean
+      ok:
+        type: boolean
+      platform:
+        const: telegram
+        type: string
+      restart_action:
+        anyOf:
+        - const: gateway-restart
+          type: string
+        - type: 'null'
+      restart_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      restart_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      restart_started:
+        type: boolean
+    required:
+    - ok
+    - needs_restart
+    - restart_started
+    - platform
+    - bot_username
+    type: object
+  TelegramOnboardingStartResponse:
+    additionalProperties: false
+    description: '``start_telegram_onboarding`` — the setup service''s pairing, trimmed to strings.'
+    properties:
+      deep_link:
+        type: string
+      expires_at:
+        type: string
+      pairing_id:
+        type: string
+      qr_payload:
+        type: string
+      suggested_username:
+        type: string
+    required:
+    - pairing_id
+    - suggested_username
+    - deep_link
+    - qr_payload
+    - expires_at
+    type: object
+  TelegramOnboardingStatusResponse:
+    additionalProperties: false
+    description: '``get_telegram_onboarding_status``: ``waiting`` carries only ``expires_at``;
+
+      ``ready`` is ``_telegram_ready_payload``. Terminal statuses are 410s.'
+    properties:
+      bot_username:
+        anyOf:
+        - type: string
+        - type: 'null'
+      expires_at:
+        type: string
+      owner_user_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      status:
+        enum:
+        - waiting
+        - ready
+        type: string
+    required:
+    - status
+    - expires_at
+    type: object
+  WhatsAppOnboardingApplyResponse:
+    additionalProperties: false
+    description: '``apply_whatsapp_onboarding``.'
+    properties:
+      needs_restart:
+        type: boolean
+      ok:
+        type: boolean
+      platform:
+        const: whatsapp
+        type: string
+      restart_action:
+        anyOf:
+        - const: gateway-restart
+          type: string
+        - type: 'null'
+      restart_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      restart_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      restart_started:
+        type: boolean
+    required:
+    - ok
+    - needs_restart
+    - restart_started
+    - platform
+    type: object
+  WhatsAppOnboardingResponse:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_messaging.py::_whatsapp_onboarding_payload`` — the
+
+      ``_WhatsAppOnboardingSession`` fields in ``_WHATSAPP_PAYLOAD_FIELDS``.'
+    properties:
+      account_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      account_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      account_phone:
+        anyOf:
+        - type: string
+        - type: 'null'
+      allowed_users:
+        type: string
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      expires_at:
+        type: string
+      mode:
+        enum:
+        - bot
+        - self-chat
+        type: string
+      pairing_id:
+        type: string
+      qr_payload:
+        anyOf:
+        - type: string
+        - type: 'null'
+      status:
+        enum:
+        - starting
+        - installing
+        - waiting
+        - connected
+        - error
+        - expired
+        - cancelled
+        type: string
+    required:
+    - pairing_id
+    - status
+    - qr_payload
+    - expires_at
+    - mode
+    - allowed_users
+    - account_id
+    - account_name
+    - account_phone
+    - error
+    type: object
+operations:
+- method: DELETE
+  path: /api/messaging/telegram/onboarding/{pairing_id}
+  x-source: hermes_cli/web_routers/messaging.py:785
+  x-handler-hash: 6dffdab7eac99ceda6144e9ca5f22c60b4f9e92ca0ed41776e676f3701154653
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: DELETE
+  path: /api/messaging/whatsapp/onboarding/{pairing_id}
+  x-source: hermes_cli/web_routers/messaging.py:626
+  x-handler-hash: 9bddd478179b532e4c08f8c5ec0c87536e386e7aba052d740d6f08cef92fd0bb
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: GET
+  path: /api/messaging/platforms
+  x-source: hermes_cli/web_routers/messaging.py:795
+  x-handler-hash: 8ffcd0c6f82ec30dc81f25ce07e29443cb74d1183495b1d5c85c9cff852ebd6c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MessagingPlatformsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessagingPlatformsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/messaging/telegram/onboarding/{pairing_id}
+  x-source: hermes_cli/web_routers/messaging.py:706
+  x-handler-hash: d557cec9bdb6baf725b429ecaacb36d0c808e903ef89949d0d5e650e4e70cd12
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: TelegramOnboardingStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TelegramOnboardingStatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/messaging/whatsapp/onboarding/{pairing_id}
+  x-source: hermes_cli/web_routers/messaging.py:586
+  x-handler-hash: 287f112fcdaaf7278bdb58db603b8f59928ddb7d742e33c163dbadd70adcbf6e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: WhatsAppOnboardingResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WhatsAppOnboardingResponse'
+      description: Successful Response
+- method: POST
+  path: /api/messaging/platforms/{platform_id}/test
+  x-source: hermes_cli/web_routers/messaging.py:928
+  x-handler-hash: cfe0f8a371e5d761270b8b5b9f470fe4560c2ab90a3ccd56bef841406e339ff5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MessagingPlatformTestResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessagingPlatformTestResponse'
+      description: Successful Response
+- method: POST
+  path: /api/messaging/telegram/onboarding/start
+  x-source: hermes_cli/web_routers/messaging.py:683
+  x-handler-hash: 6b5ee6849be6b703b0cae65c99fe9c6173eadcaff339aa4db6d05db893371445
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: TelegramOnboardingStartResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TelegramOnboardingStartResponse'
+      description: Successful Response
+- method: POST
+  path: /api/messaging/telegram/onboarding/{pairing_id}/apply
+  x-source: hermes_cli/web_routers/messaging.py:745
+  x-handler-hash: 22c6e7796d113323f5bb3ac81b0ccdd09e2d391ab6debcc4d4380e9ed904f2ba
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: TelegramOnboardingApplyResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TelegramOnboardingApplyResponse'
+      description: Successful Response
+- method: POST
+  path: /api/messaging/whatsapp/onboarding/start
+  x-source: hermes_cli/web_routers/messaging.py:552
+  x-handler-hash: 16d578fddd338451238d159dd29ad8504f1367dd8af29f486c4c47b02573d5be
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: WhatsAppOnboardingResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WhatsAppOnboardingResponse'
+      description: Successful Response
+- method: POST
+  path: /api/messaging/whatsapp/onboarding/{pairing_id}/apply
+  x-source: hermes_cli/web_routers/messaging.py:595
+  x-handler-hash: db8e0f55b9477e08cc1d888331fbf80364a9db975e2ce67b016ce3015fb86d1c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: WhatsAppOnboardingApplyResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WhatsAppOnboardingApplyResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/messaging/platforms/{platform_id}
+  x-source: hermes_cli/web_routers/messaging.py:854
+  x-handler-hash: 9e93234214a027ee8d350a8e4cf6c73de2de69ae643f84b4e40ed2296ab4cc47
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MessagingPlatformUpdateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessagingPlatformUpdateResponse'
+      description: Successful Response

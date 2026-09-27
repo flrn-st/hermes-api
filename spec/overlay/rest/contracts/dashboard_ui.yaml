@@ -1,0 +1,1062 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  AgentPluginActivateResponse:
+    additionalProperties: false
+    description: '``post_agent_plugin_activate`` — ``activation`` is ``None`` when the plugin did not load.'
+    properties:
+      activation:
+        anyOf:
+        - $ref: '#/components/schemas/AgentPluginActivation'
+        - type: 'null'
+      ok:
+        type: boolean
+    required:
+    - ok
+    - activation
+    type: object
+  AgentPluginActivation:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_activation.py::plugin_activation_summary`` (+ ``live_now`` when this
+
+      process loaded it via ``load_and_go_live``; absent when taken from the gateway''s answer).
+
+      Mirrors ``tui_gateway/contracts/tools_mcp_plugins.py::PluginActivation``.'
+    properties:
+      activated_now:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      deferred:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      key:
+        type: string
+      live_now:
+        anyOf:
+        - $ref: '#/components/schemas/AgentPluginLiveNow'
+        - type: 'null'
+      name:
+        type: string
+    required:
+    - name
+    - key
+    - activated_now
+    - deferred
+    type: object
+  AgentPluginInstallResponse:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_cmd_install.py::dashboard_install_plugin`` ok payload (``ok: false``
+
+      becomes a 400) with ``after_install_path`` stripped by the route. The activation trio comes
+
+      from ``plugins_activation.activate_plugin_now`` (or its not-enabled stand-in).'
+    properties:
+      activation:
+        anyOf:
+        - $ref: '#/components/schemas/AgentPluginActivation'
+        - type: 'null'
+      enabled:
+        type: boolean
+      gateway_reloaded:
+        type: boolean
+      missing_env:
+        items:
+          type: string
+        type: array
+      ok:
+        type: boolean
+      plugin_name:
+        type: string
+      python_dependencies:
+        items:
+          type: string
+        type: array
+      restart_required:
+        type: boolean
+      warnings:
+        items:
+          type: string
+        type: array
+    required:
+    - ok
+    - plugin_name
+    - warnings
+    - python_dependencies
+    - missing_env
+    - enabled
+    - gateway_reloaded
+    - activation
+    - restart_required
+    type: object
+  AgentPluginLiveNow:
+    additionalProperties: false
+    properties:
+      mcp_servers:
+        items:
+          $ref: '#/components/schemas/AgentPluginLiveServer'
+        type: array
+      skills:
+        items:
+          $ref: '#/components/schemas/AgentPluginLiveSkill'
+        type: array
+    required:
+    - mcp_servers
+    - skills
+    type: object
+  AgentPluginLiveServer:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_activation_live.py::connect_plugin_mcp`` row. Mirrors
+
+      ``tui_gateway/contracts/tools_mcp_plugins.py::PluginLiveServer``.'
+    properties:
+      connected:
+        type: boolean
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      tools:
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    - connected
+    - tools
+    type: object
+  AgentPluginLiveSkill:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_activation_live.py::plugin_skills`` row (``PluginLiveSkill``).'
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - description
+    type: object
+  AgentPluginRemoveResponse:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_cmd_remove.py::_remove_user_plugin``; ``cleared_memory_provider``
+
+      only when the removed plugin was the selected ``memory.provider``.'
+    properties:
+      cleared_memory_provider:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      name:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - name
+    type: object
+  AgentPluginToggleResponse:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_cmd.py::dashboard_set_agent_plugin_enabled`` ok payload; ``name`` is
+
+      the canonical key written. An enable that changed config also carries ``gateway_reloaded`` +
+
+      ``activation``; ``ok: false`` becomes a 400.'
+    properties:
+      activation:
+        anyOf:
+        - $ref: '#/components/schemas/AgentPluginActivation'
+        - type: 'null'
+      gateway_reloaded:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      name:
+        type: string
+      ok:
+        type: boolean
+      restart_required:
+        type: boolean
+      unchanged:
+        type: boolean
+    required:
+    - ok
+    - name
+    - unchanged
+    - restart_required
+    type: object
+  AgentPluginUpdateResponse:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_cmd_update.py::dashboard_update_user_plugin``: a catalog re-pin
+
+      (``sha``, deps, warnings, plus the activation trio when it changed), a ``git pull``
+
+      (``output``), or ``ok: false`` + ``consent_required`` with the ``delta`` a widened pin adds —
+
+      the only ``ok: false`` answer that is not turned into a 400.'
+    properties:
+      activation:
+        anyOf:
+        - $ref: '#/components/schemas/AgentPluginActivation'
+        - type: 'null'
+      consent_required:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      delta:
+        anyOf:
+        - additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+        - type: 'null'
+      delta_lines:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_reloaded:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      name:
+        type: string
+      ok:
+        type: boolean
+      output:
+        anyOf:
+        - type: string
+        - type: 'null'
+      python_dependencies:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      restart_required:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      sha:
+        anyOf:
+        - type: string
+        - type: 'null'
+      unchanged:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      warnings:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+    required:
+    - ok
+    - name
+    type: object
+  DashboardFontResponse:
+    additionalProperties: false
+    description: '``get_dashboard_font`` — a ``_FONT_CHOICES`` id, or ``"theme"``.'
+    properties:
+      font:
+        type: string
+    required:
+    - font
+    type: object
+  DashboardFontSetResponse:
+    additionalProperties: false
+    description: '``set_dashboard_font`` — the stored id (unknown ids coerce to ``"theme"``).'
+    properties:
+      font:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - font
+    type: object
+  DashboardPluginManifest:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*``
+
+      keys stripped. String fields are the manifest.json values (defaults when absent).'
+    properties:
+      css:
+        anyOf:
+        - type: string
+        - type: 'null'
+      description:
+        type: string
+      entry:
+        type: string
+      has_api:
+        type: boolean
+      icon:
+        type: string
+      label:
+        type: string
+      name:
+        type: string
+      slots:
+        items:
+          type: string
+        type: array
+      source:
+        enum:
+        - user
+        - bundled
+        - project
+        type: string
+      tab:
+        $ref: '#/components/schemas/DashboardPluginTab'
+      version:
+        type: string
+    required:
+    - name
+    - label
+    - description
+    - icon
+    - version
+    - tab
+    - slots
+    - entry
+    - css
+    - has_api
+    - source
+    type: object
+  DashboardPluginTab:
+    additionalProperties: false
+    description: '``_dashboard_plugin_entry`` tab info; ``override`` only when it is an absolute route,
+
+      ``hidden`` only when true.'
+    properties:
+      hidden:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      path:
+        type: string
+      position:
+        type: string
+    required:
+    - path
+    - position
+    type: object
+  DashboardPluginsRescanResponse:
+    additionalProperties: false
+    description: '``rescan_dashboard_plugins``.'
+    properties:
+      count:
+        type: integer
+      ok:
+        type: boolean
+    required:
+    - ok
+    - count
+    type: object
+  DashboardThemeAssets:
+    additionalProperties: false
+    description: Only non-empty named slots are sent; ``custom`` keys are CSS identifiers.
+    properties:
+      bg:
+        anyOf:
+        - type: string
+        - type: 'null'
+      crest:
+        anyOf:
+        - type: string
+        - type: 'null'
+      custom:
+        anyOf:
+        - additionalProperties:
+            type: string
+          type: object
+        - type: 'null'
+      header:
+        anyOf:
+        - type: string
+        - type: 'null'
+      hero:
+        anyOf:
+        - type: string
+        - type: 'null'
+      logo:
+        anyOf:
+        - type: string
+        - type: 'null'
+      sidebar:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
+  DashboardThemeDefinition:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_dashboard.py::_normalise_theme_definition`` — the wire format
+
+      ``ThemeProvider`` consumes. ``label`` falls back to ``name``; ``description`` is the raw YAML
+
+      value (``null`` when the key is present but empty).'
+    properties:
+      assets:
+        anyOf:
+        - $ref: '#/components/schemas/DashboardThemeAssets'
+        - type: 'null'
+      colorOverrides:
+        anyOf:
+        - additionalProperties:
+            type: string
+          type: object
+        - type: 'null'
+      componentStyles:
+        anyOf:
+        - additionalProperties:
+            additionalProperties:
+              type: string
+            type: object
+          type: object
+        - type: 'null'
+      customCSS:
+        anyOf:
+        - type: string
+        - type: 'null'
+      description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      label:
+        type: string
+      layout:
+        $ref: '#/components/schemas/DashboardThemeLayout'
+      layoutVariant:
+        enum:
+        - standard
+        - cockpit
+        - tiled
+        type: string
+      name:
+        type: string
+      palette:
+        $ref: '#/components/schemas/DashboardThemePalette'
+      typography:
+        $ref: '#/components/schemas/DashboardThemeTypography'
+    required:
+    - name
+    - label
+    - description
+    - palette
+    - typography
+    - layout
+    - layoutVariant
+    type: object
+  DashboardThemeEntry:
+    additionalProperties: false
+    description: 'A built-in (``_BUILTIN_DASHBOARD_THEMES``: no ``definition``, the frontend owns it) or a
+
+      user theme from ``dashboard-themes/*.yaml`` (with its normalised ``definition``).'
+    properties:
+      definition:
+        anyOf:
+        - $ref: '#/components/schemas/DashboardThemeDefinition'
+        - type: 'null'
+      description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      label:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    - label
+    - description
+    type: object
+  DashboardThemeLayer:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_dashboard.py::_parse_theme_layer`` — alpha clamped to 0..1.'
+    properties:
+      alpha:
+        type: number
+      hex:
+        type: string
+    required:
+    - hex
+    - alpha
+    type: object
+  DashboardThemeLayout:
+    additionalProperties: false
+    properties:
+      density:
+        enum:
+        - compact
+        - comfortable
+        - spacious
+        type: string
+      radius:
+        type: string
+    required:
+    - radius
+    - density
+    type: object
+  DashboardThemePalette:
+    additionalProperties: false
+    properties:
+      background:
+        $ref: '#/components/schemas/DashboardThemeLayer'
+      foreground:
+        $ref: '#/components/schemas/DashboardThemeLayer'
+      midground:
+        $ref: '#/components/schemas/DashboardThemeLayer'
+      noiseOpacity:
+        type: number
+      warmGlow:
+        type: string
+    required:
+    - background
+    - midground
+    - foreground
+    - warmGlow
+    - noiseOpacity
+    type: object
+  DashboardThemeSetResponse:
+    additionalProperties: false
+    description: '``set_dashboard_theme``.'
+    properties:
+      ok:
+        type: boolean
+      theme:
+        type: string
+    required:
+    - ok
+    - theme
+    type: object
+  DashboardThemeTypography:
+    additionalProperties: false
+    description: Defaults (``_THEME_DEFAULT_TYPOGRAPHY``) overlaid with the non-empty YAML strings.
+    properties:
+      baseSize:
+        type: string
+      fontDisplay:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fontMono:
+        type: string
+      fontSans:
+        type: string
+      fontUrl:
+        anyOf:
+        - type: string
+        - type: 'null'
+      letterSpacing:
+        type: string
+      lineHeight:
+        type: string
+    required:
+    - fontSans
+    - fontMono
+    - baseSize
+    - lineHeight
+    - letterSpacing
+    type: object
+  DashboardThemesResponse:
+    additionalProperties: false
+    description: '``get_dashboard_themes``; ``active`` is ``dashboard.theme`` as stored in config.yaml.'
+    properties:
+      active:
+        type: string
+      themes:
+        items:
+          $ref: '#/components/schemas/DashboardThemeEntry'
+        type: array
+    required:
+    - themes
+    - active
+    type: object
+  PluginCatalogCapabilities:
+    additionalProperties: false
+    description: '``hermes_cli/plugin_catalog.py::CatalogCapabilities``.'
+    properties:
+      provides_hooks:
+        items:
+          type: string
+        type: array
+      provides_middleware:
+        items:
+          type: string
+        type: array
+      provides_tools:
+        items:
+          type: string
+        type: array
+      requires_env:
+        items:
+          type: string
+        type: array
+    required:
+    - provides_tools
+    - provides_hooks
+    - provides_middleware
+    - requires_env
+    type: object
+  PluginCatalogEntryRow:
+    additionalProperties: false
+    description: '``PluginCatalogEntry.to_dict()`` merged with local state by
+
+      ``hermes_cli/plugins_cmd_catalog.py::installed_catalog_state``. ``tier``/``category`` are
+
+      enforced by ``plugin_catalog.entry_from_mapping``.'
+    properties:
+      capabilities:
+        $ref: '#/components/schemas/PluginCatalogCapabilities'
+      capability_summary:
+        type: string
+      category:
+        enum:
+        - desktop
+        - memory
+        - platform
+        - web
+        - tools
+        - voice
+        - automation
+        - models
+        - general
+        type: string
+      description:
+        type: string
+      docs_url:
+        type: string
+      image:
+        type: string
+      installed:
+        type: boolean
+      installed_sha:
+        anyOf:
+        - type: string
+        - type: 'null'
+      maintainer:
+        type: string
+      name:
+        type: string
+      onboarding:
+        type: boolean
+      platforms:
+        items:
+          type: string
+        type: array
+      readme:
+        type: boolean
+      repo:
+        type: string
+      requires_hermes:
+        type: string
+      runtime_status:
+        anyOf:
+        - enum:
+          - enabled
+          - disabled
+          - inactive
+          type: string
+        - type: 'null'
+      screenshots:
+        items:
+          type: string
+        type: array
+      sha:
+        type: string
+      sha_short:
+        type: string
+      subdir:
+        type: string
+      tier:
+        enum:
+        - official
+        - community
+        type: string
+      title:
+        type: string
+      update_available:
+        type: boolean
+      version:
+        type: string
+    required:
+    - name
+    - repo
+    - sha
+    - description
+    - maintainer
+    - tier
+    - category
+    - requires_hermes
+    - subdir
+    - docs_url
+    - version
+    - image
+    - screenshots
+    - readme
+    - platforms
+    - title
+    - onboarding
+    - capabilities
+    - sha_short
+    - capability_summary
+    - installed
+    - installed_sha
+    - update_available
+    - runtime_status
+    type: object
+  PluginCatalogRemovedRow:
+    additionalProperties: false
+    description: '``hermes_cli/plugin_catalog.py::RemovedEntry`` (kill list).'
+    properties:
+      date:
+        type: string
+      name:
+        type: string
+      reason:
+        type: string
+      repo:
+        type: string
+    required:
+    - name
+    - repo
+    - reason
+    - date
+    type: object
+  PluginCatalogResponse:
+    additionalProperties: false
+    description: '``hermes_cli/plugins_cmd_catalog.py::installed_catalog_state``; ``generated_at`` is ISO-8601
+
+      UTC with a ``Z`` suffix.'
+    properties:
+      entries:
+        items:
+          $ref: '#/components/schemas/PluginCatalogEntryRow'
+        type: array
+      generated_at:
+        type: string
+      removed:
+        items:
+          $ref: '#/components/schemas/PluginCatalogRemovedRow'
+        type: array
+    required:
+    - entries
+    - removed
+    - generated_at
+    type: object
+  PluginVisibilityResponse:
+    additionalProperties: false
+    description: '``post_plugin_visibility``.'
+    properties:
+      hidden:
+        type: boolean
+      name:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - name
+    - hidden
+    type: object
+operations:
+- method: DELETE
+  path: /api/dashboard/agent-plugins/{name}
+  x-source: hermes_cli/web_routers/dashboard_ui.py:284
+  x-handler-hash: a27818f4b058e244b3a34cd65d37476935a8ec95ef88c560659a72ed74444627
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginRemoveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginRemoveResponse'
+      description: Successful Response
+- method: GET
+  path: /api/dashboard/font
+  x-source: hermes_cli/web_routers/dashboard_ui.py:90
+  x-handler-hash: 068c52940cf0cf46ae4d6693a546826e03cbb4ce33035b0ea0f1a369b2138f8f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardFontResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardFontResponse'
+      description: Successful Response
+- method: GET
+  path: /api/dashboard/plugins
+  x-source: hermes_cli/web_routers/dashboard_ui.py:131
+  x-handler-hash: 6868acd296476f7cd5d3af20fd83a942c164643f0e43646f4df4d8c67cd1dc85
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"items": {"$ref": "#/components/schemas/DashboardPluginManifest"}, "type": "array"}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/DashboardPluginManifest'
+            type: array
+      description: Successful Response
+- method: GET
+  path: /api/dashboard/plugins/catalog
+  x-source: hermes_cli/web_routers/dashboard_ui.py:181
+  x-handler-hash: deeb40c20c9a1407a18fa4ac44b668fb0bda2dda147304594512b65ad4b0af19
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: PluginCatalogResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PluginCatalogResponse'
+      description: Successful Response
+- method: GET
+  path: /api/dashboard/plugins/rescan
+  x-source: hermes_cli/web_routers/dashboard_ui.py:149
+  x-handler-hash: 06d64b2163cddae642c985580f0ad75ee2d6e2905ecdba235e66c236bc5c3dd9
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardPluginsRescanResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardPluginsRescanResponse'
+      description: Successful Response
+- method: GET
+  path: /api/dashboard/themes
+  x-source: hermes_cli/web_routers/dashboard_ui.py:51
+  x-handler-hash: d7af1d0834431d64394f8b2aa1401ab70108999f55be165136c7c52616ef181a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardThemesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardThemesResponse'
+      description: Successful Response
+- method: GET
+  path: /dashboard-plugins/{plugin_name}/{file_path}
+  x-source: hermes_cli/web_routers/dashboard_ui.py:383
+  x-handler-hash: c5256c157f423f829b9d81ba6005fcf04dd0f3c2f68762c7b1a89b221c118ea1
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '200 application/javascript, {"format": "binary", "type": "string"}, 200 font/otf, 200 font/ttf, 200
+      font/woff, 200 font/woff2, 200 image/gif, 200 image/jpeg, 200 image/png, 200 image/svg+xml, 200 image/webp,
+      200 image/x-icon, 200 text/css, 200 text/html'
+  responses:
+    '200':
+      content:
+        application/javascript:
+          schema:
+            format: binary
+            type: string
+        application/json:
+          schema:
+            format: binary
+            type: string
+        font/otf:
+          schema:
+            format: binary
+            type: string
+        font/ttf:
+          schema:
+            format: binary
+            type: string
+        font/woff:
+          schema:
+            format: binary
+            type: string
+        font/woff2:
+          schema:
+            format: binary
+            type: string
+        image/gif:
+          schema:
+            format: binary
+            type: string
+        image/jpeg:
+          schema:
+            format: binary
+            type: string
+        image/png:
+          schema:
+            format: binary
+            type: string
+        image/svg+xml:
+          schema:
+            format: binary
+            type: string
+        image/webp:
+          schema:
+            format: binary
+            type: string
+        image/x-icon:
+          schema:
+            format: binary
+            type: string
+        text/css:
+          schema:
+            format: binary
+            type: string
+        text/html:
+          schema:
+            format: binary
+            type: string
+      description: A static file from the plugin's ``dashboard/`` directory.
+- method: POST
+  path: /api/dashboard/agent-plugins/activate
+  x-source: hermes_cli/web_routers/dashboard_ui.py:290
+  x-handler-hash: 7a8c7656977731c29d6f41a641e1d6c2fba20ed88eab050d6edbbb0265860fec
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginActivateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginActivateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/dashboard/agent-plugins/install
+  x-source: hermes_cli/web_routers/dashboard_ui.py:222
+  x-handler-hash: e0d1759056ffbcc0dcba64751fd9150339e4c7496a74c008f7ed919788e87aa6
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginInstallResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginInstallResponse'
+      description: Successful Response
+- method: POST
+  path: /api/dashboard/agent-plugins/{name}/disable
+  x-source: hermes_cli/web_routers/dashboard_ui.py:262
+  x-handler-hash: 5add31cf5bcb68785fb0f50c569f0ed4dfee3937b3b67d846e886f5e66620b9c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginToggleResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginToggleResponse'
+      description: Successful Response
+- method: POST
+  path: /api/dashboard/agent-plugins/{name}/enable
+  x-source: hermes_cli/web_routers/dashboard_ui.py:255
+  x-handler-hash: 8a5a3b45eeea81d08099bfa53fa416e0606d918c68ce8ac737400405b8b96a45
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginToggleResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginToggleResponse'
+      description: Successful Response
+- method: POST
+  path: /api/dashboard/agent-plugins/{name}/update
+  x-source: hermes_cli/web_routers/dashboard_ui.py:269
+  x-handler-hash: fd1834ade1b1fcd050e2ceec563d49629d9cac985e96013653c49f6ef5f766e7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AgentPluginUpdateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentPluginUpdateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/dashboard/plugins/{name}/visibility
+  x-source: hermes_cli/web_routers/dashboard_ui.py:345
+  x-handler-hash: 62a90b77bf7b0cd2b3914674c7567254230ee9940609d0853a597e013c41db97
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: PluginVisibilityResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PluginVisibilityResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/dashboard/font
+  x-source: hermes_cli/web_routers/dashboard_ui.py:100
+  x-handler-hash: ac55ca2aed02a0ad4318da01dfb8e6aa0dc30de6ea22768b380ddb366f74d667
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardFontSetResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardFontSetResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/dashboard/plugin-providers
+  x-source: hermes_cli/web_routers/dashboard_ui.py:317
+  x-handler-hash: 0a44efe083bd7f47c16b41e49bc99909c71651e735ed7184f10f780fa44e08de
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/dashboard/theme
+  x-source: hermes_cli/web_routers/dashboard_ui.py:71
+  x-handler-hash: aa187b52aacec6a66f37620410a4b1173d31544ee7c81f8834f0dcc1cde1fe25
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: DashboardThemeSetResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DashboardThemeSetResponse'
+      description: Successful Response

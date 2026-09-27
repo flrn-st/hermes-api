@@ -1,0 +1,829 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  KanbanBoardCard:
+    additionalProperties: false
+    description: 'A ``/board`` card: the task plus the per-board rollups ``get_board`` joins in.'
+    properties:
+      age:
+        $ref: '#/components/schemas/KanbanTaskAge'
+      assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_recurrences:
+        type: integer
+      body:
+        anyOf:
+        - type: string
+        - type: 'null'
+      branch_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      comment_count:
+        type: integer
+      completed_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      completion_contract:
+        anyOf:
+        - type: string
+        - type: 'null'
+      consecutive_failures:
+        type: integer
+      created_at:
+        type: integer
+      created_by:
+        anyOf:
+        - type: string
+        - type: 'null'
+      current_run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      current_step_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      diagnostics:
+        type: array
+        items:
+          $ref: '#/components/schemas/KanbanDiagnostic'
+        description: Present only when the task has active diagnostics (never empty, never null).
+      goal_max_turns:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      goal_mode:
+        type: boolean
+      id:
+        type: string
+      idempotency_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      link_counts:
+        $ref: '#/components/schemas/KanbanLinkCounts'
+      max_retries:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      priority:
+        type: integer
+      progress:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanChildProgress'
+        - type: 'null'
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skills:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      status:
+        type: string
+      tenant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        type: string
+      warnings:
+        $ref: '#/components/schemas/KanbanWarningsSummary'
+      worker_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      workflow_template_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      workspace_kind:
+        type: string
+      workspace_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - title
+    - body
+    - assignee
+    - status
+    - priority
+    - created_by
+    - created_at
+    - started_at
+    - completed_at
+    - workspace_kind
+    - workspace_path
+    - claim_lock
+    - claim_expires
+    - tenant
+    - branch_name
+    - project_id
+    - result
+    - idempotency_key
+    - consecutive_failures
+    - worker_pid
+    - last_failure_error
+    - max_runtime_seconds
+    - last_heartbeat_at
+    - current_run_id
+    - workflow_template_id
+    - current_step_key
+    - skills
+    - model_override
+    - provider_override
+    - reasoning_effort
+    - max_retries
+    - goal_mode
+    - goal_max_turns
+    - session_id
+    - block_kind
+    - block_recurrences
+    - completion_contract
+    - age
+    - latest_summary
+    - link_counts
+    - comment_count
+    - progress
+    type: object
+  KanbanChildResult:
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      status:
+        type: string
+      title:
+        type: string
+    required:
+    - id
+    - title
+    - status
+    - latest_summary
+    - result
+    type: object
+  KanbanComment:
+    additionalProperties: false
+    description: '``asdict(kanban_db.Comment)``.'
+    properties:
+      author:
+        type: string
+      body:
+        type: string
+      created_at:
+        type: integer
+      id:
+        type: integer
+      task_id:
+        type: string
+    required:
+    - id
+    - task_id
+    - author
+    - body
+    - created_at
+    type: object
+  KanbanEvent:
+    additionalProperties: false
+    description: '``asdict(kanban_db.Event)``; ``payload`` is per-``kind``.'
+    properties:
+      created_at:
+        type: integer
+      id:
+        type: integer
+      kind:
+        type: string
+      payload:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      task_id:
+        type: string
+    required:
+    - id
+    - task_id
+    - kind
+    - payload
+    - created_at
+    - run_id
+    type: object
+  KanbanLinkedTask:
+    additionalProperties: false
+    description: '``plugin_api._link_tasks`` row.'
+    properties:
+      id:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    required:
+    - id
+    - title
+    - status
+    type: object
+  KanbanTask:
+    additionalProperties: false
+    description: '``plugin_api._task_dict``: ``asdict(kanban_db.Task)`` plus the derived ``age`` and the
+
+      newest run ``latest_summary`` (a 200-char preview on ``/board``, the full text elsewhere).'
+    properties:
+      age:
+        $ref: '#/components/schemas/KanbanTaskAge'
+      assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_recurrences:
+        type: integer
+      body:
+        anyOf:
+        - type: string
+        - type: 'null'
+      branch_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      completed_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      completion_contract:
+        anyOf:
+        - type: string
+        - type: 'null'
+      consecutive_failures:
+        type: integer
+      created_at:
+        type: integer
+      created_by:
+        anyOf:
+        - type: string
+        - type: 'null'
+      current_run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      current_step_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      goal_max_turns:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      goal_mode:
+        type: boolean
+      id:
+        type: string
+      idempotency_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      max_retries:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      priority:
+        type: integer
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skills:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      status:
+        type: string
+      tenant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        type: string
+      worker_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      workflow_template_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      workspace_kind:
+        type: string
+      workspace_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - title
+    - body
+    - assignee
+    - status
+    - priority
+    - created_by
+    - created_at
+    - started_at
+    - completed_at
+    - workspace_kind
+    - workspace_path
+    - claim_lock
+    - claim_expires
+    - tenant
+    - branch_name
+    - project_id
+    - result
+    - idempotency_key
+    - consecutive_failures
+    - worker_pid
+    - last_failure_error
+    - max_runtime_seconds
+    - last_heartbeat_at
+    - current_run_id
+    - workflow_template_id
+    - current_step_key
+    - skills
+    - model_override
+    - provider_override
+    - reasoning_effort
+    - max_retries
+    - goal_mode
+    - goal_max_turns
+    - session_id
+    - block_kind
+    - block_recurrences
+    - completion_contract
+    - age
+    - latest_summary
+    type: object
+  KanbanTaskCreateResponse:
+    additionalProperties: false
+    description: '``plugin_api.create_task``; ``warning`` when a ready+assigned task has no dispatcher.'
+    properties:
+      task:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanTask'
+        - type: 'null'
+      warning:
+        type: string
+        description: Present only when a ready, assigned task has no running dispatcher.
+    required:
+    - task
+    type: object
+  KanbanTaskDetailResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_task`` — the drawer payload.'
+    properties:
+      attachments:
+        items:
+          $ref: '#/components/schemas/KanbanAttachment'
+        type: array
+      child_results:
+        items:
+          $ref: '#/components/schemas/KanbanChildResult'
+        type: array
+      comments:
+        items:
+          $ref: '#/components/schemas/KanbanComment'
+        type: array
+      events:
+        items:
+          $ref: '#/components/schemas/KanbanEvent'
+        type: array
+      link_tasks:
+        items:
+          $ref: '#/components/schemas/KanbanLinkedTask'
+        type: array
+      links:
+        $ref: '#/components/schemas/KanbanTaskLinks'
+      runs:
+        items:
+          $ref: '#/components/schemas/KanbanRun'
+        type: array
+      task:
+        $ref: '#/components/schemas/KanbanTaskWithDiagnostics'
+    required:
+    - task
+    - comments
+    - events
+    - attachments
+    - links
+    - link_tasks
+    - child_results
+    - runs
+    type: object
+  KanbanTaskLinks:
+    additionalProperties: false
+    description: '``plugin_api._links_for``.'
+    properties:
+      children:
+        items:
+          type: string
+        type: array
+      parents:
+        items:
+          type: string
+        type: array
+    required:
+    - parents
+    - children
+    type: object
+  KanbanTaskUpdateResponse:
+    additionalProperties: false
+    description: '``plugin_api.update_task``.'
+    properties:
+      task:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanTask'
+        - type: 'null'
+    required:
+    - task
+    type: object
+  KanbanTaskWithDiagnostics:
+    additionalProperties: false
+    description: '``_task_dict`` after ``_attach_diagnostics``: both keys only when the task has diagnostics.'
+    properties:
+      age:
+        $ref: '#/components/schemas/KanbanTaskAge'
+      assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_recurrences:
+        type: integer
+      body:
+        anyOf:
+        - type: string
+        - type: 'null'
+      branch_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      completed_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      completion_contract:
+        anyOf:
+        - type: string
+        - type: 'null'
+      consecutive_failures:
+        type: integer
+      created_at:
+        type: integer
+      created_by:
+        anyOf:
+        - type: string
+        - type: 'null'
+      current_run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      current_step_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      diagnostics:
+        type: array
+        items:
+          $ref: '#/components/schemas/KanbanDiagnostic'
+        description: Present only when the task has active diagnostics (never empty, never null).
+      goal_max_turns:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      goal_mode:
+        type: boolean
+      id:
+        type: string
+      idempotency_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      max_retries:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      priority:
+        type: integer
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skills:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      status:
+        type: string
+      tenant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        type: string
+      warnings:
+        $ref: '#/components/schemas/KanbanWarningsSummary'
+      worker_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      workflow_template_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      workspace_kind:
+        type: string
+      workspace_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - title
+    - body
+    - assignee
+    - status
+    - priority
+    - created_by
+    - created_at
+    - started_at
+    - completed_at
+    - workspace_kind
+    - workspace_path
+    - claim_lock
+    - claim_expires
+    - tenant
+    - branch_name
+    - project_id
+    - result
+    - idempotency_key
+    - consecutive_failures
+    - worker_pid
+    - last_failure_error
+    - max_runtime_seconds
+    - last_heartbeat_at
+    - current_run_id
+    - workflow_template_id
+    - current_step_key
+    - skills
+    - model_override
+    - provider_override
+    - reasoning_effort
+    - max_retries
+    - goal_mode
+    - goal_max_turns
+    - session_id
+    - block_kind
+    - block_recurrences
+    - completion_contract
+    - age
+    - latest_summary
+    type: object
+operations:
+- method: GET
+  path: /api/plugins/kanban/attachments/{attachment_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:481
+  x-handler-hash: 32e841f53433d7a54063a5c5d397aa0bf2548ae2d860eddae97d72ac008796a4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 application/octet-stream, 200 */*
+  responses:
+    '200':
+      description: The file, served with the content type recorded at upload (the uploader-supplied type, so any
+        media type), application/octet-stream when none was recorded.
+      content:
+        application/octet-stream:
+          schema:
+            type: string
+            format: binary
+        '*/*':
+          schema:
+            type: string
+            format: binary
+- method: POST
+  path: /api/plugins/kanban/tasks
+  x-source: plugins/kanban/dashboard/plugin_api.py:413
+  x-handler-hash: c4f556d1806cddc24d677de171d368003653ff5c91e8f385088edf5e643591a0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanTaskCreateResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskCreateResponse'
+- method: GET
+  path: /api/plugins/kanban/tasks/{task_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:359
+  x-handler-hash: b0f79119e68f4ea0109c58fead1b7fb1a539192eb0f428ee830d2df37c5be4b0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanTaskDetailResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskDetailResponse'
+- method: PATCH
+  path: /api/plugins/kanban/tasks/{task_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:668
+  x-handler-hash: 965459fc4dd369e9a1548c1e9e894f855197c85a7bb1e5360b2f17fcb8d628b5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: KanbanTaskUpdateResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskUpdateResponse'

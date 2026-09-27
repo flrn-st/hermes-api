@@ -1,0 +1,445 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  AnalyticsAuxTaskUsage:
+    additionalProperties: false
+    description: '``web_server_profiles._merge_aux_into_by_model`` ``aux_tasks`` entry.'
+    properties:
+      api_calls:
+        type: integer
+      estimated_cost:
+        type: number
+      input_tokens:
+        type: integer
+      output_tokens:
+        type: integer
+      task:
+        type: string
+    required:
+    - task
+    - input_tokens
+    - output_tokens
+    - estimated_cost
+    - api_calls
+    type: object
+  AnalyticsModelCard:
+    additionalProperties: false
+    description: '``_get_models_analytics`` card: one per (model, billing provider), auxiliary-only models
+
+      included. ``provider`` is ``""`` when unrecorded; ``last_used_at`` is an epoch.'
+    properties:
+      actual_cost:
+        type: number
+      api_calls:
+        type: integer
+      avg_tokens_per_session:
+        anyOf:
+        - type: number
+        - type: 'null'
+      cache_read_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      capabilities:
+        $ref: '#/components/schemas/ModelsDevCapabilities'
+      estimated_cost:
+        type: number
+      input_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      last_used_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      model:
+        type: string
+      output_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      provider:
+        type: string
+      reasoning_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      sessions:
+        type: integer
+      tool_calls:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - model
+    - provider
+    - input_tokens
+    - output_tokens
+    - cache_read_tokens
+    - reasoning_tokens
+    - estimated_cost
+    - actual_cost
+    - sessions
+    - api_calls
+    - tool_calls
+    - last_used_at
+    - avg_tokens_per_session
+    - capabilities
+    type: object
+  AnalyticsModelsResponse:
+    additionalProperties: false
+    description: '``_get_models_analytics``.'
+    properties:
+      models:
+        items:
+          $ref: '#/components/schemas/AnalyticsModelCard'
+        type: array
+      period_days:
+        type: integer
+      totals:
+        $ref: '#/components/schemas/AnalyticsModelsTotals'
+    required:
+    - models
+    - totals
+    - period_days
+    type: object
+  AnalyticsModelsTotals:
+    additionalProperties: false
+    properties:
+      distinct_models:
+        type: integer
+      total_actual_cost:
+        type: number
+      total_api_calls:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_cache_read:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_estimated_cost:
+        type: number
+      total_input:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_output:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_reasoning:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_sessions:
+        type: integer
+    required:
+    - distinct_models
+    - total_input
+    - total_output
+    - total_cache_read
+    - total_reasoning
+    - total_estimated_cost
+    - total_actual_cost
+    - total_sessions
+    - total_api_calls
+    type: object
+  AnalyticsSkillRow:
+    additionalProperties: false
+    description: '``agent/insights.py::InsightsEngine._compute_skill_breakdown`` row; ``last_used_at`` is the
+
+      epoch of the latest call carrying a timestamp.'
+    properties:
+      last_used_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      manage_count:
+        type: integer
+      percentage:
+        type: number
+      skill:
+        type: string
+      total_count:
+        type: integer
+      view_count:
+        type: integer
+    required:
+    - skill
+    - view_count
+    - manage_count
+    - total_count
+    - percentage
+    - last_used_at
+    type: object
+  AnalyticsSkillsBreakdown:
+    additionalProperties: false
+    description: '``agent/insights.py::InsightsEngine._compute_skill_breakdown``.'
+    properties:
+      summary:
+        $ref: '#/components/schemas/AnalyticsSkillsSummary'
+      top_skills:
+        items:
+          $ref: '#/components/schemas/AnalyticsSkillRow'
+        type: array
+    required:
+    - summary
+    - top_skills
+    type: object
+  AnalyticsSkillsSummary:
+    additionalProperties: false
+    properties:
+      distinct_skills_used:
+        type: integer
+      total_skill_actions:
+        type: integer
+      total_skill_edits:
+        type: integer
+      total_skill_loads:
+        type: integer
+    required:
+    - total_skill_loads
+    - total_skill_edits
+    - total_skill_actions
+    - distinct_skills_used
+    type: object
+  AnalyticsTaskSummaryRow:
+    additionalProperties: false
+    description: '``web_server_profiles._aux_task_summary`` row — auxiliary usage per task across models.'
+    properties:
+      api_calls:
+        type: integer
+      estimated_cost:
+        type: number
+      input_tokens:
+        type: integer
+      models:
+        items:
+          type: string
+        type: array
+      output_tokens:
+        type: integer
+      task:
+        type: string
+    required:
+    - task
+    - input_tokens
+    - output_tokens
+    - estimated_cost
+    - api_calls
+    - models
+    type: object
+  AnalyticsToolRow:
+    additionalProperties: false
+    description: '``agent/insights.py::InsightsEngine._compute_tool_breakdown`` row.'
+    properties:
+      count:
+        type: integer
+      percentage:
+        type: number
+      tool:
+        type: string
+    required:
+    - tool
+    - count
+    - percentage
+    type: object
+  AnalyticsUsageDailyRow:
+    additionalProperties: false
+    description: '``_get_usage_analytics`` ``daily`` row; ``day`` is ``YYYY-MM-DD`` (``null`` only for a
+
+      corrupt ``started_at`` cell).'
+    properties:
+      actual_cost:
+        type: number
+      api_calls:
+        type: integer
+      cache_read_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      day:
+        anyOf:
+        - type: string
+        - type: 'null'
+      estimated_cost:
+        type: number
+      input_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      output_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      reasoning_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      sessions:
+        type: integer
+    required:
+    - day
+    - input_tokens
+    - output_tokens
+    - cache_read_tokens
+    - reasoning_tokens
+    - estimated_cost
+    - actual_cost
+    - sessions
+    - api_calls
+    type: object
+  AnalyticsUsageModelRow:
+    additionalProperties: false
+    description: '``_get_usage_analytics`` ``by_model`` row after ``_merge_aux_into_by_model``; ``aux_tasks``
+
+      only on rows that auxiliary usage folded into (or created, for aux-only models).'
+    properties:
+      api_calls:
+        type: integer
+      aux_tasks:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/AnalyticsAuxTaskUsage'
+          type: array
+        - type: 'null'
+      estimated_cost:
+        type: number
+      input_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model:
+        type: string
+      output_tokens:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      sessions:
+        type: integer
+    required:
+    - model
+    - input_tokens
+    - output_tokens
+    - estimated_cost
+    - sessions
+    - api_calls
+    type: object
+  AnalyticsUsageResponse:
+    additionalProperties: false
+    description: '``_get_usage_analytics``.'
+    properties:
+      by_model:
+        items:
+          $ref: '#/components/schemas/AnalyticsUsageModelRow'
+        type: array
+      by_task:
+        items:
+          $ref: '#/components/schemas/AnalyticsTaskSummaryRow'
+        type: array
+      daily:
+        items:
+          $ref: '#/components/schemas/AnalyticsUsageDailyRow'
+        type: array
+      period_days:
+        type: integer
+      skills:
+        $ref: '#/components/schemas/AnalyticsSkillsBreakdown'
+      tools:
+        items:
+          $ref: '#/components/schemas/AnalyticsToolRow'
+        type: array
+      totals:
+        $ref: '#/components/schemas/AnalyticsUsageTotals'
+    required:
+    - daily
+    - by_model
+    - by_task
+    - totals
+    - period_days
+    - skills
+    - tools
+    type: object
+  AnalyticsUsageTotals:
+    additionalProperties: false
+    properties:
+      total_actual_cost:
+        type: number
+      total_api_calls:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_cache_read:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_estimated_cost:
+        type: number
+      total_input:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_output:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_reasoning:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      total_sessions:
+        type: integer
+    required:
+    - total_input
+    - total_output
+    - total_cache_read
+    - total_reasoning
+    - total_estimated_cost
+    - total_actual_cost
+    - total_sessions
+    - total_api_calls
+    type: object
+operations:
+- method: GET
+  path: /api/analytics/models
+  x-source: hermes_cli/web_routers/analytics.py:305
+  x-handler-hash: 9bdbd136d071072249f52f7302e285a2cab8f87d9e6cae29c7c7cf288967319b
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AnalyticsModelsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AnalyticsModelsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/analytics/usage
+  x-source: hermes_cli/web_routers/analytics.py:143
+  x-handler-hash: 885941292538372e4b0ad3b98e17f73b93d7f3cbf82433e7bfeae690bb8053b9
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AnalyticsUsageResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AnalyticsUsageResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/config/raw
+  x-source: hermes_cli/web_routers/analytics.py:52
+  x-handler-hash: ae66b495686c88836db3f764b0728b8566e7c5db4da2d795a0e8d05a1647edf4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response

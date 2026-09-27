@@ -161,9 +161,11 @@ def plan(tag: dict, tag_hashes: dict, branch: dict, branch_hashes: dict, commit:
             "responses": responses,
         }
         files.setdefault(stem, {"components": {}, "operations": []})["operations"].append(entry)
-        for name in _closure(_refs(responses), branch_schemas):
+        for name in _closure(_refs(responses), {**branch_schemas, **manual_components}):
             owners.setdefault(name, stem)
     for name in sorted(owners):
+        if name not in branch_schemas:
+            continue  # defined only by a hand-written overlay
         schema = branch_schemas[name]
         if name in tag_schemas:
             if _strip_titles(tag_schemas[name]) != schema:

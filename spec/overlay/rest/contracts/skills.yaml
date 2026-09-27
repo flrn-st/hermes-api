@@ -1,0 +1,632 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  SkillContentUpdateResponse:
+    additionalProperties: false
+    description: '``tools/skill_manager_tool.py::_edit_skill`` success payload (failures become a 400/404).
+
+      ``org_sharing`` only when an org-mirror edit was auto-proposed.'
+    properties:
+      _change:
+        $ref: '#/components/schemas/SkillWriteChange'
+      message:
+        type: string
+      org_sharing:
+        anyOf:
+        - type: string
+        - type: 'null'
+      path:
+        type: string
+      success:
+        type: boolean
+      system_prompt_preview:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - success
+    - message
+    - path
+    - _change
+    type: object
+  SkillCreateResponse:
+    additionalProperties: false
+    description: '``tools/skill_manager_tool.py::_create_skill`` success payload (failures become a 400).
+
+      ``path`` is relative to the skills dir when it lies under it; ``category`` only when given;
+
+      ``system_prompt_preview`` only when the description is truncated in the prompt;
+
+      ``lint_warnings`` + ``lint_hint`` only when the linter found something.'
+    properties:
+      _change:
+        $ref: '#/components/schemas/SkillWriteChange'
+      category:
+        anyOf:
+        - type: string
+        - type: 'null'
+      hint:
+        type: string
+      lint_hint:
+        anyOf:
+        - type: string
+        - type: 'null'
+      lint_warnings:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/SkillLintWarning'
+          type: array
+        - type: 'null'
+      message:
+        type: string
+      path:
+        type: string
+      skill_md:
+        type: string
+      success:
+        type: boolean
+      system_prompt_preview:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - success
+    - message
+    - path
+    - skill_md
+    - _change
+    - hint
+    type: object
+  SkillHubEntry:
+    additionalProperties: false
+    description: '``_skill_meta_to_payload`` over ``tools/skills_hub_models.py::SkillMeta``.'
+    properties:
+      description:
+        type: string
+      identifier:
+        type: string
+      name:
+        type: string
+      repo:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      trust_level:
+        type: string
+    required:
+    - name
+    - description
+    - source
+    - identifier
+    - trust_level
+    - repo
+    - tags
+    type: object
+  SkillHubInstalledRecord:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_profiles.py::_installed_hub_identifiers`` value — lock-file fields
+
+      read with ``.get`` (``null`` on legacy entries).'
+    properties:
+      name:
+        type: string
+      scan_verdict:
+        anyOf:
+        - type: string
+        - type: 'null'
+      trust_level:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - name
+    - trust_level
+    - scan_verdict
+    type: object
+  SkillHubOfficialEntry:
+    additionalProperties: false
+    description: '``list_official_skills`` row: ``category`` from ``official/<category>/<skill>``
+
+      (``"general"`` when flat).'
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      identifier:
+        type: string
+      installed:
+        type: boolean
+      name:
+        type: string
+      repo:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      trust_level:
+        type: string
+    required:
+    - name
+    - description
+    - source
+    - identifier
+    - trust_level
+    - repo
+    - tags
+    - category
+    - installed
+    type: object
+  SkillHubOfficialResponse:
+    additionalProperties: false
+    description: '``list_official_skills`` — the whole optional-skills catalog.'
+    properties:
+      skills:
+        items:
+          $ref: '#/components/schemas/SkillHubOfficialEntry'
+        type: array
+    required:
+    - skills
+    type: object
+  SkillHubPreviewResponse:
+    additionalProperties: false
+    description: '``preview_skill_hub`` — ``repo`` is ``null`` when only a bundle resolved; ``files`` are
+
+      the bundle''s relative paths, sorted.'
+    properties:
+      description:
+        type: string
+      files:
+        items:
+          type: string
+        type: array
+      identifier:
+        type: string
+      name:
+        type: string
+      repo:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skill_md:
+        type: string
+      source:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      trust_level:
+        type: string
+    required:
+    - name
+    - description
+    - source
+    - identifier
+    - trust_level
+    - repo
+    - tags
+    - skill_md
+    - files
+    type: object
+  SkillHubScanFinding:
+    additionalProperties: false
+    description: '``tools/skills_guard.py::Finding`` subset.'
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      file:
+        type: string
+      line:
+        type: integer
+      severity:
+        type: string
+    required:
+    - severity
+    - category
+    - file
+    - line
+    - description
+    type: object
+  SkillHubScanResponse:
+    additionalProperties: false
+    description: '``scan_skill_hub`` — ``tools/skills_guard.py::scan_skill`` + ``should_allow_install``
+
+      (``True``/``None``/``False`` → ``allow``/``ask``/``block``). ``tier1`` is ``null`` when the
+
+      optional scanner is not installed or enabled.'
+    properties:
+      findings:
+        items:
+          $ref: '#/components/schemas/SkillHubScanFinding'
+        type: array
+      identifier:
+        type: string
+      name:
+        type: string
+      policy:
+        enum:
+        - allow
+        - ask
+        - block
+        type: string
+      policy_reason:
+        type: string
+      severity_counts:
+        $ref: '#/components/schemas/SkillHubScanSeverityCounts'
+      source:
+        type: string
+      summary:
+        type: string
+      tier1:
+        anyOf:
+        - $ref: '#/components/schemas/SkillHubTier1Report'
+        - type: 'null'
+      trust_level:
+        type: string
+      verdict:
+        enum:
+        - safe
+        - caution
+        - dangerous
+        type: string
+    required:
+    - name
+    - identifier
+    - source
+    - trust_level
+    - verdict
+    - summary
+    - policy
+    - policy_reason
+    - findings
+    - severity_counts
+    - tier1
+    type: object
+  SkillHubScanSeverityCounts:
+    additionalProperties: false
+    properties:
+      critical:
+        type: integer
+      high:
+        type: integer
+      low:
+        type: integer
+      medium:
+        type: integer
+    required:
+    - critical
+    - high
+    - medium
+    - low
+    type: object
+  SkillHubSearchResponse:
+    additionalProperties: false
+    description: '``search_skills_hub`` (all-empty for a blank query); ``source_counts`` / ``timed_out``
+
+      come from ``tools/skills_hub_search.py::parallel_search_sources``.'
+    properties:
+      installed:
+        additionalProperties:
+          $ref: '#/components/schemas/SkillHubInstalledRecord'
+        type: object
+      results:
+        items:
+          $ref: '#/components/schemas/SkillHubEntry'
+        type: array
+      source_counts:
+        additionalProperties:
+          type: integer
+        type: object
+      timed_out:
+        items:
+          type: string
+        type: array
+    required:
+    - results
+    - source_counts
+    - timed_out
+    - installed
+    type: object
+  SkillHubSource:
+    additionalProperties: false
+    description: '``list_skills_hub_sources`` row; ``rate_limited`` only for ``github``, ``available`` only
+
+      for ``hermes-index``.'
+    properties:
+      available:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      id:
+        type: string
+      label:
+        type: string
+      rate_limited:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      searchable:
+        type: boolean
+    required:
+    - id
+    - label
+    - searchable
+    type: object
+  SkillHubSourcesResponse:
+    additionalProperties: false
+    description: '``list_skills_hub_sources``; ``installed`` is keyed by hub identifier.'
+    properties:
+      featured:
+        items:
+          $ref: '#/components/schemas/SkillHubEntry'
+        type: array
+      index_available:
+        type: boolean
+      installed:
+        additionalProperties:
+          $ref: '#/components/schemas/SkillHubInstalledRecord'
+        type: object
+      sources:
+        items:
+          $ref: '#/components/schemas/SkillHubSource'
+        type: array
+    required:
+    - sources
+    - index_available
+    - featured
+    - installed
+    type: object
+  SkillHubTier1Finding:
+    additionalProperties: false
+    description: '``tools/skillevaluator_scan.py::Tier1Finding``; ``secrets_class`` is ``is_secrets_class``.'
+    properties:
+      check:
+        type: string
+      file:
+        type: string
+      line:
+        type: integer
+      message:
+        type: string
+      secrets_class:
+        type: boolean
+      severity:
+        type: string
+      validator:
+        type: string
+    required:
+    - check
+    - validator
+    - severity
+    - message
+    - file
+    - line
+    - secrets_class
+    type: object
+  SkillHubTier1Report:
+    additionalProperties: false
+    description: Advisory SkillEvaluator Tier 1 result (``tools/skillevaluator_scan.py::Tier1Report``).
+    properties:
+      findings:
+        items:
+          $ref: '#/components/schemas/SkillHubTier1Finding'
+        type: array
+      incomplete_checks:
+        items:
+          type: string
+        type: array
+      passed:
+        type: boolean
+    required:
+    - passed
+    - incomplete_checks
+    - findings
+    type: object
+  SkillLintWarning:
+    additionalProperties: false
+    description: '``tools/skill_manager_tool.py::_attach_lint_findings`` row (advisory).'
+    properties:
+      message:
+        type: string
+      rule:
+        type: string
+      severity:
+        type: string
+    required:
+    - severity
+    - rule
+    - message
+    type: object
+  SkillToggleResponse:
+    additionalProperties: false
+    description: '``toggle_skill``.'
+    properties:
+      enabled:
+        type: boolean
+      name:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - name
+    - enabled
+    type: object
+  SkillWriteChange:
+    additionalProperties: false
+    description: '``_change`` — the new frontmatter description, clipped (``_description_preview``).'
+    properties:
+      description:
+        type: string
+    required:
+    - description
+    type: object
+operations:
+- method: GET
+  path: /api/skills/hub/official
+  x-source: hermes_cli/web_routers/skills.py:123
+  x-handler-hash: 7e327b92e29332d3535f17fdddec25c7b435e862e86a983153761b61c55748ca
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillHubOfficialResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillHubOfficialResponse'
+      description: Successful Response
+- method: GET
+  path: /api/skills/hub/preview
+  x-source: hermes_cli/web_routers/skills.py:227
+  x-handler-hash: 38efc9c26a56583fe3302cfb16ca7e0ee0c9545fd4c58e5952cff77c4499524a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillHubPreviewResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillHubPreviewResponse'
+      description: Successful Response
+- method: GET
+  path: /api/skills/hub/scan
+  x-source: hermes_cli/web_routers/skills.py:265
+  x-handler-hash: 705ae67c26ff65a7872392338a99549a78e7f09b7679f977ab027bc75d657f64
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillHubScanResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillHubScanResponse'
+      description: Successful Response
+- method: GET
+  path: /api/skills/hub/search
+  x-source: hermes_cli/web_routers/skills.py:185
+  x-handler-hash: 67649bc690e2f538d7089ee9611421051c000e35416f0f8045f51445ae37222a
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillHubSearchResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillHubSearchResponse'
+      description: Successful Response
+- method: GET
+  path: /api/skills/hub/sources
+  x-source: hermes_cli/web_routers/skills.py:147
+  x-handler-hash: cf048ad71e8641065913d4144bb44c39d39ba0baebe223d0057ffb6de1288334
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillHubSourcesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillHubSourcesResponse'
+      description: Successful Response
+- method: POST
+  path: /api/skills
+  x-source: hermes_cli/web_routers/skills.py:413
+  x-handler-hash: 441cd1860c252387eb6300597bfdc48e3baeb829e9cd14fae02c73f78a7625d5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillCreateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillCreateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/skills/hub/install
+  x-source: hermes_cli/web_routers/skills.py:97
+  x-handler-hash: cd29e5b536e4cfc4b88365f3607b1790ee5639070e165fbd9558990d56b81488
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/skills/hub/uninstall
+  x-source: hermes_cli/web_routers/skills.py:106
+  x-handler-hash: b54fee062dccc8b8e733513ab02eee15404f7f005a4f80e5b28e4d1a37d95d3d
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/skills/hub/update
+  x-source: hermes_cli/web_routers/skills.py:115
+  x-handler-hash: 47623d7a3000f00cec6f5efb8e5ef722ced5087dfe6eda7c55733da2c5897906
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ActionSpawnResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/skills/content
+  x-source: hermes_cli/web_routers/skills.py:427
+  x-handler-hash: ae89a8890da11f4d68746e0253c613efe43aacca49e1c8ae7625d31e74c4784e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillContentUpdateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillContentUpdateResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/skills/toggle
+  x-source: hermes_cli/web_routers/skills.py:374
+  x-handler-hash: 2886812fa2e1c2a7a9b5f79328070a4e4715f358ddc4a1aae855f4e23698be71
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillToggleResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillToggleResponse'
+      description: Successful Response

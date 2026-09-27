@@ -1,0 +1,223 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  HermesUpdateCheckResponse:
+    additionalProperties: false
+    description: '``check_hermes_update``. ``behind``: commits behind, ``0`` up to date, ``-1`` behind by an unknown
+      count, ``null`` when the check could not run or does not apply. ``install_method`` is ``detect_install_method``''s
+      value, or ``"managed-runtime"`` (with ``update_command: "managed outside dashboard"``) when the dashboard''s
+      local updater is managed externally. ``commits`` only when an update is available.'
+    properties:
+      behind:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      can_apply:
+        type: boolean
+      commits:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/HermesUpdateCommit'
+          type: array
+        - type: 'null'
+      current_version:
+        type: string
+      install_method:
+        type: string
+      message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      update_available:
+        type: boolean
+      update_command:
+        type: string
+    required:
+    - install_method
+    - current_version
+    - behind
+    - update_available
+    - can_apply
+    - update_command
+    - message
+    type: object
+  HermesUpdateCommit:
+    additionalProperties: false
+    description: '``hermes_cli/banner.py::upstream_commits_behind`` row (GitHub compare, newest first, at most 20):
+      ``sha`` shortened to 7 chars, ``summary`` the first message line, ``at`` the committer date in epoch seconds
+      (``0`` when unparseable); the list is ``[]`` when the compare is unavailable.'
+    properties:
+      at:
+        type: integer
+      author:
+        type: string
+      sha:
+        type: string
+      summary:
+        type: string
+    required:
+    - sha
+    - summary
+    - author
+    - at
+    type: object
+  HermesUpdateStartResponse:
+    additionalProperties: false
+    description: '``update_hermes``: a refusal (``ok: false``, ``pid: null`` + ``error``/``message``/``update_command``,
+      via ``_update_refused``; the managed-runtime refusal carries ``update_command: "managed outside dashboard"``),
+      the already-running update (``already_running: true``, ``action_id`` when recorded), or the freshly spawned
+      one (with ``action_id``).'
+    properties:
+      action_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      already_running:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      ok:
+        type: boolean
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      update_command:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    - pid
+    - name
+    type: object
+  UpdateReceiptRecord:
+    additionalProperties: true
+    description: '``latest.json`` as ``hermes_cli/update_receipt.py`` wrote it, returned verbatim. The file outlives
+      the code that wrote it, so every key may be absent; ``resume_update_receipt`` adds ``post_swap_pid``, ``update_cmd_fleet``
+      adds ``runtime_outcomes``.'
+    properties:
+      argv:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      exit_code:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      finished_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fleet:
+        anyOf:
+        - items:
+            additionalProperties: true
+            type: object
+          type: array
+        - type: 'null'
+      gateway_restart:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      outcome:
+        anyOf:
+        - type: string
+        - type: 'null'
+      pending_manual_serves:
+        anyOf:
+        - items:
+            additionalProperties: true
+            type: object
+          type: array
+        - type: 'null'
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      plan:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      post_swap_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      post_update:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      pre_update:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      schema:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      skips:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/UpdateReceiptSkip'
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      steps:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/UpdateReceiptStep'
+          type: array
+        - type: 'null'
+      stop_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
+operations:
+- method: POST
+  path: /api/hermes/update
+  x-source: hermes_cli/web_routers/actions.py:219
+  x-handler-hash: 95f8b7de7384cdbce5815a6e68a1be0a13685985e3ffc85f19d78b17440cf5ef
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: HermesUpdateStartResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HermesUpdateStartResponse'
+- method: GET
+  path: /api/hermes/update/check
+  x-source: hermes_cli/web_routers/actions.py:258
+  x-handler-hash: 54bc4b20337983f76b45d7999fae6771970ad59d10e24e40cab0a798ce157f61
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: HermesUpdateCheckResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HermesUpdateCheckResponse'

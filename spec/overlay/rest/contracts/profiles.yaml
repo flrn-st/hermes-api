@@ -1,0 +1,728 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  ProfileActiveResponse:
+    additionalProperties: false
+    description: '``get_active_profile_endpoint``: the sticky default and the profile this dashboard serves.'
+    properties:
+      active:
+        type: string
+      current:
+        type: string
+    required:
+    - active
+    - current
+    type: object
+  ProfileCreateResponse:
+    additionalProperties: false
+    description: '``create_profile_endpoint``; ``model_error`` is ``""`` unless the model pick was rejected.'
+    properties:
+      hub_installs:
+        items:
+          $ref: '#/components/schemas/ProfileHubInstall'
+        type: array
+      mcp_written:
+        type: integer
+      model_error:
+        type: string
+      model_set:
+        type: boolean
+      name:
+        type: string
+      ok:
+        type: boolean
+      path:
+        type: string
+      skills_disabled:
+        type: integer
+    required:
+    - ok
+    - name
+    - path
+    - model_set
+    - model_error
+    - mcp_written
+    - skills_disabled
+    - hub_installs
+    type: object
+  ProfileDeleteResponse:
+    additionalProperties: false
+    description: '``delete_profile_endpoint``; the settlement keys ride only when the directory is gone but
+
+      ``ProfileIdentitySettlementPending`` left its identity unsettled.'
+    properties:
+      identity_settled:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      ok:
+        type: boolean
+      path:
+        type: string
+      retry_command:
+        anyOf:
+        - type: string
+        - type: 'null'
+      settlement_pending:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+    required:
+    - ok
+    - path
+    type: object
+  ProfileDescribeAutoResponse:
+    additionalProperties: false
+    description: '``describe_profile_auto_endpoint`` over ``hermes_cli/profile_describer.py::DescribeOutcome``;
+
+      a failed generation is ``ok: false`` with its ``reason``.'
+    properties:
+      description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      description_auto:
+        type: boolean
+      ok:
+        type: boolean
+      reason:
+        type: string
+    required:
+    - ok
+    - reason
+    - description
+    - description_auto
+    type: object
+  ProfileDescriptionResponse:
+    additionalProperties: false
+    description: '``update_profile_description_endpoint``.'
+    properties:
+      description:
+        type: string
+      description_auto:
+        type: boolean
+      ok:
+        type: boolean
+    required:
+    - ok
+    - description
+    - description_auto
+    type: object
+  ProfileDesktopOverlayResponse:
+    additionalProperties: false
+    description: '``get_profile_desktop_overlay``; ``desktop`` is the file''s JSON document (which may itself
+
+      be ``null``).'
+    properties:
+      desktop: {}
+      exists:
+        type: boolean
+    required:
+    - exists
+    - desktop
+    type: object
+  ProfileExportResponse:
+    additionalProperties: false
+    description: '``export_profile_endpoint``.'
+    properties:
+      archive:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - archive
+    type: object
+  ProfileHubInstall:
+    additionalProperties: false
+    description: A spawned ``hermes skills install``; ``pid`` is null when the spawn failed.
+    properties:
+      identifier:
+        type: string
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - identifier
+    - pid
+    type: object
+  ProfileListResponse:
+    additionalProperties: false
+    description: '``list_profiles_endpoint`` (``_read_profiles``).'
+    properties:
+      profiles:
+        items:
+          $ref: '#/components/schemas/ProfileSummary'
+        type: array
+    required:
+    - profiles
+    type: object
+  ProfileModelResponse:
+    additionalProperties: false
+    description: '``update_profile_model_endpoint``.'
+    properties:
+      model:
+        type: string
+      ok:
+        type: boolean
+      provider:
+        type: string
+    required:
+    - ok
+    - provider
+    - model
+    type: object
+  ProfileOpenTerminalResponse:
+    additionalProperties: false
+    description: '``open_profile_terminal_endpoint``.'
+    properties:
+      command:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - command
+    type: object
+  ProfileProjectTreeNode:
+    additionalProperties: false
+    description: '``tui_gateway/project_tree.py::_project_node`` after ``_merge_profile_tree`` folded the
+
+      same folder across profiles (counts and totals summed).'
+    properties:
+      color:
+        anyOf:
+        - type: string
+        - type: 'null'
+      icon:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: string
+      isAuto:
+        type: boolean
+      isNoProject:
+        type: boolean
+      label:
+        type: string
+      lastActive:
+        type: number
+      path:
+        anyOf:
+        - type: string
+        - type: 'null'
+      previewSessions:
+        items:
+          $ref: '#/components/schemas/ProfileProjectTreeSession'
+        type: array
+      repos:
+        items:
+          $ref: '#/components/schemas/ProfileProjectTreeRepo'
+        type: array
+      sessionCount:
+        type: integer
+      sessionIds:
+        items:
+          type: string
+        type: array
+      totalCostUsd:
+        type: number
+      totalTokens:
+        type: integer
+    required:
+    - id
+    - label
+    - path
+    - color
+    - icon
+    - isAuto
+    - isNoProject
+    - sessionCount
+    - lastActive
+    - totalTokens
+    - totalCostUsd
+    - repos
+    - previewSessions
+    - sessionIds
+    type: object
+  ProfileProjectTreeRepo:
+    additionalProperties: false
+    description: '``tui_gateway/project_tree.py::_repo_node``.'
+    properties:
+      groups:
+        items:
+          $ref: '#/components/schemas/ProfileProjectTreeLane'
+        type: array
+      id:
+        type: string
+      label:
+        type: string
+      path:
+        anyOf:
+        - type: string
+        - type: 'null'
+      sessionCount:
+        type: integer
+    required:
+    - id
+    - label
+    - path
+    - groups
+    - sessionCount
+    type: object
+  ProfileProjectsTreeResponse:
+    additionalProperties: false
+    description: '``get_profiles_projects_tree`` — the ``projects.tree`` JSON-RPC result
+
+      (``ProjectsTreeResult``) across every profile, plus per-profile read ``errors``.'
+    properties:
+      active_id:
+        type: 'null'
+      errors:
+        items:
+          $ref: '#/components/schemas/ProfileReadError'
+        type: array
+      projects:
+        items:
+          $ref: '#/components/schemas/ProfileProjectTreeNode'
+        type: array
+      scoped_session_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - projects
+    - active_id
+    - scoped_session_ids
+    - errors
+    type: object
+  ProfileReadError:
+    additionalProperties: false
+    description: One profile whose ``state.db`` read failed (``_read_profile_db``).
+    properties:
+      error:
+        type: string
+      profile:
+        type: string
+    required:
+    - profile
+    - error
+    type: object
+  ProfileRenameResponse:
+    additionalProperties: false
+    description: '``rename_profile_endpoint``; renaming ``default`` only sets ``display_name`` and keeps
+
+      ``name: "default"``.'
+    properties:
+      display_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      ok:
+        type: boolean
+      path:
+        type: string
+    required:
+    - ok
+    - name
+    - path
+    type: object
+  ProfileSessionPullRequest:
+    additionalProperties: false
+    properties:
+      number:
+        type: integer
+      url:
+        type: string
+    required:
+    - number
+    - url
+    type: object
+  ProfileSessionPullRequestsResponse:
+    additionalProperties: false
+    description: '``post_profiles_sessions_pull_requests`` — session id -> the PR its transcript opened.'
+    properties:
+      pull_requests:
+        additionalProperties:
+          $ref: '#/components/schemas/ProfileSessionPullRequest'
+        type: object
+      scanned:
+        items:
+          type: string
+        type: array
+    required:
+    - pull_requests
+    - scanned
+    type: object
+  ProfileSessionsResponse:
+    additionalProperties: false
+    description: '``get_profiles_sessions`` — rows from every profile''s store, tagged with their owner.'
+    properties:
+      errors:
+        items:
+          $ref: '#/components/schemas/ProfileReadError'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      profile_totals:
+        additionalProperties:
+          type: integer
+        type: object
+      sessions:
+        items:
+          $ref: '#/components/schemas/SessionListRow'
+        type: array
+      storage:
+        additionalProperties:
+          const: corrupt
+          type: string
+        type: object
+      total:
+        type: integer
+    required:
+    - sessions
+    - total
+    - profile_totals
+    - limit
+    - offset
+    - errors
+    - storage
+    type: object
+  ProfileSetActiveResponse:
+    additionalProperties: false
+    description: '``set_active_profile_endpoint``.'
+    properties:
+      active:
+        type: string
+      ok:
+        type: boolean
+    required:
+    - ok
+    - active
+    type: object
+  ProfileSetupCommandResponse:
+    additionalProperties: false
+    description: '``get_profile_setup_command``.'
+    properties:
+      command:
+        type: string
+    required:
+    - command
+    type: object
+  ProfileSummary:
+    additionalProperties: false
+    description: '``_profile_to_dict``, or ``web_server_profiles.py::_fallback_profile_entry`` when
+
+      ``list_profiles`` fails (that scan omits ``display_name`` and ``role``).'
+    properties:
+      bot_title:
+        type: string
+      description:
+        type: string
+      description_auto:
+        type: boolean
+      display_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      distribution_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      distribution_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      distribution_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_running:
+        type: boolean
+      has_alias:
+        type: boolean
+      has_env:
+        type: boolean
+      is_default:
+        type: boolean
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      path:
+        type: string
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      role:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: '``hermes_cli.profiles.PROFILE_ROLES`` ("setup") or null.'
+      skill_count:
+        type: integer
+    required:
+    - name
+    - path
+    - is_default
+    - model
+    - provider
+    - has_env
+    - skill_count
+    - gateway_running
+    - description
+    - description_auto
+    - bot_title
+    - distribution_name
+    - distribution_version
+    - distribution_source
+    - has_alias
+    type: object
+operations:
+- method: DELETE
+  path: /api/profiles/{name}
+  x-source: hermes_cli/web_routers/profiles.py:869
+  x-handler-hash: ef1dc51faa2825906ebd8e586fb67291c15813b411f7ae36f1e9c6c6a350e15e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileDeleteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileDeleteResponse'
+      description: Successful Response
+- method: GET
+  path: /api/profiles
+  x-source: hermes_cli/web_routers/profiles.py:699
+  x-handler-hash: b7992377fe83cd92cd7b39d5412c47ae87ad2169a07184375ba6170375b1aaf1
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/profiles/active
+  x-source: hermes_cli/web_routers/profiles.py:777
+  x-handler-hash: a0383d556910fe70939eacf7062d609e4b142a11f5b44bf1d82ce308d8abcbaf
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileActiveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileActiveResponse'
+      description: Successful Response
+- method: GET
+  path: /api/profiles/projects/tree
+  x-source: hermes_cli/web_routers/profiles.py:611
+  x-handler-hash: 32e3585d7efc1f9b6008000c6f9c4726914b0eb34cd4e8024121e28bf0f881ee
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileProjectsTreeResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileProjectsTreeResponse'
+      description: Successful Response
+- method: GET
+  path: /api/profiles/sessions
+  x-source: hermes_cli/web_routers/profiles.py:411
+  x-handler-hash: 48226893fa91899f047d0e603af08b75405f244c275c9685af604ad571b97a23
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileSessionsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileSessionsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/profiles/{name}/desktop-overlay
+  x-source: hermes_cli/web_routers/profiles.py:1034
+  x-handler-hash: be1be8c11e54304ae39c7bea8583cbc2b1879cfd1072c5e1fe9a7deb33a0b274
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileDesktopOverlayResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileDesktopOverlayResponse'
+      description: Successful Response
+- method: GET
+  path: /api/profiles/{name}/setup-command
+  x-source: hermes_cli/web_routers/profiles.py:807
+  x-handler-hash: f8f71e42e3a5766766e2346a683e1aac8c98e6182719cbb607e8f85f41b4ae1e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileSetupCommandResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileSetupCommandResponse'
+      description: Successful Response
+- method: PATCH
+  path: /api/profiles/{name}
+  x-source: hermes_cli/web_routers/profiles.py:850
+  x-handler-hash: ec1d951d2ba24fedbd0de32a7db2e37287a1b4b9e6c81df062d6066b22658799
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileRenameResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileRenameResponse'
+      description: Successful Response
+- method: POST
+  path: /api/profiles
+  x-source: hermes_cli/web_routers/profiles.py:704
+  x-handler-hash: e0681a57fc28e2f810c0180f101c3b84b12948188f0dc993c3ba0d5d81a17aa0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileCreateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileCreateResponse'
+      description: Successful Response
+- method: POST
+  path: /api/profiles/active
+  x-source: hermes_cli/web_routers/profiles.py:796
+  x-handler-hash: 9afc499eabf3458d4ca3f1d9a9ba3d086bf7121e6a9357109346d6755ae569bf
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileSetActiveResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileSetActiveResponse'
+      description: Successful Response
+- method: POST
+  path: /api/profiles/sessions/pull-requests
+  x-source: hermes_cli/web_routers/profiles.py:661
+  x-handler-hash: 8bb9f21f6e5ce9e0ba15a72332594c1fd1836e0089ff7f0b25560e690d69d392
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileSessionPullRequestsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileSessionPullRequestsResponse'
+      description: Successful Response
+- method: POST
+  path: /api/profiles/{name}/describe-auto
+  x-source: hermes_cli/web_routers/profiles.py:957
+  x-handler-hash: e2611d5b76967224c27929fb14abadd496836b3c9a5cf5462ecaeb28933da658
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileDescribeAutoResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileDescribeAutoResponse'
+      description: Successful Response
+- method: POST
+  path: /api/profiles/{name}/export
+  x-source: hermes_cli/web_routers/profiles.py:988
+  x-handler-hash: 0a17e675631ec36b11a906f400e5193b7d03c31b4f39e60717722d8d3861548c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileExportResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileExportResponse'
+      description: Successful Response
+- method: POST
+  path: /api/profiles/{name}/open-terminal
+  x-source: hermes_cli/web_routers/profiles.py:828
+  x-handler-hash: bd9e822e4659cf990e981dd09098feb578bc06bb7bbc4b4d4881689ccf4c6475
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileOpenTerminalResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileOpenTerminalResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/profiles/{name}/description
+  x-source: hermes_cli/web_routers/profiles.py:928
+  x-handler-hash: 0fa78625db456c5e9c866cfe68a23119d709c76be08e109e708992b5d0102d30
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileDescriptionResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileDescriptionResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/profiles/{name}/model
+  x-source: hermes_cli/web_routers/profiles.py:942
+  x-handler-hash: 72705127b47a304ea8edbe0aa5ca3326e1b245201988fcc0f6c1b669ef3e3ead
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ProfileModelResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileModelResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/profiles/{name}/soul
+  x-source: hermes_cli/web_routers/profiles.py:906
+  x-handler-hash: 03805dabea87de48990f0bec5f4c27eea0d0e12ed75b70cd19efb302647ccbdb
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response

@@ -1,0 +1,136 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  ChatWorkspaceProject:
+    additionalProperties: false
+    description: '``hermes_cli/projects_db.py::Project.to_dict`` (the ``projects.list`` row).'
+    properties:
+      archived:
+        type: boolean
+      board_slug:
+        anyOf:
+        - type: string
+        - type: 'null'
+      color:
+        anyOf:
+        - type: string
+        - type: 'null'
+      created_at:
+        type: integer
+      description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      folders:
+        items:
+          $ref: '#/components/schemas/ChatWorkspaceProjectFolder'
+        type: array
+      icon:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: string
+      name:
+        type: string
+      primary_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+      slug:
+        type: string
+    required:
+    - id
+    - slug
+    - name
+    - description
+    - icon
+    - color
+    - board_slug
+    - primary_path
+    - archived
+    - created_at
+    - folders
+    type: object
+  ChatWorkspaceProjectFolder:
+    additionalProperties: false
+    description: '``hermes_cli/projects_db.py::ProjectFolder.to_dict``.'
+    properties:
+      added_at:
+        type: integer
+      is_primary:
+        type: boolean
+      label:
+        anyOf:
+        - type: string
+        - type: 'null'
+      path:
+        type: string
+    required:
+    - path
+    - label
+    - is_primary
+    - added_at
+    type: object
+  ChatWorkspaceRepo:
+    additionalProperties: false
+    description: '``tui_gateway/methods_projects.py::_discover_repos_payload`` row: a git root with its session
+
+      totals (``last_active`` is an epoch, ``0.0`` for a scanned repo with no sessions).'
+    properties:
+      label:
+        type: string
+      last_active:
+        type: number
+      root:
+        type: string
+      sessions:
+        type: integer
+    required:
+    - root
+    - label
+    - sessions
+    - last_active
+    type: object
+  ChatWorkspacesResponse:
+    additionalProperties: false
+    description: '``_collect_workspaces``. ``default_cwd`` is where a chat without ``?cwd=`` starts; ``home``
+
+      is the host user''s home directory.'
+    properties:
+      default_cwd:
+        type: string
+      home:
+        type: string
+      projects:
+        items:
+          $ref: '#/components/schemas/ChatWorkspaceProject'
+        type: array
+      repos:
+        items:
+          $ref: '#/components/schemas/ChatWorkspaceRepo'
+        type: array
+      scan_enabled:
+        type: boolean
+    required:
+    - projects
+    - repos
+    - default_cwd
+    - home
+    - scan_enabled
+    type: object
+operations:
+- method: GET
+  path: /api/chat/workspaces
+  x-source: hermes_cli/web_routers/chat_workspaces.py:64
+  x-handler-hash: c14e426dd2489b456c563f91c316b034efe13e707ed1470fe70d9ba46bd3f5b2
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ChatWorkspacesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChatWorkspacesResponse'
+      description: Successful Response

@@ -1,0 +1,431 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  AudioSpeakResponse:
+    additionalProperties: false
+    description: '``speak_text``.'
+    properties:
+      data_url:
+        description: '``data:<mime_type>;base64,<audio>``.'
+        type: string
+      mime_type:
+        enum:
+        - audio/mpeg
+        - audio/ogg
+        - audio/wav
+        - audio/flac
+        type: string
+      ok:
+        type: boolean
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    - data_url
+    - mime_type
+    - provider
+    type: object
+  AudioTranscriptionResponse:
+    additionalProperties: false
+    description: '``transcribe_audio_upload``; ``transcript`` is ``""`` when no speech was detected.'
+    properties:
+      ok:
+        type: boolean
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      transcript:
+        type: string
+    required:
+    - ok
+    - transcript
+    - provider
+    type: object
+  ElevenLabsVoice:
+    additionalProperties: false
+    properties:
+      label:
+        type: string
+      name:
+        type: string
+      voice_id:
+        type: string
+    required:
+    - voice_id
+    - name
+    - label
+    type: object
+  ElevenLabsVoicesResponse:
+    additionalProperties: false
+    description: '``get_elevenlabs_voices``; ``available: false`` with no key configured, or with
+
+      ``error: "unauthorized"`` when ElevenLabs rejected the key.'
+    properties:
+      available:
+        type: boolean
+      error:
+        anyOf:
+        - const: unauthorized
+          type: string
+        - type: 'null'
+      voices:
+        items:
+          $ref: '#/components/schemas/ElevenLabsVoice'
+        type: array
+    required:
+    - available
+    - voices
+    type: object
+  TtsLeaseResponse:
+    additionalProperties: false
+    description: '``tts_lease`` — the request''s ``lease`` / ``active`` plus
+
+      ``tools/tts_tool_lifecycle.py::acquire_tts_lease`` (warm-up result) or ``release_tts_lease``
+
+      (``released``). A lifecycle exception is reported in the body (``action: "error"``,
+
+      ``leases: null``), never as an HTTP error.'
+    properties:
+      action:
+        anyOf:
+        - enum:
+          - noop
+          - loaded
+          - cached
+          - warmed
+          - installed
+          - error
+          type: string
+        - type: 'null'
+      active:
+        type: boolean
+      elapsed_ms:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      lease:
+        type: string
+      leases:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      ok:
+        type: boolean
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      released:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      warmed:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+    required:
+    - ok
+    - lease
+    - active
+    - leases
+    type: object
+  VoiceClientConfigResponse:
+    additionalProperties: false
+    description: '``get_client_voice_config`` — ``tools/voice_client_config.py::resolve_client_voice_config``.'
+    properties:
+      ok:
+        type: boolean
+      stt:
+        $ref: '#/components/schemas/VoiceClientSttConfig'
+      tts:
+        $ref: '#/components/schemas/VoiceClientTtsConfig'
+    required:
+    - ok
+    - stt
+    - tts
+    type: object
+  VoiceClientSttConfig:
+    additionalProperties: false
+    description: '``tools/voice_client_config.py::_resolve_stt_client_config``. ``mode: "relay"`` carries only
+
+      ``reason``; ``"direct"`` carries the provider wire and credentials.'
+    properties:
+      api_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      language:
+        anyOf:
+        - type: string
+        - type: 'null'
+      mode:
+        enum:
+        - relay
+        - direct
+        type: string
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      timeout_s:
+        anyOf:
+        - type: number
+        - type: 'null'
+      wire:
+        anyOf:
+        - enum:
+          - openai-multipart
+          - xai-stt
+          - elevenlabs-stt
+          type: string
+        - type: 'null'
+    required:
+    - mode
+    type: object
+  VoiceClientTtsConfig:
+    additionalProperties: false
+    description: '``tools/voice_client_config.py::_resolve_tts_client_config`` (same relay/direct split as
+
+      STT). ``speed`` is ``null`` for providers that take none; ``extra_body`` is OpenAI-only.'
+    properties:
+      api_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      extra_body:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+        description: Optional ``lang_code`` / ``consent_attestation`` from ``tts.openai``.
+      min_len:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      mode:
+        enum:
+        - relay
+        - direct
+        type: string
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      speed:
+        anyOf:
+        - type: number
+        - type: 'null'
+      voice:
+        anyOf:
+        - type: string
+        - type: 'null'
+      wire:
+        anyOf:
+        - enum:
+          - openai-speech
+          - elevenlabs-tts
+          type: string
+        - type: 'null'
+    required:
+    - mode
+    type: object
+  VoiceLiveSessionInfo:
+    additionalProperties: true
+    properties:
+      id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
+  VoiceLiveSessionResponse:
+    additionalProperties: true
+    description: '``create_voice_live_session`` — ``{"ok": true}`` merged over the vendor''s
+
+      ``POST /v1/live/sessions`` response (``tools/voice_live.py::create_webrtc_session``), which the
+
+      vendor owns; the session id and SDP answer are the fields the renderer reads.'
+    properties:
+      ok:
+        type: boolean
+      session:
+        anyOf:
+        - $ref: '#/components/schemas/VoiceLiveSessionInfo'
+        - type: 'null'
+      transport:
+        anyOf:
+        - $ref: '#/components/schemas/VoiceLiveTransport'
+        - type: 'null'
+    required:
+    - ok
+    type: object
+  VoiceLiveStatusResponse:
+    additionalProperties: false
+    description: '``get_voice_live_status`` — ``tools/voice_live.py::resolve_gpt_live_status``.'
+    properties:
+      available:
+        type: boolean
+      mode:
+        enum:
+        - chained
+        - gpt-live
+        type: string
+      model:
+        type: string
+      ok:
+        type: boolean
+      reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      voice:
+        type: string
+    required:
+    - ok
+    - mode
+    - available
+    - reason
+    - model
+    - voice
+    type: object
+  VoiceLiveTransport:
+    additionalProperties: true
+    properties:
+      sdp:
+        anyOf:
+        - type: string
+        - type: 'null'
+      type:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
+operations:
+- method: GET
+  path: /api/audio/elevenlabs/voices
+  x-source: hermes_cli/web_routers/audio.py:207
+  x-handler-hash: 146751c71dbcc12ea6ef809dbd696290cf8f06f8a96c8685cc309aed7b1a143e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ElevenLabsVoicesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ElevenLabsVoicesResponse'
+      description: Successful Response
+- method: GET
+  path: /api/audio/voice-config
+  x-source: hermes_cli/web_routers/audio.py:140
+  x-handler-hash: a57060c08c07bf57d9f990fb44448819dfecf5074cc512102aa876ee073dd2a0
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: VoiceClientConfigResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VoiceClientConfigResponse'
+      description: Successful Response
+- method: GET
+  path: /api/audio/voice-live/status
+  x-source: hermes_cli/web_routers/audio.py:167
+  x-handler-hash: 035ef29e3550c9b1f06995f1155c5c681258c0c63e56a289ec76fb312dd048c7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: VoiceLiveStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VoiceLiveStatusResponse'
+      description: Successful Response
+- method: POST
+  path: /api/audio/speak
+  x-source: hermes_cli/web_routers/audio.py:284
+  x-handler-hash: d2754c48eb90210226f48804d2e6b030294bd8dd2cf77ea292ab082dcdf91a09
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AudioSpeakResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AudioSpeakResponse'
+      description: Successful Response
+- method: POST
+  path: /api/audio/transcribe
+  x-source: hermes_cli/web_routers/audio.py:77
+  x-handler-hash: 2019dcb77ffbb5348969578106993e795a06d1372800ed89097a157cd863db64
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AudioTranscriptionResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AudioTranscriptionResponse'
+      description: Successful Response
+- method: POST
+  path: /api/audio/tts-lease
+  x-source: hermes_cli/web_routers/audio.py:341
+  x-handler-hash: 1fc8a4d485328fcce4ef13fe909357024c5b7ddc3b52509cd571c527615e262f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: TtsLeaseResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TtsLeaseResponse'
+      description: Successful Response
+- method: POST
+  path: /api/audio/voice-live/session
+  x-source: hermes_cli/web_routers/audio.py:177
+  x-handler-hash: bc4f97cfc7663dba40f5da0f435df4693af9671890306735163f116baaa253f4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: VoiceLiveSessionResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VoiceLiveSessionResponse'
+      description: Successful Response

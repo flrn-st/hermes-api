@@ -1,0 +1,81 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  SkillContentResponse:
+    additionalProperties: false
+    description: '``get_skill_content`` — raw SKILL.md text and its absolute path.'
+    properties:
+      content:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+    required:
+    - name
+    - content
+    - path
+    type: object
+  SkillListRow:
+    additionalProperties: false
+    description: '``get_skills`` row: ``tools/skills_tool.py::_find_all_skills`` (``category`` is ``null``
+
+      for a top-level skill) annotated with enabled state, usage count and provenance.'
+    properties:
+      category:
+        anyOf:
+        - type: string
+        - type: 'null'
+      description:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      provenance:
+        enum:
+        - hub
+        - bundled
+        - agent
+        type: string
+      usage:
+        type: integer
+    required:
+    - name
+    - description
+    - category
+    - enabled
+    - usage
+    - provenance
+    type: object
+operations:
+- method: GET
+  path: /api/skills
+  x-source: hermes_cli/web_routers/skills.py:343
+  x-handler-hash: 2c3c560ef27a48e88ffee22a788e306d9c607bc80131645b10d17fac92de6a30
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"items": {"$ref": "#/components/schemas/SkillListRow"}, "type": "array"}'
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SkillListRow'
+- method: GET
+  path: /api/skills/content
+  x-source: hermes_cli/web_routers/skills.py:392
+  x-handler-hash: 5e150c34f040af55a98bd8525e9decfc14793748d3e19468c003e2f0f032f961
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: SkillContentResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillContentResponse'

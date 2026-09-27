@@ -1,0 +1,496 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  AchievementEvidence:
+    additionalProperties: false
+    description: '``evidence_for`` — the session holding the best per-session value for the metric.'
+    properties:
+      session_id:
+        type: string
+      title:
+        type: string
+      value:
+        type: integer
+    required:
+    - session_id
+    - title
+    - value
+    type: object
+  AchievementItem:
+    additionalProperties: false
+    description: 'One ``ACHIEVEMENTS`` definition merged with its evaluation (``_result``) and passed through
+
+      ``display_achievement``. Tiered badges carry ``threshold_metric`` + ``tiers``, multi-condition
+
+      ones ``requirements``. A hidden secret is masked (``name`` ``"???"``, ``icon`` ``"secret"``).
+
+      ``unlocked_at`` / ``evidence`` appear on unlocked badges of a snapshot (``unlocked_at`` is null
+
+      for an unlock seen only by an in-flight partial scan).'
+    properties:
+      category:
+        type: string
+      criteria:
+        type: string
+      description:
+        type: string
+      discovered:
+        type: boolean
+      evidence:
+        anyOf:
+        - $ref: '#/components/schemas/AchievementEvidence'
+        - type: 'null'
+      icon:
+        type: string
+      id:
+        type: string
+      kind:
+        enum:
+        - lifetime
+        - best_session
+        - multi_condition
+        type: string
+      name:
+        type: string
+      next_threshold:
+        type: integer
+      next_tier:
+        anyOf:
+        - type: string
+        - type: 'null'
+      progress:
+        type: integer
+      progress_pct:
+        type: integer
+      requirements:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/AchievementRequirement'
+          type: array
+        - type: 'null'
+      secret:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      state:
+        enum:
+        - unlocked
+        - discovered
+        - secret
+        type: string
+      threshold_metric:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tier:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tiers:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/AchievementTier'
+          type: array
+        - type: 'null'
+      unlocked:
+        type: boolean
+      unlocked_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - id
+    - name
+    - description
+    - category
+    - kind
+    - icon
+    - unlocked
+    - discovered
+    - state
+    - tier
+    - progress
+    - next_tier
+    - next_threshold
+    - progress_pct
+    - criteria
+    type: object
+  AchievementRequirement:
+    additionalProperties: false
+    properties:
+      gte:
+        type: integer
+      metric:
+        type: string
+    required:
+    - metric
+    - gte
+    type: object
+  AchievementRescanResponse:
+    additionalProperties: false
+    description: '``rescan`` — ``{"ok": true}`` plus the full ``_snapshot`` payload of a synchronous scan.'
+    properties:
+      achievements:
+        items:
+          $ref: '#/components/schemas/AchievementItem'
+        type: array
+      aggregate:
+        additionalProperties:
+          type: integer
+        type: object
+      discovered_count:
+        type: integer
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      generated_at:
+        type: integer
+      ok:
+        type: boolean
+      scan_meta:
+        $ref: '#/components/schemas/AchievementScanMeta'
+      secret_count:
+        type: integer
+      sessions:
+        items:
+          $ref: '#/components/schemas/AchievementSessionStats'
+        type: array
+      total_count:
+        type: integer
+      unlocked_count:
+        type: integer
+    required:
+    - ok
+    - achievements
+    - sessions
+    - aggregate
+    - scan_meta
+    - error
+    - unlocked_count
+    - discovered_count
+    - secret_count
+    - total_count
+    - generated_at
+    type: object
+  AchievementResetResponse:
+    additionalProperties: false
+    description: '``reset_state``.'
+    properties:
+      ok:
+        type: boolean
+    required:
+    - ok
+    type: object
+  AchievementScanMeta:
+    additionalProperties: false
+    description: '``_scan_meta``; the ``sessions_*_so_far`` / ``expected_total`` pair only on real scans.'
+    properties:
+      mode:
+        enum:
+        - full
+        - incremental
+        - in_progress
+        - pending
+        - failed
+        type: string
+      sessions_expected_total:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      sessions_rescanned:
+        type: integer
+      sessions_reused:
+        type: integer
+      sessions_scanned_so_far:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      sessions_total:
+        type: integer
+    required:
+    - mode
+    - sessions_total
+    - sessions_rescanned
+    - sessions_reused
+    type: object
+  AchievementScanMetaWithStatus:
+    additionalProperties: false
+    properties:
+      mode:
+        enum:
+        - full
+        - incremental
+        - in_progress
+        - pending
+        - failed
+        type: string
+      sessions_expected_total:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      sessions_rescanned:
+        type: integer
+      sessions_reused:
+        type: integer
+      sessions_scanned_so_far:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      sessions_total:
+        type: integer
+      status:
+        $ref: '#/components/schemas/AchievementScanStatus'
+    required:
+    - mode
+    - sessions_total
+    - sessions_rescanned
+    - sessions_reused
+    - status
+    type: object
+  AchievementScanStatus:
+    additionalProperties: false
+    description: '``_scan_status_payload`` — ``_SCAN_STATUS`` plus the snapshot freshness fields.'
+    properties:
+      finished_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      last_duration_ms:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      last_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      run_count:
+        type: integer
+      snapshot_age_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      snapshot_generated_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      snapshot_stale:
+        type: boolean
+      started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      state:
+        enum:
+        - idle
+        - running
+        - failed
+        type: string
+      ttl_seconds:
+        type: integer
+    required:
+    - state
+    - started_at
+    - finished_at
+    - last_error
+    - last_duration_ms
+    - run_count
+    - ttl_seconds
+    - snapshot_generated_at
+    - snapshot_age_seconds
+    - snapshot_stale
+    type: object
+  AchievementSessionBadgesResponse:
+    additionalProperties: false
+    description: '``session_badges`` — badges the one session unlocks on its own (``[]`` when unknown).'
+    properties:
+      badges:
+        items:
+          $ref: '#/components/schemas/AchievementItem'
+        type: array
+      session_id:
+        type: string
+    required:
+    - session_id
+    - badges
+    type: object
+  AchievementSessionStats:
+    additionalProperties:
+      type: integer
+    description: 'One per-session ``analyze_messages`` row (checkpointed) with the session fields
+
+      ``scan_sessions`` adds. Every other key is an integer counter (``*_calls``, ``*_count``,
+
+      ``*_events``).'
+    properties:
+      last_active:
+        anyOf:
+        - type: number
+        - type: 'null'
+      model_names:
+        items:
+          type: string
+        type: array
+      port_conflict:
+        type: boolean
+      session_id:
+        type: string
+      source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      title:
+        type: string
+      tool_names:
+        items:
+          type: string
+        type: array
+    required:
+    - session_id
+    - title
+    - started_at
+    - last_active
+    - source
+    - tool_names
+    - model_names
+    - port_conflict
+    type: object
+  AchievementTier:
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+      threshold:
+        type: integer
+    required:
+    - name
+    - threshold
+    type: object
+  AchievementsResponse:
+    additionalProperties: false
+    description: '``achievements`` — the current snapshot (``evaluate_all``) without its per-session rows.'
+    properties:
+      achievements:
+        items:
+          $ref: '#/components/schemas/AchievementItem'
+        type: array
+      discovered_count:
+        type: integer
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      generated_at:
+        type: integer
+      is_stale:
+        type: boolean
+      scan_meta:
+        $ref: '#/components/schemas/AchievementScanMetaWithStatus'
+      secret_count:
+        type: integer
+      total_count:
+        type: integer
+      unlocked_count:
+        type: integer
+    required:
+    - achievements
+    - unlocked_count
+    - discovered_count
+    - secret_count
+    - total_count
+    - error
+    - generated_at
+    - is_stale
+    - scan_meta
+    type: object
+operations:
+- method: GET
+  path: /api/plugins/hermes-achievements/achievements
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:843
+  x-handler-hash: b9bff06c4c0e2b14e6cf6325b1d68a2af715a3a1b23132161dc8ff16f9f2844c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AchievementsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AchievementsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/hermes-achievements/recent-unlocks
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:857
+  x-handler-hash: 40bf1e183867aa87a3346791046216734860506db18be52f849e9c2d4e9770be
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"items": {"$ref": "#/components/schemas/AchievementItem"}, "type": "array"}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/AchievementItem'
+            type: array
+      description: Successful Response
+- method: GET
+  path: /api/plugins/hermes-achievements/scan-status
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:852
+  x-handler-hash: 666ca4a4b6f551381f6bde08b8458107a021d64ccead44a639be28aec568be9c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AchievementScanStatus
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AchievementScanStatus'
+      description: Successful Response
+- method: GET
+  path: /api/plugins/hermes-achievements/sessions/{session_id}/badges
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:863
+  x-handler-hash: ed899ecef1af957e8a252fe3966d14fad731855ade01e9b235125fd00052d5e7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AchievementSessionBadgesResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AchievementSessionBadgesResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/hermes-achievements/rescan
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:874
+  x-handler-hash: 7155556e376df9ac0193a8a6297755394b3d6f493f7effa678c247722e8a1c00
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AchievementRescanResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AchievementRescanResponse'
+      description: Successful Response
+- method: POST
+  path: /api/plugins/hermes-achievements/reset-state
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:879
+  x-handler-hash: 971fb19e2621f8799482d12d4eb915375507d0fc5d9500b67fde24444f202294
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: AchievementResetResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AchievementResetResponse'
+      description: Successful Response

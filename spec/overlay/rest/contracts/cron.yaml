@@ -1,0 +1,685 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  CronBlueprint:
+    additionalProperties: false
+    description: '``cron/blueprint_catalog.py::blueprint_catalog_entry``.'
+    properties:
+      appUrl:
+        description: '``hermes://blueprint/...`` deep link.'
+        type: string
+      category:
+        type: string
+      command:
+        description: Ready-to-paste ``/blueprint`` slash command.
+        type: string
+      description:
+        type: string
+      fields:
+        items:
+          $ref: '#/components/schemas/CronBlueprintField'
+        type: array
+      key:
+        type: string
+      schedule:
+        description: Cron expression template with ``{slot}`` placeholders.
+        type: string
+      scheduleHuman:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - key
+    - title
+    - description
+    - category
+    - tags
+    - fields
+    - schedule
+    - scheduleHuman
+    - command
+    - appUrl
+    type: object
+  CronBlueprintField:
+    additionalProperties: false
+    description: One ``cron/blueprint_catalog.py::BlueprintSlot`` as a form field.
+    properties:
+      default:
+        anyOf:
+        - type: string
+        - type: 'null'
+      help:
+        type: string
+      label:
+        type: string
+      name:
+        type: string
+      optional:
+        type: boolean
+      options:
+        items:
+          type: string
+        type: array
+      strict:
+        description: 'False: ``options`` are suggestions, any value is accepted.'
+        type: boolean
+      type:
+        enum:
+        - time
+        - enum
+        - text
+        - weekdays
+        type: string
+    required:
+    - name
+    - type
+    - label
+    - default
+    - options
+    - optional
+    - strict
+    - help
+    type: object
+  CronBlueprintsResponse:
+    additionalProperties: false
+    description: '``list_cron_blueprints``.'
+    properties:
+      blueprints:
+        items:
+          $ref: '#/components/schemas/CronBlueprint'
+        type: array
+    required:
+    - blueprints
+    type: object
+  CronDeliveryTarget:
+    additionalProperties: false
+    description: '``cron/scheduler_delivery.py::cron_delivery_targets`` (plus the implicit ``local`` row).'
+    properties:
+      home_env_var:
+        anyOf:
+        - type: string
+        - type: 'null'
+      home_target_set:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+    required:
+    - id
+    - name
+    - home_target_set
+    - home_env_var
+    type: object
+  CronDeliveryTargetsResponse:
+    additionalProperties: false
+    description: '``get_cron_delivery_targets``.'
+    properties:
+      targets:
+        items:
+          $ref: '#/components/schemas/CronDeliveryTarget'
+        type: array
+    required:
+    - targets
+    type: object
+  CronFireResponse:
+    additionalProperties: false
+    description: '``cron_fire_webhook`` success: its own ``gone``/``gateway_stopped`` answers, or the
+
+      gateway api_server''s (``gateway/platforms/api_server.py::_handle_cron_fire``) passed through:
+
+      ``accepted`` (202) or ``duplicate`` (200).'
+    properties:
+      detail:
+        anyOf:
+        - type: string
+        - type: 'null'
+      job_id:
+        type: string
+      profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+      status:
+        description: '"gone", "gateway_stopped", "duplicate" or "accepted".'
+        type: string
+    required:
+    - status
+    - job_id
+    type: object
+  CronJob:
+    additionalProperties: true
+    description: 'One ``jobs.json`` record as the dashboard sees it: ``cron/jobs.py::create_job`` fields
+
+      (read paths go through ``_normalize_job_record``) plus the profile annotation of
+
+      ``hermes_cli/web_server_cron.py::_annotate_cron_job``.
+
+
+      Open because the scheduler stamps bookkeeping keys onto the record (``run_claim``,
+
+      ``fire_claim``, ``pending_slot``, ``preflight_alerted``, quota-hold state, ...). Keys that
+
+      ``create_job`` always writes are still optional here: legacy/hand-edited records may predate
+
+      them, and readers fall back (``enabled`` defaults to true).'
+    properties:
+      attach_to_session:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      context_from:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      created_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      deliver:
+        anyOf:
+        - type: string
+        - type: 'null'
+      enabled:
+        default: true
+        type: boolean
+      enabled_toolsets:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      failure_deliver:
+        anyOf:
+        - type: string
+        - type: 'null'
+      failure_streak:
+        default: 0
+        type: integer
+      hermes_home:
+        type: string
+      id:
+        type: string
+      is_default_profile:
+        type: boolean
+      last_delivery_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_delivery_unverified:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+        description: '``platform:chat_id`` targets acked without delivery evidence.'
+      last_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_fire_error:
+        anyOf:
+        - $ref: '#/components/schemas/CronJobFireError'
+        - type: 'null'
+      last_run_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_status:
+        anyOf:
+        - type: string
+        - type: 'null'
+      latest_execution:
+        anyOf:
+        - $ref: '#/components/schemas/CronJobExecution'
+        - type: 'null'
+        description: Only on list rows (``cron/jobs.py::list_jobs``); null when never executed.
+      manual_run_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      manual_run_prompt:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      monitor_script:
+        anyOf:
+        - type: string
+        - type: 'null'
+      monitor_state:
+        anyOf:
+        - $ref: '#/components/schemas/CronJobMonitorState'
+        - type: 'null'
+      monitor_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      next_run_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      no_agent:
+        default: false
+        type: boolean
+      origin:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      paused_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      paused_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      profile:
+        type: string
+      profile_name:
+        type: string
+      prompt:
+        type: string
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      repeat:
+        anyOf:
+        - $ref: '#/components/schemas/CronJobRepeat'
+        - type: 'null'
+      schedule:
+        $ref: '#/components/schemas/CronJobSchedule'
+      schedule_display:
+        type: string
+      scheduler_heartbeat_age_s:
+        anyOf:
+        - type: number
+        - type: 'null'
+        description: Seconds since the profile's ticker last iterated; null when never/unknown.
+      script:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skill:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Legacy single-skill alias: the first of ``skills``.'
+      skills:
+        items:
+          type: string
+        type: array
+      state:
+        description: Effective state; "scheduled", "paused", "completed" or "error".
+        type: string
+      workdir:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - name
+    - prompt
+    - skills
+    - skill
+    - schedule
+    - schedule_display
+    - state
+    - profile
+    - profile_name
+    - hermes_home
+    - is_default_profile
+    - scheduler_heartbeat_age_s
+    type: object
+  CronJobExecution:
+    additionalProperties: false
+    description: One ``executions`` row of ``cron/executions.db`` (``cron/executions.py::latest_executions``).
+    properties:
+      claimed_at:
+        type: string
+      delivery_outcome:
+        anyOf:
+        - type: string
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      finished_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_pending:
+        type: integer
+      handoff_started_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      id:
+        type: string
+      job_id:
+        type: string
+      pid:
+        type: integer
+      process_id:
+        type: string
+      process_started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      scheduled_instant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        type: string
+      started_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      status:
+        enum:
+        - claimed
+        - running
+        - completed
+        - failed
+        - unknown
+        type: string
+    required:
+    - id
+    - job_id
+    - source
+    - process_id
+    - pid
+    - process_started_at
+    - status
+    - handoff_pending
+    - handoff_started_at
+    - claimed_at
+    - started_at
+    - finished_at
+    - error
+    - delivery_outcome
+    - scheduled_instant
+    type: object
+  CronJobFireError:
+    additionalProperties: false
+    description: '``cron/jobs.py::note_fire_forward_failure``.'
+    properties:
+      at:
+        type: string
+      detail:
+        type: string
+    required:
+    - at
+    - detail
+    type: object
+  CronJobMonitorState:
+    additionalProperties: false
+    description: '``cron/monitor.py::_persist_monitor_state``.'
+    properties:
+      last_changed_at:
+        type: string
+      last_output_hash:
+        type: string
+    required:
+    - last_output_hash
+    - last_changed_at
+    type: object
+  CronJobRepeat:
+    additionalProperties: false
+    properties:
+      completed:
+        type: integer
+      times:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        description: None = forever.
+    required:
+    - times
+    - completed
+    type: object
+  CronJobSchedule:
+    additionalProperties: true
+    description: '``cron/jobs.py::parse_schedule``; open because hand-edited/legacy records may carry other
+
+      keys (``_schedule_display_for_job`` still reads a legacy ``value``).'
+    properties:
+      display:
+        anyOf:
+        - type: string
+        - type: 'null'
+      expr:
+        anyOf:
+        - type: string
+        - type: 'null'
+      kind:
+        enum:
+        - once
+        - interval
+        - cron
+        type: string
+      minutes:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      run_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - kind
+    type: object
+operations:
+- method: DELETE
+  path: /api/cron/jobs/{job_id}
+  x-source: hermes_cli/web_routers/cron.py:297
+  x-handler-hash: 89403ea7244d2f1fa9488d6bbdc3d21a1d1b0e820b112ee8e9359b0739691c33
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: OkResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OkResponse'
+      description: Successful Response
+- method: GET
+  path: /api/cron/blueprints
+  x-source: hermes_cli/web_routers/cron.py:393
+  x-handler-hash: 693fe2615e2d6542f62e61555fe653df572516ca6ca95128a5bb1814bcf68c21
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronBlueprintsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronBlueprintsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/cron/delivery-targets
+  x-source: hermes_cli/web_routers/cron.py:253
+  x-handler-hash: 7be3b632f992418eacd3f54ec94c23fc90ac5118d0f96dd4d7bd8e7ec8c9374f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronDeliveryTargetsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronDeliveryTargetsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/cron/jobs
+  x-source: hermes_cli/web_routers/cron.py:233
+  x-handler-hash: 7f6c0fc87fd91b05b1a09b23b5448b51afe8da96dab7a80d196cffb6c7e90813
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: '{"items": {"$ref": "#/components/schemas/CronJob"}, "type": "array"}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/CronJob'
+            type: array
+      description: Successful Response
+- method: GET
+  path: /api/cron/jobs/{job_id}
+  x-source: hermes_cli/web_routers/cron.py:238
+  x-handler-hash: 00532fe91749c44b1588471ad874ab1c8c3b5b155af8aa4ea4d5d2412cf0a6ed
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJob'
+      description: Successful Response
+- method: GET
+  path: /api/cron/jobs/{job_id}/runs
+  x-source: hermes_cli/web_routers/cron.py:243
+  x-handler-hash: 9d8373548f189891c2309a5cdc73089f4e3af724f39461f7ff49985239644766
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJobRunsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJobRunsResponse'
+      description: Successful Response
+- method: POST
+  path: /api/cron/blueprints/instantiate
+  x-source: hermes_cli/web_routers/cron.py:424
+  x-handler-hash: e350c8be285731cde2dffa844b3ad40961b7d2011ca754328dbe8cb036c8c357
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJob'
+      description: Successful Response
+- method: POST
+  path: /api/cron/fire
+  x-source: hermes_cli/web_routers/cron.py:302
+  x-handler-hash: b222191afbb175e46b4fa0df17fd519e4167c18b8c7c490adf6becd34dbc54a4
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronFireResponse, CronFireResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronFireResponse'
+      description: Successful Response
+    '202':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronFireResponse'
+      description: Accepted
+- method: POST
+  path: /api/cron/jobs
+  x-source: hermes_cli/web_routers/cron.py:248
+  x-handler-hash: b9e36c32818fb251f255ab7090d63d0dee154b76b17b9de63267bdf2bd30f7b1
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJob'
+      description: Successful Response
+- method: POST
+  path: /api/cron/jobs/{job_id}/pause
+  x-source: hermes_cli/web_routers/cron.py:282
+  x-handler-hash: d01f80b4e9e8ddd419b6ba8ea877b0224bc734da6e652ce5c686f622267d02e6
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJob'
+      description: Successful Response
+- method: POST
+  path: /api/cron/jobs/{job_id}/resume
+  x-source: hermes_cli/web_routers/cron.py:287
+  x-handler-hash: 32a9838ceef5e1c1b58db7ecbfc2943eb532b83b8642194f363f9269104f24dc
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJob'
+      description: Successful Response
+- method: POST
+  path: /api/cron/jobs/{job_id}/trigger
+  x-source: hermes_cli/web_routers/cron.py:292
+  x-handler-hash: 55b5134b1aaf9d12f8b9f60062ba01c0e8fb12a27f8404bc0fec6930d9488820
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJob'
+      description: Successful Response
+- method: PUT
+  path: /api/cron/jobs/{job_id}
+  x-source: hermes_cli/web_routers/cron.py:277
+  x-handler-hash: 97093fe341ae3b7ceb5aca947ef572203823521f0b8d63de53f70151d9d8ef26
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: CronJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CronJob'
+      description: Successful Response

@@ -1,0 +1,30 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+operations:
+- method: GET
+  path: /api/files/download
+  x-source: hermes_cli/web_routers/files.py:453
+  x-handler-hash: 3d6cfdabd046ad0faedf14f272c10fda29d2b57c234d63a881717cd57d08de98
+  responses:
+    '200':
+      description: The file bytes; ``Content-Type`` is the MIME type guessed from the file name (``application/octet-stream``
+        when unknown), so any media type is possible.
+      content:
+        '*/*':
+          schema:
+            type: string
+            format: binary
+- method: GET
+  path: /api/fs/download
+  x-source: hermes_cli/web_routers/files.py:733
+  x-handler-hash: e5cd25f6048dd9aba592ca68758fd9505ceb0c72d5165af0ec94cf9ea7b127aa
+  responses:
+    '200':
+      description: The file bytes as an attachment; ``Content-Type`` comes from ``_fs_mime_type`` (fixed suffix
+        table, else the MIME type guessed from the name, else ``application/octet-stream``), so any media type is
+        possible.
+      content:
+        '*/*':
+          schema:
+            type: string
+            format: binary

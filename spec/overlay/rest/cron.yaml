@@ -1,0 +1,301 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  CronJobRunSession:
+    additionalProperties: true
+    description: 'One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression
+
+      lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool,
+
+      ``pinned`` stays SQLite 0/1.'
+    properties:
+      actual_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      api_call_count:
+        type: integer
+      archived:
+        type: boolean
+      billing_base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_mode:
+        anyOf:
+        - type: string
+        - type: 'null'
+      billing_provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cache_read_tokens:
+        type: integer
+      cache_write_tokens:
+        type: integer
+      chat_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      chat_type:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_failure_cooldown_until:
+        anyOf:
+        - type: number
+        - type: 'null'
+      compression_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compression_fallback_streak:
+        type: integer
+      compression_ineffective_count:
+        type: integer
+      compression_recovery_deadline:
+        anyOf:
+        - type: number
+        - type: 'null'
+      cost_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cost_status:
+        anyOf:
+        - type: string
+        - type: 'null'
+      cwd:
+        anyOf:
+        - type: string
+        - type: 'null'
+      display_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      end_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ended_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      estimated_cost_usd:
+        anyOf:
+        - type: number
+        - type: 'null'
+      expiry_finalized:
+        type: integer
+      git_branch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      git_metadata_generation:
+        type: integer
+      git_repo_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_platform:
+        anyOf:
+        - type: string
+        - type: 'null'
+      handoff_state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      hidden:
+        type: integer
+      id:
+        type: string
+      input_tokens:
+        type: integer
+      is_active:
+        type: boolean
+      last_active:
+        type: number
+      last_activity_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      last_activity_description:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_activity_provenance:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_read_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+        description: Read watermark; ``0`` = marked unread, null = never tracked.
+      message_count:
+        type: integer
+      model:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model_config:
+        anyOf:
+        - type: string
+        - type: 'null'
+      origin_json:
+        anyOf:
+        - type: string
+        - type: 'null'
+      output_tokens:
+        type: integer
+      parent_session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      pinned:
+        type: integer
+      preview:
+        type: string
+      pricing_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+      profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Absent when no profile holds the job.
+      profile_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_tokens:
+        type: integer
+      rewind_count:
+        type: integer
+      session_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        type: string
+      started_at:
+        type: number
+      system_prompt:
+        anyOf:
+        - type: string
+        - type: 'null'
+      system_prompt_hash:
+        anyOf:
+        - type: string
+        - type: 'null'
+      thread_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_call_count:
+        type: integer
+      tool_names:
+        anyOf:
+        - type: string
+        - type: 'null'
+      transport_profile:
+        anyOf:
+        - type: string
+        - type: 'null'
+      user_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - source
+    - user_id
+    - session_key
+    - chat_id
+    - chat_type
+    - thread_id
+    - display_name
+    - origin_json
+    - expiry_finalized
+    - model
+    - parent_session_id
+    - started_at
+    - ended_at
+    - end_reason
+    - message_count
+    - tool_call_count
+    - input_tokens
+    - output_tokens
+    - cache_read_tokens
+    - cache_write_tokens
+    - reasoning_tokens
+    - cwd
+    - git_branch
+    - git_repo_root
+    - billing_provider
+    - billing_base_url
+    - billing_mode
+    - estimated_cost_usd
+    - actual_cost_usd
+    - cost_status
+    - cost_source
+    - pricing_version
+    - title
+    - title_source
+    - last_activity_at
+    - last_activity_description
+    - last_activity_provenance
+    - api_call_count
+    - handoff_state
+    - handoff_platform
+    - handoff_error
+    - compression_failure_cooldown_until
+    - compression_failure_error
+    - compression_fallback_streak
+    - compression_ineffective_count
+    - compression_recovery_deadline
+    - profile_name
+    - transport_profile
+    - rewind_count
+    - hidden
+    - last_read_at
+    - tool_names
+    - archived
+    - pinned
+    - preview
+    - last_active
+    - is_active
+    - model_config
+    - system_prompt
+    - system_prompt_hash
+    - git_metadata_generation
+    type: object
+  CronJobRunsResponse:
+    additionalProperties: false
+    description: '``_list_cron_job_runs_sync`` — the job''s run sessions (``SessionDB.list_cron_job_runs``), newest
+      first, annotated with ``is_active``/``archived`` and ``profile`` when a profile holds the job.'
+    properties:
+      limit:
+        type: integer
+      runs:
+        items:
+          $ref: '#/components/schemas/CronJobRunSession'
+        type: array
+    required:
+    - runs
+    - limit
+    type: object
+operations: []

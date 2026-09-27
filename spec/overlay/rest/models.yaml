@@ -1,0 +1,42 @@
+# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
+# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+components:
+  ModelInfoResponse:
+    additionalProperties: false
+    description: '``get_model_info``.'
+    properties:
+      auto_context_length:
+        type: integer
+      capabilities:
+        $ref: '#/components/schemas/ModelsDevCapabilities'
+      config_context_length:
+        type: integer
+      effective_context_length:
+        type: integer
+      model:
+        type: string
+      provider:
+        type: string
+    required:
+    - model
+    - provider
+    - auto_context_length
+    - config_context_length
+    - effective_context_length
+    - capabilities
+    type: object
+operations:
+- method: GET
+  path: /api/model/info
+  x-source: hermes_cli/web_routers/models.py:53
+  x-handler-hash: ba2daca241b5923b0baa33f8bf7747d29a11b3ca58c44f0363b7feca2d2d25ce
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ModelInfoResponse
+  responses:
+    '200':
+      description: Successful Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ModelInfoResponse'

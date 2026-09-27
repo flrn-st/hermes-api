@@ -28,6 +28,8 @@ _OPERATIONS = {
 
 
 def _media_matches(media: str, documented: str) -> bool:
+    if documented == "*/*":
+        return True
     if documented.endswith("/*"):
         return media.startswith(documented[:-1])
     return media == documented

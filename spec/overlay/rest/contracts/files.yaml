@@ -1,0 +1,532 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  ChatImageUploadResponse:
+    additionalProperties: false
+    description: '``upload_chat_image``: where the clipboard image landed under ``HERMES_HOME/images/``.'
+    properties:
+      bytes:
+        type: integer
+      mime_type:
+        type: string
+      name:
+        type: string
+      ok:
+        type: boolean
+      path:
+        type: string
+    required:
+    - ok
+    - path
+    - name
+    - bytes
+    - mime_type
+    type: object
+  FsDataUrlResponse:
+    additionalProperties: false
+    description: '``fs_read_data_url``.'
+    properties:
+      dataUrl:
+        type: string
+    required:
+    - dataUrl
+    type: object
+  FsDefaultCwdResponse:
+    additionalProperties: false
+    description: '``fs_default_cwd``; ``branch`` is ``""`` outside a git checkout or on a detached HEAD.'
+    properties:
+      branch:
+        type: string
+      cwd:
+        type: string
+    required:
+    - cwd
+    - branch
+    type: object
+  FsGitRootResponse:
+    additionalProperties: false
+    description: '``fs_git_root``: the nearest ancestor holding ``.git``, else null.'
+    properties:
+      root:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - root
+    type: object
+  FsListEntry:
+    additionalProperties: false
+    properties:
+      isDirectory:
+        type: boolean
+      name:
+        type: string
+      path:
+        type: string
+    required:
+    - name
+    - path
+    - isDirectory
+    type: object
+  FsListResponse:
+    additionalProperties: false
+    description: '``fs_list``. A read failure is a 200 with ``entries: []`` and ``error`` (an errno name
+
+      such as ``ENOENT``, else the OS ``strerror`` or ``"read-error"``).'
+    properties:
+      entries:
+        items:
+          $ref: '#/components/schemas/FsListEntry'
+        type: array
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - entries
+    type: object
+  FsReadTextResponse:
+    additionalProperties: false
+    description: '``fs_read_text``: a UTF-8 (``replace``) preview capped at 512 KiB.'
+    properties:
+      binary:
+        type: boolean
+      byteSize:
+        type: integer
+      language:
+        type: string
+      mimeType:
+        type: string
+      path:
+        type: string
+      text:
+        type: string
+      truncated:
+        type: boolean
+    required:
+    - binary
+    - byteSize
+    - language
+    - mimeType
+    - path
+    - text
+    - truncated
+    type: object
+  FsWriteTextResponse:
+    additionalProperties: false
+    description: '``fs_write_text``.'
+    properties:
+      byteSize:
+        type: integer
+      ok:
+        type: boolean
+      path:
+        type: string
+    required:
+    - ok
+    - path
+    - byteSize
+    type: object
+  ManagedFileDeleteResponse:
+    additionalProperties: false
+    description: '``delete_managed_file``.'
+    properties:
+      can_change_path:
+        type: boolean
+      locked_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      path:
+        type: string
+      root:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - root
+    - locked_root
+    - can_change_path
+    - ok
+    - path
+    type: object
+  ManagedFileEntry:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_files.py::_managed_file_entry``; ``size``/``mime_type`` are null
+
+      for directories.'
+    properties:
+      is_directory:
+        type: boolean
+      mime_type:
+        anyOf:
+        - type: string
+        - type: 'null'
+      mtime:
+        type: number
+      name:
+        type: string
+      path:
+        type: string
+      size:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - name
+    - path
+    - is_directory
+    - size
+    - mtime
+    - mime_type
+    type: object
+  ManagedFileListResponse:
+    additionalProperties: false
+    description: '``list_managed_files``; ``parent`` is null at the filesystem or locked root.'
+    properties:
+      can_change_path:
+        type: boolean
+      entries:
+        items:
+          $ref: '#/components/schemas/ManagedFileEntry'
+        type: array
+      locked_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      parent:
+        anyOf:
+        - type: string
+        - type: 'null'
+      path:
+        type: string
+      root:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - root
+    - locked_root
+    - can_change_path
+    - path
+    - parent
+    - entries
+    type: object
+  ManagedFileReadResponse:
+    additionalProperties: false
+    description: '``read_managed_file``.'
+    properties:
+      can_change_path:
+        type: boolean
+      data_url:
+        type: string
+      locked_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      mime_type:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      size:
+        type: integer
+    required:
+    - root
+    - locked_root
+    - can_change_path
+    - name
+    - path
+    - size
+    - mime_type
+    - data_url
+    type: object
+  ManagedFileWriteResponse:
+    additionalProperties: false
+    description: '``_managed_write_result`` (upload, upload-stream, mkdir).'
+    properties:
+      can_change_path:
+        type: boolean
+      entry:
+        $ref: '#/components/schemas/ManagedFileEntry'
+      locked_root:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ok:
+        type: boolean
+      path:
+        type: string
+      root:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - root
+    - locked_root
+    - can_change_path
+    - ok
+    - entry
+    - path
+    type: object
+  MediaDataUrlResponse:
+    additionalProperties: false
+    description: '``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL.'
+    properties:
+      data_url:
+        type: string
+    required:
+    - data_url
+    type: object
+operations:
+- method: DELETE
+  path: /api/files
+  x-source: hermes_cli/web_routers/files.py:586
+  x-handler-hash: b4ece9ba0cc0ca48c8bbdb8a8e4b303ffb3db5aa7f13ffa588d4a3859efcb7a2
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ManagedFileDeleteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ManagedFileDeleteResponse'
+      description: Successful Response
+- method: GET
+  path: /api/files
+  x-source: hermes_cli/web_routers/files.py:367
+  x-handler-hash: 41a325c9eeefd33497b9210f8329d3b6fe939f065d3174930a32a330aa5f3af5
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ManagedFileListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ManagedFileListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/files/read
+  x-source: hermes_cli/web_routers/files.py:416
+  x-handler-hash: cd9b110ff0a5f0a5b1598a0a8e48a1b8ce420205008764a33556a7f1f407f55c
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ManagedFileReadResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ManagedFileReadResponse'
+      description: Successful Response
+- method: GET
+  path: /api/files/stream
+  x-source: hermes_cli/web_routers/files.py:473
+  x-handler-hash: 0d876328c99838373b188850c6f5f070f92692d764a96e6841bcb1b5ae138642
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 application/octet-stream, 200 audio/*, 200 video/*
+  responses:
+    '200':
+      content:
+        application/octet-stream:
+          schema:
+            format: binary
+            type: string
+        audio/*:
+          schema:
+            format: binary
+            type: string
+        video/*:
+          schema:
+            format: binary
+            type: string
+      description: Range-aware inline audio/video bytes (streamable extensions only); ``Content-Type`` is the guessed
+        MIME type, ``application/octet-stream`` when unknown.
+- method: GET
+  path: /api/fs/default-cwd
+  x-source: hermes_cli/web_routers/files.py:757
+  x-handler-hash: 6ee97da04434c3986188b2b607a64d0e1747a45a5b03f12cc996eff6e1fa7045
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: FsDefaultCwdResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FsDefaultCwdResponse'
+      description: Successful Response
+- method: GET
+  path: /api/fs/git-root
+  x-source: hermes_cli/web_routers/files.py:746
+  x-handler-hash: cc772e1c3a3fd8832beff2f68794fae1df05f024a12d34f50025718181a13242
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: FsGitRootResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FsGitRootResponse'
+      description: Successful Response
+- method: GET
+  path: /api/fs/list
+  x-source: hermes_cli/web_routers/files.py:617
+  x-handler-hash: 3924edb584a79d01139811fd11282e5fb5d1631d70b3e3e91aea2e74fa9add00
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: FsListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FsListResponse'
+      description: Successful Response
+- method: GET
+  path: /api/fs/read-data-url
+  x-source: hermes_cli/web_routers/files.py:719
+  x-handler-hash: 5efb0c022762ffee9d471009f1dabf7af8adcda035a54b36bd3932f6948725a7
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: FsDataUrlResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FsDataUrlResponse'
+      description: Successful Response
+- method: GET
+  path: /api/fs/read-text
+  x-source: hermes_cli/web_routers/files.py:640
+  x-handler-hash: 3b25d065684e17480c859f381b7b18bbb3cdacddfdeef0b28ecd0de12e78aeb9
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: FsReadTextResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FsReadTextResponse'
+      description: Successful Response
+- method: GET
+  path: /api/media
+  x-source: hermes_cli/web_routers/files.py:251
+  x-handler-hash: 1fb78a58e27d32f603b30c55189b6cbf549cc57814115fede53607f823759124
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: MediaDataUrlResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MediaDataUrlResponse'
+      description: Successful Response
+- method: HEAD
+  path: /api/files/stream
+  x-source: hermes_cli/web_routers/files.py:473
+  x-handler-hash: 0d876328c99838373b188850c6f5f070f92692d764a96e6841bcb1b5ae138642
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: 200 application/octet-stream, 200 audio/*, 200 video/*
+  responses:
+    '200':
+      content:
+        application/octet-stream:
+          schema:
+            format: binary
+            type: string
+        audio/*:
+          schema:
+            format: binary
+            type: string
+        video/*:
+          schema:
+            format: binary
+            type: string
+      description: Range-aware inline audio/video bytes (streamable extensions only); ``Content-Type`` is the guessed
+        MIME type, ``application/octet-stream`` when unknown.
+- method: POST
+  path: /api/chat/image-upload
+  x-source: hermes_cli/web_routers/files.py:330
+  x-handler-hash: 3e96c11b75e06412c0ac465a747a496662a698034d45c2c63d84955b46c94bac
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ChatImageUploadResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChatImageUploadResponse'
+      description: Successful Response
+- method: POST
+  path: /api/files/mkdir
+  x-source: hermes_cli/web_routers/files.py:576
+  x-handler-hash: 91d0a999747dde2d4d529fb1aa99b2ebb566ee1ec4bd6a29a65596d416356994
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ManagedFileWriteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ManagedFileWriteResponse'
+      description: Successful Response
+- method: POST
+  path: /api/files/upload
+  x-source: hermes_cli/web_routers/files.py:501
+  x-handler-hash: ea51fcad11d2d5c9da292d53e22dbbea92145a69a008349ad1b731b18516a36e
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ManagedFileWriteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ManagedFileWriteResponse'
+      description: Successful Response
+- method: POST
+  path: /api/files/upload-stream
+  x-source: hermes_cli/web_routers/files.py:555
+  x-handler-hash: b7dbc2f2bfe00b24ccef624bd9a934a386c7be03d7f22500c20e49402aabe80f
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: ManagedFileWriteResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ManagedFileWriteResponse'
+      description: Successful Response
+- method: POST
+  path: /api/fs/write-text
+  x-source: hermes_cli/web_routers/files.py:659
+  x-handler-hash: 5bfe416b66338c1cccd076d45ea0e87d571f5eafa4621eefb64fc5f5789c0235
+  x-contract:
+    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    model: FsWriteTextResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FsWriteTextResponse'
+      description: Successful Response

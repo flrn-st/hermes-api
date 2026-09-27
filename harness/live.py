@@ -189,7 +189,7 @@ class HermesServer:
 
 
 def _client_command(client: str, env: dict[str, str], proxy: FaultProxy, control: ControlServer,
-                    gated: GatedServer) -> tuple[list[str], Path, dict[str, str]]:
+                    gated: GatedServer | None) -> tuple[list[str], Path, dict[str, str]]:
     if client == "swift":
         return ["swift", "run", "--quiet", "hermes-api-cli", "smoke", "--url", env["HERMES_LIVE_URL"]], ROOT, env
     if client == "kotlin":
@@ -197,7 +197,8 @@ def _client_command(client: str, env: dict[str, str], proxy: FaultProxy, control
     if client in SIMULATORS:
         # xcodebuild forwards TEST_RUNNER_-prefixed variables into the simulator test process.
         runner = {**env, "TEST_RUNNER_HERMES_LIVE_SCENARIOS": "1"}
-        for name in ("HERMES_LIVE_URL", "HERMES_LIVE_TOKEN", "HERMES_LIVE_LIFECYCLE", "HERMES_LIVE_CONTROL"):
+        for name in ("HERMES_LIVE_URL", "HERMES_LIVE_TOKEN", "HERMES_LIVE_LIFECYCLE", "HERMES_LIVE_CONTROL",
+                     "HERMES_LIVE_MODE"):
             runner["TEST_RUNNER_" + name] = env[name]
         # The whole suite runs in the simulator: the unit tests as well as the live scenarios.
         # Not quiet: a failing scenario reports its reason only in the test output.
@@ -207,12 +208,14 @@ def _client_command(client: str, env: dict[str, str], proxy: FaultProxy, control
     if client == "android":
         adb = shutil.which("adb") or str(Path(env.get("ANDROID_HOME", "")) / "platform-tools" / "adb")
         # The emulator reaches the proxy and control endpoint on its own loopback.
-        for port in (proxy.port, control.port, gated.port):
+        for port in (proxy.port, control.port, *([gated.port] if gated else [])):
             subprocess.run([adb, "reverse", f"tcp:{port}", f"tcp:{port}"], check=True, env=env,
                            stdout=subprocess.DEVNULL)
-        arguments = [f"-Pandroid.testInstrumentationRunnerArguments.{name}={env[variable]}" for name, variable in (
+        arguments = [f"-Pandroid.testInstrumentationRunnerArguments.{name}={env.get(variable, '')}"
+                     for name, variable in (
             ("hermesUrl", "HERMES_LIVE_URL"), ("hermesToken", "HERMES_LIVE_TOKEN"),
-            ("hermesLifecycle", "HERMES_LIVE_LIFECYCLE"), ("hermesControl", "HERMES_LIVE_CONTROL"))]
+            ("hermesLifecycle", "HERMES_LIVE_LIFECYCLE"), ("hermesControl", "HERMES_LIVE_CONTROL"),
+            ("hermesMode", "HERMES_LIVE_MODE"))]
         return [str(ROOT / "android" / "gradlew"), "connectedDebugAndroidTest", "--quiet", *arguments], \
             ROOT / "android", env
     raise ValueError(f"Unknown client {client}")

@@ -110,6 +110,7 @@ class LiveScenarioInstrumentedTest {
             "hermesToken" to "HERMES_LIVE_TOKEN",
             "hermesLifecycle" to "HERMES_LIVE_LIFECYCLE",
             "hermesControl" to "HERMES_LIVE_CONTROL",
+            "hermesMode" to "HERMES_LIVE_MODE",
         )
     }
 }

@@ -7,6 +7,8 @@ public struct LiveScenarioEnvironment: Sendable {
     public let auth: any HermesAuth
     public let token: String?
     public let lifecycle: Bool
+    /// `stress` runs the stress scenarios against the stress harness's seeded server instead.
+    public let mode: String
     public let control: URL?
 
     public init(_ values: [String: String]) throws {
@@ -24,6 +26,7 @@ public struct LiveScenarioEnvironment: Sendable {
             throw LiveScenarioError("HERMES_LIVE_TICKET or HERMES_LIVE_TOKEN is required")
         }
         lifecycle = values["HERMES_LIVE_LIFECYCLE"] == "1"
+        mode = values["HERMES_LIVE_MODE"] ?? ""
         control = values["HERMES_LIVE_CONTROL"].flatMap(URL.init(string:))
     }
 }
@@ -46,11 +49,18 @@ enum Fixture {
     static let approvalReply = "HermesAPI approval denied as expected."
     static let reconnectPrompt = "Stream the HermesAPI reconnect fixture slowly."
     static let reconnectReply = (1...16).map { String(format: "part%02d", $0) }.joined(separator: " ")
+    static let greetingPrompt = "Reply with a short greeting."
+    static let longPrompt = "Stream the HermesAPI long fixture."
+    static let pacedPrompt = "Stream the HermesAPI paced fixture."
 }
 
 public enum LiveScenarios {
     /// Runs the smoke scenario and, when the harness exposes its control endpoint, the reconnect scenarios.
     public static func run(_ environment: LiveScenarioEnvironment) async throws {
+        if environment.mode == "stress" {
+            try await StressScenarios.run(environment)
+            return
+        }
         let observations = LiveObservations()
         try await smoke(environment, observations: observations)
         guard let control = environment.control else { return }
@@ -246,18 +256,57 @@ public enum LiveScenarios {
         }
     }
 
-    private static func runTurn(
+    static func runTurn(
         _ gateway: HermesGateway, sessionID: String, prompt: String, tool: String?,
-        onFirstDelta: (@Sendable () async throws -> Void)? = nil
+        deadline: Duration = .seconds(120), onFirstDelta: (@Sendable () async throws -> Void)? = nil
     ) async throws -> Turn {
         // Subscribe before submitting so no event of the turn can precede the subscription.
         let events = gateway.events()
-        let submission = try await gateway.prompt.submit(.init(sessionId: sessionID, text: .string(prompt)))
-        guard submission.status != nil else { throw LiveScenarioError("Gateway rejected the prompt") }
+        let started = TurnStarted()
+        let states = gateway.connectionStates()
+        let stateWatch = Task {
+            for await state in states { await started.state(String(describing: state)) }
+        }
+        defer { stateWatch.cancel() }
+        do {
+            let submission = try await gateway.prompt.submit(.init(sessionId: sessionID, text: .string(prompt)))
+            guard submission.status != nil else { throw LiveScenarioError("Gateway rejected the prompt") }
+        } catch HermesGatewayError.transport {
+            await started.note("submit lost its response")
+            // The connection dropped with the submission unanswered: Hermes may have started the turn. As an
+            // app should, watch the replayed events and submit again only if the turn never shows up.
+            let resubmit = Task {
+                try await Task.sleep(for: .seconds(15))
+                guard await !started.value else { return }
+                await started.note("resubmitted")
+                _ = try await gateway.prompt.submit(.init(sessionId: sessionID, text: .string(prompt)))
+            }
+            await started.onFinish { resubmit.cancel() }
+        }
         // Generous: Hermes builds the agent on the first turn, which is slow on a cold CI runner.
-        return try await withDeadline(.seconds(120), "the turn for \"\(prompt)\" to complete") {
+        do {
+            return try await turnEvents(events, sessionID: sessionID, prompt: prompt, tool: tool, deadline: deadline,
+                                        started: started, onFirstDelta: onFirstDelta)
+        } catch let error as LiveScenarioError where error.description.hasPrefix("Timed out") {
+            throw LiveScenarioError("\(error.description); \(await started.trace)")
+        }
+    }
+
+    private static func turnEvents(
+        _ events: AsyncStream<GatewayEvent>, sessionID: String, prompt: String, tool: String?, deadline: Duration,
+        started: TurnStarted, onFirstDelta: (@Sendable () async throws -> Void)?
+    ) async throws -> Turn {
+        try await withDeadline(deadline, "the turn for \"\(prompt)\" to complete") {
+            defer { Task { await started.finish() } }
             var turn = Turn(tool: tool)
-            for await event in events where event.sessionID == sessionID {
+            for await event in events {
+                guard event.sessionID == sessionID else {
+                    turn.otherSessions.insert(event.sessionID ?? "none")
+                    continue
+                }
+                turn.types[event.type, default: 0] += 1
+                await started.event(event.type, seq: event.seq, replayed: event.replayed)
+                if event.type == "message.start" || event.type == "message.delta" { await started.mark() }
                 if let seq = event.seq { turn.sequence.append(seq) }
                 if event.replayed { turn.replayedEvents += 1 }
                 switch event.payload {
@@ -286,7 +335,38 @@ public enum LiveScenarios {
     }
 }
 
-private struct Turn: Sendable {
+/// Whether a submitted turn has shown up in the event stream, and what happened on the way, for failures.
+private actor TurnStarted {
+    private(set) var value = false
+    private var finishers: [@Sendable () -> Void] = []
+    private var log: [String] = []
+    private var counts: [String: Int] = [:]
+
+    func mark() { value = true }
+
+    func state(_ description: String) { log.append("state \(description)") }
+
+    func note(_ text: String) { log.append(text) }
+
+    func event(_ type: String, seq: Int?, replayed: Bool) {
+        counts[type, default: 0] += 1
+        if type != "message.delta" { log.append("\(type) seq \(seq.map(String.init) ?? "-")\(replayed ? " replayed" : "")") }
+    }
+
+    var trace: String {
+        let tally = counts.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
+        return "events [\(tally)]; last: \(log.suffix(25).joined(separator: " | "))"
+    }
+
+    func onFinish(_ action: @escaping @Sendable () -> Void) { finishers.append(action) }
+
+    func finish() {
+        for action in finishers { action() }
+        finishers.removeAll()
+    }
+}
+
+struct Turn: Sendable {
     let tool: String?
     var sawStart = false
     var sawToolStart = false
@@ -296,8 +376,17 @@ private struct Turn: Sendable {
     var reply: String?
     var sequence: [Int] = []
     var replayedEvents = 0
+    var types: [String: Int] = [:]
+    var otherSessions: Set<String> = []
 
     init(tool: String?) { self.tool = tool }
+
+    /// What arrived for the turn, for failure messages.
+    var trace: String {
+        let counts = types.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " ")
+        return "events [\(counts)], replayed \(replayedEvents), seq \(sequence.first.map(String.init) ?? "-")"
+            + "...\(sequence.last.map(String.init) ?? "-") (\(sequence.count)), other sessions \(otherSessions.sorted())"
+    }
 
     func expect(reply expected: String) throws {
         guard let reply, reply == expected else {
@@ -305,7 +394,7 @@ private struct Turn: Sendable {
         }
         guard sawStart else { throw LiveScenarioError("No message.start before \"\(expected)\"") }
         guard streamed.trimmingCharacters(in: .whitespacesAndNewlines) == reply else {
-            throw LiveScenarioError("Streamed text \"\(streamed)\" differs from the final reply")
+            throw LiveScenarioError("Streamed text \"\(streamed.prefix(200))\" differs from the final reply; \(trace)")
         }
         if let tool, !(sawToolStart && sawToolComplete) {
             throw LiveScenarioError("The \(tool) tool did not start and complete")
@@ -315,7 +404,7 @@ private struct Turn: Sendable {
     /// Every sequenced event arrives exactly once and in order across a reconnect.
     func expectContiguousSequence() throws {
         guard let first = sequence.first, sequence == Array(first..<(first + sequence.count)) else {
-            throw LiveScenarioError("Session events were lost, duplicated or reordered: \(sequence)")
+            throw LiveScenarioError("Session events were lost, duplicated or reordered: \(sequence); \(trace)")
         }
     }
 }
@@ -339,6 +428,26 @@ struct FaultControl: Sendable {
     /// Sends the run's measured coverage evidence.
     func report(_ observations: [String: [String]]) async throws {
         try await post("report", query: [], body: JSONEncoder().encode(observations))
+    }
+
+    /// Shapes the proxied connections with a named network profile (`harness/faults.py`).
+    func conditions(_ profile: String) async throws {
+        try await post("conditions", query: [URLQueryItem(name: "profile", value: profile)])
+    }
+
+    /// Sends a stress run's timings in milliseconds.
+    func metrics(_ values: [String: Double]) async throws {
+        try await post("metrics", query: [], body: JSONEncoder().encode(values))
+    }
+
+    /// The dataset the stress harness seeded.
+    func stressDataset() async throws -> StressDataset {
+        let (data, response) = try await URLSession.shared.data(
+            for: URLRequest(url: base.appendingPathComponent("stress"), timeoutInterval: 30))
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw LiveScenarioError("Harness control stress failed")
+        }
+        return try JSONDecoder().decode(StressDataset.self, from: data)
     }
 
     /// The REST scenario the harness recorded fixtures from.

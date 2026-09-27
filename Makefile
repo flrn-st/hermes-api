@@ -2,7 +2,7 @@ REF ?= $(shell cat spec/current-release.txt)
 # Live clients: swift (macOS), kotlin (JVM), ios (simulator), android (connected emulator).
 CLIENTS ?= swift,kotlin
 
-.PHONY: gen check-gen rest check-rest live live-ticket record coverage test android apple
+.PHONY: gen check-gen rest check-rest live live-ticket record coverage test android apple stress bench
 
 gen:
 	uv run --locked python -m tools.fetch_spec --ref $(REF)
@@ -27,6 +27,16 @@ check-gen:
 
 live:
 	uv run --locked python -m harness.live --ref $(REF) --clients $(CLIENTS)
+
+# Large data, long streams, concurrency and degraded networks (see harness/stress.py). SCALE grows the dataset.
+SCALE ?= 1
+stress:
+	uv run --locked python -m harness.stress --ref $(REF) --clients $(CLIENTS) --scale $(SCALE)
+
+# Decoding cost of large payloads in optimized builds, against budgets.
+bench:
+	swift run -c release --quiet hermes-api-cli bench --fixture fixtures/$(REF)/liveness.jsonl
+	cd kotlin && ./gradlew bench --quiet
 
 record:
 	uv run --locked python -m harness.live --ref $(REF) --record

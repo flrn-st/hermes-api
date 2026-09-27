@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -67,6 +68,8 @@ public class LiveScenarioEnvironment(
     public val token: String? = values["HERMES_LIVE_TOKEN"]?.takeIf { it.isNotEmpty() }
     private val ticket: String? = values["HERMES_LIVE_TICKET"]?.takeIf { it.isNotEmpty() }
     public val lifecycle: Boolean = values["HERMES_LIVE_LIFECYCLE"] == "1"
+    /** `stress` runs the stress scenarios against the stress harness's seeded server instead. */
+    public val mode: String = values["HERMES_LIVE_MODE"] ?: ""
     public val control: URI? = values["HERMES_LIVE_CONTROL"]?.takeIf { it.isNotEmpty() }?.let(::URI)
 
     public val auth: HermesAuth = when {
@@ -82,7 +85,7 @@ public class LiveScenarioEnvironment(
 public class LiveScenarioFailure(message: String) : Exception(message)
 
 /** Fixture replies produced by the harness model stub (`harness/stub_llm.py`). */
-private object Fixture {
+internal object Fixture {
     const val REPLY = "HermesAPI fixture reply."
     const val CLARIFY_PROMPT = "Ask which release channel to use for HermesAPI."
     const val CLARIFY_REPLY = "HermesAPI stable release selected."
@@ -91,11 +94,15 @@ private object Fixture {
     const val APPROVAL_REPLY = "HermesAPI approval denied as expected."
     const val RECONNECT_PROMPT = "Stream the HermesAPI reconnect fixture slowly."
     val RECONNECT_REPLY = (1..16).joinToString(" ") { "part" + it.toString().padStart(2, '0') }
+    const val GREETING_PROMPT = "Reply with a short greeting."
+    const val LONG_PROMPT = "Stream the HermesAPI long fixture."
+    const val PACED_PROMPT = "Stream the HermesAPI paced fixture."
 }
 
 public object LiveScenarios {
     /** Runs the smoke scenario and, when the harness exposes its control endpoint, the reconnect scenarios. */
     public suspend fun run(environment: LiveScenarioEnvironment) {
+        if (environment.mode == "stress") return StressScenarios.run(environment)
         val observations = LiveObservations()
         smoke(environment, observations)
         val control = environment.control ?: return
@@ -264,16 +271,21 @@ public object LiveScenarios {
         }
     }
 
-    private suspend fun runTurn(
+    internal suspend fun runTurn(
         gateway: HermesGateway, sessionId: String, prompt: String, tool: String?,
-        onFirstDelta: (suspend () -> Unit)? = null,
+        deadlineMillis: Long = 120_000, onFirstDelta: (suspend () -> Unit)? = null,
     ): Turn = coroutineScope {
         val turn = Turn(tool)
         val completion = async(start = CoroutineStart.UNDISPATCHED) {
             // Generous: Hermes builds the agent on the first turn, which is slow on a cold CI runner.
-            deadline(120_000, "the turn for \"$prompt\" to complete") {
+            deadline(deadlineMillis, "the turn for \"$prompt\" to complete") {
                 gateway.events.first { event ->
-                    if (event.sessionId != sessionId) return@first false
+                    if (event.sessionId != sessionId) {
+                        turn.otherSessions += event.sessionId ?: "none"
+                        return@first false
+                    }
+                    turn.types[event.type] = (turn.types[event.type] ?: 0) + 1
+                    if (event.type == "message.start" || event.type == "message.delta") turn.started = true
                     event.seq?.let(turn.sequence::add)
                     if (event.replayed) turn.replayedEvents++
                     when (val payload = event.payload) {
@@ -297,14 +309,35 @@ public object LiveScenarios {
                 }
             }
         }
-        val submitted = gateway.methods.prompt.submit(PromptSubmitParams(sessionId = sessionId, text = JsonPrimitive(prompt)))
-        if (submitted.status == null) throw LiveScenarioFailure("Gateway rejected the prompt")
-        completion.await()
+        try {
+            val submitted = gateway.methods.prompt.submit(PromptSubmitParams(sessionId = sessionId, text = JsonPrimitive(prompt)))
+            if (submitted.status == null) throw LiveScenarioFailure("Gateway rejected the prompt")
+        } catch (error: HermesGatewayException.Transport) {
+            turn.notes += "submit lost its response"
+            // The connection dropped with the submission unanswered: Hermes may have started the turn. As an
+            // app should, watch the replayed events and submit again only if the turn never shows up.
+            val resubmit = launch {
+                delay(15_000)
+                if (!turn.started) turn.notes += "resubmitted"
+                if (!turn.started) gateway.methods.prompt.submit(PromptSubmitParams(sessionId = sessionId, text = JsonPrimitive(prompt)))
+            }
+            completion.invokeOnCompletion { resubmit.cancel() }
+        }
+        val states = launch { gateway.connectionStates.collect { turn.notes += "state $it" } }
+        try {
+            completion.await()
+        } catch (error: LiveScenarioFailure) {
+            if (error.message?.startsWith("Timed out") == true) throw LiveScenarioFailure("${error.message}; ${turn.trace}")
+            throw error
+        } finally {
+            states.cancel()
+        }
         turn
     }
 }
 
-private class Turn(val tool: String?) {
+internal class Turn(val tool: String?) {
+    @Volatile var started = false
     var sawStart = false
     var sawToolStart = false
     var sawToolComplete = false
@@ -313,12 +346,20 @@ private class Turn(val tool: String?) {
     var reply: String? = null
     val sequence = mutableListOf<Long>()
     var replayedEvents = 0
+    val types = sortedMapOf<String, Int>()
+    val otherSessions = sortedSetOf<String>()
+
+    /** What arrived for the turn, for failure messages. */
+    val notes: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+    val trace: String get() = "events $types, replayed $replayedEvents, seq ${sequence.firstOrNull()}..." +
+        "${sequence.lastOrNull()} (${sequence.size}), other sessions $otherSessions; last: " +
+        synchronized(notes) { notes.takeLast(25).joinToString(" | ") }
 
     fun expectReply(expected: String) {
         if (reply != expected) throw LiveScenarioFailure("Expected reply \"$expected\", got \"${reply ?: "nothing"}\"")
         if (!sawStart) throw LiveScenarioFailure("No message.start before \"$expected\"")
         if (streamed.toString().trim() != reply) {
-            throw LiveScenarioFailure("Streamed text \"$streamed\" differs from the final reply")
+            throw LiveScenarioFailure("Streamed text \"${streamed.take(200)}\" differs from the final reply; $trace")
         }
         if (tool != null && !(sawToolStart && sawToolComplete)) {
             throw LiveScenarioFailure("The $tool tool did not start and complete")
@@ -329,13 +370,13 @@ private class Turn(val tool: String?) {
     fun expectContiguousSequence() {
         val first = sequence.firstOrNull()
         if (first == null || sequence != (first until first + sequence.size).toList()) {
-            throw LiveScenarioFailure("Session events were lost, duplicated or reordered: $sequence")
+            throw LiveScenarioFailure("Session events were lost, duplicated or reordered: $sequence; $trace")
         }
     }
 }
 
 /** Calls the harness control endpoint that severs sockets or restarts the tagged server. */
-private class FaultControl(private val base: URI) {
+internal class FaultControl(private val base: URI) {
     suspend fun drop(holdMillis: Int) = post("drop?hold_ms=$holdMillis")
 
     suspend fun blackhole() = post("blackhole")
@@ -345,13 +386,24 @@ private class FaultControl(private val base: URI) {
     /** Sends the run's measured coverage evidence. */
     suspend fun report(json: String) = post("report", json)
 
+    /** Shapes the proxied connections with a named network profile (`harness/faults.py`). */
+    suspend fun conditions(profile: String) = post("conditions?profile=$profile")
+
+    /** Sends a stress run's timings in milliseconds. */
+    suspend fun metrics(json: String) = post("metrics", json)
+
+    /** The dataset the stress harness seeded. */
+    suspend fun stressDataset(): JsonObject = get("stress")
+
     /** The REST scenario the harness recorded fixtures from. */
-    suspend fun restScenario(): JsonObject = withContext(Dispatchers.IO) {
-        val connection = URL(base.resolve("/rest-scenario").toString()).openConnection() as HttpURLConnection
+    suspend fun restScenario(): JsonObject = get("rest-scenario")
+
+    private suspend fun get(path: String): JsonObject = withContext(Dispatchers.IO) {
+        val connection = URL(base.resolve("/$path").toString()).openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = 10_000
             connection.readTimeout = 30_000
-            if (connection.responseCode != 200) throw LiveScenarioFailure("Harness control rest-scenario failed")
+            if (connection.responseCode != 200) throw LiveScenarioFailure("Harness control $path failed")
             Json.parseToJsonElement(connection.inputStream.use { it.readBytes().decodeToString() }).jsonObject
         } finally {
             connection.disconnect()

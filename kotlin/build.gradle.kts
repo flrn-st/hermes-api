@@ -42,6 +42,14 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.register<JavaExec>("bench") {
+    group = "verification"
+    description = "Measure decoding of large recorded payloads against their budgets"
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass = "hermes.api.BenchKt"
+    args = listOf("../fixtures/${file("../spec/current-release.txt").readText().trim()}/liveness.jsonl")
+}
+
 tasks.register<JavaExec>("smoke") {
     group = "verification"
     description = "Exercise the Kotlin gateway against a live tagged Hermes server"

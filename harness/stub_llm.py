@@ -20,6 +20,15 @@ RECONNECT_PROMPT = "Stream the HermesAPI reconnect fixture slowly."
 RECONNECT_CHUNKS = [f"part{index:02d} " for index in range(1, 17)]
 RECONNECT_REPLY = "".join(RECONNECT_CHUNKS).strip()
 RECONNECT_CHUNK_DELAY = 0.25
+# Stress fixtures: a very long reply streamed as fast as possible, and a long reply streamed over tens
+# of seconds so network faults hit it mid-turn.
+LONG_PROMPT = "Stream the HermesAPI long fixture."
+LONG_CHUNKS = [f"segment {index:04d} of the HermesAPI long fixture. " for index in range(1, 2001)]
+LONG_REPLY = "".join(LONG_CHUNKS).strip()
+PACED_PROMPT = "Stream the HermesAPI paced fixture."
+PACED_CHUNKS = [f"beat {index:03d} " for index in range(1, 301)]
+PACED_REPLY = "".join(PACED_CHUNKS).strip()
+PACED_CHUNK_DELAY = 0.05
 
 
 class StubLLM:
@@ -38,19 +47,21 @@ class StubLLM:
                 self.end_headers()
                 self.wfile.write(payload)
 
-            def _stream_slowly(self, model: str, usage: dict) -> None:
+            def _stream_slowly(self, model: str, usage: dict, chunks: list[str] = RECONNECT_CHUNKS,
+                               delay: float = RECONNECT_CHUNK_DELAY) -> None:
                 """Spread the reply over seconds so a client can lose its socket mid-turn."""
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream")
                 self.send_header("Connection", "close")
                 self.end_headers()
-                for index, text in enumerate(RECONNECT_CHUNKS):
+                for index, text in enumerate(chunks):
                     delta = {"role": "assistant", "content": text} if index == 0 else {"content": text}
                     chunk = {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,
                              "model": model, "choices": [{"index": 0, "delta": delta, "finish_reason": None}]}
                     self.wfile.write(("data: " + json.dumps(chunk) + "\n\n").encode())
                     self.wfile.flush()
-                    time.sleep(RECONNECT_CHUNK_DELAY)
+                    if delay:
+                        time.sleep(delay)
                 final = {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,
                          "model": model, "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
                          "usage": usage}
@@ -108,6 +119,12 @@ class StubLLM:
                     return
                 if RECONNECT_PROMPT in latest_user and request.get("stream"):
                     self._stream_slowly(model, usage)
+                    return
+                if LONG_PROMPT in latest_user and request.get("stream"):
+                    self._stream_slowly(model, usage, LONG_CHUNKS, 0)
+                    return
+                if PACED_PROMPT in latest_user and request.get("stream"):
+                    self._stream_slowly(model, usage, PACED_CHUNKS, PACED_CHUNK_DELAY)
                     return
                 reply = CLARIFY_REPLY if clarify_turn else APPROVAL_REPLY if approval_turn else REPLY
                 if request.get("stream"):

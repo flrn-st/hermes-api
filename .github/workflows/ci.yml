@@ -182,6 +182,31 @@ jobs:
       - name: Verify ticket subprotocols in both clients
         run: make live-ticket
 
+  # Large data, long streams, concurrency, degraded and flaky networks, and decoding budgets.
+  stress:
+    needs: changes
+    if: >-
+      ${{ !cancelled() && (github.event_name != 'pull_request' ||
+      needs.changes.outputs.swift == 'true' || needs.changes.outputs.kotlin == 'true') }}
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          lfs: true
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Stress both clients against a seeded tagged server
+        run: make stress
+      - name: Check decoding budgets
+        run: make bench
+
   apple:
     needs: changes
     if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.swift == 'true') }}
@@ -294,7 +319,7 @@ jobs:
 
   # The single required check: fails when any job above failed or was cancelled; skipped jobs pass.
   ci-ok:
-    needs: [changes, tooling, swift, kotlin, live, apple, android-build, android-live]
+    needs: [changes, tooling, swift, kotlin, live, stress, apple, android-build, android-live]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5

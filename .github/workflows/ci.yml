@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish the current release from main after every check passes
+        description: Publish the package version from main after every check passes
         type: boolean
         default: false
 
@@ -39,7 +39,6 @@ concurrency:
 
 jobs:
   # Pull requests run the platform jobs only when their inputs change; everything else runs them all.
-  # On main it also reports whether the push moved the current release, which publishes it.
   changes:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -51,7 +50,6 @@ jobs:
       swift: ${{ steps.filter.outputs.swift }}
       kotlin: ${{ steps.filter.outputs.kotlin }}
       android: ${{ steps.filter.outputs.android }}
-      release: ${{ steps.filter.outputs.release }}
     steps:
       # Pull requests list their files through the API; pushes diff against the commit before the push.
       - name: Check out the pushed commits
@@ -83,8 +81,6 @@ jobs:
               - *shared
               - 'kotlin/**'
               - 'android/**'
-            release:
-              - 'spec/current-release.txt'
 
   tooling:
     runs-on: ubuntu-latest
@@ -303,14 +299,14 @@ jobs:
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: exit 1
 
-  # Publishes when a push to main moves the current release, or on a dispatch with publish set;
-  # every check above has already built and tested this commit on every platform.
+  # Publishes the package version in kotlin/build.gradle.kts once: on a push to main that changes it, or
+  # on a dispatch with publish set. Every check above has already built and tested this commit on every
+  # platform.
   publish:
     needs: [changes, ci-ok]
     if: >-
       ${{ !cancelled() && needs.ci-ok.result == 'success' && github.ref == 'refs/heads/main' &&
-      ((github.event_name == 'push' && needs.changes.outputs.release == 'true') ||
-      (github.event_name == 'workflow_dispatch' && inputs.publish)) }}
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -330,30 +326,54 @@ jobs:
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
+      - name: Find an unpublished package version
+        id: version
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          release=$(uv run --locked python -m tools.release_version)
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          previous=$(git show "$BEFORE:kotlin/build.gradle.kts" 2>/dev/null | sed -n 's/^version = "\(.*\)"$/\1/p' || true)
+          if [ "$EVENT" = push ] && [ "$previous" = "$release" ]; then
+            echo "This push keeps HermesAPI $release; nothing to publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif git rev-parse "refs/tags/$release" >/dev/null 2>&1; then
+            if [ "$(git rev-parse "refs/tags/$release^{commit}")" = "$GITHUB_SHA" ]; then
+              # A rerun of the publishing commit completes a release that failed after tagging.
+              echo "publish=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "HermesAPI $release is already published; raise the version in kotlin/build.gradle.kts to release this commit."
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: steps.version.outputs.publish == 'true'
         with:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
-      - name: Enforce complete tagged coverage
+        if: steps.version.outputs.publish == 'true'
+      - name: Enforce tagged coverage (complete or reviewed exemption)
+        if: steps.version.outputs.publish == 'true'
         run: |
           make coverage
           uv run --locked python -m tools.coverage --ref "$(cat spec/current-release.txt)" --gate
       - name: Publish Maven and SwiftPM release
+        if: steps.version.outputs.publish == 'true'
+        env:
+          RELEASE: ${{ steps.version.outputs.release }}
         run: |
-          release=$(uv run --locked python -m tools.release_version)
-          if git rev-parse "refs/tags/$release" >/dev/null 2>&1; then
-            existing=$(git rev-parse "refs/tags/$release^{commit}")
-            if [ "$existing" != "$GITHUB_SHA" ]; then
-              echo "Release tag $release points to another commit" >&2
-              exit 1
-            fi
-          else
+          if ! git rev-parse "refs/tags/$RELEASE" >/dev/null 2>&1; then
             (cd kotlin && ./gradlew publishHermesAPIPublicationToGitHubPackagesRepository)
             (cd android && ./gradlew publishHermesAPIAndroidPublicationToGitHubPackagesRepository)
-            git tag "$release"
-            git push origin "$release"
+            git tag "$RELEASE"
+            git push origin "$RELEASE"
           fi
-          if ! gh release view "$release" >/dev/null 2>&1; then
-            gh release create "$release" --title "HermesAPI $release" --notes-file "coverage/$(cat spec/current-release.txt).md"
+          if ! gh release view "$RELEASE" >/dev/null 2>&1; then
+            hermes="$(cat spec/current-release.txt)"
+            { echo "HermesAPI $RELEASE speaks Hermes $hermes."; echo; cat "coverage/$hermes.md"; } > /tmp/release-notes.md
+            gh release create "$RELEASE" --title "HermesAPI $RELEASE (Hermes $hermes)" --notes-file /tmp/release-notes.md
           fi

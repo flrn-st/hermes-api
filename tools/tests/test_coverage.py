@@ -56,3 +56,34 @@ def test_recorded_system_prompt_is_redacted() -> None:
     assert protected
     assert all(record["frame"]["params"]["payload"]["system_prompt"] == "<redacted>"
                for record in protected)
+
+
+def _copy(tmp_path, exemptions: str):
+    import shutil
+
+    for relative in (f"spec/out/{CURRENT}", f"fixtures/{CURRENT}", "coverage/evidence"):
+        shutil.copytree(ROOT / relative, tmp_path / relative)
+    (tmp_path / "spec/exemptions.yaml").write_text(exemptions)
+    return tmp_path
+
+
+OAUTH_SUBMIT = "POST /api/providers/oauth/{provider_id}/submit"
+
+
+def test_exemptions_count_toward_the_gate_and_leave_the_gaps(tmp_path) -> None:
+    root = _copy(tmp_path, "exemptions:\n- kind: rest\n  name: " + OAUTH_SUBMIT +
+                 "\n  reason: Always answers 400 at this release.\n  reviewed_by: flrnst\n")
+    data = report(CURRENT, root)
+    submit = next(item for item in data["entries"] if item["name"] == OAUTH_SUBMIT)
+    assert submit["exempt"] == "Always answers 400 at this release."
+    assert data["exempt"] == 1 and data["summary"]["rest"]["exempt"] == 1
+
+
+@pytest.mark.parametrize(("exemption", "problem"), [
+    ("- kind: rest\n  name: GET /api/invented\n  reason: x\n  reviewed_by: y\n", "not a surface"),
+    ("- kind: rest\n  name: " + OAUTH_SUBMIT + "\n  reason: x\n", "needs a reason and reviewed_by"),
+    ("- kind: gateway_method\n  name: prompt.submit\n  reason: x\n  reviewed_by: y\n", "complete now"),
+])
+def test_exemptions_must_still_apply(tmp_path, exemption: str, problem: str) -> None:
+    with pytest.raises(ValueError, match=problem):
+        report(CURRENT, _copy(tmp_path, "exemptions:\n" + exemption))

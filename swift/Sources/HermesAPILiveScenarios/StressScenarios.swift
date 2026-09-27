@@ -45,14 +45,17 @@ enum StressScenarios {
         let faults = FaultControl(base: control)
         let dataset = try await faults.stressDataset()
         let metrics = StressMetrics()
-        let rest = HermesREST(configuration: .init(baseURL: environment.url, auth: LocalTokenAuth(token: token)))
+        let trail = HTTPTrail()
+        let rest = HermesREST(configuration: .init(baseURL: environment.url, auth: LocalTokenAuth(token: token),
+                                                   transport: TracingHTTPTransport(trail: trail)))
         try await largeData(rest, dataset: dataset, metrics: metrics)
         try await parallelReads(rest, metrics: metrics)
         let gateway = HermesGateway(configuration: .init(baseURL: environment.url, auth: environment.auth))
         do {
             try await gateway.connect()
             try await gatewayScale(gateway, dataset: dataset, metrics: metrics)
-            try await degradedNetworks(gateway, rest: rest, faults: faults, dataset: dataset, metrics: metrics)
+            try await degradedNetworks(gateway, rest: rest, trail: trail, faults: faults, dataset: dataset,
+                                       metrics: metrics)
             await gateway.disconnect()
         } catch {
             try? await faults.conditions("none")
@@ -233,8 +236,9 @@ enum StressScenarios {
         { _ = try await $0.tools.toolsets() },
     ]
 
-    private static func degradedNetworks(_ gateway: HermesGateway, rest: HermesREST, faults: FaultControl,
-                                         dataset: StressDataset, metrics: StressMetrics) async throws {
+    private static func degradedNetworks(_ gateway: HermesGateway, rest: HermesREST, trail: HTTPTrail,
+                                         faults: FaultControl, dataset: StressDataset,
+                                         metrics: StressMetrics) async throws {
         try await faults.conditions("3g")
         try await measure("rest.reads.3g", metrics) {
             for read in reads { try await read(rest) }
@@ -250,8 +254,12 @@ enum StressScenarios {
 
         // A link that resets every connection after a few seconds: reads retry, the stream resumes by replay.
         try await faults.conditions("flaky")
-        try await measure("rest.reads.flaky", metrics) {
-            for _ in 0..<4 { for read in reads { try await read(rest) } }
+        do {
+            try await measure("rest.reads.flaky", metrics) {
+                for _ in 0..<4 { for read in reads { try await read(rest) } }
+            }
+        } catch {
+            throw LiveScenarioError("\(error); last attempts: \(await trail.summary)")
         }
         let paced = try await step("gateway.session.create under flaky") {
             try await createSession(gateway, closeOnDisconnect: false)
@@ -298,5 +306,38 @@ private actor FirstDelta {
     var milliseconds: Double? {
         guard let at else { return nil }
         return Double(at.components.seconds) * 1000 + Double(at.components.attoseconds) / 1e15
+    }
+}
+
+/// The latest HTTP attempts of a stress run, for failure messages: the REST client logs only to the
+/// unified log, which a CI run does not show.
+actor HTTPTrail {
+    private let started = ContinuousClock.now
+    private var entries: [String] = []
+
+    func record(_ entry: String) {
+        let at = (ContinuousClock.now - started).components.seconds
+        entries.append("+\(at)s \(entry)")
+        if entries.count > 30 { entries.removeFirst(entries.count - 30) }
+    }
+
+    var summary: String { entries.joined(separator: " | ") }
+}
+
+struct TracingHTTPTransport: HTTPTransport {
+    let trail: HTTPTrail
+    let inner: any HTTPTransport = URLSessionHTTPTransport()
+
+    func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let started = ContinuousClock.now
+        let name = "\(request.httpMethod ?? "GET") \(request.url?.path ?? "?")"
+        do {
+            let (data, response) = try await inner.send(request)
+            await trail.record("\(name) \(response.statusCode) \(data.count)B in \(ContinuousClock.now - started)")
+            return (data, response)
+        } catch {
+            await trail.record("\(name) failed after \(ContinuousClock.now - started): \(error.localizedDescription)")
+            throw error
+        }
     }
 }

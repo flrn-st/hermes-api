@@ -1,5 +1,6 @@
 import Foundation
 import HermesAPI
+@testable import HermesAPILiveScenarios
 import Testing
 
 /// Answers each request from a script and records what was sent.
@@ -273,4 +274,13 @@ private actor RotationLog {
         return
     }
     #expect(duplicate.status == "duplicate")
+}
+
+@Test func liveScenarioCapturesPathsAndURLParameters() throws {
+    let result = try JSONDecoder().decode(JSONValue.self, from: Data(
+        #"{"jobs":[{"id":"j1"}],"next":"http://127.0.0.1:1/cb?code=a%20b&state=s"}"#.utf8))
+    #expect(RESTScenario.lookup(result, "jobs.0.id") == .string("j1"))
+    #expect(RESTScenario.lookup(result, "next#code") == .string("a b"))
+    #expect(RESTScenario.lookup(result, "$") == result)
+    #expect(try RESTScenario.resolve(.string("job-${id}"), ["id": .string("j1")]) == .string("job-j1"))
 }

@@ -1,10 +1,10 @@
 # HermesAPI
 
-Generated Swift and Kotlin clients for published [Hermes Agent](https://github.com/NousResearch/hermes-agent) releases. This repository is under construction: the gateway models, method namespaces, notifications, and server requests are generated and compile on both platforms. Both gateway runtimes now support authenticated connections, typed calls, server requests, and reconnect replay. REST has a tested runtime and six reviewed operations, including JSON request bodies and required nullable response fields. Full REST and live coverage are still being built, so this is not yet an app-ready client. The current coverage gate is 18/634 and blocks publishing.
+Generated Swift and Kotlin clients for published [Hermes Agent](https://github.com/NousResearch/hermes-agent) releases. This repository is under construction: the gateway models, method namespaces, notifications, and server requests are generated and compile on both platforms. Both gateway runtimes now support authenticated connections, typed calls, server requests, and reconnect replay. REST generates 335 of the release's 336 operations from reviewed response contracts, with authentication (session token, native Bearer tokens with refresh, cookies), deadlines, retries and strict decoding; both clients run 268 of them live against the tagged server (see [the REST client guide](docs/rest.md)). Full coverage is still being built, so this is not yet an app-ready client; the coverage gate blocks publishing until every operation is complete.
 
 The repository is pinned to a Hermes version: HermesAPI 0.21.4 is generated from and tested against Hermes Agent 0.21.4. Hermes tags its releases by date, so `spec/refs.yaml` maps each version to its release tag (`v0.21.4: v2026.9.21`), and fetching refuses a tag whose `pyproject.toml` states a different version. Release candidates and canaries are never tracked. Pinned data lives under the version (`spec/out/v0.21.4/`, `fixtures/v0.21.4/`).
 
-The source contract for the gateway is Hermes' committed OpenRPC document. The dashboard REST contract uses FastAPI's `app.openapi()` document from the tagged server, supplemented with reviewed overlays where response schemas are missing. The current tag has 334 REST operations; its upstream success response schemas are empty. Generated code is committed and verified against the exact upstream tag. Development branches are outside the current tracking policy.
+The source contract for the gateway is Hermes' committed OpenRPC document. The dashboard REST contract uses FastAPI's `app.openapi()` document from the tagged server, supplemented with reviewed overlays because the tagged routes document no response schemas. The overlays are drafted from the response contracts on the `feat/dashboard-rest-response-models` branch of the Hermes fork (`tools/import_contracts.py`) for every handler whose body is unchanged at the tag, and hand-reviewed against the tagged handlers otherwise (`spec/overlay/rest/`); every entry keeps the tag handler's source and hash, and `tools/contract_gate.py` checks them against the tag's own test suite. Generated code is committed and verified against the exact upstream tag. Development branches are outside the current tracking policy.
 
 `tools/fetch_spec.py` pins the OpenRPC artifact and source metadata to the
 upstream tag. `tools/schema_audit.py` fails on unknown schema constructs.
@@ -38,7 +38,7 @@ and VoIP apps
 ([TN3135](https://developer.apple.com/documentation/technotes/tn3135-low-level-networking-on-watchos)).
 `make live-ticket` verifies both clients send the authenticated ticket as a
 WebSocket subprotocol. `make record` records the tagged liveness, prompt turn,
-session lifecycle, and REST scenario and runs both fixture decode suites.
+session lifecycle, and REST scenario (`scenarios/rest.yaml`, including a second server behind the dashboard auth gate) and runs both fixture decode suites.
 `make coverage` writes the per-operation coverage report. The scheduled
 release watcher checks published Hermes releases only (reading each new tag's version) and opens an update PR with
 contract changes, REST breaking changes, and the coverage report. Publication

@@ -313,5 +313,7 @@ class HermesRESTTest {
         assertEquals(JsonPrimitive("c"), hermes.api.live.RESTScenario.lookup(
             Json.parseToJsonElement("""{"a":[{"b":"c"}]}"""), "a.0.b"))
         assertIs<JsonObject>(hermes.api.live.RESTScenario.resolve(Json.parseToJsonElement("""{"x":"${'$'}{id}"}"""), captured))
+        assertEquals(JsonPrimitive("a b"), hermes.api.live.RESTScenario.lookup(
+            Json.parseToJsonElement("""{"next":"http://127.0.0.1:1/cb?code=a%20b&state=s"}"""), "next#code"))
     }
 }

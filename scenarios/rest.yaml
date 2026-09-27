@@ -1,0 +1,665 @@
+# REST calls the recorder and every live client run, in order, against one isolated tagged server.
+# Each call names an operation ("METHOD /path" as in the OpenAPI document) and its arguments:
+# `path`, `query`, `form` (multipart fields; a file is {filename, content_type, text}) and `body`.
+# `capture` remembers values from the JSON result by dotted path (`$` is the whole result);
+# `${name}` uses them later. `${@name}` is a harness value: `home` (the isolated HERMES_HOME) and
+# `repo` (a scratch git repository in it). `until: {path, equals, timeout}` repeats a call until
+# the result at `path` equals `equals`, for waiting on background actions.
+# The scenario runs several times against the same server (recorder, then each client), so every
+# call that creates something also removes it or uses a name unique to the run, and every call
+# that changes configuration restores it.
+# Operations that act on the host outside the isolated home (gateway service control, updates,
+# terminals, OS permission prompts), install or download software, or need external accounts are
+# not called here; they are listed in the pull request as proposed exemptions.
+calls:
+- {operation: GET /api/analytics/models}
+- {operation: GET /api/analytics/usage}
+- {operation: GET /api/audio/elevenlabs/voices}
+- {operation: GET /api/audio/voice-config}
+- {operation: GET /api/audio/voice-live/status}
+- {operation: GET /api/chat/workspaces}
+- {operation: GET /api/config}
+- {operation: GET /api/config/defaults}
+- {operation: GET /api/config/raw}
+- {operation: GET /api/config/schema}
+- {operation: GET /api/credentials/pool}
+- {operation: GET /api/cron/blueprints}
+- {operation: GET /api/cron/delivery-targets}
+- {operation: GET /api/cron/jobs}
+- {operation: GET /api/curator}
+- {operation: GET /api/dashboard/font}
+- {operation: GET /api/dashboard/plugins}
+- {operation: GET /api/dashboard/plugins/catalog}
+- {operation: GET /api/dashboard/plugins/hub}
+- {operation: GET /api/dashboard/plugins/rescan}
+- {operation: GET /api/dashboard/themes}
+- {operation: GET /api/egress/status}
+- {operation: GET /api/env}
+- {operation: GET /api/fs/default-cwd}
+- {operation: GET /api/gateway/migrate/plan}
+- {operation: GET /api/git/gh-auth}
+- {operation: GET /api/health}
+- {operation: GET /api/health/idle}
+- {operation: GET /api/hermes/update/check}
+- {operation: GET /api/host/identity}
+- {operation: GET /api/learning/graph}
+- {operation: GET /api/local-models/catalog}
+- {operation: GET /api/local-models/hardware}
+- {operation: GET /api/local-models/jobs}
+- {operation: GET /api/local-models/status}
+- {operation: GET /api/logs}
+- {operation: GET /api/mcp/catalog}
+- {operation: GET /api/mcp/servers}
+- {operation: GET /api/memory}
+- {operation: GET /api/messaging/platforms}
+- {operation: GET /api/model/auxiliary}
+- {operation: GET /api/model/info}
+- {operation: GET /api/model/moa}
+- {operation: GET /api/model/options}
+- {operation: GET /api/model/recommended-default}
+- {operation: GET /api/ops/checkpoints}
+- {operation: GET /api/ops/hooks}
+- {operation: GET /api/pairing}
+- {operation: GET /api/plugins/hermes-achievements/achievements}
+- {operation: GET /api/plugins/hermes-achievements/recent-unlocks}
+- {operation: GET /api/plugins/hermes-achievements/scan-status}
+- {operation: GET /api/plugins/kanban/assignees}
+- {operation: GET /api/plugins/kanban/board}
+- {operation: GET /api/plugins/kanban/boards}
+- {operation: GET /api/plugins/kanban/config}
+- {operation: GET /api/plugins/kanban/diagnostics}
+- {operation: GET /api/plugins/kanban/home-channels}
+- {operation: GET /api/plugins/kanban/model-options}
+- {operation: GET /api/plugins/kanban/orchestration}
+- {operation: GET /api/plugins/kanban/profiles}
+- {operation: GET /api/plugins/kanban/projects}
+- {operation: GET /api/plugins/kanban/stats}
+- {operation: GET /api/plugins/kanban/workers/active}
+- {operation: GET /api/portal}
+- {operation: GET /api/profiles}
+- {operation: GET /api/profiles/active}
+- {operation: GET /api/profiles/projects/tree}
+- {operation: GET /api/profiles/sessions}
+- {operation: GET /api/profiles/sessions/sidebar}
+- {operation: GET /api/providers/custom-endpoints}
+- {operation: GET /api/providers/oauth}
+- {operation: GET /api/sessions}
+- operation: GET /api/sessions/empty/count
+  query: {profile: default}
+- {operation: GET /api/sessions/search}
+- {operation: GET /api/sessions/stats}
+- {operation: GET /api/skills}
+- {operation: GET /api/skills/hub/official}
+- {operation: GET /api/skills/hub/search}
+- {operation: GET /api/skills/hub/sources}
+- {operation: GET /api/status}
+- {operation: GET /api/system/stats}
+- {operation: GET /api/tools/computer-use/status}
+- {operation: GET /api/tools/terminal/backends}
+- {operation: GET /api/tools/toolsets}
+- {operation: GET /api/webhooks}
+- {operation: GET /login}
+- operation: POST /api/profiles/active
+  body: {name: default}
+- operation: GET /api/git/status
+  query: {path: '${@repo}'}
+- operation: GET /api/git/branches
+  query: {path: '${@repo}'}
+- operation: GET /api/git/base-branches
+  query: {path: '${@repo}'}
+- operation: GET /api/git/worktrees
+  query: {path: '${@repo}'}
+- operation: GET /api/git/review/commit-context
+  query: {path: '${@repo}'}
+- operation: GET /api/git/review/rev-parse
+  query: {path: '${@repo}', ref: HEAD}
+  capture: {head: sha}
+- operation: GET /api/git/review/ship-info
+  query: {path: '${@repo}'}
+- operation: GET /api/fs/git-root
+  query: {path: '${@repo}'}
+- operation: GET /api/fs/list
+  query: {path: '${@repo}'}
+- operation: POST /api/fs/write-text
+  body: {path: '${@repo}/notes.md', content: 'Scenario notes after ${head}
+
+      '}
+- operation: GET /api/fs/read-text
+  query: {path: '${@repo}/notes.md'}
+- operation: GET /api/fs/read-data-url
+  query: {path: '${@repo}/notes.md'}
+- operation: GET /api/fs/download
+  query: {path: '${@repo}/notes.md'}
+- operation: GET /api/git/review/list
+  query: {path: '${@repo}'}
+- operation: GET /api/git/review/diff
+  query: {path: '${@repo}', file: notes.md}
+- operation: GET /api/git/file-diff
+  query: {path: '${@repo}', file: README.md}
+- operation: POST /api/git/review/stage
+  body: {path: '${@repo}', file: notes.md}
+- operation: POST /api/git/review/unstage
+  body: {path: '${@repo}', file: notes.md}
+- operation: POST /api/git/review/stage
+  body: {path: '${@repo}', file: notes.md}
+- operation: POST /api/git/review/commit
+  body: {path: '${@repo}', message: Add scenario notes}
+- operation: POST /api/git/worktree/add
+  body: {path: '${@repo}', branch: scenario-worktree, name: scenario-worktree}
+  capture: {worktree: path}
+- operation: POST /api/git/worktree/remove
+  body: {path: '${@repo}', worktreePath: '${worktree}', force: true}
+- operation: POST /api/git/branch/switch
+  body: {path: '${@repo}', branch: main}
+- operation: POST /api/git/review/revert
+  body: {path: '${@repo}', file: README.md}
+- operation: POST /api/git/review/pr-list
+  body: {path: '${@repo}'}
+- operation: POST /api/files/mkdir
+  body: {path: '${@repo}/scenario'}
+- operation: POST /api/files/upload
+  body: {path: '${@repo}/scenario/hello.txt', data_url: 'data:text/plain;base64,aGVsbG8=', overwrite: true}
+- operation: POST /api/files/upload-stream
+  form:
+    path: ${@repo}/scenario/stream.txt
+    file: {filename: stream.txt, content_type: text/plain, text: streamed}
+- operation: POST /api/files/upload
+  body: {path: '${@home}/images/pixel.png', overwrite: true, data_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='}
+- operation: GET /api/media
+  query: {path: '${@home}/images/pixel.png'}
+- operation: GET /api/files
+  query: {path: '${@repo}/scenario'}
+- operation: GET /api/files/read
+  query: {path: '${@repo}/scenario/hello.txt'}
+- operation: GET /api/files/download
+  query: {path: '${@repo}/scenario/hello.txt'}
+- operation: POST /api/files/upload
+  body: {path: '${@repo}/scenario/tone.wav', overwrite: true, data_url: 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA=='}
+- operation: GET /api/files/stream
+  query: {path: '${@repo}/scenario/tone.wav'}
+- operation: HEAD /api/files/stream
+  query: {path: '${@repo}/scenario/tone.wav'}
+- operation: DELETE /api/files
+  body: {path: '${@repo}/scenario', recursive: true}
+- operation: GET /api/sessions
+  query: {limit: 1}
+  capture: {session: sessions.0.id}
+- operation: GET /api/sessions/{session_id}
+  path: {session_id: '${session}'}
+- operation: GET /api/sessions/{session_id}/messages
+  path: {session_id: '${session}'}
+  query: {limit: 10}
+  capture: {message: messages.0.id}
+- operation: GET /api/sessions/{session_id}/messages/around
+  path: {session_id: '${session}'}
+  query: {row_id: '${message}', limit: 4}
+- operation: GET /api/sessions/{session_id}/timeline
+  path: {session_id: '${session}'}
+- operation: GET /api/sessions/{session_id}/latest-descendant
+  path: {session_id: '${session}'}
+- operation: PATCH /api/sessions/{session_id}
+  path: {session_id: '${session}'}
+  body: {title: 'HermesAPI scenario session ${head}', pinned: true, unread: false}
+- operation: PATCH /api/sessions/{session_id}
+  path: {session_id: '${session}'}
+  body: {pinned: false}
+- operation: GET /api/plugins/hermes-achievements/sessions/{session_id}/badges
+  path: {session_id: '${session}'}
+- operation: POST /api/profiles/sessions/pull-requests
+  body:
+    ids: ['${session}']
+- operation: GET /api/sessions/{session_id}/export
+  path: {session_id: '${session}'}
+  capture: {exported: $}
+- operation: DELETE /api/sessions/{session_id}
+  path: {session_id: '${session}'}
+- operation: POST /api/sessions/import
+  body:
+    sessions: ['${exported}']
+- operation: POST /api/sessions/bulk-delete
+  body:
+    ids: [hermes-api-scenario-missing]
+    profile: default
+- operation: DELETE /api/sessions/empty
+  query: {profile: default}
+- operation: POST /api/sessions/owner-backfill
+  body: {}
+- operation: POST /api/sessions/prune
+  body: {dry_run: true, max_messages: 0}
+- operation: POST /api/profiles
+  body: {name: scenario-profile, description: HermesAPI scenario profile}
+- operation: GET /api/profiles/{name}/soul
+  path: {name: scenario-profile}
+- operation: PUT /api/profiles/{name}/soul
+  path: {name: scenario-profile}
+  body: {content: 'You are the HermesAPI scenario profile.
+
+      '}
+- operation: PUT /api/profiles/{name}/description
+  path: {name: scenario-profile}
+  body: {description: Created by the HermesAPI live scenario}
+- operation: PUT /api/profiles/{name}/model
+  path: {name: scenario-profile}
+  body: {model: openai/gpt-4o-mini, provider: openrouter}
+- operation: GET /api/profiles/{name}/setup-command
+  path: {name: scenario-profile}
+- operation: GET /api/profiles/{name}/desktop-overlay
+  path: {name: scenario-profile}
+- operation: PATCH /api/profiles/{name}
+  path: {name: scenario-profile}
+  body: {new_name: scenario-renamed}
+- operation: POST /api/profiles/{name}/export
+  path: {name: scenario-renamed}
+  body: {}
+  capture: {profile_archive: archive}
+- operation: DELETE /api/profiles/{name}
+  path: {name: scenario-renamed}
+- operation: POST /api/profiles/import
+  body: {archive: '${profile_archive}', name: scenario-imported}
+- operation: DELETE /api/profiles/{name}
+  path: {name: scenario-imported}
+- operation: GET /api/config
+  capture: {config: $}
+- operation: PUT /api/config
+  body: {config: '${config}'}
+- operation: GET /api/config/raw
+  capture: {raw_config: yaml}
+- operation: PUT /api/config/raw
+  body: {yaml_text: '${raw_config}'}
+- operation: PUT /api/env
+  body: {key: TAVILY_API_KEY, value: hermes-api-scenario-key}
+- operation: POST /api/env/reveal
+  body: {key: TAVILY_API_KEY}
+- operation: POST /api/providers/validate
+  body: {key: TAVILY_API_KEY, value: hermes-api-scenario-key}
+- operation: DELETE /api/env
+  body: {key: TAVILY_API_KEY}
+- operation: POST /api/skills
+  body: {name: 'hermes-api-${head}', content: '---
+
+      name: hermes-api-${head}
+
+      description: Scenario skill
+
+      ---
+
+
+      Do nothing.
+
+      '}
+- operation: GET /api/skills/content
+  query: {name: 'hermes-api-${head}'}
+- operation: PUT /api/skills/content
+  body: {name: 'hermes-api-${head}', content: '---
+
+      name: hermes-api-${head}
+
+      description: Scenario skill, edited
+
+      ---
+
+
+      Do nothing.
+
+      '}
+- operation: PUT /api/skills/toggle
+  body: {name: 'hermes-api-${head}', enabled: false}
+- operation: PUT /api/skills/toggle
+  body: {name: 'hermes-api-${head}', enabled: true}
+- operation: POST /api/fs/write-text
+  body: {path: '${@home}/memories/MEMORY.md', content: 'HermesAPI scenario memory
+
+      The scenario runs every operation.
+
+      '}
+- operation: GET /api/learning/graph
+  capture: {learning_node: nodes.0.id}
+- operation: GET /api/learning/node
+  query: {id: '${learning_node}'}
+- operation: PUT /api/learning/node
+  body: {id: '${learning_node}', content: 'HermesAPI scenario memory, edited'}
+- operation: DELETE /api/learning/node
+  body: {id: '${learning_node}'}
+- operation: POST /api/skills/hub/uninstall
+  body: {name: 'hermes-api-${head}'}
+- operation: POST /api/model/set
+  body: {scope: auxiliary, task: compression, provider: openrouter, model: openai/gpt-4o-mini}
+- operation: PUT /api/config/raw
+  body: {yaml_text: '${raw_config}'}
+- operation: POST /api/cron/jobs
+  body: {name: hermes-api-scenario, prompt: Reply with a short greeting., schedule: every 1h, paused: true}
+  capture: {job: id}
+- operation: GET /api/cron/jobs/{job_id}
+  path: {job_id: '${job}'}
+- operation: PUT /api/cron/jobs/{job_id}
+  path: {job_id: '${job}'}
+  body:
+    updates: {name: hermes-api-scenario-edited}
+- operation: POST /api/cron/jobs/{job_id}/resume
+  path: {job_id: '${job}'}
+- operation: POST /api/cron/jobs/{job_id}/trigger
+  path: {job_id: '${job}'}
+- operation: POST /api/cron/jobs/{job_id}/pause
+  path: {job_id: '${job}'}
+- operation: GET /api/cron/jobs/{job_id}/runs
+  path: {job_id: '${job}'}
+- operation: DELETE /api/cron/jobs/{job_id}
+  path: {job_id: '${job}'}
+- operation: GET /api/cron/blueprints
+  capture: {blueprint: blueprints.0.key}
+- operation: POST /api/cron/blueprints/instantiate
+  body: {blueprint: '${blueprint}'}
+  capture: {blueprint_job: id}
+- operation: DELETE /api/cron/jobs/{job_id}
+  path: {job_id: '${blueprint_job}'}
+- operation: PUT /api/messaging/platforms/{platform_id}
+  path: {platform_id: webhook}
+  body: {enabled: true}
+- operation: POST /api/webhooks
+  body: {name: hermes-api-scenario, prompt: Summarise the event., description: Scenario webhook}
+- operation: PUT /api/webhooks/{name}/enabled
+  path: {name: hermes-api-scenario}
+  body: {enabled: false}
+- operation: DELETE /api/webhooks/{name}
+  path: {name: hermes-api-scenario}
+  query: {profile: default}
+- operation: PUT /api/messaging/platforms/{platform_id}
+  path: {platform_id: webhook}
+  body: {enabled: false}
+- operation: POST /api/mcp/servers
+  body:
+    name: hermes-api-scenario
+    command: /bin/echo
+    args: [scenario]
+- operation: PUT /api/mcp/servers/{name}/enabled
+  path: {name: hermes-api-scenario}
+  body: {enabled: false}
+- operation: POST /api/mcp/servers/{name}/test
+  path: {name: hermes-api-scenario}
+- operation: DELETE /api/mcp/servers/{name}
+  path: {name: hermes-api-scenario}
+- operation: GET /api/mcp/servers
+  capture: {mcp_servers: servers}
+- operation: PUT /api/mcp/servers
+  body:
+    servers: {}
+- operation: GET /api/tools/toolsets/{name}/config
+  path: {name: web}
+- operation: GET /api/tools/toolsets/{name}/models
+  path: {name: image_gen}
+- operation: PUT /api/tools/toolsets/{name}
+  path: {name: web}
+  body: {enabled: false}
+- operation: PUT /api/tools/toolsets/{name}
+  path: {name: web}
+  body: {enabled: true}
+- operation: PUT /api/tools/toolsets/{name}/env
+  path: {name: web}
+  body:
+    env: {TAVILY_API_KEY: hermes-api-scenario-key}
+- operation: PUT /api/tools/toolsets/{name}/provider
+  path: {name: web}
+  body: {provider: Brave Search (Free)}
+- operation: DELETE /api/env
+  body: {key: TAVILY_API_KEY}
+- operation: PUT /api/tools/terminal/backend
+  body: {backend: local}
+- operation: GET /api/model/moa
+  capture: {moa_preset: default_preset, moa_presets: presets}
+- operation: PUT /api/model/moa
+  body: {default_preset: '${moa_preset}', presets: '${moa_presets}'}
+- operation: PUT /api/dashboard/font
+  body: {font: theme}
+- operation: PUT /api/dashboard/theme
+  body: {name: default}
+- operation: PUT /api/dashboard/plugin-providers
+  body: {}
+- operation: POST /api/dashboard/plugins/{name}/visibility
+  path: {name: kanban}
+  body: {hidden: false}
+- operation: PUT /api/curator/paused
+  body: {paused: true}
+- operation: PUT /api/curator/paused
+  body: {paused: false}
+- operation: POST /api/credentials/pool
+  body: {provider: openrouter, api_key: sk-or-hermes-api-scenario, label: scenario}
+- {operation: GET /api/credentials/pool}
+- operation: DELETE /api/credentials/pool/{provider}/{index}
+  path: {provider: openrouter, index: 1}
+  query: {profile: default}
+- operation: POST /api/providers/custom-endpoints/validate
+  body: {name: Scenario endpoint, base_url: 'http://127.0.0.1:9/v1', model: scenario-model}
+- operation: POST /api/providers/custom-endpoints
+  body: {name: Scenario endpoint, base_url: 'http://127.0.0.1:9/v1', model: scenario-model, discover_models: false}
+  capture: {endpoint: id}
+- operation: POST /api/providers/custom-endpoints/{endpoint_id}/activate
+  path: {endpoint_id: '${endpoint}'}
+- operation: DELETE /api/providers/custom-endpoints/{endpoint_id}
+  path: {endpoint_id: '${endpoint}'}
+- operation: PUT /api/config/raw
+  body: {yaml_text: '${raw_config}'}
+- operation: POST /api/plugins/kanban/boards
+  body: {slug: hermes-api-scenario, name: HermesAPI scenario, description: Scenario board}
+- operation: PATCH /api/plugins/kanban/boards/{slug}
+  path: {slug: hermes-api-scenario}
+  body: {description: 'Scenario board, renamed'}
+- operation: POST /api/plugins/kanban/tasks
+  query: {board: hermes-api-scenario}
+  body: {title: Scenario parent task, body: Parent, triage: true}
+  capture: {parent: task.id}
+- operation: POST /api/plugins/kanban/tasks
+  query: {board: hermes-api-scenario}
+  body: {title: Scenario child task, body: Child, triage: true}
+  capture: {child: task.id}
+- operation: GET /api/plugins/kanban/tasks/{task_id}
+  path: {task_id: '${parent}'}
+  query: {board: hermes-api-scenario}
+- operation: PATCH /api/plugins/kanban/tasks/{task_id}
+  path: {task_id: '${parent}'}
+  query: {board: hermes-api-scenario}
+  body: {title: 'Scenario parent task, edited', priority: 2}
+- operation: POST /api/plugins/kanban/tasks/{task_id}/comments
+  path: {task_id: '${parent}'}
+  query: {board: hermes-api-scenario}
+  body: {body: A scenario comment, author: hermes-api}
+- operation: POST /api/plugins/kanban/tasks/{task_id}/estimate
+  path: {task_id: '${child}'}
+  query: {board: hermes-api-scenario}
+- operation: POST /api/plugins/kanban/tasks/{task_id}/specify
+  path: {task_id: '${child}'}
+  query: {board: hermes-api-scenario}
+  body: {author: hermes-api}
+- operation: POST /api/plugins/kanban/tasks/{task_id}/decompose
+  path: {task_id: '${child}'}
+  query: {board: hermes-api-scenario}
+  body: {author: hermes-api}
+- operation: POST /api/plugins/kanban/links
+  query: {board: hermes-api-scenario}
+  body: {parent_id: '${parent}', child_id: '${child}'}
+- operation: DELETE /api/plugins/kanban/links
+  query: {board: hermes-api-scenario, parent_id: '${parent}', child_id: '${child}'}
+- operation: POST /api/plugins/kanban/tasks/{task_id}/attachments
+  path: {task_id: '${parent}'}
+  query: {board: hermes-api-scenario}
+  form:
+    file: {filename: notes.txt, content_type: text/plain, text: attachment}
+    uploaded_by: hermes-api
+  capture: {attachment: attachment.id}
+- operation: GET /api/plugins/kanban/tasks/{task_id}/attachments
+  path: {task_id: '${parent}'}
+  query: {board: hermes-api-scenario}
+- operation: GET /api/plugins/kanban/attachments/{attachment_id}
+  path: {attachment_id: '${attachment}'}
+  query: {board: hermes-api-scenario}
+- operation: DELETE /api/plugins/kanban/attachments/{attachment_id}
+  path: {attachment_id: '${attachment}'}
+  query: {board: hermes-api-scenario}
+- operation: GET /api/config/raw
+  capture: {raw_config: yaml}
+- operation: PUT /api/config/raw
+  body: {yaml_text: "${raw_config}\nplatforms:\n  telegram:\n    enabled: false\n    home_channel: {platform: telegram,\
+      \ chat_id: '4242', name: Scenario}\n"}
+- operation: POST /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}
+  path: {task_id: '${parent}', platform: telegram}
+  query: {board: hermes-api-scenario}
+- operation: DELETE /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}
+  path: {task_id: '${parent}', platform: telegram}
+  query: {board: hermes-api-scenario}
+- operation: PUT /api/config/raw
+  body: {yaml_text: '${raw_config}'}
+- operation: GET /api/plugins/kanban/tasks/{task_id}/log
+  path: {task_id: '${parent}'}
+  query: {board: hermes-api-scenario}
+- operation: POST /api/plugins/kanban/tasks/{task_id}/reassign
+  path: {task_id: '${parent}'}
+  query: {board: hermes-api-scenario}
+  body: {profile: default, reason: scenario}
+- operation: POST /api/plugins/kanban/tasks/bulk
+  query: {board: hermes-api-scenario}
+  body:
+    ids: ['${parent}', '${child}']
+    priority: 1
+- operation: POST /api/plugins/kanban/dispatch
+  query: {board: hermes-api-scenario, dry_run: true}
+- operation: DELETE /api/plugins/kanban/tasks/{task_id}
+  path: {task_id: '${child}'}
+  query: {board: hermes-api-scenario}
+- operation: POST /api/plugins/kanban/boards/{slug}/export
+  path: {slug: hermes-api-scenario}
+  body: {}
+  capture: {board_archive: archive}
+- operation: POST /api/plugins/kanban/boards/import
+  body: {archive: '${board_archive}', slug: hermes-api-imported}
+- operation: DELETE /api/plugins/kanban/boards/{slug}
+  path: {slug: hermes-api-imported}
+  query: {delete: true}
+- operation: POST /api/plugins/kanban/boards/{slug}/switch
+  path: {slug: hermes-api-scenario}
+- operation: POST /api/plugins/kanban/boards/{slug}/switch
+  path: {slug: default}
+- operation: DELETE /api/plugins/kanban/boards/{slug}
+  path: {slug: hermes-api-scenario}
+  query: {delete: true}
+- operation: GET /api/plugins/kanban/orchestration
+  capture: {orchestration: $}
+- operation: PUT /api/plugins/kanban/orchestration
+  body: {auto_decompose: false}
+- operation: PATCH /api/plugins/kanban/profiles/{profile_name}
+  path: {profile_name: default}
+  body: {description: Default profile}
+- operation: POST /api/ops/hooks
+  query: {profile: default}
+  body: {event: agent_loop_stopped, command: 'true', approve: true}
+- operation: DELETE /api/ops/hooks
+  query: {profile: default}
+  body: {event: agent_loop_stopped, command: 'true'}
+- {operation: POST /api/pairing/clear-pending}
+- operation: GET /api/memory/providers/{name}/config
+  path: {name: holographic}
+- operation: PUT /api/memory/providers/{name}/config
+  path: {name: holographic}
+  body:
+    values: {}
+- operation: PUT /api/memory/provider
+  body: {provider: ''}
+- operation: POST /api/memory/reset
+  query: {profile: default}
+  body: {target: memory}
+- operation: GET /api/memory/providers/{provider}/oauth/status
+  path: {provider: honcho}
+- operation: POST /api/audio/tts-lease
+  body: {lease: hermes-api-scenario, active: true}
+- operation: POST /api/audio/tts-lease
+  body: {lease: hermes-api-scenario, active: false}
+- operation: POST /api/chat/image-upload
+  body: {filename: pixel.png, data_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='}
+- {operation: POST /api/plugins/hermes-achievements/rescan}
+- {operation: POST /api/plugins/hermes-achievements/reset-state}
+- operation: POST /api/ops/prompt-size
+  capture: {action: name}
+- operation: GET /api/actions/{name}/status
+  path: {name: '${action}'}
+- {operation: POST /api/ops/config-migrate}
+- operation: POST /api/ops/checkpoints/prune
+  query: {profile: default}
+- {operation: POST /api/ops/doctor}
+- {operation: POST /api/ops/dump}
+- {operation: POST /api/ops/security-audit}
+- operation: GET /dashboard-plugins/{plugin_name}/{file_path}
+  path: {plugin_name: kanban, file_path: manifest.json}
+- operation: POST /api/dashboard/agent-plugins/{name}/enable
+  path: {name: disk-cleanup}
+- operation: POST /api/dashboard/agent-plugins/{name}/disable
+  path: {name: disk-cleanup}
+- operation: POST /api/gateway/drain
+  body: {action: drain, suppress_notification: true}
+- operation: POST /api/gateway/drain
+  body: {action: cancel}
+- operation: POST /api/health/retirement
+  body: {action: prepare}
+  capture: {retirement: token}
+- operation: POST /api/health/retirement
+  body: {action: cancel, token: '${retirement}'}
+- operation: DELETE /api/providers/oauth/{provider_id}
+  path: {provider_id: nous}
+  query: {profile: default}
+- operation: PUT /api/messaging/platforms/{platform_id}
+  path: {platform_id: telegram}
+  body:
+    enabled: false
+    env: {}
+- operation: POST /api/messaging/platforms/{platform_id}/test
+  path: {platform_id: telegram}
+- operation: POST /api/plugins/kanban/estimate
+  body: {title: Write a haiku, body: About HermesAPI}
+- operation: POST /api/profiles/{name}/describe-auto
+  path: {name: default}
+  body: {overwrite: false}
+- operation: POST /api/plugins/kanban/profiles/{profile_name}/describe-auto
+  path: {profile_name: default}
+  body: {overwrite: false}
+- operation: POST /api/curator/run
+  query: {profile: default}
+- operation: POST /api/local-models/server
+  body: {action: stop}
+- operation: POST /api/ops/backup
+  query: {profile: default}
+  body: {}
+  capture: {backup_archive: archive}
+- operation: GET /api/actions/{name}/status
+  path: {name: backup}
+  until: {path: running, equals: false, timeout: 60}
+- operation: GET /api/ops/backup/download
+  query: {archive: '${backup_archive}'}
+# A second tagged server behind the dashboard auth gate (the bundled password provider, user
+# `hermes-api`, password `scenario-password`), started without credentials: public routes, the
+# native app's PKCE sign-in, Bearer-authenticated calls (`auth: native` signs requests with the
+# tokens captured as `tokens`), token refresh, and a browser cookie session. `name#param` captures
+# the query parameter `param` of the URL at `name`.
+gated_calls:
+- {operation: GET /api/auth/providers}
+- {operation: GET /login}
+- operation: GET /auth/login
+  query: {provider: basic}
+- operation: GET /auth/native/authorize
+  query: {provider: basic, code_challenge: Mqlx6tel6Hd6jvw673vAco05qVPhjcMLuakGjpQsmZw, code_challenge_method: S256,
+    redirect_uri: 'http://127.0.0.1:1/callback', state: scenario-state}
+- operation: POST /auth/password-login
+  body: {provider: basic, username: hermes-api, password: scenario-password}
+  capture: {code: 'next#code'}
+- operation: POST /auth/native/token
+  body: {code: '${code}', code_verifier: hermes-api-scenario-code-verifier-0123456789abcdefghijklmnop}
+  capture: {first_refresh: refresh_token}
+- operation: POST /auth/native/refresh
+  body: {refresh_token: '${first_refresh}', provider: basic}
+  capture: {tokens: $}
+- operation: GET /api/auth/me
+  auth: native
+- operation: POST /api/auth/ws-ticket
+  auth: native
+- operation: GET /api/sessions/empty/count
+  auth: native
+- operation: POST /auth/password-login
+  body: {provider: basic, username: hermes-api, password: scenario-password}
+- {operation: GET /api/auth/me}
+- {operation: POST /auth/logout}

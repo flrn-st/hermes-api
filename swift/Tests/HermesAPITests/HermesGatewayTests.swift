@@ -37,6 +37,10 @@ private actor TestSocket: GatewayConnection {
     private var failure: HermesGatewayError?
     private let answersHeartbeats: Bool
     private(set) var isClosed = false
+    private var sendsFail = false
+
+    /// The socket died, but its reader has not noticed: sends fail, reads still wait.
+    func failSends() { sendsFail = true }
 
     init(answersHeartbeats: Bool = false) {
         (sent, sentContinuation) = AsyncStream.makeStream(of: Data.self)
@@ -45,7 +49,7 @@ private actor TestSocket: GatewayConnection {
     }
 
     func send(_ frame: Data) throws {
-        guard !isClosed else { throw HermesGatewayError.transport("closed") }
+        guard !isClosed, !sendsFail else { throw HermesGatewayError.transport("closed") }
         guard let object = try JSONSerialization.jsonObject(with: frame) as? [String: Any] else {
             throw HermesGatewayError.decoding("Invalid test frame")
         }
@@ -264,6 +268,60 @@ private func createSession(
     #expect(method == "probe")
     await second.inject(result(id, #"{"pong":true}"#))
     #expect(try await probe.value.pong)
+    await gateway.disconnect()
+}
+
+@Test func readOnlyCallsAreRepeatedAfterALostConnection() async throws {
+    let first = TestSocket()
+    let second = TestSocket()
+    let gateway = client(SequenceTransport([first, second]), timeout: .seconds(5))
+    try await gateway.connect()
+    var sentFirst = first.sent.makeAsyncIterator()
+    let call = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }
+    _ = try #require(await sentFirst.next())
+    await first.sever()
+    var sentSecond = second.sent.makeAsyncIterator()
+    let (method, id) = try sentCall(try #require(await sentSecond.next()))
+    #expect(method == "ping")
+    await second.inject(result(id, #"{"pong":true}"#))
+    #expect(try await call.value.pong)
+    await gateway.disconnect()
+}
+
+@Test func callsThatMayHaveRunAreNotRepeated() async throws {
+    let first = TestSocket()
+    let second = TestSocket()
+    let gateway = client(SequenceTransport([first, second]), timeout: .seconds(5))
+    try await gateway.connect()
+    var sentFirst = first.sent.makeAsyncIterator()
+    let call = Task { try await gateway.call("probe", params: PingParams(), as: PingResult.self) }
+    _ = try #require(await sentFirst.next())
+    await first.sever()
+    await #expect(throws: HermesGatewayError.transport("closed")) { try await call.value }
+    // The next frame on the new socket is the next call, not a repeat of the one that may have run.
+    try await state(of: gateway) { $0 == .connected }
+    let next = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }
+    var sentSecond = second.sent.makeAsyncIterator()
+    let (method, id) = try sentCall(try #require(await sentSecond.next()))
+    #expect(method == "ping")
+    await second.inject(result(id, #"{"pong":true}"#))
+    _ = try await next.value
+    await gateway.disconnect()
+}
+
+@Test func undeliveredCallsAreSentOnTheNextConnection() async throws {
+    let first = TestSocket()
+    let second = TestSocket()
+    let gateway = client(SequenceTransport([first, second]), timeout: .seconds(5))
+    try await gateway.connect()
+    await first.failSends()
+    let call = Task { try await gateway.call("probe", params: PingParams(), as: PingResult.self) }
+    var sentSecond = second.sent.makeAsyncIterator()
+    let (method, id) = try sentCall(try #require(await sentSecond.next()))
+    #expect(method == "probe")
+    await second.inject(result(id, #"{"pong":true}"#))
+    #expect(try await call.value.pong)
+    #expect(await first.isClosed)
     await gateway.disconnect()
 }
 

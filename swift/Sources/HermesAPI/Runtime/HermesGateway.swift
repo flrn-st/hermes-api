@@ -409,12 +409,43 @@ public actor HermesGateway: GatewayCalling {
                        waitsForConnection: true)
     }
 
-    /// App calls made while reconnecting wait for the connection, up to their timeout. Calls in flight
-    /// when a socket dies fail with `transport`: Hermes may or may not have run them.
+    /// App calls made while reconnecting wait for the connection, up to their timeout. When the connection
+    /// drops under a call, the call is sent again on the next connection if Hermes never received it, or if
+    /// it only reads state (`HermesGatewayContract.readOnlyMethods`). Any other call whose response was
+    /// lost fails with `transport`: Hermes may or may not have run it.
     private func call<Params: Encodable & Sendable, Result: Decodable & Sendable>(
         _ method: String, params: Params, as resultType: Result.Type, timeout: Duration, waitsForConnection: Bool
     ) async throws -> Result {
+        let deadline = ContinuousClock.now + timeout
+        var attempt = 1
+        while true {
+            do {
+                return try await attemptCall(method, params: params, as: resultType,
+                                             timeout: deadline - ContinuousClock.now,
+                                             waitsForConnection: waitsForConnection)
+            } catch let loss as ConnectionLoss {
+                let repeatable = !loss.delivered || HermesGatewayContract.readOnlyMethods.contains(method)
+                guard waitsForConnection, repeatable, attempt < 6, ContinuousClock.now < deadline else {
+                    throw loss.error
+                }
+                attempt += 1
+                configuration.logger.info(
+                    "Repeating \(method, privacy: .public) after a lost connection (attempt \(attempt))")
+            }
+        }
+    }
+
+    /// A call the connection dropped under; `delivered` is false when the frame never left.
+    private struct ConnectionLoss: Error {
+        let delivered: Bool
+        let error: HermesGatewayError
+    }
+
+    private func attemptCall<Params: Encodable & Sendable, Result: Decodable & Sendable>(
+        _ method: String, params: Params, as resultType: Result.Type, timeout: Duration, waitsForConnection: Bool
+    ) async throws -> Result {
         try Task.checkCancellation()
+        guard timeout > .zero else { throw HermesGatewayError.timeout }
         if waitsForConnection && !ready {
             try await awaitConnection(within: timeout)
         }
@@ -432,7 +463,16 @@ public actor HermesGateway: GatewayCalling {
             continuation.finish()
         }
         do {
-            try await socket.send(frame)
+            do {
+                try await socket.send(frame)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                // A socket that cannot send is dead even if its reader has not noticed yet.
+                let lost = Self.gatewayError(error)
+                await connectionLost(lost, generation: current)
+                throw ConnectionLoss(delivered: false, error: lost)
+            }
             let result = try await withThrowingTaskGroup(of: JSONValue.self) { group in
                 group.addTask {
                     var iterator = stream.makeAsyncIterator()
@@ -465,6 +505,11 @@ public actor HermesGateway: GatewayCalling {
         } catch HermesGatewayError.rpc(HermesGatewayErrorCode.backendRetiring, let message, let data) {
             await connectionLost(.transport("Hermes backend is retiring"), generation: current)
             throw HermesGatewayError.rpc(code: HermesGatewayErrorCode.backendRetiring, message: message, data: data)
+        } catch let loss as ConnectionLoss {
+            throw loss
+        } catch HermesGatewayError.transport(let message) where generation != current {
+            // The socket this call went out on is gone: the response was lost with it.
+            throw ConnectionLoss(delivered: true, error: .transport(message))
         } catch {
             throw Self.gatewayError(error)
         }
@@ -553,7 +598,7 @@ public actor HermesGateway: GatewayCalling {
 
     /// A malformed frame is logged and dropped: reconnecting would not change what Hermes sends.
     private func handleFrame(_ data: Data, socket: any GatewayConnection, generation current: Int) async {
-        guard case .object(let fields)? = try? JSONDecoder().decode(JSONValue.self, from: data) else {
+        guard case .object(let fields)? = try? JSONValue(jsonData: data) else {
             configuration.logger.error("Dropped a gateway frame that is not a JSON object")
             return
         }

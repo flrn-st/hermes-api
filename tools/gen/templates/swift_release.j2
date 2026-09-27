@@ -8,4 +8,7 @@ public enum HermesGatewayContract {
     public static let upstreamTag = {{ tag_literal }}
     public static let desktopContract = {{ desktop_contract }}
     public static let supportedContractRange: ClosedRange<Int> = {{ desktop_contract }}...{{ desktop_contract }}
+    /// Methods that only read state (`spec/gateway-read-only.yaml`); the gateway repeats them after a
+    /// reconnect when a dropped connection lost their response.
+    public static let readOnlyMethods: Set<String> = [{{ read_only }}]
 }

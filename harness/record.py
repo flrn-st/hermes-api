@@ -245,6 +245,7 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
     entries: list[dict] = []
     captured: dict[str, object] = {}
     seen_events: list[str] = []
+    seen_session_events: list[tuple[str, object]] = []
     seen_requests: list[str] = []
     seen_frames: dict[str, dict] = {}
     async with connect(f"{url}/api/ws?token={token}", origin=os.environ["HERMES_LIVE_URL"]) as socket:
@@ -260,6 +261,7 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
                     if name == "error":
                         raise RuntimeError("Hermes emitted an error event")
                     seen_events.append(name)
+                    seen_session_events.append((name, params.get("session_id")))
                     seen_frames[name] = frame
                     recorded_frame = json.loads(json.dumps(frame))
                     redacted_fields: list[str] = []
@@ -325,6 +327,7 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
         for number, call in enumerate(gateway_calls, 1):
             identifier = len(calls) + number
             seen_events.clear()
+            seen_session_events.clear()
             method = call["method"]
             contract = METHODS[method]
             params = contract.params.model_validate(_substitute(call.get("params", {}), values)).model_dump(
@@ -340,8 +343,10 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
             entries.append({"kind": "response", "name": method, "frame": redacted,
                             **({"redactions": redactions} if redactions else {})})
             if wait_for := call.get("wait"):
+                # The call's own session: a subagent's events must not end the wait.
+                wanted = (wait_for, params.get("session_id"))
                 deadline = time.monotonic() + 60
-                while wait_for not in seen_events:
+                while wanted not in seen_session_events:
                     if time.monotonic() > deadline:
                         raise TimeoutError(f"Gateway scenario call {number} {method} never saw {wait_for}")
                     await receive()

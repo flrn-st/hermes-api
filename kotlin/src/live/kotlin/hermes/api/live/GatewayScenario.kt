@@ -46,10 +46,15 @@ internal object GatewayScenario {
             val method = call.getValue("method").jsonPrimitive.content
             val label = "Gateway scenario call ${index + 1} $method"
             val wait = (call["wait"] as? JsonPrimitive)?.contentOrNull
+            val params = RESTScenario.resolve(call["params"] ?: JsonObject(emptyMap()), captured)
+            // The call's own session: a subagent's events must not end the wait.
+            val session = ((params as? JsonObject)?.get("session_id") as? JsonPrimitive)?.contentOrNull
             // Subscribe before calling, so the awaited event cannot precede the subscription.
-            val awaited = wait?.let { type -> async(start = CoroutineStart.UNDISPATCHED) { gateway.events.first { it.type == type } } }
+            val awaited = wait?.let { type ->
+                async(start = CoroutineStart.UNDISPATCHED) { gateway.events.first { it.type == type && it.sessionId == session } }
+            }
             val result = try {
-                GatewayOperations.call(method, gateway, RESTScenario.resolve(call["params"] ?: JsonObject(emptyMap()), captured), json)
+                GatewayOperations.call(method, gateway, params, json)
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Exception) {

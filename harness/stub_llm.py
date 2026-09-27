@@ -29,6 +29,27 @@ PACED_PROMPT = "Stream the HermesAPI paced fixture."
 PACED_CHUNKS = [f"beat {index:03d} " for index in range(1, 301)]
 PACED_REPLY = "".join(PACED_CHUNKS).strip()
 PACED_CHUNK_DELAY = 0.05
+# Feature fixtures: a turn that writes a todo list, one that delegates to a subagent (which the stub then
+# answers like any other turn), and one that reasons before it answers.
+TODO_PROMPT = "Plan the HermesAPI fixture with a todo list."
+TODO_REPLY = "HermesAPI todo list written."
+DELEGATE_PROMPT = "Delegate the HermesAPI fixture check to a subagent."
+DELEGATE_REPLY = "HermesAPI subagent finished."
+REASONING_PROMPT = "Think about the HermesAPI fixture before answering."
+REASONING_CHUNKS = ["Considering ", "the HermesAPI ", "fixture."]
+REASONING_REPLY = "HermesAPI reasoning complete."
+# Prompts answered with one tool call, then with a reply once the tool result is in.
+SCRIPTED_TOOLS = {
+    CLARIFY_PROMPT: ("clarify", {"questions": [{"question": "Which release channel?", "choices": ["Stable", "Beta"]}]},
+                     CLARIFY_REPLY),
+    APPROVAL_PROMPT: ("terminal", {"command": APPROVAL_COMMAND}, APPROVAL_REPLY),
+    TODO_PROMPT: ("todo_list", {"todos": [{"id": "1", "content": "Check the HermesAPI fixture", "status": "in_progress"},
+                                          {"id": "2", "content": "Report the result", "status": "pending"}]},
+                  TODO_REPLY),
+    DELEGATE_PROMPT: ("delegate_task", {"tasks": [{"goal": "Reply with a short greeting.",
+                                                   "context": "HermesAPI fixture subagent."}]},
+                      DELEGATE_REPLY),
+}
 
 
 class StubLLM:
@@ -69,6 +90,19 @@ class StubLLM:
                 self.wfile.flush()
                 self.close_connection = True
 
+            def _stream_reasoning(self, model: str, usage: dict) -> None:
+                """Stream reasoning deltas before the reply, as reasoning models do."""
+                deltas = ([{"role": "assistant", "reasoning_content": REASONING_CHUNKS[0]}]
+                          + [{"reasoning_content": text} for text in REASONING_CHUNKS[1:]]
+                          + [{"content": REASONING_REPLY}])
+                body = "".join("data: " + json.dumps({
+                    "id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1, "model": model,
+                    "choices": [{"index": 0, "delta": delta, "finish_reason": None}]}) + "\n\n" for delta in deltas)
+                final = {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1, "model": model,
+                         "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}], "usage": usage}
+                self._answer("text/event-stream",
+                             (body + "data: " + json.dumps(final) + "\n\ndata: [DONE]\n\n").encode())
+
             def do_GET(self) -> None:
                 if self.path != "/v1/models":
                     self.send_error(404)
@@ -88,16 +122,12 @@ class StubLLM:
                 messages = request.get("messages", [])
                 latest_user = next((str(message.get("content")) for message in reversed(messages)
                                     if message.get("role") == "user"), "")
-                clarify_turn = CLARIFY_PROMPT in latest_user
-                approval_turn = APPROVAL_PROMPT in latest_user
+                scripted = next((script for prompt, script in SCRIPTED_TOOLS.items() if prompt in latest_user), None)
                 latest_user_index = max((index for index, message in enumerate(messages)
                                          if message.get("role") == "user"), default=-1)
                 answered_tool = any(message.get("role") == "tool" for message in messages[latest_user_index + 1:])
-                if (clarify_turn or approval_turn) and not answered_tool:
-                    tool_name = "clarify" if clarify_turn else "terminal"
-                    arguments = (json.dumps({"questions": [{"question": "Which release channel?",
-                                                          "choices": ["Stable", "Beta"]}]}) if clarify_turn
-                                 else json.dumps({"command": APPROVAL_COMMAND}))
+                if scripted and not answered_tool:
+                    tool_name, arguments = scripted[0], json.dumps(scripted[1])
                     choice = {"index": 0, "delta": {"role": "assistant", "content": None,
                               "tool_calls": [{"index": 0, "id": f"call_hermes_api_{tool_name}",
                                               "type": "function", "function": {"name": tool_name,
@@ -126,7 +156,10 @@ class StubLLM:
                 if PACED_PROMPT in latest_user and request.get("stream"):
                     self._stream_slowly(model, usage, PACED_CHUNKS, PACED_CHUNK_DELAY)
                     return
-                reply = CLARIFY_REPLY if clarify_turn else APPROVAL_REPLY if approval_turn else REPLY
+                if REASONING_PROMPT in latest_user and request.get("stream"):
+                    self._stream_reasoning(model, usage)
+                    return
+                reply = scripted[2] if scripted else REPLY
                 if request.get("stream"):
                     chunks = [
                         {"id": "hermes-api-stub", "object": "chat.completion.chunk", "created": 1,

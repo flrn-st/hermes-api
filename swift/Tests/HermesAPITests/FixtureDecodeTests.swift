@@ -24,6 +24,13 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
     }
 }
 
+/// Every reply and tool the stub model answers the recorded scenarios with (`harness/stub_llm.py`).
+private let fixtureReplies: Set<String> = [
+    "HermesAPI fixture reply.", "HermesAPI stable release selected.", "HermesAPI approval denied as expected.",
+    "HermesAPI reasoning complete.", "HermesAPI subagent finished.",
+]
+private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task"]
+
 @Test func recordedLivenessFramesDecodeInSwift() throws {
     let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
@@ -103,21 +110,17 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
                 #expect(!ready.replayEpoch.isEmpty)
                 #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(ready)) == params["payload"])
             }
-            if case .messageComplete(let complete) = payload {
-                #expect([.string("HermesAPI fixture reply."),
-                         .string("HermesAPI stable release selected."),
-                         .string("HermesAPI approval denied as expected.")].contains(complete.text))
+            if case .messageComplete(let complete) = payload, case .string(let text)? = complete.text {
+                #expect(fixtureReplies.contains(text))
             }
             if case .messageDelta(let delta) = payload {
-                #expect(["HermesAPI fixture reply.", "HermesAPI stable release selected.",
-                         "HermesAPI approval denied as expected."].contains(
-                    delta.text.trimmingCharacters(in: .whitespacesAndNewlines)))
+                #expect(fixtureReplies.contains(delta.text.trimmingCharacters(in: .whitespacesAndNewlines)))
             }
             if case .toolStart(let started) = payload {
-                #expect(["clarify", "terminal"].contains(started.name))
+                #expect(fixtureTools.contains(started.name))
             }
             if case .toolComplete(let completed) = payload {
-                #expect(["clarify", "terminal"].contains(completed.name))
+                #expect(fixtureTools.contains(completed.name))
                 if completed.name == "terminal" {
                     guard case .object(let result)? = completed.result else {
                         throw HermesGatewayError.decoding("Missing denied terminal result")

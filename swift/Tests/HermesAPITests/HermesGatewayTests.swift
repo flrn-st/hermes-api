@@ -342,6 +342,25 @@ private func createSession(
     await gateway.disconnect()
 }
 
+@Test func genericFailureWithTheRetiringCodeKeepsTheConnection() async throws {
+    let socket = TestSocket()
+    let transport = SequenceTransport([socket])
+    let gateway = client(transport)
+    try await gateway.connect()
+    var sent = socket.sent.makeAsyncIterator()
+    let call = Task { try await gateway.call("tools.configure", params: PingParams(), as: PingResult.self) }
+    let (_, id) = try sentCall(try #require(await sent.next()))
+    // tools.configure answers 5035 for its own failures too; only the retiring message means Hermes is leaving.
+    await socket.inject(error(id, code: 5035, "could not write the toolset config"))
+    await #expect(throws: HermesGatewayError.self) { try await call.value }
+    let ping = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }
+    let (_, pingID) = try sentCall(try #require(await sent.next()))
+    await socket.inject(result(pingID, #"{"pong":true}"#))
+    #expect(try await ping.value.pong)
+    #expect(await transport.attempts == 1)
+    await gateway.disconnect()
+}
+
 // MARK: - Authentication
 
 @Test func ticketAuthUsesAuthenticatedPost() async throws {

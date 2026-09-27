@@ -10,6 +10,9 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
     public val {{ namespace.kotlin_name }}: {{ namespace.type_name }} = {{ namespace.type_name }}(caller)
 {% endfor %}
 {% for method in root_methods %}
+{% for line in method.kotlin_doc %}
+    {{ line }}
+{% endfor %}
     public suspend fun {{ method.kotlin_name }}(params: {{ method.params }}): {{ method.result }} =
         caller.call({{ method.wire_literal }}, params, serializer<{{ method.params }}>(), serializer<{{ method.result }}>())
 {% endfor %}
@@ -18,6 +21,9 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
 
 public class {{ namespace.type_name }}(private val caller: GatewayCaller) {
 {% for method in namespace.methods %}
+{% for line in method.kotlin_doc %}
+    {{ line }}
+{% endfor %}
     public suspend fun {{ method.kotlin_name }}(params: {{ method.params }}): {{ method.result }} =
         caller.call({{ method.wire_literal }}, params, serializer<{{ method.params }}>(), serializer<{{ method.result }}>())
 {% endfor %}

@@ -22,17 +22,6 @@ public enum HermesGatewayError: Error, Sendable, Equatable {
     }
 }
 
-public enum HermesGatewayErrorCode {
-    public static let contractValidation = 4000
-    public static let sessionNotFound = 4001
-    public static let incompatibleContract = 4006
-    public static let sessionNotLive = 4007
-    public static let sessionSettling = 4009
-    public static let sessionUnavailable = 4015
-    /// The backend is shutting down and asks clients to reconnect.
-    public static let backendRetiring = 5035
-}
-
 public enum GatewayConnectionState: Sendable, Equatable {
     /// Not started, or closed by `disconnect()`.
     case idle

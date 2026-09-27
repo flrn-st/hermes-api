@@ -37,6 +37,7 @@ import kotlinx.serialization.json.put
 import hermes.api.generated.gateway.ClientCapabilitiesParams
 import hermes.api.generated.gateway.ClientCapabilitiesResult
 import hermes.api.generated.gateway.GatewayEventPayload
+import hermes.api.generated.gateway.GatewayKnownError
 import hermes.api.generated.gateway.GatewayMethodCatalog
 import hermes.api.generated.gateway.HermesGatewayContract
 import hermes.api.generated.gateway.ServerRequest
@@ -469,7 +470,7 @@ public class HermesGateway(
             withContext(confined) { trackSession(method, encodedParams, result) }
             return decoded
         } catch (error: HermesGatewayException.RPC) {
-            if (error.code == HermesGatewayErrorCodes.BACKEND_RETIRING) {
+            if (error.known == GatewayKnownError.BACKEND_RETIRING) {
                 withContext(confined) { connectionLost(HermesGatewayException.Transport("Hermes backend is retiring"), current) }
             }
             throw error
@@ -748,12 +749,11 @@ public class HermesGateway(
                     waitsForConnection = false)
                 return Rebind.Bound
             } catch (error: HermesGatewayException.RPC) {
-                when (error.code) {
-                    // Hermes is still settling the disconnect interrupt.
-                    HermesGatewayErrorCodes.SESSION_SETTLING -> if (attempt < 3) delay(500L * attempt) else return Rebind.Settling
-                    // Not found, not live, unavailable, or refused otherwise: this runtime id is no longer ours.
-                    else -> return Rebind.Gone(error.message ?: "unavailable")
-                }
+                // Not found, not live, or refused otherwise: this runtime id is no longer ours.
+                if (error.known != GatewayKnownError.SESSION_SETTLING) return Rebind.Gone(error.message ?: "unavailable")
+                if (attempt == 3) return Rebind.Settling
+                // Hermes is still settling the disconnect interrupt.
+                delay(500L * attempt)
             }
         }
         return Rebind.Settling

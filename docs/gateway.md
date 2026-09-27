@@ -80,7 +80,7 @@ gateway.connect()
 | Hermes reclaimed a session (it does so 20 s after its socket closes, and on restart) | Resumes it from storage with `session.resume`. The session continues under a new runtime id, reported as `.resumed(previousSessionID:sessionID:storedSessionID:)`. |
 | Replay window exceeded (512 events or 4 MiB per session) | Reports `.replayTruncated`; reload the transcript with `session.history`. |
 | Credential rejected (HTTP 401/403), incompatible server | Stops retrying and reports `.failed(error)`; call `connect()` again once fixed. |
-| Hermes is retiring the backend (RPC error 5035) | Reconnects. |
+| Hermes is retiring the backend (`GatewayKnownError.backendRetiring`) | Reconnects. Other failures that reuse code 5035 do not. |
 | Calls made while reconnecting | Wait for the connection, up to their timeout. |
 | Calls in flight when a socket dies | Sent again on the next connection when the frame never left, or when the method only reads state (`HermesGatewayContract.readOnlyMethods`, reviewed in `spec/gateway-read-only.yaml`), all within the call's timeout. Any other call whose response was lost fails with a transport error, because Hermes may already have run it: after `prompt.submit` fails that way, watch the session's events (reconnect replays them) and submit again only if the turn never starts. |
 | Slow event consumer | Events are buffered per subscriber; a slow consumer never stalls the socket or its heartbeat. |
@@ -89,6 +89,37 @@ gateway.connect()
 Sessions created with `close_on_disconnect: true` are torn down by Hermes as soon
 as the socket closes; the client reports them as `.unavailable` instead of
 rebinding them.
+
+## Errors Hermes answers with
+
+A refused call throws `HermesGatewayError.rpc(code:message:data:)` (Kotlin: `HermesGatewayException.RPC`).
+Hermes reuses codes for unrelated failures (4001 is "session not found" for session methods and an
+invalid audio frame for `wake.feed`), so the client classifies each error by code and message against a
+reviewed catalog of the pinned release:
+
+- `error.kind` is a `GatewayErrorKind`: what the app can do about it (`invalidRequest`, `unsupported`,
+  `notFound`, `conflict`, `busy`, `forbidden`, `unavailable`, `serverError`, or `unknown` for codes
+  the release does not answer with).
+- `error.known` is a `GatewayKnownError` for errors with a stable meaning, such as `.sessionNotFound`,
+  `.sessionBusy`, `.sessionStarting`, `.unknownMethod` or `.backendRetiring`.
+- Every generated method's documentation lists the codes its handler can answer with, and their messages.
+
+```swift
+do {
+    _ = try await gateway.prompt.submit(.init(sessionId: id, text: .string(text)))
+} catch let error as HermesGatewayError where error.known == .sessionBusy {
+    // Queue the message until the turn finishes.
+} catch let error as HermesGatewayError where error.kind == .notFound {
+    // The session is gone: resume it by its stored id.
+}
+```
+
+Hermes declares no errors in its gateway contract, so `make rest` reads them from the tagged handlers into
+`spec/out/<ref>/gateway-errors.json`, following decorators, shared helpers and codes passed through
+them. `spec/gateway-errors.yaml` classifies every code; each entry pins its message templates by hash,
+and generation stops when a release adds, removes or changes a code until it is reviewed again. The live
+scenarios provoke refusals on purpose (an unknown method, a wrongly typed parameter, a missing session
+and profile) and both clients must classify them as the catalog says.
 
 ## How it is tested
 

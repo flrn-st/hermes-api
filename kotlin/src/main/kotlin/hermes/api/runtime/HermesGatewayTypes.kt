@@ -20,17 +20,6 @@ public sealed class HermesGatewayException(message: String) : Exception(message)
     internal val isTerminal: Boolean get() = this is AuthenticationFailed || this is IncompatibleServer
 }
 
-public object HermesGatewayErrorCodes {
-    public const val CONTRACT_VALIDATION: Int = 4000
-    public const val SESSION_NOT_FOUND: Int = 4001
-    public const val INCOMPATIBLE_CONTRACT: Int = 4006
-    public const val SESSION_NOT_LIVE: Int = 4007
-    public const val SESSION_SETTLING: Int = 4009
-    public const val SESSION_UNAVAILABLE: Int = 4015
-    /** The backend is shutting down and asks clients to reconnect. */
-    public const val BACKEND_RETIRING: Int = 5035
-}
-
 public sealed interface GatewayConnectionState {
     /** Not started, or closed by `disconnect()`. */
     public data object Idle : GatewayConnectionState

@@ -69,6 +69,7 @@ public struct GatewayMethodCatalog: Sendable {
     public var voice: VoiceMethods { VoiceMethods(caller: caller) }
     public var wake: WakeMethods { WakeMethods(caller: caller) }
 
+    /// Cheapest liveness probe; answered on the WS reader thread even while every agent is mid-turn.
     public func ping(_ params: PingParams) async throws -> PingResult {
         try await caller.call("ping", params: params, as: PingResult.self)
     }
@@ -78,6 +79,14 @@ public struct AgentsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Registry-wide background process summary for ``/agents``.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5033 unsupported
     public func list(_ params: AgentsListParams) async throws -> AgentsListResult {
         try await caller.call("agents.list", params: params, as: AgentsListResult.self)
     }
@@ -87,12 +96,31 @@ public struct ApprovalMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Replay the approvals still waiting on this session (reconnect / polling).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5004 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func pending(_ params: ApprovalPendingParams) async throws -> ApprovalPendingResult {
         try await caller.call("approval.pending", params: params, as: ApprovalPendingResult.self)
     }
+    /// Tell the backend the card is on screen, so its timeout clock starts.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4006 invalidRequest: "request_id required"
+    /// - 5004 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func received(_ params: ApprovalReceivedParams) async throws -> ApprovalReceivedResult {
         try await caller.call("approval.received", params: params, as: ApprovalReceivedResult.self)
     }
+    /// Deliver the user's decision on a dangerous command (falls back to durable identity on a stale sid).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5004 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func respond(_ params: ApprovalRespondParams) async throws -> ApprovalRespondResult {
         try await caller.call("approval.respond", params: params, as: ApprovalRespondResult.self)
     }
@@ -102,18 +130,23 @@ public struct BillingMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Enable/disable auto top-up with its threshold and reload amount (billing:manage).
     public func autoReload(_ params: BillingAutoReloadParams) async throws -> BillingMutationResult {
         try await caller.call("billing.auto_reload", params: params, as: BillingMutationResult.self)
     }
+    /// Start a one-off top-up charge (billing:manage, idempotent).
     public func charge(_ params: BillingChargeParams) async throws -> BillingChargeResult {
         try await caller.call("billing.charge", params: params, as: BillingChargeResult.self)
     }
+    /// Poll one charge by id.
     public func chargeStatus(_ params: BillingChargeStatusParams) async throws -> BillingChargeStatusResult {
         try await caller.call("billing.charge_status", params: params, as: BillingChargeStatusResult.self)
     }
+    /// Read-only billing view (no scope); the Nous free tier is answered locally without a portal call.
     public func state(_ params: ProfileParams) async throws -> BillingStateResult {
         try await caller.call("billing.state", params: params, as: BillingStateResult.self)
     }
+    /// Run the billing:manage device flow; the URL/code arrive via billing.step_up.verification.
     public func stepUp(_ params: BillingStepUpParams) async throws -> BillingStepUpResult {
         try await caller.call("billing.step_up", params: params, as: BillingStepUpResult.self)
     }
@@ -123,15 +156,39 @@ public struct BotRelayMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Deliver a relayed DM into a Bot Chat on this gateway and return the one-turn reply (blocking).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4090 invalidRequest: "profile and message required"
+    /// - 4091 invalidRequest: "message too long"
+    /// - 4092 notFound: "no profile '{…}' on this gateway"
+    /// - 5092 serverError: "delivery turn failed: {…}"
+    /// - 5093 serverError: "delivery turn timed out"
+    /// - 5094 serverError
+    /// - 5096 busy
     public func deliver(_ params: BotRelayDeliverParams) async throws -> BotRelayDeliverResult {
         try await caller.call("bot_relay.deliver", params: params, as: BotRelayDeliverResult.self)
     }
+    /// Atomically claim every pending cross-connection envelope queued on this gateway.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5091 serverError
     public func outboxDrain(_ params: BotRelayOutboxDrainParams) async throws -> BotRelayOutboxDrainResult {
         try await caller.call("bot_relay.outbox.drain", params: params, as: BotRelayOutboxDrainResult.self)
     }
+    /// Write a relayed reply and/or typed error for an envelope so the sender-side waiter resolves.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4093 invalidRequest: "id required"
+    /// - 4094 invalidRequest
+    /// - 5095 invalidRequest
     public func reply(_ params: BotRelayReplyParams) async throws -> OkResult {
         try await caller.call("bot_relay.reply", params: params, as: OkResult.self)
     }
+    /// Replace this gateway's view of agents on other connections; answers the accepted row count.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5090 serverError
     public func rosterSync(_ params: BotRelayRosterSyncParams) async throws -> BotRelayRosterSyncResult {
         try await caller.call("bot_relay.roster.sync", params: params, as: BotRelayRosterSyncResult.self)
     }
@@ -141,18 +198,39 @@ public struct BrowserMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Hard-detach only the controller owned by this authenticated transport.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4403 forbidden: "authenticated controller identity required", "controller is not owned by this transport", "session is not owned by this transport"
     public func controllerDetach(_ params: BrowserControllerParams) async throws -> BrowserControllerDetachResult {
         try await caller.call("browser.controller.detach", params: params, as: BrowserControllerDetachResult.self)
     }
+    /// Acknowledge a heartbeat only for this transport's own attached controller.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4403 forbidden: "authenticated controller identity required", "controller is not owned by this transport", "session is not owned by this transport"; notFound: "no controller registered for this session"
     public func controllerHeartbeat(_ params: BrowserControllerParams) async throws -> OkResult {
         try await caller.call("browser.controller.heartbeat", params: params, as: OkResult.self)
     }
+    /// Attach this connection as the browser controller for one session; fails closed (4403).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4403 forbidden: "browser.controller.register requires an authenticated non-internal identity", "browser.extension_control.enabled is not set", "controller is not owned by this transport", "session is not owned by this transport"; invalidRequest: "controller_id, browser_profile_id, and server session profile are required", "no permitted controller capabilities requested"; notFound: "no controller registered for this session"; unsupported: "unsupported browser-control protocol version; expected {…}"
     public func controllerRegister(_ params: BrowserControllerRegisterParams) async throws -> BrowserControllerRegisterResult {
         try await caller.call("browser.controller.register", params: params, as: BrowserControllerRegisterResult.self)
     }
+    /// Deliver one command result to the broker; accepted is false for unknown or settled command ids.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4403 forbidden: "authenticated controller identity required", "controller is not owned by this transport", "session is not owned by this transport"; invalidRequest: "command_id required"; notFound: "no controller registered for this session"
     public func controllerResult(_ params: BrowserControllerResultParams) async throws -> BrowserControllerResultResult {
         try await caller.call("browser.controller.result", params: params, as: BrowserControllerResultResult.self)
     }
+    /// Inspect, attach to, or drop the CDP browser the tools use; ``messages`` narrate a connect.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4015 invalidRequest: "browser url must be a string, got {…}", "invalid port in browser url: {…}", "missing host in browser url: {…}", "unknown action: {…}", …
+    /// - 5031 unavailable: "could not reach browser CDP at {…}", "could not reach browser CDP at {…}: {…}"
     public func manage(_ params: BrowserManageParams) async throws -> BrowserManageResult {
         try await caller.call("browser.manage", params: params, as: BrowserManageResult.self)
     }
@@ -162,6 +240,13 @@ public struct ClarifyMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Lock one answer of a batch clarify request (editable until every question is locked).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4002 invalidRequest: "request_id and question_id required"
+    /// - 5000 serverError
+    /// - 5019 serverError: "compute-host clarify lock failed: {…}", "compute-host clarify lock returned an invalid response"
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func lock(_ params: ClarifyLockParams) async throws -> ClarifyLockResult {
         try await caller.call("clarify.lock", params: params, as: ClarifyLockResult.self)
     }
@@ -171,6 +256,12 @@ public struct CliMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Run ``hermes <argv>`` non-interactively and capture its output; ``blocked`` explains a refusal.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4003 invalidRequest: "argv must be list[str]"
+    /// - 5017 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func exec(_ params: CliExecParams) async throws -> CliExecResult {
         try await caller.call("cli.exec", params: params, as: CliExecResult.self)
     }
@@ -180,6 +271,7 @@ public struct ClientMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// What the calling client handles, sent once per connection (after gateway.ready); returns the server→client request methods this backend may send.
     public func capabilities(_ params: ClientCapabilitiesParams) async throws -> ClientCapabilitiesResult {
         try await caller.call("client.capabilities", params: params, as: ClientCapabilitiesResult.self)
     }
@@ -189,6 +281,11 @@ public struct ClipboardMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Save the host clipboard image into the session and queue it for the next turn.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5027 unavailable: "clipboard unavailable: {…}"
     public func paste(_ params: ClipboardPasteParams) async throws -> AttachedImageResult {
         try await caller.call("clipboard.paste", params: params, as: AttachedImageResult.self)
     }
@@ -198,9 +295,22 @@ public struct CommandMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Run a quick/plugin/bundle/skill/built-in slash command and answer a structured directive.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4018 invalidRequest: "not a quick/plugin/bundle/skill command: {…}"
     public func dispatch(_ params: CommandDispatchParams) async throws -> CommandDispatchResult {
         try await caller.call("command.dispatch", params: params, as: CommandDispatchResult.self)
     }
+    /// Canonical registry command for a name or alias.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4011 notFound: "unknown command: {…}"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5012 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func resolve(_ params: CommandResolveParams) async throws -> CommandResolveResult {
         try await caller.call("command.resolve", params: params, as: CommandResolveResult.self)
     }
@@ -210,6 +320,14 @@ public struct CommandsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Categorized slash metadata (registry, quick, plugin, skill) for completion menus.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5020 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func catalog(_ params: CommandsCatalogParams) async throws -> CommandsCatalogResult {
         try await caller.call("commands.catalog", params: params, as: CommandsCatalogResult.self)
     }
@@ -219,9 +337,17 @@ public struct CompleteMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Path / @-reference completions for the composer (files, folders, profiles, plugin providers).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5021 serverError
     public func path(_ params: CompletePathParams) async throws -> CompletionItemsResult {
         try await caller.call("complete.path", params: params, as: CompletionItemsResult.self)
     }
+    /// Ranked slash-command / skill completions for a ``/`` token.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5020 serverError
     public func slash(_ params: CompleteSlashParams) async throws -> CompleteSlashResult {
         try await caller.call("complete.slash", params: params, as: CompleteSlashResult.self)
     }
@@ -231,12 +357,30 @@ public struct ConfigMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Read one normalised config value (or the whole effective config) the way the UIs render it.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4002 invalidRequest: "unknown config key: {…}"
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func get(_ params: ConfigGetParams) async throws -> ConfigGetResult {
         try await caller.call("config.get", params: params, as: ConfigGetResult.self)
     }
+    /// Change one config key (persisted or session-scoped) and read back the normalised value.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4002 invalidRequest: "unknown config key: {…}"
     public func set(_ params: ConfigSetParams) async throws -> ConfigSetResult {
         try await caller.call("config.set", params: params, as: ConfigSetResult.self)
     }
+    /// Masked, display-ready config summary (model / agent / environment rows).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5030 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func show(_ params: ConfigShowParams) async throws -> ConfigShowResult {
         try await caller.call("config.show", params: params, as: ConfigShowResult.self)
     }
@@ -246,6 +390,18 @@ public struct ConnectionMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Per-target outcomes from the card, and an optional Continue.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "Connector parameters are invalid."
+    /// - 4001 notFound: "session not found or not owned by this transport"
+    /// - 4002 invalidRequest: "Connection answer is invalid."
+    /// - 4004 notFound: "No open operation with that op_id."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 5033 unsupported: "Connectors must be managed on the session's compute host."
+    /// - 5034 serverError: "Connector request failed. Try again explicitly."
     public func respond(_ params: ConnectionRespondParams) async throws -> ConnectionRespondResult {
         try await caller.call("connection.respond", params: params, as: ConnectionRespondResult.self)
     }
@@ -255,33 +411,137 @@ public struct ConnectorsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// The scoped member's hosted connector accounts, optionally filtered by connector slug.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "connector must be a slug."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 4090 conflict: "Select an organization to manage connector rules."
+    /// - 5034 unavailable: "Connector accounts are unavailable."
     public func accounts(_ params: ConnectorAccountsParams) async throws -> ConnectorAccountsResult {
         try await caller.call("connectors.accounts", params: params, as: ConnectorAccountsResult.self)
     }
+    /// Remove one hosted connector account owned by the scoped member.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "Connection id is invalid.", "connection_id is required."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 4041 notFound: "Connector account not found."
+    /// - 4090 conflict: "Select an organization to manage connector rules."
+    /// - 5034 unavailable: "Connector accounts are unavailable."
     public func accountsRemove(_ params: ConnectorAccountsRemoveParams) async throws -> ConnectorAccountsRemoveResult {
         try await caller.call("connectors.accounts.remove", params: params, as: ConnectorAccountsRemoveResult.self)
     }
+    /// The hosted connector catalog available to the scoped member.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 4090 conflict: "Select an organization to manage connector rules."
+    /// - 5034 unavailable: "Connector catalog is unavailable."
     public func catalog(_ params: ProfileParams) async throws -> ConnectorsCatalogResult {
         try await caller.call("connectors.catalog", params: params, as: ConnectorsCatalogResult.self)
     }
+    /// Start or re-initiate authorization for named connectors on a session or account operation.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "Connector parameters are invalid.", "One target kind per request."
+    /// - 4001 conflict: "session ownership changed"; notFound: "session not found or not owned by this transport"
+    /// - 4002 conflict: "Reopen the stored link.", "The operation has settled.", "The target cannot be run again.", "This target cannot be run again."
+    /// - 4004 notFound: "No open connection operation for this session.", "No such target on the open operation."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available in this session.", "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 5033 unsupported: "Connectors must be managed on the session's compute host."
+    /// - 5034 serverError: "Connector request failed. Try again explicitly.", "Connector service returned an invalid response.", "Connector service returned no authorization results."
     public func connect(_ params: ConnectorsConnectParams) async throws -> ConnectorsConnectResult {
         try await caller.call("connectors.connect", params: params, as: ConnectorsConnectResult.self)
     }
+    /// Connector catalog + connection state for one session or profile account owner.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "Connector parameters are invalid.", "One target kind per request."
+    /// - 4001 conflict: "session ownership changed"; notFound: "session not found or not owned by this transport"
+    /// - 4002 conflict: "Reopen the stored link.", "The operation has settled.", "The target cannot be run again.", "This target cannot be run again."
+    /// - 4004 notFound: "No open connection operation for this session.", "No such target on the open operation."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available in this session.", "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 5033 unsupported: "Connectors must be managed on the session's compute host."
+    /// - 5034 serverError: "Connector request failed. Try again explicitly.", "Connector service returned an invalid response.", "Connector service returned no authorization results."
     public func list(_ params: ConnectorsListParams) async throws -> ConnectorsListResult {
         try await caller.call("connectors.list", params: params, as: ConnectorsListResult.self)
     }
+    /// The current snapshot of one open session or account operation.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "Connector parameters are invalid."
+    /// - 4001 notFound: "session not found or not owned by this transport"
+    /// - 4004 notFound: "No open operation with that op_id."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 5033 unsupported: "Connectors must be managed on the session's compute host."
+    /// - 5034 serverError: "Connector request failed. Try again explicitly."
     public func operationStatus(_ params: ConnectionOperationParams) async throws -> ConnectionOperationStatus {
         try await caller.call("connectors.operation.status", params: params, as: ConnectionOperationStatus.self)
     }
+    /// The browser leg came back (hermes://connections/done): read the accounts now, not at the next tick.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "Connector parameters are invalid."
+    /// - 4001 notFound: "session not found or not owned by this transport"
+    /// - 4004 notFound: "No open operation with that op_id."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 5033 unsupported: "Connectors must be managed on the session's compute host."
+    /// - 5034 serverError: "Connector request failed. Try again explicitly."
     public func operationWake(_ params: ConnectionOperationParams) async throws -> ConnectionWakeResult {
         try await caller.call("connectors.operation.wake", params: params, as: ConnectionWakeResult.self)
     }
+    /// Policy layers for the scoped member, from organization to member scope.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 4090 conflict: "Select an organization to manage connector rules."
+    /// - 5034 unavailable: "Connector policy is unavailable."
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func policyGet(_ params: ProfileParams) async throws -> ConnectorPolicyGetResult {
         try await caller.call("connectors.policy.get", params: params, as: ConnectorPolicyGetResult.self)
     }
+    /// Apply one scoped member connector or tool-list policy change.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "Connector parameters are invalid.", "Connector policy change is invalid."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 4090 conflict: "Select an organization to manage connector rules."
+    /// - 5034 unavailable: "Connector policy is unavailable."
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func policySet(_ params: ConnectorPolicySetParams) async throws -> ConnectorPolicySetResult {
         try await caller.call("connectors.policy.set", params: params, as: ConnectorPolicySetResult.self)
     }
+    /// The scoped profile's cached or current tool list for one connector.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "slug and refresh are required parameters"
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 4041 notFound: "Connector not found."
+    /// - 4090 conflict: "Select an organization to manage connector rules."
+    /// - 5034 unavailable: "Connector tools are unavailable."
     public func tools(_ params: ConnectorToolsParams) async throws -> ConnectorToolsResult {
         try await caller.call("connectors.tools", params: params, as: ConnectorToolsResult.self)
     }
@@ -291,6 +551,15 @@ public struct CronMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// List/add/remove/pause/resume cron jobs in the (optionally profile-scoped) cron store.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4016 invalidRequest: "unknown cron action: {…}"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5023 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func manage(_ params: CronManageParams) async throws -> CronManageResult {
         try await caller.call("cron.manage", params: params, as: CronManageResult.self)
     }
@@ -300,9 +569,11 @@ public struct DelegationMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Block/unblock NEW spawns globally (active children keep running); returns the new state.
     public func pause(_ params: DelegationPauseParams) async throws -> DelegationPauseResult {
         try await caller.call("delegation.pause", params: params, as: DelegationPauseResult.self)
     }
+    /// Running subagent tree plus the spawn pause flag and limits.
     public func status(_ params: ProfileParams) async throws -> DelegationStatusResult {
         try await caller.call("delegation.status", params: params, as: DelegationStatusResult.self)
     }
@@ -312,6 +583,7 @@ public struct DiagnosticsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Upload a force-redacted debug bundle to Nous-internal diagnostics storage.
     public func shareNous(_ params: DiagnosticsShareNousParams) async throws -> DiagnosticsShareNousResult {
         try await caller.call("diagnostics.share_nous", params: params, as: DiagnosticsShareNousResult.self)
     }
@@ -321,27 +593,59 @@ public struct DisplayMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Run the distro package install on the gateway host; progress streams as display.install.log/.done.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 unsupported: "Bot Desktop runs on Linux gateway hosts only", "no supported package manager (apt-get, dnf, pacman) on this host"
     public func install(_ params: ProfileParams) async throws -> DisplayInstallResult {
         try await caller.call("display.install", params: params, as: DisplayInstallResult.self)
     }
+    /// Take over: the human named by a viewer id this connection minted controls the screen.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 forbidden: "viewer_id was not minted for this connection; call display.observe first"; invalidRequest: "viewer_id required"
     public func leaseAcquire(_ params: DisplayLeaseAcquireParams) async throws -> DisplayLeaseResult {
         try await caller.call("display.lease.acquire", params: params, as: DisplayLeaseResult.self)
     }
+    /// Hand back. Without a viewer id the release is refused while a human holds unless force.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 forbidden: "viewer_id was not minted for this connection; call display.observe first"; invalidRequest: "viewer_id required to release another viewer's lease (or pass force: true)"
     public func leaseRelease(_ params: DisplayLeaseReleaseParams) async throws -> DisplayLeaseResult {
         try await caller.call("display.lease.release", params: params, as: DisplayLeaseResult.self)
     }
+    /// Mint a single-use ticket for /api/display/ws and the server-minted viewer id for this connection.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 conflict: "this profile's Bot Desktop is not running; call display.start first"
     public func observe(_ params: DisplayObserveParams) async throws -> DisplayObserveResult {
         try await caller.call("display.observe", params: params, as: DisplayObserveResult.self)
     }
+    /// Start this profile's Xvnc + Xfce (idempotent); blocks until the display is published.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 serverError
     public func start(_ params: ProfileParams) async throws -> DisplayStatus {
         try await caller.call("display.start", params: params, as: DisplayStatus.self)
     }
+    /// Runtime + lease snapshot for this profile's screen.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 serverError
     public func status(_ params: ProfileParams) async throws -> DisplayStatus {
         try await caller.call("display.status", params: params, as: DisplayStatus.self)
     }
+    /// Stop the screen. Refused (5300, code viewer_mismatch) while a human holds unless force.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 conflict: "a human holds this screen; pass force: true to stop it anyway"
     public func stop(_ params: DisplayStopParams) async throws -> DisplayStopResult {
         try await caller.call("display.stop", params: params, as: DisplayStopResult.self)
     }
+    /// One JPEG grab of the bot's screen; read-only, never changes the lease.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 serverError
     public func thumbnail(_ params: ProfileParams) async throws -> DisplayThumbnailResult {
         try await caller.call("display.thumbnail", params: params, as: DisplayThumbnailResult.self)
     }
@@ -351,6 +655,12 @@ public struct FileMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Stage a non-image file into the session workspace and hand back its @file: ref.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4015 invalidRequest: "path or data_url required"
+    /// - 5028 serverError
     public func attach(_ params: FileAttachParams) async throws -> FileAttachResult {
         try await caller.call("file.attach", params: params, as: FileAttachResult.self)
     }
@@ -360,12 +670,24 @@ public struct FreeTierMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Mark the one-time availability notice as shown on the free-tier identity.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5091 serverError
     public func ackNotice(_ params: ProfileParams) async throws -> FreeTierAckNoticeResult {
         try await caller.call("free_tier.ack_notice", params: params, as: FreeTierAckNoticeResult.self)
     }
+    /// Explicit retry of the free-tier identity mint when the boot bootstrap could not create it.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5092 serverError
     public func provision(_ params: ProfileParams) async throws -> FreeTierProvisionResult {
         try await caller.call("free_tier.provision", params: params, as: FreeTierProvisionResult.self)
     }
+    /// Pure read of the focused profile's free-tier identity state (no network, no side effects).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5090 serverError
     public func status(_ params: ProfileParams) async throws -> FreeTierStatusResult {
         try await caller.call("free_tier.status", params: params, as: FreeTierStatusResult.self)
     }
@@ -375,6 +697,7 @@ public struct GatewayMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// What THIS build enforces (a client withholds a feature unless advertised).
     public func capabilities(_ params: PingParams) async throws -> GatewayCapabilitiesResult {
         try await caller.call("gateway.capabilities", params: params, as: GatewayCapabilitiesResult.self)
     }
@@ -384,57 +707,157 @@ public struct GroupsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Resolve one exact pending approval raised by a local or peer room member.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4115 unavailable: "hosted room driver is unavailable"
+    /// - 5119 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func approve(_ params: GroupsApproveParams) async throws -> GroupsApproveResult {
         try await caller.call("groups.approve", params: params, as: GroupsApproveResult.self)
     }
+    /// Describe the hosted-room protocol implemented by this gateway.
     public func capabilities(_ params: GroupsCapabilitiesParams) async throws -> GroupsCapabilitiesResult {
         try await caller.call("groups.capabilities", params: params, as: GroupsCapabilitiesResult.self)
     }
+    /// Create a hosted room idempotently; authority is this gateway's stable install identity.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4110 invalidRequest
+    /// - 4123 unavailable: "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+    /// - 5111 serverError
     public func create(_ params: GroupsCreateParams) async throws -> GroupsCreateResult {
         try await caller.call("groups.create", params: params, as: GroupsCreateResult.self)
     }
+    /// Fence this gateway's stale room authority against a proven newer epoch.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4119 invalidRequest
+    /// - 5119 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func demote(_ params: GroupsDemoteParams) async throws -> GroupsDemoteResult {
         try await caller.call("groups.demote", params: params, as: GroupsDemoteResult.self)
     }
+    /// Permanently tombstone a hosted room id after stopping its work and revoking peer routes.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4113 invalidRequest
+    /// - 4123 unavailable: "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+    /// - 5114 serverError
     public func disband(_ params: GroupsDisbandParams) async throws -> GroupsDisbandResult {
         try await caller.call("groups.disband", params: params, as: GroupsDisbandResult.self)
     }
+    /// List rooms hosted by this gateway, most recently changed first.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5110 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func list(_ params: GroupsListParams) async throws -> GroupsListResult {
         try await caller.call("groups.list", params: params, as: GroupsListResult.self)
     }
+    /// A monotonic room-log delta after since_seq, bounded by count and page bytes.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4112 invalidRequest
+    /// - 5113 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func log(_ params: GroupsLogParams) async throws -> GroupsLogResult {
         try await caller.call("groups.log", params: params, as: GroupsLogResult.self)
     }
+    /// Mint one target-issued room/profile grant for a prospective room home.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4120 invalidRequest
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func peerInvite(_ params: GroupsPeerInviteParams) async throws -> GroupsPeerInviteResult {
         try await caller.call("groups.peer.invite", params: params, as: GroupsPeerInviteResult.self)
     }
+    /// Register and probe one scoped peer route on the room home.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4121 unavailable: "hosted room driver is unavailable"
+    /// - 5120 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func peerRegister(_ params: GroupsPeerRegisterParams) async throws -> GroupsPeerRegisterResult {
         try await caller.call("groups.peer.register", params: params, as: GroupsPeerRegisterResult.self)
     }
+    /// Revoke one target-issued grant using its exact profile scope.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4122 unsupported
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func peerRevoke(_ params: GroupsPeerRevokeParams) async throws -> GroupsPeerRevokeResult {
         try await caller.call("groups.peer.revoke", params: params, as: GroupsPeerRevokeResult.self)
     }
+    /// Continue a replicated room on this gateway at epoch + 1; requires confirm=true.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4118 conflict: "promotion requires confirm=true acknowledging the previous authority can no longer commit"
+    /// - 5118 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func promote(_ params: GroupsPromoteParams) async throws -> GroupsPromoteResult {
         try await caller.call("groups.promote", params: params, as: GroupsPromoteResult.self)
     }
+    /// Rename one hosted room atomically with its replay event.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4117 invalidRequest
+    /// - 5117 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func rename(_ params: GroupsRenameParams) async throws -> GroupsRenameResult {
         try await caller.call("groups.rename", params: params, as: GroupsRenameResult.self)
     }
+    /// The local replica's coverage and authority lineage for one room.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4117 invalidRequest
+    /// - 5117 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func replicaState(_ params: GroupsReplicaStateParams) async throws -> GroupsReplicaStateResult {
         try await caller.call("groups.replica_state", params: params, as: GroupsReplicaStateResult.self)
     }
+    /// Persist one authority-stamped replay page into the local replica store; idempotent.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4116 invalidRequest
+    /// - 5116 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func replicate(_ params: GroupsReplicateParams) async throws -> GroupsReplicateResult {
         try await caller.call("groups.replicate", params: params, as: GroupsReplicateResult.self)
     }
+    /// Retry one indeterminate room task after explicit user confirmation.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4115 unavailable: "hosted room driver is unavailable"
+    /// - 5118 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func retry(_ params: GroupsRetryParams) async throws -> GroupsRetryResult {
         try await caller.call("groups.retry", params: params, as: GroupsRetryResult.self)
     }
+    /// Append one inert message.user event idempotently; the actor is server-owned.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4111 invalidRequest
+    /// - 4123 unavailable: "Group Chat worker is unavailable. Restart the Hermes gateway and try again."
+    /// - 5112 serverError
     public func send(_ params: GroupsSendParams) async throws -> GroupsSendResult {
         try await caller.call("groups.send", params: params, as: GroupsSendResult.self)
     }
+    /// One hosted room's replay cursor and fenced authority state, plus live driver status.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4114 invalidRequest
+    /// - 5115 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func state(_ params: GroupsStateParams) async throws -> GroupsStateResult {
         try await caller.call("groups.state", params: params, as: GroupsStateResult.self)
     }
+    /// Durably cancel queued or running work for one hosted room.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4115 unavailable: "hosted room driver is unavailable"
+    /// - 5116 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func stop(_ params: GroupsStopParams) async throws -> GroupsStopResult {
         try await caller.call("groups.stop", params: params, as: GroupsStopResult.self)
     }
@@ -444,12 +867,34 @@ public struct HandoffMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Fail a not-yet-claimed handoff (client poll timeout); CAS against the watcher.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
     public func fail(_ params: HandoffFailParams) async throws -> HandoffFailResult {
         try await caller.call("handoff.fail", params: params, as: HandoffFailResult.self)
     }
+    /// Queue a handoff to a messaging platform's home channel; the gateway watcher claims it.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4009 busy: "session busy — wait for the current turn to finish, then retry the handoff"
+    /// - 4023 invalidRequest: "platform required"
+    /// - 4024 invalidRequest: "unknown platform '{…}'"
+    /// - 4025 conflict: "platform '{…}' is not configured/enabled in the gateway"
+    /// - 4026 conflict: "no home channel configured for {…} — set one with /sethome on the destination chat first"
+    /// - 4027 busy: "session is already in flight for handoff — wait for it to settle, then retry"
+    /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+    /// - 5021 serverError: "could not load gateway config: {…}"
     public func request(_ params: HandoffRequestParams) async throws -> HandoffRequestResult {
         try await caller.call("handoff.request", params: params, as: HandoffRequestResult.self)
     }
+    /// Poll the handoff row for this session.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
     public func state(_ params: SessionParams) async throws -> HandoffStateResult {
         try await caller.call("handoff.state", params: params, as: HandoffStateResult.self)
     }
@@ -459,15 +904,41 @@ public struct ImageMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Queue a gateway-visible image file for the next turn.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4015 invalidRequest: "path required"
+    /// - 4016 invalidRequest: "unsupported image: {…}"; notFound: "image not found: {…}"
+    /// - 5027 serverError
     public func attach(_ params: ImageAttachParams) async throws -> AttachedImageResult {
         try await caller.call("image.attach", params: params, as: AttachedImageResult.self)
     }
+    /// Queue an image uploaded as base64 (remote client); reply mirrors image.attach.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4015 invalidRequest: "content_base64 required"
+    /// - 4016 invalidRequest: "unsupported image extension: {…}"
+    /// - 4017 invalidRequest: "data is not valid base64", "image is empty"
+    /// - 4018 invalidRequest: "{…} too large ({…} bytes; cap is {…} MB)"
+    /// - 5027 serverError: "write failed: {…}"
     public func attachBytes(_ params: ImageAttachBytesParams) async throws -> AttachedImageResult {
         try await caller.call("image.attach_bytes", params: params, as: AttachedImageResult.self)
     }
+    /// Drop a queued image before the turn is sent.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4015 invalidRequest: "path required"
     public func detach(_ params: ImageDetachParams) async throws -> ImageDetachResult {
         try await caller.call("image.detach", params: params, as: ImageDetachResult.self)
     }
+    /// Generate an image through the tool's provider dispatcher and hand the renderer a data URL.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4071 invalidRequest: "prompt required"
+    /// - 5071 serverError
     public func generate(_ params: ImageGenerateParams) async throws -> ImageGenerateResult {
         try await caller.call("image.generate", params: params, as: ImageGenerateResult.self)
     }
@@ -477,6 +948,11 @@ public struct InputMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Recognise a terminal file drop pasted into the composer and turn it into an attachment.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5027 serverError
     public func detectDrop(_ params: InputDetectDropParams) async throws -> InputDetectDropResult {
         try await caller.call("input.detect_drop", params: params, as: InputDetectDropResult.self)
     }
@@ -486,6 +962,14 @@ public struct InsightsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Session/message counts over the last ``days`` for the (optionally scoped) profile store.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5017 unavailable: "Session storage is unavailable: {…}. {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func get(_ params: InsightsGetParams) async throws -> InsightsGetResult {
         try await caller.call("insights.get", params: params, as: InsightsGetResult.self)
     }
@@ -495,15 +979,47 @@ public struct LearningMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Archive a skill (restorable via curator) or remove a memory chunk.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5000 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func delete(_ params: LearningNodeParams) async throws -> LearningMutationResult {
         try await caller.call("learning.delete", params: params, as: LearningMutationResult.self)
     }
+    /// Node content (SKILL.md or memory chunk) for an edit prefill.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5000 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func detail(_ params: LearningNodeParams) async throws -> LearningDetailResult {
         try await caller.call("learning.detail", params: params, as: LearningDetailResult.self)
     }
+    /// Rewrite a node's content (SKILL.md or memory chunk).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5000 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func edit(_ params: LearningEditParams) async throws -> LearningMutationResult {
         try await caller.call("learning.edit", params: params, as: LearningMutationResult.self)
     }
+    /// Pre-render the /journey timeline (frames + legend/summary) so the TUI walks it locally.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5000 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func frames(_ params: LearningFramesParams) async throws -> LearningFramesResult {
         try await caller.call("learning.frames", params: params, as: LearningFramesResult.self)
     }
@@ -513,6 +1029,13 @@ public struct LlmMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Stateless one-shot LLM completion (titles, ideas) on the session's or the task backend.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4030 invalidRequest: "llm.oneshot requires a template or instructions/input"
+    /// - 4031 unsupported
+    /// - 4032 forbidden
+    /// - 5030 serverError: "one-shot generation failed: {…}"
     public func oneshot(_ params: LlmOneshotParams) async throws -> LlmOneshotResult {
         try await caller.call("llm.oneshot", params: params, as: LlmOneshotResult.self)
     }
@@ -522,36 +1045,128 @@ public struct McpMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Curated MCP presets with per-profile installed/enabled state and the env keys each needs.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func catalog(_ params: ProfileParams) async throws -> McpCatalogResult {
         try await caller.call("mcp.catalog", params: params, as: McpCatalogResult.self)
     }
+    /// Add a server to the profile's config from a catalog preset and/or an explicit config.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 invalidRequest: "server '{…}' rejected: suspicious command/args configuration"; notFound: "session not found"
+    /// - 4063 invalidRequest: "config must specify a 'url' (http) or 'command' (stdio), or a valid 'preset'", "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 4090 conflict: "server '{…}' already exists", "server '{…}' is provided by plugin '{…}' and cannot be modified"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversAdd(_ params: McpServersAddParams) async throws -> McpServersAddResult {
         try await caller.call("mcp.servers.add", params: params, as: McpServersAddResult.self)
     }
+    /// Configured MCP servers for the (scoped) profile, secrets redacted to env-key names.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversList(_ params: ProfileParams) async throws -> McpServersListResult {
         try await caller.call("mcp.servers.list", params: params, as: McpServersListResult.self)
     }
+    /// Relay a client-captured redirect into a client_redirect_uri flow.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversOauthCallback(_ params: McpOauthCallbackParams) async throws -> McpOauthCallbackResult {
         try await caller.call("mcp.servers.oauth.callback", params: params, as: McpOauthCallbackResult.self)
     }
+    /// Cancel a flow owned by the resolved profile, waking its callback worker.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversOauthCancel(_ params: McpOauthFlowParams) async throws -> McpOauthCancelResult {
         try await caller.call("mcp.servers.oauth.cancel", params: params, as: McpOauthCancelResult.self)
     }
+    /// Poll a flow; approved persists tokens for the profile and returns the probed tools.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversOauthPoll(_ params: McpOauthFlowParams) async throws -> McpOauthPollResult {
         try await caller.call("mcp.servers.oauth.poll", params: params, as: McpOauthPollResult.self)
     }
+    /// Begin a PKCE OAuth flow; the client opens auth_url and polls mcp.servers.oauth.poll.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"; unsupported: "stdio servers authenticate via env keys, not OAuth", "this server uses header/API-key auth, not OAuth"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+    /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversOauthStart(_ params: McpOauthStartParams) async throws -> McpOauthStartResult {
         try await caller.call("mcp.servers.oauth.start", params: params, as: McpOauthStartResult.self)
     }
+    /// Drop a server from the profile's config.yaml.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+    /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversRemove(_ params: McpServerNameParams) async throws -> McpServersRemoveResult {
         try await caller.call("mcp.servers.remove", params: params, as: McpServersRemoveResult.self)
     }
+    /// Store a credential in the profile's .env and reference it from the server config (header or env).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 invalidRequest: "malformed server config"; notFound: "session not found"
+    /// - 4063 invalidRequest: "value is not a valid credential", "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+    /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversSetApiKey(_ params: McpServersSetApiKeyParams) async throws -> McpServersSetApiKeyResult {
         try await caller.call("mcp.servers.set_api_key", params: params, as: McpServersSetApiKeyResult.self)
     }
+    /// Cached runtime state per configured server; never connects, probes, or starts auth.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversStatus(_ params: ProfileParams) async throws -> McpServersStatusResult {
         try await caller.call("mcp.servers.status", params: params, as: McpServersStatusResult.self)
     }
+    /// Connect, list tools, disconnect — an OAuth server with no token on disk is reported as not ok.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func serversTest(_ params: McpServerNameParams) async throws -> McpServersTestResult {
         try await caller.call("mcp.servers.test", params: params, as: McpServersTestResult.self)
     }
@@ -561,6 +1176,15 @@ public struct MessageMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Set/clear one author's emoji reaction on a message; returns the row's full reaction list.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4023 invalidRequest: "row_id or newest_role required"
+    /// - 4024 invalidRequest: "emoji must be a non-empty string or null"
+    /// - 4025 invalidRequest: "author must be 'user' or 'agent'"
+    /// - 4040 notFound: "message not found in this session", "no message to react to yet"
+    /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
     public func react(_ params: MessageReactParams) async throws -> MessageReactResult {
         try await caller.call("message.react", params: params, as: MessageReactResult.self)
     }
@@ -570,12 +1194,31 @@ public struct ModelMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Remove every credential (env keys and OAuth state) for a provider.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 invalidRequest: "slug is required"
+    /// - 4005 notFound: "no credentials found for {…}"
+    /// - 5035 unavailable
     public func disconnect(_ params: ModelDisconnectParams) async throws -> ModelDisconnectResult {
         try await caller.call("model.disconnect", params: params, as: ModelDisconnectResult.self)
     }
+    /// Provider/model inventory for the picker, layered over the session's live provider when given.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5033 unsupported
     public func options(_ params: ModelOptionsParams) async throws -> ModelOptionsResult {
         try await caller.call("model.options", params: params, as: ModelOptionsResult.self)
     }
+    /// Save an API key for a provider and return its refreshed inventory row.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 invalidRequest: "slug and api_key are required"
+    /// - 4002 invalidRequest: "unknown provider: {…}"
+    /// - 4003 conflict: "{…} uses {…} auth — run `hermes model` to configure"
+    /// - 4004 conflict: "no env var defined for {…}"
+    /// - 4006 forbidden: "managed install — credentials are read-only"
+    /// - 5034 unavailable
     public func saveKey(_ params: ModelSaveKeyParams) async throws -> ModelSaveKeyResult {
         try await caller.call("model.save_key", params: params, as: ModelSaveKeyResult.self)
     }
@@ -585,9 +1228,18 @@ public struct OnboardingMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Create-or-read the backend-owned setup profile; the backend picks the name and finds it by role.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5073 serverError
     public func ensureSetupProfile(_ params: Params) async throws -> OnboardingEnsureSetupProfileResult {
         try await caller.call("onboarding.ensure_setup_profile", params: params, as: OnboardingEnsureSetupProfileResult.self)
     }
+    /// Restore the setup profile to its created state in place (soul, memories, skills, sessions).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4072 notFound: "no setup profile to reset"
+    /// - 5074 serverError
     public func resetSetupProfile(_ params: Params) async throws -> OnboardingResetSetupProfileResult {
         try await caller.call("onboarding.reset_setup_profile", params: params, as: OnboardingResetSetupProfileResult.self)
     }
@@ -597,6 +1249,10 @@ public struct PasteMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Spill a large paste to a file and hand back the inline placeholder.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "empty paste"
     public func collapse(_ params: PasteCollapseParams) async throws -> PasteCollapseResult {
         try await caller.call("paste.collapse", params: params, as: PasteCollapseResult.self)
     }
@@ -606,6 +1262,16 @@ public struct PdfMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Render a PDF's pages to PNG and queue them as images for the next turn.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4015 invalidRequest: "first_page must be >= 1", "first_page/last_page must be integers", "last_page must be >= first_page", "path or content_base64 required"
+    /// - 4016 invalidRequest: "not a PDF: {…}"; notFound: "PDF not found: {…}"
+    /// - 4017 invalidRequest: "data is not valid base64", "decoded PDF is empty", "payload is not a PDF (missing %PDF- magic bytes)"
+    /// - 4018 invalidRequest: "PDF too large; cap is {…} MB", "{…} too large ({…} bytes; cap is {…} MB)"
+    /// - 4019 invalidRequest: "page range exceeds cap of {…} pages per attach call"
+    /// - 5028 serverError: "pdftoppm failed: {…}", "pdftoppm produced no pages (corrupt PDF?)", "pdftoppm timed out (>120s)"; unsupported: "pdftoppm not installed (poppler-utils package required)"
     public func attach(_ params: PdfAttachParams) async throws -> PdfAttachResult {
         try await caller.call("pdf.attach", params: params, as: PdfAttachResult.self)
     }
@@ -615,48 +1281,119 @@ public struct PetMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Stop an in-flight pet generate/hatch by token (idempotent).
     public func cancel(_ params: PetCancelParams) async throws -> PetCancelResult {
         try await caller.call("pet.cancel", params: params, as: PetCancelResult.self)
     }
+    /// Half-block cell frames (or a kitty placement) for one pet state.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func cells(_ params: PetCellsParams) async throws -> PetCellsResult {
         try await caller.call("pet.cells", params: params, as: PetCellsResult.self)
     }
+    /// Turn the pet display off from the desktop picker.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func disable(_ params: ProfileParams) async throws -> OkResult {
         try await caller.call("pet.disable", params: params, as: OkResult.self)
     }
+    /// Export an installed pet as a re-importable .zip.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func export(_ params: PetSlugParams) async throws -> PetExportResult {
         try await caller.call("pet.export", params: params, as: PetExportResult.self)
     }
+    /// Petdex gallery + local install state (installed-only offline); localOnly skips the remote manifest.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func gallery(_ params: PetGalleryParams) async throws -> PetGalleryResult {
         try await caller.call("pet.gallery", params: params, as: PetGalleryResult.self)
     }
+    /// Candidate base looks for a new pet (draft step); drafts also stream via pet.generate.progress.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing prompt", "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func generate(_ params: PetGenerateParams) async throws -> PetGenerateResult {
         try await caller.call("pet.generate", params: params, as: PetGenerateResult.self)
     }
+    /// Whether pet generation is possible (a reference-capable image backend) and which providers.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func generateStatus(_ params: ProfileParams) async throws -> PetGenerateStatusResult {
         try await caller.call("pet.generate.status", params: params, as: PetGenerateStatusResult.self)
     }
+    /// Turn a base draft into a full spritesheet pet; progress streams via pet.hatch.progress.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"; conflict: "draft expired — generate again"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func hatch(_ params: PetHatchParams) async throws -> PetHatchResult {
         try await caller.call("pet.hatch", params: params, as: PetHatchResult.self)
     }
+    /// Active pet for sprite renderers: spritesheet (base64) + frame geometry + state-row taxonomy.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func info(_ params: PetInfoParams) async throws -> PetInfoResult {
         try await caller.call("pet.info", params: params, as: PetInfoResult.self)
     }
+    /// Cheap active-pet metadata used to avoid full payload refreshes.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func infoMeta(_ params: ProfileParams) async throws -> PetInfoMetaResult {
         try await caller.call("pet.info.meta", params: params, as: PetInfoMetaResult.self)
     }
+    /// Uninstall a pet (delete its directory); if it was active, turn the display off.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func remove(_ params: PetSlugParams) async throws -> PetSlugResult {
         try await caller.call("pet.remove", params: params, as: PetSlugResult.self)
     }
+    /// Rename a pet's display name + realign its slug/dir; follows the active slug in config.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing name", "missing slug"
+    /// - 5031 serverError: "pet.rename failed", "{…} failed: {…}"
     public func rename(_ params: PetRenameParams) async throws -> PetSlugResult {
         try await caller.call("pet.rename", params: params, as: PetSlugResult.self)
     }
+    /// Persist display.pet.scale (clamped to engine bounds) from the desktop slider.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func scale(_ params: PetScaleParams) async throws -> PetScaleResult {
         try await caller.call("pet.scale", params: params, as: PetScaleResult.self)
     }
+    /// Adopt a pet: install (if needed) + activate; writes display.pet.* to config.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "could not adopt '{…}': {…}", "{…} failed: {…}"
     public func select(_ params: PetSlugParams) async throws -> PetSlugResult {
         try await caller.call("pet.select", params: params, as: PetSlugResult.self)
     }
+    /// Idle-frame PNG data URI for the picker (desktop CSP breaks CDN <img>).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "missing slug"
+    /// - 5031 serverError: "{…} failed: {…}"
     public func thumb(_ params: PetThumbParams) async throws -> PetThumbResult {
         try await caller.call("pet.thumb", params: params, as: PetThumbResult.self)
     }
@@ -666,9 +1403,25 @@ public struct PluginsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Loaded plugin manager entries (legacy flat view); the Plugins Hub uses plugins.manage list.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func list(_ params: PluginsListParams) async throws -> PluginsListResult {
         try await caller.call("plugins.list", params: params, as: PluginsListResult.self)
     }
+    /// Plugins Hub backend: list installed plugins, toggle, git-install, re-pin a catalog install, or remove a user install.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4017 invalidRequest: "unknown {…} action: {…}"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5026 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func manage(_ params: PluginsManageParams) async throws -> PluginsManageResult {
         try await caller.call("plugins.manage", params: params, as: PluginsManageResult.self)
     }
@@ -678,6 +1431,13 @@ public struct PreviewMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Spawn a hidden agent that brings the desktop preview's dev server back up.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4012 invalidRequest: "url required"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5035 unavailable: "backend is retiring; reconnect to continue"
     public func restart(_ params: PreviewRestartParams) async throws -> TaskIdResult {
         try await caller.call("preview.restart", params: params, as: TaskIdResult.self)
     }
@@ -687,12 +1447,38 @@ public struct ProcessMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Kill one background process the caller's session owns and return its output snapshot.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4012 invalidRequest: "process_id required"
+    /// - 4044 notFound: "no such process: {…}"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5010 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func kill(_ params: ProcessKillParams) async throws -> ProcessKillResult {
         try await caller.call("process.kill", params: params, as: ProcessKillResult.self)
     }
+    /// Background processes owned by the caller's session (desktop status stack poll).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5010 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func list(_ params: ProcessListParams) async throws -> ProcessListResult {
         try await caller.call("process.list", params: params, as: ProcessListResult.self)
     }
+    /// Kill every background process in the registry (``/stop``), answering the count killed.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5010 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func stop(_ params: ProcessStopParams) async throws -> ProcessStopResult {
         try await caller.call("process.stop", params: params, as: ProcessStopResult.self)
     }
@@ -702,24 +1488,67 @@ public struct ProfilesMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Editor Save: apply any subset of a profile's sections and report each one.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4063 invalidRequest: "name required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5064 serverError
     public func configure(_ params: ProfilesConfigureParams) async throws -> ProfilesConfigureResult {
         try await caller.call("profiles.configure", params: params, as: ProfilesConfigureResult.self)
     }
+    /// Create a profile (ws twin of POST /api/profiles), mirroring launch credentials by default.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4061 invalidRequest: "name required"
+    /// - 4062 conflict
+    /// - 5062 serverError
     public func create(_ params: ProfilesCreateParams) async throws -> ProfilesCreateResult {
         try await caller.call("profiles.create", params: params, as: ProfilesCreateResult.self)
     }
+    /// Everything the profile editor shows: soul, model pin, skills, toolsets, MCP servers.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4063 invalidRequest: "name required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5063 serverError
     public func describe(_ params: ProfileNameParams) async throws -> ProfilesDescribeResult {
         try await caller.call("profiles.describe", params: params, as: ProfilesDescribeResult.self)
     }
+    /// A profile asset as a data URL.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4063 invalidRequest: "name required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5066 serverError
     public func getAsset(_ params: ProfilesGetAssetParams) async throws -> ProfilesGetAssetResult {
         try await caller.call("profiles.get_asset", params: params, as: ProfilesGetAssetResult.self)
     }
+    /// Roster of profiles with previews so a client paints without N follow-up calls.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
     public func list(_ params: ProfilesListParams) async throws -> ProfilesListResult {
         try await caller.call("profiles.list", params: params, as: ProfilesListResult.self)
     }
+    /// Write the onboarding facts into the default profile's user memory and confirm they landed.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5067 serverError
     public func rememberOnboarding(_ params: ProfilesRememberOnboardingParams) async throws -> ProfilesRememberOnboardingResult {
         try await caller.call("profiles.remember_onboarding", params: params, as: ProfilesRememberOnboardingResult.self)
     }
+    /// Store or clear a profile asset (avatar) atomically.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4063 invalidRequest: "name required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 4066 invalidRequest: "unknown asset '{…}' (supported: avatar)"
+    /// - 4067 invalidRequest: "data required (data URL or base64)"
+    /// - 4068 invalidRequest: "data is not valid base64"
+    /// - 4069 invalidRequest: "asset too large ({…} bytes; max 2MB)"
+    /// - 4070 invalidRequest: "unsupported image format (PNG/JPEG/WebP only)"
+    /// - 5065 serverError
     public func setAsset(_ params: ProfilesSetAssetParams) async throws -> ProfilesSetAssetResult {
         try await caller.call("profiles.set_asset", params: params, as: ProfilesSetAssetResult.self)
     }
@@ -729,6 +1558,7 @@ public struct ProjectMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Structured project facts for a cwd so UIs don't re-sniff the workspace.
     public func facts(_ params: ProjectFactsParams) async throws -> ProjectFactsResult {
         try await caller.call("project.facts", params: params, as: ProjectFactsResult.self)
     }
@@ -738,48 +1568,131 @@ public struct ProjectsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Attach a folder to a project (optionally as its primary path).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func addFolder(_ params: ProjectsAddFolderParams) async throws -> ProjectResult {
         try await caller.call("projects.add_folder", params: params, as: ProjectResult.self)
     }
+    /// Archive (or with ``restore`` un-archive) a project; answers the full listing.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func archive(_ params: ProjectsArchiveParams) async throws -> ProjectsPayload {
         try await caller.call("projects.archive", params: params, as: ProjectsPayload.self)
     }
+    /// Create a project from a name + folders; duplicate primary paths are refused (5063).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func create(_ params: ProjectsCreateParams) async throws -> OptionalProjectResult {
         try await caller.call("projects.create", params: params, as: OptionalProjectResult.self)
     }
+    /// Delete a project and its folders; answers the full listing.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func delete(_ params: ProjectIdParams) async throws -> ProjectsPayload {
         try await caller.call("projects.delete", params: params, as: ProjectsPayload.self)
     }
+    /// Repos for the desktop overview: scanned-from-disk (cached) ∪ session-derived.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
     public func discoverRepos(_ params: ProjectsDiscoverReposParams) async throws -> ProjectsDiscoverReposResult {
         try await caller.call("projects.discover_repos", params: params, as: ProjectsDiscoverReposResult.self)
     }
+    /// Which project (if any) owns a directory, plus the resolved cwd and its git branch.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func forCwd(_ params: ProjectsForCwdParams) async throws -> ProjectsForCwdResult {
         try await caller.call("projects.for_cwd", params: params, as: ProjectsForCwdResult.self)
     }
+    /// One stored project with its folders.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func get(_ params: ProjectIdParams) async throws -> ProjectResult {
         try await caller.call("projects.get", params: params, as: ProjectResult.self)
     }
+    /// Every project of the profile (archived included) plus which one is active.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func list(_ params: ProfileParams) async throws -> ProjectsPayload {
         try await caller.call("projects.list", params: params, as: ProjectsPayload.self)
     }
+    /// Fully hydrated lanes for one project, from the same grouping as projects.tree.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5063 invalidRequest: "project_id required"
     public func projectSessions(_ params: ProjectsProjectSessionsParams) async throws -> ProjectsProjectSessionsResult {
         try await caller.call("projects.project_sessions", params: params, as: ProjectsProjectSessionsResult.self)
     }
+    /// Persist repo roots found by the client's (desktop-side) scan; return the merged list.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
     public func recordRepos(_ params: ProjectsRecordReposParams) async throws -> ProjectsRecordReposResult {
         try await caller.call("projects.record_repos", params: params, as: ProjectsRecordReposResult.self)
     }
+    /// Detach a folder from a project.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func removeFolder(_ params: ProjectFolderParams) async throws -> ProjectResult {
         try await caller.call("projects.remove_folder", params: params, as: ProjectResult.self)
     }
+    /// Switch (or clear) the active project for the profile.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func setActive(_ params: ProjectsSetActiveParams) async throws -> ActiveIdResult {
         try await caller.call("projects.set_active", params: params, as: ActiveIdResult.self)
     }
+    /// Make one attached folder the project's primary path.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func setPrimary(_ params: ProjectFolderParams) async throws -> ProjectResult {
         try await caller.call("projects.set_primary", params: params, as: ProjectResult.self)
     }
+    /// Project → repo → lane overview with counts and a few preview sessions per project.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
     public func tree(_ params: ProjectsTreeParams) async throws -> ProjectsTreeResult {
         try await caller.call("projects.tree", params: params, as: ProjectsTreeResult.self)
     }
+    /// Patch a project's display fields; answers the refreshed project.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5061 serverError
+    /// - 5062 notFound: "no such project"
+    /// - 5063 serverError
     public func update(_ params: ProjectsUpdateParams) async throws -> ProjectResult {
         try await caller.call("projects.update", params: params, as: ProjectResult.self)
     }
@@ -789,12 +1702,51 @@ public struct PromptMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Run a task on a fresh agent in the background; the answer arrives as background.complete.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4012 invalidRequest: "text required"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5035 unavailable: "backend is retiring; reconnect to continue"
     public func background(_ params: SideAgentParams) async throws -> TaskIdResult {
         try await caller.call("prompt.background", params: params, as: TaskIdResult.self)
     }
+    /// Side question over a snapshot of the live conversation; the answer arrives as btw.complete.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4012 invalidRequest: "text required"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5035 unavailable: "backend is retiring; reconnect to continue"
     public func btw(_ params: SideAgentParams) async throws -> TaskIdResult {
         try await caller.call("prompt.btw", params: params, as: TaskIdResult.self)
     }
+    /// Send a user turn to a live session; busy sessions queue / steer / redirect instead of refusing.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4004 invalidRequest: "confirm_truncate requires truncate_before_user_ordinal, truncate_before_message_id, or truncate_before_row_id", "ordinal-only truncation is unsafe for durable session history; include truncate_before_row_id", "{…} must be an integer"
+    /// - 4007 notFound: "session no longer live; retry resume"
+    /// - 4009 busy: "session busy", "session disconnect interrupt settling", "subagent still running — wait for it to finish"
+    /// - 4018 conflict: "target user message is no longer in session history"
+    /// - 4028 conflict: "truncation would erase the entire session transcript; resubmit with confirm_empty_truncate=true if this is intended"
+    /// - 4029 invalidRequest: "truncation parameters require confirm_truncate=true; an ordinary prompt.submit must not drop session history (update your Hermes client if a rewind was intended)"
+    /// - 4030 conflict: "truncate_before_user_ordinal ({…}) does not match {…} target turn ({…})"
+    /// - 4090 conflict
+    /// - 4091 busy: "hosted room member session is busy"
+    /// - 4120 invalidRequest: "hosted room turns require a bot_room session"; forbidden: "invalid hosted room turn proof"
+    /// - 4121 unsupported: "hosted room turns do not support isolated compute workers yet"
+    /// - 4122 unsupported: "This room is managed by {…}. Update Hermes Desktop to continue it."
+    /// - 4124 invalidRequest: "turn author is stamped by the gateway, never by a client"
+    /// - 5008 serverError: "failed to persist history truncation: {…}"
+    /// - 5019 serverError: "compute-host dispatch failed: {…}"
+    /// - 5032 busy: "agent initialization timed out after {…}s — your message was not sent; retry once the session is ready"
+    /// - 5035 unavailable: "backend is retiring; reconnect to continue"
+    /// - 5070 serverError: "Session storage could not be written, so this message was not saved: the disk is full. Free some disk space, then send your message again."
+    /// - 5071 serverError: "Session storage could not be written, so this message was not saved. Cause: {…}. {…} Then send your message again."
+    /// - 5072 unavailable: "Session storage is unavailable, so this message was not saved. Cause: {…}. {…} Then send your message again."
+    /// - 5122 unavailable: "Could not verify this group. Try again after the gateway recovers."
     public func submit(_ params: PromptSubmitParams) async throws -> PromptSubmitResult {
         try await caller.call("prompt.submit", params: params, as: PromptSubmitResult.self)
     }
@@ -804,9 +1756,26 @@ public struct ReloadMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Re-read ~/.hermes/.env (CLI /reload parity); built agents keep their pool until /new.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5015 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func env(_ params: ReloadEnvParams) async throws -> ReloadEnvResult {
         try await caller.call("reload.env", params: params, as: ReloadEnvResult.self)
     }
+    /// Tear down and rediscover MCP servers for every live session (prompt cache is invalidated).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5015 serverError
+    /// - 5019 serverError: "compute-host reload_mcp failed: {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func mcp(_ params: ReloadMcpParams) async throws -> ReloadMcpResult {
         try await caller.call("reload.mcp", params: params, as: ReloadMcpResult.self)
     }
@@ -816,6 +1785,10 @@ public struct RequestMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Answer an open server→client request from a client that never received the frame.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4002 invalidRequest: "id and an object result required"
     public func answer(_ params: RequestAnswerParams) async throws -> RequestAnswerResult {
         try await caller.call("request.answer", params: params, as: RequestAnswerResult.self)
     }
@@ -825,12 +1798,39 @@ public struct RollbackMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Diff between a checkpoint and the working tree, with an ANSI rendering sized to the TUI.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4014 invalidRequest: "hash required"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5022 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func diff(_ params: RollbackDiffParams) async throws -> RollbackDiffResult {
         try await caller.call("rollback.diff", params: params, as: RollbackDiffResult.self)
     }
+    /// Checkpoints for the session's cwd; ``enabled: false`` when checkpointing is off.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5020 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func list(_ params: RollbackListParams) async throws -> RollbackListResult {
         try await caller.call("rollback.list", params: params, as: RollbackListResult.self)
     }
+    /// Restore the working tree (or one file) to a checkpoint by hash or 1-based index.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4009 busy
+    /// - 4014 invalidRequest: "hash required"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5021 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func restore(_ params: RollbackRestoreParams) async throws -> RollbackRestoreResult {
         try await caller.call("rollback.restore", params: params, as: RollbackRestoreResult.self)
     }
@@ -840,99 +1840,274 @@ public struct SessionMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Attach the frontend to a live session without closing the previously focused one.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4007 notFound: "session no longer live; retry resume"
+    /// - 4009 busy: "session disconnect interrupt settling"
     public func activate(_ params: SessionActivateParams) async throws -> SessionActivateResult {
         try await caller.call("session.activate", params: params, as: SessionActivateResult.self)
     }
+    /// Live sessions in this process, insertion order (not a DB browser).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5036 serverError: "could not enumerate active sessions: {…}"
     public func activeList(_ params: SessionActiveListParams) async throws -> SessionActiveListResult {
         try await caller.call("session.active_list", params: params, as: SessionActiveListResult.self)
     }
+    /// Fork a live session into a new stored child that shares the parent's history so far.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4008 conflict: "nothing to branch — send a message first"
+    /// - 5000 serverError: "agent init failed on branch: {…}"
+    /// - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func branch(_ params: SessionBranchParams) async throws -> SessionBranchResult {
         try await caller.call("session.branch", params: params, as: SessionBranchResult.self)
     }
+    /// Whole-session branch of a stored parent: the owning backend reads and copies the transcript, which never crosses the wire (a separate method so an older gateway fails loudly, not with an empty branch).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - -32602 invalidRequest
+    /// - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+    /// - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
     public func branchStored(_ params: SessionBranchStoredParams) async throws -> SessionBranchStoredResult {
         try await caller.call("session.branch_stored", params: params, as: SessionBranchStoredResult.self)
     }
+    /// session.branch of the whole history without echoing the copied transcript back.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4008 conflict: "nothing to branch — send a message first"
+    /// - 5000 serverError: "agent init failed on branch: {…}"
+    /// - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func branchWhole(_ params: SessionBranchWholeParams) async throws -> SessionBranchWholeResult {
         try await caller.call("session.branch_whole", params: params, as: SessionBranchWholeResult.self)
     }
+    /// Tear down a live session (its stored row stays resumable).
     public func close(_ params: SessionCloseParams) async throws -> SessionCloseResult {
         try await caller.call("session.close", params: params, as: SessionCloseResult.self)
     }
+    /// Manual /compress of an idle session, optionally focused on a topic.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4009 busy
+    /// - 5005 serverError
+    /// - 5019 serverError: "compute-host compress failed: {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func compress(_ params: SessionCompressParams) async throws -> SessionCompressResult {
         try await caller.call("session.compress", params: params, as: SessionCompressResult.self)
     }
+    /// Cursor-style split of the context window by category.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5000 serverError: "Could not compute context breakdown: {…}"
     public func contextBreakdown(_ params: SessionContextBreakdownParams) async throws -> SessionContextBreakdownResult {
         try await caller.call("session.context_breakdown", params: params, as: SessionContextBreakdownResult.self)
     }
+    /// Run one allowlisted goal / loop / subgoal / heartbeat action and return the exact resulting snapshot.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 conflict: "session has no stored key"; notFound: "session not found"
+    /// - 4004 invalidRequest: "action is required", "args must be an object", "subgoal index must be >= 1", "subgoal index must be an integer", …; forbidden: "gate actions are not allowed through session.control"
+    /// - 5031 serverError: "dispatch failed: {…}", "session.control snapshot failed: {…}"; unavailable: "command.dispatch unavailable"
     public func control(_ params: SessionControlParams) async throws -> SessionControlResult {
         try await caller.call("session.control", params: params, as: SessionControlResult.self)
     }
+    /// Stable, allowlisted snapshot of one live session's goal / loop / heartbeat state.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 conflict: "session has no stored key"; notFound: "session not found"
+    /// - 5031 serverError: "session.control.read failed: {…}"
     public func controlRead(_ params: SessionControlReadParams) async throws -> SessionControlReadResult {
         try await caller.call("session.control.read", params: params, as: SessionControlReadResult.self)
     }
+    /// Mint a live session (agent builds after the reply); a DB row appears on the first prompt unless seeded.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - -32602 invalidRequest
+    /// - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+    /// - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
     public func create(_ params: SessionCreateParams) async throws -> SessionCreateResult {
         try await caller.call("session.create", params: params, as: SessionCreateResult.self)
     }
+    /// Change a live, idle session's working directory.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4009 busy: "session busy"
+    /// - 4016 invalidRequest: "cwd required"
+    /// - 4017 invalidRequest
     public func cwdSet(_ params: SessionCwdSetParams) async throws -> SessionCwdSetResult {
         try await caller.call("session.cwd.set", params: params, as: SessionCwdSetResult.self)
     }
+    /// Delete a stored session + transcripts; refused while it is live here.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4006 invalidRequest: "session_id required"
+    /// - 4007 notFound: "session not found"
+    /// - 4023 conflict: "cannot delete an active session"
+    /// - 5036 serverError: "could not enumerate active sessions: {…}", "delete failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
     public func delete(_ params: SessionDeleteParams) async throws -> SessionDeleteResult {
         try await caller.call("session.delete", params: params, as: SessionDeleteResult.self)
     }
+    /// Replay events after a seq watermark on WS reconnect; truncated means refetch state.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - -32602 invalidRequest: "invalid params: last_seen must be an integer"
     public func eventsSince(_ params: SessionEventsSinceParams) async throws -> SessionEventsSinceResult {
         try await caller.call("session.events.since", params: params, as: SessionEventsSinceResult.self)
     }
+    /// Replay-buffer occupancy telemetry (ops/debug).
     public func eventsStats(_ params: SessionEventsStatsParams) async throws -> SessionEventsStatsResult {
         try await caller.call("session.events.stats", params: params, as: SessionEventsStatsResult.self)
     }
+    /// Import a foreign session into this profile's history (idempotent per origin).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - -32602 invalidRequest
+    /// - -32000 serverError: "Could not read this session on the backend"; unavailable: "Session storage is unavailable: {…}. {…}"
     public func foreignImport(_ params: SessionForeignIdParams) async throws -> SessionForeignImportResult {
         try await caller.call("session.foreign.import", params: params, as: SessionForeignImportResult.self)
     }
+    /// One page of Claude Code / Codex sessions found on the serving backend.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - -32602 invalidRequest
+    /// - -32000 serverError: "Could not read session folders on this backend"
     public func foreignList(_ params: SessionForeignListParams) async throws -> SessionForeignListResult {
         try await caller.call("session.foreign.list", params: params, as: SessionForeignListResult.self)
     }
+    /// Preview a foreign session's tail before importing it.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - -32602 invalidRequest
+    /// - -32000 serverError: "Could not read this session on the backend"; unavailable: "Session storage is unavailable: {…}. {…}"
     public func foreignPreview(_ params: SessionForeignIdParams) async throws -> SessionForeignPreviewResult {
         try await caller.call("session.foreign.preview", params: params, as: SessionForeignPreviewResult.self)
     }
+    /// The durable display transcript (ancestors included, row ids attached).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
     public func history(_ params: SessionHistoryParams) async throws -> SessionHistoryResult {
         try await caller.call("session.history", params: params, as: SessionHistoryResult.self)
     }
+    /// Stop the running turn (and streaming TTS); retires the crash-recovery marker.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5019 serverError: "compute-host interrupt failed: {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func interrupt(_ params: SessionInterruptParams) async throws -> SessionInterruptResult {
         try await caller.call("session.interrupt", params: params, as: SessionInterruptResult.self)
     }
+    /// Human-facing stored sessions, most recent first (sub-agent / kanban sources denied).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5006 unavailable: "Session storage is unavailable: {…}. {…}"
     public func list(_ params: SessionListParams) async throws -> SessionListResult {
         try await caller.call("session.list", params: params, as: SessionListResult.self)
     }
+    /// Most recent human-facing session; errors fold into a null session_id.
     public func mostRecent(_ params: SessionMostRecentParams) async throws -> SessionMostRecentResult {
         try await caller.call("session.most_recent", params: params, as: SessionMostRecentResult.self)
     }
+    /// Redirect the active turn (queued for the next turn while the agent is still building).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4002 invalidRequest: "text is required"
+    /// - 4010 unsupported: "agent does not support active-turn redirect"
+    /// - 5000 serverError: "{…} failed: {…}"
     public func redirect(_ params: SessionCorrectionParams) async throws -> SessionCorrectionResult {
         try await caller.call("session.redirect", params: params, as: SessionCorrectionResult.self)
     }
+    /// Attach to a stored session: reuse it if live here, else lazy / deferred / cold / eager rebuild.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4006 invalidRequest: "session_id required"
+    /// - 4007 notFound: "session no longer live; retry resume", "session not found"
+    /// - 4009 busy: "session disconnect interrupt settling"
+    /// - 4130 conflict
+    /// - 5000 unavailable: "Session storage is unavailable: {…}. {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func resume(_ params: SessionResumeParams) async throws -> SessionResumeResult {
         try await caller.call("session.resume", params: params, as: SessionResumeResult.self)
     }
+    /// Export the transcript to ~/.hermes/sessions/saved (classic /save).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5011 serverError: "compute-host session save failed: {…}", "compute-host session save returned an invalid response", "failed to create save directory {…}: {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func save(_ params: SessionSaveParams) async throws -> SessionSaveResult {
         try await caller.call("session.save", params: params, as: SessionSaveResult.self)
     }
+    /// Set/clear hidden (out of the default list, still resumable by its owner) on a session + lineage.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
     public func setHidden(_ params: SessionSetHiddenParams) async throws -> SessionSetHiddenResult {
         try await caller.call("session.set_hidden", params: params, as: SessionSetHiddenResult.self)
     }
+    /// Rendered /status text for the session.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
     public func status(_ params: SessionStatusParams) async throws -> SessionStatusResult {
         try await caller.call("session.status", params: params, as: SessionStatusResult.self)
     }
+    /// Inject text into the next tool result without interrupting the turn.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4002 invalidRequest: "text is required"
+    /// - 4010 unsupported: "agent does not support steer"
+    /// - 5000 serverError: "{…} failed: {…}"
     public func steer(_ params: SessionCorrectionParams) async throws -> SessionCorrectionResult {
         try await caller.call("session.steer", params: params, as: SessionCorrectionResult.self)
     }
+    /// Read or set a live session's title; a title set before the row exists is queued.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4021 invalidRequest: "title required"
+    /// - 4022 invalidRequest
+    /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
     public func title(_ params: SessionTitleParams) async throws -> SessionTitleResult {
         try await caller.call("session.title", params: params, as: SessionTitleResult.self)
     }
+    /// Drop the last user turn (and everything after it) from an idle session.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4009 busy
+    /// - 5008 serverError: "undo: {…}"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func undo(_ params: SessionUndoParams) async throws -> SessionUndoResult {
         try await caller.call("session.undo", params: params, as: SessionUndoResult.self)
     }
+    /// Token / context / cost counters for the session (+ Nous credit lines when available).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
     public func usage(_ params: SessionUsageParams) async throws -> SessionUsageResult {
         try await caller.call("session.usage", params: params, as: SessionUsageResult.self)
     }
+    /// Re-home a stored session's workspace; git identity is replaced and a live agent follows.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4007 notFound: "session not found"; invalidRequest: "session_key required"
+    /// - 4016 invalidRequest: "cwd required"
+    /// - 4017 notFound: "working directory does not exist: {…}"
+    /// - 5007 serverError: "move failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
     public func workspaceMove(_ params: SessionWorkspaceMoveParams) async throws -> SessionWorkspaceMoveResult {
         try await caller.call("session.workspace.move", params: params, as: SessionWorkspaceMoveResult.self)
     }
@@ -942,9 +2117,14 @@ public struct SetupMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Strict provider check through the same runtime resolution the agent uses on session creation.
     public func runtimeCheck(_ params: SetupRuntimeCheckParams) async throws -> SetupRuntimeCheckResult {
         try await caller.call("setup.runtime_check", params: params, as: SetupRuntimeCheckResult.self)
     }
+    /// Loose provider check: is ANY provider auth state discoverable for the (launch or named) profile.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5016 serverError
     public func status(_ params: ProfileParams) async throws -> SetupStatusResult {
         try await caller.call("setup.status", params: params, as: SetupStatusResult.self)
     }
@@ -954,6 +2134,14 @@ public struct ShellMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Run a safe (non-dangerous) shell command captured for ``!cmd`` / inline substitution.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4004 invalidRequest: "empty command"
+    /// - 4005 forbidden: "blocked (hardline): {…}. Use the agent for dangerous commands.", "blocked: {…}. Use the agent for dangerous commands."
+    /// - 5001 unavailable: "shell.exec unavailable: approval safety module not importable"
+    /// - 5003 serverError
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func exec(_ params: ShellExecParams) async throws -> ShellExecResult {
         try await caller.call("shell.exec", params: params, as: ShellExecResult.self)
     }
@@ -963,9 +2151,26 @@ public struct SkillsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Skills hub backend: list the profile's skills or search / browse / inspect / install from the hub.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4017 invalidRequest: "unknown {…} action: {…}"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5024 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func manage(_ params: SkillsManageParams) async throws -> SkillsManageResult {
         try await caller.call("skills.manage", params: params, as: SkillsManageResult.self)
     }
+    /// Re-scan skill dirs; the pre-rendered ``output`` is what /reload-skills prints.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5025 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func reload(_ params: SkillsReloadParams) async throws -> SkillsReloadResult {
         try await caller.call("skills.reload", params: params, as: SkillsReloadResult.self)
     }
@@ -975,6 +2180,13 @@ public struct SlashMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Execute a slash command against the session's slash worker (or a live/plugin shortcut).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4004 invalidRequest: "empty command"
+    /// - 4018 invalidRequest: "skill command: use command.dispatch for /{…}", "snapshot restore mutates live config/state; use command.dispatch for /snapshot restore"
+    /// - 5030 serverError: "slash worker start failed: {…}"
     public func exec(_ params: SlashExecParams) async throws -> SlashExecResult {
         try await caller.call("slash.exec", params: params, as: SlashExecResult.self)
     }
@@ -984,12 +2196,24 @@ public struct SpawnTreeMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Saved spawn-tree snapshots, newest first.
     public func list(_ params: SpawnTreeListParams) async throws -> SpawnTreeListResult {
         try await caller.call("spawn_tree.list", params: params, as: SpawnTreeListResult.self)
     }
+    /// Read one saved spawn-tree snapshot (path must be under the spawn-trees root).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "path required"
+    /// - 4030 forbidden: "path outside spawn-trees root: {…}"
+    /// - 5000 serverError: "spawn_tree.load failed: snapshot is not a JSON object", "spawn_tree.load failed: {…}"
     public func load(_ params: SpawnTreeLoadParams) async throws -> SpawnTreeLoadResult {
         try await caller.call("spawn_tree.load", params: params, as: SpawnTreeLoadResult.self)
     }
+    /// Persist a finished delegation tree snapshot under the session's spawn-trees dir.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "subagents list required"
+    /// - 5000 serverError: "spawn_tree.save failed: {…}"
     public func save(_ params: SpawnTreeSaveParams) async throws -> SpawnTreeSaveResult {
         try await caller.call("spawn_tree.save", params: params, as: SpawnTreeSaveResult.self)
     }
@@ -999,15 +2223,35 @@ public struct SubagentMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Hard-interrupt one owned child; ``found`` is false when it already finished.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "subagent_id required"
+    /// - 4001 notFound: "session not found or not owned by this transport"
     public func interrupt(_ params: SubagentIdParams) async throws -> SubagentInterruptResult {
         try await caller.call("subagent.interrupt", params: params, as: SubagentInterruptResult.self)
     }
+    /// Live children owned by this session (other sessions' children never leak).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found or not owned by this transport"
     public func list(_ params: SessionParams) async throws -> SubagentListResult {
         try await caller.call("subagent.list", params: params, as: SubagentListResult.self)
     }
+    /// Queue steering text into a live delegated child owned by this session.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "subagent_id required"
+    /// - 4001 notFound: "session not found"
+    /// - 4002 invalidRequest: "text is required"
     public func steer(_ params: SubagentSteerParams) async throws -> SubagentSteerResult {
         try await caller.call("subagent.steer", params: params, as: SubagentSteerResult.self)
     }
+    /// Last 16KB of an owned child's live transcript.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "subagent_id required"
+    /// - 4001 notFound: "session not found or not owned by this transport"
     public func tail(_ params: SubagentIdParams) async throws -> SubagentTailResult {
         try await caller.call("subagent.tail", params: params, as: SubagentTailResult.self)
     }
@@ -1017,18 +2261,23 @@ public struct SubscriptionMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Schedule a downgrade / same-price change or a period-end cancellation.
     public func change(_ params: SubscriptionChangeParams) async throws -> BillingPendingChangeResult {
         try await caller.call("subscription.change", params: params, as: BillingPendingChangeResult.self)
     }
+    /// Chargeless quote of what a plan change would do (billing:manage).
     public func preview(_ params: SubscriptionPreviewParams) async throws -> SubscriptionPreviewResult {
         try await caller.call("subscription.preview", params: params, as: SubscriptionPreviewResult.self)
     }
+    /// Clear a scheduled downgrade / cancellation (re-enables recurring spend).
     public func resume(_ params: ProfileParams) async throws -> BillingPendingChangeResult {
         try await caller.call("subscription.resume", params: params, as: BillingPendingChangeResult.self)
     }
+    /// Current plan, tier catalog and usage for the picker; fail-open when logged out.
     public func state(_ params: ProfileParams) async throws -> SubscriptionStateResult {
         try await caller.call("subscription.state", params: params, as: SubscriptionStateResult.self)
     }
+    /// Prorate, charge and flip the plan (billing:manage, idempotent).
     public func upgrade(_ params: SubscriptionUpgradeParams) async throws -> SubscriptionUpgradeResult {
         try await caller.call("subscription.upgrade", params: params, as: SubscriptionUpgradeResult.self)
     }
@@ -1038,6 +2287,7 @@ public struct SystemMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Host battery for the status bar; always resolves, ``available: false`` when unreadable.
     public func battery(_ params: SystemBatteryParams) async throws -> SystemBatteryResult {
         try await caller.call("system.battery", params: params, as: SystemBatteryResult.self)
     }
@@ -1047,6 +2297,10 @@ public struct TerminalMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Record the client's column width for server-side rendering.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
     public func resize(_ params: TerminalResizeParams) async throws -> TerminalResizeResult {
         try await caller.call("terminal.resize", params: params, as: TerminalResizeResult.self)
     }
@@ -1056,12 +2310,39 @@ public struct ToolsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Persist a toolset / MCP enable-disable change and rebuild the session agent so it takes effect now.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4017 invalidRequest: "unknown tools action: {…}"
+    /// - 4018 invalidRequest: "names required"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5035 unavailable
     public func configure(_ params: ToolsConfigureParams) async throws -> ToolsConfigureResult {
         try await caller.call("tools.configure", params: params, as: ToolsConfigureResult.self)
     }
+    /// Every toolset with its resolved tool names, flagged against the session's (or config's) enabled set.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5031 serverError
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func list(_ params: _SessionScoped) async throws -> ToolsetsListResult {
         try await caller.call("tools.list", params: params, as: ToolsetsListResult.self)
     }
+    /// The /tools listing grouped by toolset, including tools deferred behind the tool_search bridge.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5034 unavailable
     public func show(_ params: _SessionScoped) async throws -> ToolsShowResult {
         try await caller.call("tools.show", params: params, as: ToolsShowResult.self)
     }
@@ -1071,6 +2352,13 @@ public struct ToolsetsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Toolset summaries (no tool names) for the desktop Toolsets tab.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4063 invalidRequest: "{…} required"
+    /// - 4064 notFound: "profile '{…}' not found"
+    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func list(_ params: _SessionScoped) async throws -> ToolsetsListResult {
         try await caller.call("toolsets.list", params: params, as: ToolsetsListResult.self)
     }
@@ -1080,6 +2368,7 @@ public struct UsageMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Two-bar dollar usage view shared by /usage, /topup and /subscription; fail-open to unavailable.
     public func bars(_ params: ProfileParams) async throws -> UsageModel {
         try await caller.call("usage.bars", params: params, as: UsageModel.self)
     }
@@ -1089,24 +2378,46 @@ public struct VaultMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Add a login / payment / address item to the local vault.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5095 invalidRequest: "secret payload is required"
     public func add(_ params: VaultAddParams) async throws -> VaultAddResult {
         try await caller.call("vault.add", params: params, as: VaultAddResult.self)
     }
+    /// Metadata-only listing across the local vault and every unlocked password manager.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5095 invalidRequest
     public func list(_ params: ProfileParams) async throws -> VaultListResult {
         try await caller.call("vault.list", params: params, as: VaultListResult.self)
     }
+    /// Forget a manager's session token (every manager when no name is given).
     public func lock(_ params: VaultLockParams) async throws -> VaultLockResult {
         try await caller.call("vault.lock", params: params, as: VaultLockResult.self)
     }
+    /// Remove a local vault item by id.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5095 invalidRequest: "id is required"
     public func remove(_ params: VaultRemoveParams) async throws -> VaultRemoveResult {
         try await caller.call("vault.remove", params: params, as: VaultRemoveResult.self)
     }
+    /// Enable or disable an external password manager (disabling also locks it).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5095 invalidRequest: "unknown vault source: {…}"
     public func sourceSet(_ params: VaultSourceSetParams) async throws -> VaultSourceSetResult {
         try await caller.call("vault.source.set", params: params, as: VaultSourceSetResult.self)
     }
+    /// Status of every login source (local vault + detected password managers).
     public func sources(_ params: ProfileParams) async throws -> VaultSourcesResult {
         try await caller.call("vault.sources", params: params, as: VaultSourcesResult.self)
     }
+    /// Unlock a password manager for this session with its master password.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5095 invalidRequest: "master password is required"; conflict: "{…} is not an enabled password manager"
     public func unlock(_ params: VaultUnlockParams) async throws -> VaultUnlockResult {
         try await caller.call("vault.unlock", params: params, as: VaultUnlockResult.self)
     }
@@ -1116,6 +2427,7 @@ public struct VerificationMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Best known verification evidence for a cwd/session; read-only, never runs checks.
     public func status(_ params: VerificationStatusParams) async throws -> VerificationStatusResult {
         try await caller.call("verification.status", params: params, as: VerificationStatusResult.self)
     }
@@ -1125,12 +2437,27 @@ public struct VoiceMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// VAD-bounded push-to-talk; the transcript arrives as a voice.transcript event.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4015 conflict: "voice mode is off — enable with /voice on"
+    /// - 4019 invalidRequest: "unknown voice action: {…}"
+    /// - 5025 unsupported: "voice module not available — install audio dependencies"
     public func record(_ params: VoiceRecordParams) async throws -> VoiceRecordResult {
         try await caller.call("voice.record", params: params, as: VoiceRecordResult.self)
     }
+    /// /voice parity: report, flip voice mode on/off, or toggle speech output.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4013 invalidRequest: "unknown voice action: {…}"
     public func toggle(_ params: VoiceToggleParams) async throws -> VoiceToggleResult {
         try await caller.call("voice.toggle", params: params, as: VoiceToggleResult.self)
     }
+    /// Speak text through the backend TTS engine (barge-in aware).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4020 invalidRequest: "text required"
+    /// - 5026 serverError
     public func tts(_ params: VoiceTtsParams) async throws -> VoiceTtsResult {
         try await caller.call("voice.tts", params: params, as: VoiceTtsResult.self)
     }
@@ -1140,21 +2467,37 @@ public struct WakeMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// Push client-captured PCM into the armed detector (mic-less remote backends).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 invalidRequest: "invalid base64 pcm: {…}", "pcm frame too large", "wake.feed only accepts 16 kHz PCM", "wake.feed requires base64 pcm"
+    /// - 5026 serverError
     public func feed(_ params: WakeFeedParams) async throws -> WakeFeedResult {
         try await caller.call("wake.feed", params: params, as: WakeFeedResult.self)
     }
+    /// Release the mic (e.g. while the desktop's browser captures audio).
     public func pause(_ params: WakeControlParams) async throws -> WakePauseResult {
         try await caller.call("wake.pause", params: params, as: WakePauseResult.self)
     }
+    /// Reclaim the mic after a pause; no-op if the listener isn't armed.
     public func resume(_ params: WakeControlParams) async throws -> WakeResumeResult {
         try await caller.call("wake.resume", params: params, as: WakeResumeResult.self)
     }
+    /// Arm the wake-word listener for the calling surface; refusals explain why.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5026 unsupported: "wake module unavailable: {…}"
     public func start(_ params: WakeStartParams) async throws -> WakeStartResult {
         try await caller.call("wake.start", params: params, as: WakeStartResult.self)
     }
+    /// Everything a client needs to draw the wake-word state and decide whether to (re)arm.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5026 serverError
     public func status(_ params: WakeStatusParams) async throws -> WakeStatusResult {
         try await caller.call("wake.status", params: params, as: WakeStatusResult.self)
     }
+    /// Stop this surface's listener; persist also writes wake_word.enabled: false.
     public func stop(_ params: WakeStopParams) async throws -> WakeStopResult {
         try await caller.call("wake.stop", params: params, as: WakeStopResult.self)
     }
@@ -1224,6 +2567,7 @@ public extension HermesGateway {
     nonisolated var verification: VerificationMethods { VerificationMethods(caller: self) }
     nonisolated var voice: VoiceMethods { VoiceMethods(caller: self) }
     nonisolated var wake: WakeMethods { WakeMethods(caller: self) }
+    /// Cheapest liveness probe; answered on the WS reader thread even while every agent is mid-turn.
     nonisolated func ping(_ params: PingParams) async throws -> PingResult {
         try await call("ping", params: params, as: PingResult.self)
     }

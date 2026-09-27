@@ -160,6 +160,24 @@ These calls need a tagged-server replacement or an explicit app compatibility
 path before the generated client can replace them. Dynamic path expressions
 were excluded from this static comparison.
 
+## Gateway error codes (v0.21.5)
+
+The gateway contract declares no errors. Read from the tagged handlers, the 237 methods answer with
+138 distinct codes, and codes do not identify errors on their own:
+
+- 4001 is "session not found" for session methods, but also an invalid audio frame (`wake.feed`), a
+  malformed MCP server config and a missing connector slug. 4030 is both "not permitted" and a missing
+  `llm.oneshot` template. The runtimes therefore classify by code and message.
+- 5035 means "backend is retiring" from dispatch and `prompt.*`, but `model.disconnect` and
+  `tools.configure` use it for their own failures. The runtimes used to reconnect on any 5035; they now
+  reconnect only on the retiring message.
+- The runtimes' hand-written constants named 4015 "session unavailable" and 4006 "incompatible contract".
+  At this release 4015 is invalid attachment or browser parameters and 4006 a missing `session_id`,
+  `request_id` or read-only credentials. The generated catalog replaced them.
+- `session.events.since` without `session_id` answers -32603 "internal error" rather than a
+  validation error.
+- 20 methods relay codes from a compute host, plugin or connector service; those have no fixed meaning.
+
 ## Remaining validation
 
 - Verify the exact `hermes web` flags and health endpoint in a running

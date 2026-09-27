@@ -1,4 +1,10 @@
-"""Verify the SwiftPM tag and Kotlin Maven version for the current stable Hermes release."""
+"""The HermesAPI package version: the SwiftPM tag and the Kotlin and Android Maven version.
+
+HermesAPI has its own semantic version, so a fix to the library ships without waiting for a Hermes
+release. The Hermes release it speaks is ``spec/current-release.txt``, exposed at run time as
+``HermesGatewayContract.release``. Adopting a new Hermes release bumps the minor version; a release
+that removes or changes generated symbols needs a major bump in review.
+"""
 
 from __future__ import annotations
 
@@ -6,16 +12,27 @@ import re
 from pathlib import Path
 
 from tools.fetch_spec import ROOT
-from tools.ref_policy import current_release
+
+_GRADLE_VERSION = re.compile(r'^version = "(\d+)\.(\d+)\.(\d+)"$', re.MULTILINE)
 
 
 def version(root: Path = ROOT) -> str:
-    """The package version is the Hermes version it was generated from: HermesAPI 0.21.4 speaks Hermes 0.21.4."""
-    value = current_release(root)[1:]
+    """The one version in ``kotlin/build.gradle.kts``; the Android build reads the same line."""
     gradle = (root / "kotlin/build.gradle.kts").read_text(encoding="utf-8")
-    if not re.search(rf'^version = "{re.escape(value)}"$', gradle, re.MULTILINE):
-        raise ValueError("Kotlin Maven version does not match current Hermes release")
-    return value
+    found = _GRADLE_VERSION.findall(gradle)
+    if len(found) != 1:
+        raise ValueError("Expected one MAJOR.MINOR.PATCH version in kotlin/build.gradle.kts")
+    return ".".join(found[0])
+
+
+def bump_minor(root: Path = ROOT) -> str:
+    """Raise the minor version and reset the patch, for a newly adopted Hermes release."""
+    major, minor, _ = (int(part) for part in version(root).split("."))
+    new = f"{major}.{minor + 1}.0"
+    gradle = root / "kotlin/build.gradle.kts"
+    gradle.write_text(_GRADLE_VERSION.sub(f'version = "{new}"', gradle.read_text(encoding="utf-8")),
+                      encoding="utf-8")
+    return new
 
 
 def main() -> None:

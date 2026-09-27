@@ -24,7 +24,7 @@ def release_root(tmp_path: Path) -> Path:
         "upstream: NousResearch/hermes-agent\nminimum_contract_version: v0.21.3\n"
         "releases:\n  v0.21.3: v2026.9.14\n  v0.21.4: v2026.9.21\n"
     )
-    (tmp_path / "kotlin/build.gradle.kts").write_text('version = "0.21.4"\n')
+    (tmp_path / "kotlin/build.gradle.kts").write_text('version = "1.3.1"\n')
     return tmp_path
 
 
@@ -36,11 +36,11 @@ def test_detects_the_newest_released_version_and_skips_pre_releases(tmp_path: Pa
     assert newest_untracked(TAGS, root, {**VERSIONS, "v2026.9.24": None}.get) is None
 
 
-def test_adopts_a_version_with_its_tag(tmp_path: Path) -> None:
+def test_adopts_a_version_with_its_tag_and_bumps_the_minor(tmp_path: Path) -> None:
     root = release_root(tmp_path)
-    assert adopt("v0.21.5", "v2026.9.24", root) == "0.21.5"
+    assert adopt("v0.21.5", "v2026.9.24", root) == "1.4.0"
     assert (root / "spec/current-release.txt").read_text() == "v0.21.5\n"
     assert "v0.21.5: v2026.9.24" in (root / "spec/refs.yaml").read_text()
-    assert (root / "kotlin/build.gradle.kts").read_text() == 'version = "0.21.5"\n'
+    assert (root / "kotlin/build.gradle.kts").read_text() == 'version = "1.4.0"\n'
     with pytest.raises(ValueError, match="does not advance"):
         adopt("v0.21.4", "v2026.9.21", root)

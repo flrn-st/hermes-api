@@ -59,7 +59,8 @@ private data class TrackedSession(
 private sealed interface Rebind {
     data object Bound : Rebind
     data class Gone(val reason: String) : Rebind
-    data object RetryLater : Rebind
+    /** Hermes is still interrupting the turn it orphaned; no live event of the session reaches this socket. */
+    data object Settling : Rebind
 }
 
 /**
@@ -704,28 +705,38 @@ public class HermesGateway(
         lastSequence.keys.forEach { lastSequence[it] = 0 }
     }
 
+    /** Throws when a session could not be brought up to date over this socket; the attempt then fails and the
+     *  next one replays from the same watermark. Releasing live events past an unreplayed gap would skip it. */
     private suspend fun recoverSessions(connection: GatewayConnection, current: Int) {
         try {
             for (sessionId in trackedSessionIds().sorted()) {
                 if (current != generation) return
-                val session = sessions[sessionId] ?: TrackedSession()
-                if (session.closeOnDisconnect) {
-                    forgetSession(sessionId)
-                    mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, "Closed on disconnect"))
-                } else {
-                    when (val outcome = rebind(sessionId)) {
-                        Rebind.Bound -> replay(sessionId, connection, current)
-                        is Rebind.Gone -> resume(sessionId, session, outcome.reason)
-                        Rebind.RetryLater -> Unit
-                    }
-                }
-                releaseHeldEvents(sessionId)
+                recover(sessionId, connection, current)
             }
-        } finally {
-            val remaining = replayHold.entries.sortedBy { it.key }.flatMap { it.value.toList() }
+        } catch (error: Throwable) {
+            // Held events sit past the gap the next attempt replays.
             replayHold.clear()
-            remaining.forEach { handleEvent(it, false) }
+            throw error
         }
+        // Sessions created while recovering were never replayed, so their events need no hold.
+        val remaining = replayHold.entries.sortedBy { it.key }.flatMap { it.value.toList() }
+        replayHold.clear()
+        remaining.forEach { handleEvent(it, false) }
+    }
+
+    private suspend fun recover(sessionId: String, connection: GatewayConnection, current: Int) {
+        val session = sessions[sessionId] ?: TrackedSession()
+        if (session.closeOnDisconnect) {
+            forgetSession(sessionId)
+            mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, "Closed on disconnect"))
+        } else {
+            when (val outcome = rebind(sessionId)) {
+                Rebind.Bound -> replay(sessionId, connection, current)
+                is Rebind.Gone -> resume(sessionId, session, outcome.reason)
+                Rebind.Settling -> Unit
+            }
+        }
+        releaseHeldEvents(sessionId)
     }
 
     /** Rebinding cancels Hermes' orphan reap and routes the session's live events to this socket. */
@@ -739,18 +750,13 @@ public class HermesGateway(
             } catch (error: HermesGatewayException.RPC) {
                 when (error.code) {
                     // Hermes is still settling the disconnect interrupt.
-                    HermesGatewayErrorCodes.SESSION_SETTLING -> if (attempt < 3) delay(500L * attempt) else return Rebind.RetryLater
-                    HermesGatewayErrorCodes.SESSION_NOT_FOUND, HermesGatewayErrorCodes.SESSION_NOT_LIVE,
-                    HermesGatewayErrorCodes.SESSION_UNAVAILABLE -> return Rebind.Gone(error.message ?: "unavailable")
-                    else -> return Rebind.RetryLater
+                    HermesGatewayErrorCodes.SESSION_SETTLING -> if (attempt < 3) delay(500L * attempt) else return Rebind.Settling
+                    // Not found, not live, unavailable, or refused otherwise: this runtime id is no longer ours.
+                    else -> return Rebind.Gone(error.message ?: "unavailable")
                 }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (_: Exception) {
-                return Rebind.RetryLater
             }
         }
-        return Rebind.RetryLater
+        return Rebind.Settling
     }
 
     /** Hermes reclaims a session 20 s after its socket closes (and every session on restart), but keeps it
@@ -776,35 +782,32 @@ public class HermesGateway(
         } catch (error: HermesGatewayException.RPC) {
             forgetSession(sessionId)
             mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))
-        } catch (error: CancellationException) {
-            throw error
-        } catch (_: Exception) {
-            // Keep the session; the next reconnect tries again.
         }
     }
 
     private suspend fun replay(sessionId: String, connection: GatewayConnection, current: Int) {
-        try {
-            val result = call("session.events.since",
+        val result = try {
+            call("session.events.since",
                 SessionEventsSinceParams(sessionId, lastSeen = Patch.Value(lastSequence[sessionId] ?: 0L)),
                 SessionEventsSinceParams.serializer(), SessionEventsSinceResult.serializer(),
                 RECOVERY_TIMEOUT_MILLIS, waitsForConnection = false)
-            if (replayEpoch != null && replayEpoch != result.epoch) {
-                resetWatermarks()
-                replayEpoch = result.epoch
-            } else if (result.truncated) {
-                lastSequence[sessionId] = result.latestSeq
-                mutableRecoveries.tryEmit(GatewaySessionRecovery.ReplayTruncated(sessionId))
-            } else {
-                result.events.forEach { handleEvent(JsonObject(it), true) }
-            }
-            result.openRequests.forEach {
-                handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current)
-            }
-        } catch (error: CancellationException) {
-            throw error
-        } catch (_: Exception) {
-            // Keep the watermark; the next reconnect replays the gap.
+        } catch (error: HermesGatewayException.RPC) {
+            // Hermes answered but cannot replay; the caller must reload what it shows.
+            logger.log(GatewayLogLevel.ERROR, "Replay refused: ${error.message}")
+            mutableRecoveries.tryEmit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+            return
+        }
+        if (replayEpoch != null && replayEpoch != result.epoch) {
+            resetWatermarks()
+            replayEpoch = result.epoch
+        } else if (result.truncated) {
+            lastSequence[sessionId] = result.latestSeq
+            mutableRecoveries.tryEmit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+        } else {
+            result.events.forEach { handleEvent(JsonObject(it), true) }
+        }
+        result.openRequests.forEach {
+            handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current)
         }
     }
 

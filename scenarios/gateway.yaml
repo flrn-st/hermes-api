@@ -1,7 +1,7 @@
 # Gateway methods every client runs through its generated method table, and the recorder records.
 #
 # Each call names a method, its params, dotted `capture` paths into the result, and optionally an event to
-# `wait` for when the method's work completes later. `${@home}` is the isolated Hermes home, `${@repo}` a
+# `wait` for, from the call's session, when the method's work completes later. `${@home}` is the isolated Hermes home, `${@repo}` a
 # scratch git repository in it, and `${@unique}` a value each run fills in, so every client can run the
 # scenario against the same server. Methods that act on the host outside the isolated home (installs,
 # the screen, clipboard, microphone, password managers, foreign agents' sessions), need external
@@ -100,6 +100,10 @@ calls:
 # A session through its lifecycle, on the stub model.
 - {method: session.create, params: {title: "Scenario ${@unique}", cwd: "${@repo}", close_on_disconnect: false}, capture: {session: session_id, stored: stored_session_id}}
 - {method: prompt.submit, params: {session_id: "${session}", text: Reply with a short greeting.}, wait: message.complete}
+- {method: prompt.submit, params: {session_id: "${session}", text: Think about the HermesAPI fixture before answering.}, wait: message.complete}
+- {method: prompt.submit, params: {session_id: "${session}", text: Delegate the HermesAPI fixture check to a subagent.}, wait: message.complete}
+- {method: subagent.list, params: {session_id: "${session}"}, capture: {child: subagents.0.subagent_id}}
+- {method: subagent.tail, params: {session_id: "${session}", subagent_id: "${child}"}}
 - {method: session.history, params: {session_id: "${session}"}}
 - {method: session.status, params: {session_id: "${session}"}}
 - {method: session.usage, params: {session_id: "${session}"}}
@@ -113,7 +117,6 @@ calls:
 - {method: approval.pending, params: {session_id: "${session}"}}
 - {method: process.list, params: {session_id: "${session}"}}
 - {method: rollback.list, params: {session_id: "${session}"}}
-- {method: subagent.list, params: {session_id: "${session}"}}
 - {method: handoff.state, params: {session_id: "${session}"}}
 - {method: message.react, params: {session_id: "${session}", newest_role: assistant, emoji: "👍"}}
 - {method: slash.exec, params: {session_id: "${session}", command: /goal Finish the scenario}}

@@ -51,6 +51,13 @@ class FixtureDecodeTest {
         else -> value
     }
 
+    private companion object {
+        /** Every reply and tool the stub model answers the recorded scenarios with (`harness/stub_llm.py`). */
+        val FIXTURE_REPLIES = setOf("HermesAPI fixture reply.", "HermesAPI stable release selected.",
+            "HermesAPI approval denied as expected.", "HermesAPI reasoning complete.", "HermesAPI subagent finished.")
+        val FIXTURE_TOOLS = setOf("clarify", "terminal", "delegate_task")
+    }
+
     @Test
     fun recordedLivenessFramesDecodeInKotlin() {
         val json = Json { ignoreUnknownKeys = false }
@@ -129,16 +136,14 @@ class FixtureDecodeTest {
                 if (payload is GatewayEventPayload.MessageComplete) {
                     val reply = assertIs<hermes.api.generated.gateway.MessageCompletePayloadText.StringValue>(
                         payload.payload.text)
-                    assertTrue(reply.value in setOf("HermesAPI fixture reply.",
-                        "HermesAPI stable release selected.", "HermesAPI approval denied as expected."))
+                    assertTrue(reply.value in FIXTURE_REPLIES)
                 }
                 if (payload is GatewayEventPayload.MessageDelta) {
-                    assertTrue(payload.payload.text.trim() in setOf("HermesAPI fixture reply.",
-                        "HermesAPI stable release selected.", "HermesAPI approval denied as expected."))
+                    assertTrue(payload.payload.text.trim() in FIXTURE_REPLIES)
                 }
-                if (payload is GatewayEventPayload.ToolStart) assertTrue(payload.payload.name in setOf("clarify", "terminal"))
+                if (payload is GatewayEventPayload.ToolStart) assertTrue(payload.payload.name in FIXTURE_TOOLS)
                 if (payload is GatewayEventPayload.ToolComplete) {
-                    assertTrue(payload.payload.name in setOf("clarify", "terminal"))
+                    assertTrue(payload.payload.name in FIXTURE_TOOLS)
                     if (payload.payload.name == "terminal") {
                         val result = assertIs<JsonObject>(payload.payload.result)
                         assertEquals("blocked", result.getValue("status").jsonPrimitive.content)

@@ -50,7 +50,13 @@ release watcher checks published Hermes releases only (reading each new tag's ve
 contract changes, REST breaking changes, and the coverage report. Publication
 is gated on every tracked operation being complete (typed, generated, recorded, decoded, and run live by
 both clients) or exempted in `spec/exemptions.yaml` with a reason and a human reviewer; the coverage
-report lists every remaining gap and the evidence it lacks.
+report lists every remaining gap and the evidence it lacks. A surface counts as typed when every free-form
+location it reaches (message content, tool arguments, objects that keep undeclared keys) is reviewed in
+`spec/open-schemas.yaml`. Both review files carry `proposed` entries with a reason but no reviewer; they
+count only in `uv run python -m tools.coverage --ref <release> --assume-proposed`, which shows what signing
+them would leave. After reading them, `uv run python -m tools.sign_reviews --reviewer <name>` signs them
+(`--match <regex>` signs a subset); then raising the version in `kotlin/build.gradle.kts` on `main`
+publishes the release.
 
 See [the gateway client guide](docs/gateway.md) for iOS and Android integration and connection behaviour, [the implementation plan](HermesAPI-Implementation-Plan.md), and [release findings](docs/findings.md).
 

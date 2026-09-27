@@ -88,3 +88,65 @@ def test_exemptions_count_toward_the_gate_and_leave_the_gaps(tmp_path) -> None:
 def test_exemptions_must_still_apply(tmp_path, exemption: str, problem: str) -> None:
     with pytest.raises(ValueError, match=problem):
         report(CURRENT, _copy(tmp_path, "exemptions:\n" + exemption))
+
+
+def _with_reviews(tmp_path, exemptions: str = "exemptions: []\n", open_schemas: str = "reviewed: []\n"):
+    root = _copy(tmp_path, exemptions)
+    (root / "spec/open-schemas.yaml").write_text(open_schemas)
+    return root
+
+
+USAGE = "gateway:Usage"
+
+
+def test_a_signed_free_form_location_types_the_surfaces_that_reach_it(tmp_path) -> None:
+    before = report(CURRENT, _with_reviews(tmp_path / "a"))
+    reaching = [entry["name"] for entry in before["entries"] if USAGE in entry["open"]]
+    assert reaching
+    after = report(CURRENT, _with_reviews(tmp_path / "b", open_schemas=(
+        f'reviewed:\n- location: "{USAGE}"\n  reason: Provider counters pass through.\n  reviewed_by: flrnst\n')))
+    for entry in after["entries"]:
+        assert USAGE not in entry["open"]
+    assert after["open_schemas"]["accepted"] == 1
+
+
+def test_proposals_count_only_when_assumed(tmp_path) -> None:
+    root = _with_reviews(tmp_path, exemptions=(
+        "exemptions: []\nproposed:\n- kind: rest\n  name: " + OAUTH_SUBMIT + "\n  reason: Always 400.\n"),
+        open_schemas=f'reviewed: []\nproposed:\n- location: "{USAGE}"\n  reason: Provider counters.\n')
+    honest = report(CURRENT, root)
+    assert honest["exempt"] == 0 and honest["proposed"] == 1
+    assert any(USAGE in entry["open"] for entry in honest["entries"])
+    assumed = report(CURRENT, root, assume_proposed=True)
+    assert assumed["exempt"] == 1
+    assert all(USAGE not in entry["open"] for entry in assumed["entries"])
+
+
+@pytest.mark.parametrize(("open_schemas", "problem"), [
+    ('reviewed:\n- location: "gateway:Invented"\n  reason: x\n  reviewed_by: y\n', "not an open location"),
+    (f'reviewed:\n- location: "{USAGE}"\n  reason: x\n', "needs a reason and reviewed_by"),
+    (f'reviewed: []\nproposed:\n- location: "{USAGE}"\n  reason: x\n- location: "{USAGE}"\n  reason: y\n',
+     "listed twice"),
+])
+def test_free_form_reviews_must_still_apply(tmp_path, open_schemas: str, problem: str) -> None:
+    with pytest.raises(ValueError, match=problem):
+        report(CURRENT, _with_reviews(tmp_path, open_schemas=open_schemas))
+
+
+def test_a_documented_redirect_has_nothing_left_to_type() -> None:
+    login = next(item for item in report(CURRENT)["entries"] if item["name"] == "GET /auth/login")
+    assert login["typed"]
+
+
+def test_signing_moves_matching_proposals_with_the_reviewer(tmp_path) -> None:
+    from tools.sign_reviews import sign
+
+    root = _with_reviews(tmp_path, exemptions=(
+        "# header\nexemptions: []\nproposed:\n- kind: rest\n  name: " + OAUTH_SUBMIT + "\n  reason: Always 400.\n"),
+        open_schemas=f'reviewed: []\nproposed:\n- location: "{USAGE}"\n  reason: Provider counters.\n')
+    assert sign("flrnst", match="oauth", root=root) == {"spec/exemptions.yaml": 1, "spec/open-schemas.yaml": 0}
+    data = report(CURRENT, root)
+    assert data["exempt"] == 1 and data["open_schemas"] == {"accepted": 0, "proposed": 1}
+    assert (root / "spec/exemptions.yaml").read_text().startswith("# header\n")
+    with pytest.raises(ValueError, match="reviewer"):
+        sign(" ", root=root)

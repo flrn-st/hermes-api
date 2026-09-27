@@ -284,3 +284,16 @@ private actor RotationLog {
     #expect(RESTScenario.lookup(result, "$") == result)
     #expect(try RESTScenario.resolve(.string("job-${id}"), ["id": .string("j1")]) == .string("job-j1"))
 }
+
+@Test func fastJSONParsingAgreesWithDecoding() throws {
+    let documents = [
+        #"{"a":1,"b":1.5,"c":true,"d":false,"e":null,"f":"text ✓ é","g":[1,"x",{"h":[]}],"i":{},"j":-3,"k":1e3}"#,
+        #"[1.0, 2.25, 9007199254740993, -0.5, 0, "0", true]"#,
+        #""plain""#, "42", "null",
+    ]
+    for document in documents {
+        let data = Data(document.utf8)
+        #expect(try JSONValue(jsonData: data) == JSONDecoder().decode(JSONValue.self, from: data), "\(document)")
+    }
+    #expect(throws: (any Error).self) { try JSONValue(jsonData: Data("{".utf8)) }
+}

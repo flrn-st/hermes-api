@@ -68,7 +68,8 @@ def _free_port() -> int:
 
 
 def _await_status(url: str, token: str, server: subprocess.Popen[bytes]) -> None:
-    deadline = time.monotonic() + 30
+    # A macOS runner that also hosts a booted simulator can take most of a minute to import Hermes.
+    deadline = time.monotonic() + 120
     request = urllib.request.Request(url + "/api/status", headers={"X-Hermes-Session-Token": token})
     while time.monotonic() < deadline:
         if server.poll() is not None:

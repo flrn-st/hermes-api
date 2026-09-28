@@ -2,6 +2,9 @@ plugins {
     kotlin("jvm") version "2.4.20"
     kotlin("plugin.serialization") version "2.4.20"
     `java-library`
+    // Scripted sockets, transports, callers and FakeGateway for tests of apps built on the library, published
+    // as the `test-fixtures` variant: testImplementation(testFixtures("hermes:hermes-api:<version>")).
+    `java-test-fixtures`
     `maven-publish`
 }
 
@@ -61,6 +64,9 @@ publishing {
     publications {
         create<MavenPublication>("hermesAPI") {
             from(components["java"])
+            // Test fixtures resolve through Gradle module metadata only; a plain POM cannot express them.
+            suppressPomMetadataWarningsFor("testFixturesApiElements")
+            suppressPomMetadataWarningsFor("testFixturesRuntimeElements")
             pom {
                 name = "HermesAPI"
                 description = "Generated Kotlin client for stable Hermes Agent releases"

@@ -3,9 +3,9 @@ package hermes.api
 import java.net.ConnectException
 import java.net.URI
 import java.io.IOException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -20,6 +20,7 @@ import hermes.api.generated.rest.LearningGraphStatsTopCategoriesItem
 import hermes.api.generated.rest.ProfileActiveUpdate
 import hermes.api.generated.rest.VoiceLiveStatusResponse
 import hermes.api.generated.rest.VoiceLiveStatusResponseMode
+import hermes.api.runtime.GatewayLogger
 import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesREST
 import hermes.api.runtime.HermesRESTAuth
@@ -33,38 +34,14 @@ import hermes.api.runtime.RESTRedirect
 import hermes.api.runtime.RESTResponse
 import hermes.api.runtime.RESTRetryPolicy
 import hermes.api.runtime.RESTTransport
-import hermes.api.runtime.RESTTransportResponse
+import hermes.api.runtime.withHermesRequestTimeout
+import hermes.api.testing.ScriptedRESTTransport
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
-
-/** Answers each request from a script and records what was sent. */
-private class ScriptedTransport(vararg steps: Step) : RESTTransport {
-    sealed interface Step {
-        data class Respond(val status: Int, val body: String, val headers: Map<String, String> = emptyMap()) : Step
-        data class Fail(val error: Exception) : Step
-        data object Hang : Step
-    }
-
-    data class Sent(val method: String, val uri: URI, val headers: Map<String, String>, val body: ByteArray?, val contentType: String?)
-
-    private val steps = steps.toMutableList()
-    val requests = mutableListOf<Sent>()
-
-    override suspend fun request(
-        method: String, uri: URI, headers: Map<String, String>, body: ByteArray?, contentType: String?,
-    ): RESTTransportResponse {
-        synchronized(this) { requests += Sent(method, uri, headers, body, contentType) }
-        return when (val step = synchronized(this) { steps.removeFirst() }) {
-            is Step.Respond -> RESTTransportResponse(step.status, step.headers, step.body.encodeToByteArray())
-            is Step.Fail -> throw step.error
-            Step.Hang -> awaitCancellation()
-        }
-    }
-}
 
 private val base = URI("https://dashboard.example")
 private val fastRetry = RESTRetryPolicy(maxAttempts = 3, initialDelayMillis = 1, maximumDelayMillis = 5)
@@ -77,9 +54,9 @@ private fun client(transport: RESTTransport, auth: HermesRESTAuth? = null, retry
 class HermesRESTTest {
     @Test
     fun queryValuesAndPathSegmentsArePercentEncoded() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(200, """{"count":2}"""),
-            ScriptedTransport.Step.Respond(404, """{"detail":"Session not found"}"""),
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(200, """{"count":2}"""),
+            ScriptedRESTTransport.Step.Respond(404, """{"detail":"Session not found"}"""),
         )
         val rest = client(transport)
         assertEquals(2, rest.methods.sessions.emptyCount(profile = "qa & mobile+1/é").count)
@@ -91,9 +68,9 @@ class HermesRESTTest {
 
     @Test
     fun routesKeepTheBaseURLPath() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(200, """{"count":2}"""),
-            ScriptedTransport.Step.Respond(200, """{"count":3}"""),
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(200, """{"count":2}"""),
+            ScriptedRESTTransport.Step.Respond(200, """{"count":3}"""),
         )
         val behindRelay = client(transport, baseURI = URI("https://relay.example/agents/box%201/?ignored=1"))
         assertEquals(2, behindRelay.methods.sessions.emptyCount(profile = "default").count)
@@ -106,9 +83,9 @@ class HermesRESTTest {
 
     @Test
     fun everyAttemptResolvesTheAddressAfterThePreviousFailure() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Fail(ConnectException("primary unreachable")),
-            ScriptedTransport.Step.Respond(200, """{"count":2}"""),
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Fail(ConnectException("primary unreachable")),
+            ScriptedRESTTransport.Step.Respond(200, """{"count":2}"""),
         )
         val failures = mutableListOf<Throwable?>()
         val address = HermesDashboardAddress { failure ->
@@ -124,7 +101,7 @@ class HermesRESTTest {
 
     @Test
     fun localTokenAuthenticatesAndJSONBodiesAreSent() = runTest {
-        val transport = ScriptedTransport(ScriptedTransport.Step.Respond(200, """{"ok":true,"active":"default"}"""))
+        val transport = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(200, """{"ok":true,"active":"default"}"""))
         val result = client(transport, LocalTokenAuth("secret")).methods.profiles.setActive(ProfileActiveUpdate("default"))
         assertTrue(result.ok && result.active == "default")
         val sent = transport.requests.single()
@@ -136,9 +113,9 @@ class HermesRESTTest {
 
     @Test
     fun strictDecodingRejectsUnknownFieldsAndEnumValues() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(200, """{"ticket":"fresh","ttl_seconds":30,"surprise":1}"""),
-            ScriptedTransport.Step.Respond(200,
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(200, """{"ticket":"fresh","ttl_seconds":30,"surprise":1}"""),
+            ScriptedRESTTransport.Step.Respond(200,
                 """{"ok":true,"mode":"telepathy","available":false,"reason":null,"model":"m","voice":"v"}"""),
         )
         val rest = client(transport)
@@ -149,11 +126,11 @@ class HermesRESTTest {
 
     @Test
     fun tolerantDecodingSkipsUnknownFieldsAndKeepsEnumValues() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(200, """{"ticket":"fresh","ttl_seconds":30,"surprise":1}"""),
-            ScriptedTransport.Step.Respond(200,
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(200, """{"ticket":"fresh","ttl_seconds":30,"surprise":1}"""),
+            ScriptedRESTTransport.Step.Respond(200,
                 """{"ok":true,"mode":"telepathy","available":false,"reason":null,"model":"m","voice":"v"}"""),
-            ScriptedTransport.Step.Respond(200, """{"ttl_seconds":30}"""),
+            ScriptedRESTTransport.Step.Respond(200, """{"ttl_seconds":30}"""),
         )
         val rest = client(transport, decoding = RESTDecoding.Tolerant)
         assertEquals("fresh", rest.methods.auth.wsTicket().ticket)
@@ -190,7 +167,7 @@ class HermesRESTTest {
 
     @Test
     fun httpErrorsCarryFastAPIDetail() = runTest {
-        val transport = ScriptedTransport(ScriptedTransport.Step.Respond(401, """{"detail":"Unauthorized"}"""))
+        val transport = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(401, """{"detail":"Unauthorized"}"""))
         val error = assertFailsWith<HermesRESTException.HTTP> { client(transport).methods.auth.wsTicket() }
         assertEquals(401, error.status)
         assertEquals("Unauthorized", error.detail)
@@ -199,10 +176,10 @@ class HermesRESTTest {
 
     @Test
     fun safeRequestsRetryTransientFailures() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Fail(IOException("connection reset")),
-            ScriptedTransport.Step.Respond(503, """{"detail":"starting"}""", mapOf("Retry-After" to "0")),
-            ScriptedTransport.Step.Respond(200, """{"count":0}"""),
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Fail(IOException("connection reset")),
+            ScriptedRESTTransport.Step.Respond(503, """{"detail":"starting"}""", mapOf("Retry-After" to "0")),
+            ScriptedRESTTransport.Step.Respond(200, """{"count":0}"""),
         )
         assertEquals(0, client(transport).methods.sessions.emptyCount().count)
         assertEquals(3, transport.requests.size)
@@ -210,29 +187,29 @@ class HermesRESTTest {
 
     @Test
     fun unsafeRequestsRetryOnlyWhenHermesNeverSawThem() = runTest {
-        val unreachable = ScriptedTransport(
-            ScriptedTransport.Step.Fail(ConnectException("refused")),
-            ScriptedTransport.Step.Respond(200, """{"ok":true,"active":"x"}"""),
+        val unreachable = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Fail(ConnectException("refused")),
+            ScriptedRESTTransport.Step.Respond(200, """{"ok":true,"active":"x"}"""),
         )
         assertEquals("x", client(unreachable).methods.profiles.setActive(ProfileActiveUpdate("x")).active)
         assertEquals(2, unreachable.requests.size)
 
-        val unavailable = ScriptedTransport(
-            ScriptedTransport.Step.Respond(503, "{}"), ScriptedTransport.Step.Respond(200, """{"ok":true,"active":"x"}"""))
+        val unavailable = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(503, "{}"), ScriptedRESTTransport.Step.Respond(200, """{"ok":true,"active":"x"}"""))
         assertEquals(503, assertFailsWith<HermesRESTException.HTTP> {
             client(unavailable).methods.profiles.setActive(ProfileActiveUpdate("x"))
         }.status)
         assertEquals(1, unavailable.requests.size)
 
-        val lost = ScriptedTransport(
-            ScriptedTransport.Step.Fail(IOException("reset")), ScriptedTransport.Step.Respond(200, """{"ok":true,"active":"x"}"""))
+        val lost = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Fail(IOException("reset")), ScriptedRESTTransport.Step.Respond(200, """{"ok":true,"active":"x"}"""))
         assertFailsWith<HermesRESTException.Transport> { client(lost).methods.profiles.setActive(ProfileActiveUpdate("x")) }
         assertEquals(1, lost.requests.size)
     }
 
     @Test
     fun attemptsTimeOut() = runBlocking {
-        val transport = ScriptedTransport(ScriptedTransport.Step.Hang)
+        val transport = ScriptedRESTTransport(ScriptedRESTTransport.Step.Hang)
         val started = System.nanoTime()
         assertFailsWith<HermesRESTException.Timeout> {
             client(transport, retry = RESTRetryPolicy.None, timeoutMillis = 100).methods.sessions.emptyCount()
@@ -240,9 +217,34 @@ class HermesRESTTest {
         assertTrue(System.nanoTime() - started < 5_000_000_000L)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun aScopedTimeoutBoundsEachAttempt() = runTest {
+        val transport = ScriptedRESTTransport(ScriptedRESTTransport.Step.Hang)
+        val rest = client(transport, retry = RESTRetryPolicy.None, timeoutMillis = 60_000)
+        val started = testScheduler.currentTime
+        assertFailsWith<HermesRESTException.Timeout> {
+            withHermesRequestTimeout(100) { rest.methods.sessions.emptyCount() }
+        }
+        assertEquals(100, testScheduler.currentTime - started)
+    }
+
+    @Test
+    fun retryLogsCarryNoResponseBody() = runTest {
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(503, """{"detail":"secret-body"}"""),
+            ScriptedRESTTransport.Step.Respond(200, """{"count":1}"""),
+        )
+        val messages = mutableListOf<String>()
+        val rest = HermesREST(HermesRESTConfiguration(HermesDashboardAddress(base), transport = transport, retry = fastRetry,
+            logger = GatewayLogger { _, message -> messages += message }))
+        assertEquals(1, rest.methods.sessions.emptyCount().count)
+        assertEquals(listOf("Retrying GET (attempt 2) after HTTP 503"), messages)
+    }
+
     @Test
     fun cancellationStopsARequest() = runBlocking {
-        val transport = ScriptedTransport(ScriptedTransport.Step.Hang)
+        val transport = ScriptedRESTTransport(ScriptedRESTTransport.Step.Hang)
         val job = launch { client(transport).methods.sessions.emptyCount() }
         delay(50)
         job.cancelAndJoin()
@@ -264,14 +266,14 @@ class HermesRESTTest {
 
     @Test
     fun unauthorizedRequestsRenewTheCredentialOnce() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(401, "{}"), ScriptedTransport.Step.Respond(200, """{"ticket":"t","ttl_seconds":30}"""))
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(401, "{}"), ScriptedRESTTransport.Step.Respond(200, """{"ticket":"t","ttl_seconds":30}"""))
         val auth = RenewingAuth()
         assertEquals("t", client(transport, auth).methods.auth.wsTicket().ticket)
         assertEquals(listOf("Bearer stale", "Bearer fresh"), transport.requests.map { it.headers["Authorization"] })
         assertEquals(1, auth.renewals)
 
-        val rejected = ScriptedTransport(ScriptedTransport.Step.Respond(401, "{}"), ScriptedTransport.Step.Respond(401, "{}"))
+        val rejected = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(401, "{}"), ScriptedRESTTransport.Step.Respond(401, "{}"))
         assertEquals(401, assertFailsWith<HermesRESTException.HTTP> { client(rejected, RenewingAuth()).methods.auth.wsTicket() }.status)
         assertEquals(2, rejected.requests.size)
     }
@@ -281,7 +283,7 @@ class HermesRESTTest {
 
     @Test
     fun nativeSessionRefreshesOnceForConcurrentRejections() = runTest {
-        val refresh = ScriptedTransport(ScriptedTransport.Step.Respond(200, issued))
+        val refresh = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(200, issued))
         val rotated = mutableListOf<NativeSessionAuth.Tokens>()
         val auth = NativeSessionAuth(HermesDashboardAddress(base), NativeSessionAuth.Tokens("a1", "r1", provider = "oidc"), refresh,
             onRotate = { rotated += it })
@@ -301,7 +303,7 @@ class HermesRESTTest {
 
     @Test
     fun nativeSessionRefreshesBeforeExpiry() = runTest {
-        val refresh = ScriptedTransport(ScriptedTransport.Step.Respond(200, issued))
+        val refresh = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(200, issued))
         val auth = NativeSessionAuth(HermesDashboardAddress(base), NativeSessionAuth.Tokens("a1", "r1", expiresAt = 0), refresh)
         assertEquals(mapOf("Authorization" to "Bearer a2"), auth.authorizationHeaders())
         assertEquals(mapOf("Authorization" to "Bearer a2"), auth.authorizationHeaders())
@@ -310,16 +312,16 @@ class HermesRESTTest {
 
     @Test
     fun redirectsAreResultsNotFollowed() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(302, "", mapOf("Location" to "https://idp.example/authorize?x=1")))
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(302, "", mapOf("Location" to "https://idp.example/authorize?x=1")))
         assertEquals(RESTRedirect(302, "https://idp.example/authorize?x=1"), client(transport).methods.web.authLogin("oidc"))
     }
 
     @Test
     fun binaryAndTextBodiesKeepTheirBytes() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(200, "PK\u0003\u0004", mapOf("Content-Type" to "application/zip")),
-            ScriptedTransport.Step.Respond(200, "body{}", mapOf("Content-Type" to "text/css")),
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(200, "PK\u0003\u0004", mapOf("Content-Type" to "application/zip")),
+            ScriptedRESTTransport.Step.Respond(200, "body{}", mapOf("Content-Type" to "text/css")),
         )
         val rest = client(transport)
         val archive = rest.methods.files.download("backups/a.zip")
@@ -330,7 +332,7 @@ class HermesRESTTest {
 
     @Test
     fun multipartUploadsCarryFilesAndFields() = runTest {
-        val transport = ScriptedTransport(ScriptedTransport.Step.Respond(500, "{}"))
+        val transport = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(500, "{}"))
         runCatching {
             client(transport).methods.files.uploadStream(
                 RESTFile("a.txt", "hello".encodeToByteArray(), "text/plain"), path = "notes/a.txt")
@@ -349,9 +351,9 @@ class HermesRESTTest {
 
     @Test
     fun severalSuccessStatusesDecodeToTheirCase() = runTest {
-        val transport = ScriptedTransport(
-            ScriptedTransport.Step.Respond(202, """{"status":"accepted","job_id":"j"}"""),
-            ScriptedTransport.Step.Respond(200, """{"status":"duplicate","job_id":"j"}"""),
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(202, """{"status":"accepted","job_id":"j"}"""),
+            ScriptedRESTTransport.Step.Respond(200, """{"status":"duplicate","job_id":"j"}"""),
         )
         val rest = client(transport)
         assertEquals("accepted", assertIs<CronFireResult.Accepted>(rest.methods.cron.fire(CronFireRequest("j"))).value.status)

@@ -25,6 +25,13 @@ android {
     sourceSets {
         getByName("main").kotlin.directories.add("../kotlin/src/main/kotlin")
         getByName("androidTest").kotlin.directories.add("../kotlin/src/live/kotlin")
+        getByName("testFixtures").kotlin.directories.add("../kotlin/src/testFixtures/kotlin")
+    }
+
+    // The JVM library's scripted sockets, transports, callers and FakeGateway, published as this artifact's
+    // test fixtures: testImplementation(testFixtures("hermes:hermes-api-android:<version>")).
+    testFixtures {
+        enable = true
     }
 
     compileOptions {
@@ -66,6 +73,9 @@ publishing {
         create<MavenPublication>("hermesAPIAndroid") {
             artifactId = "hermes-api-android"
             afterEvaluate { from(components["release"]) }
+            // Test fixtures resolve through Gradle module metadata only; a plain POM cannot express them.
+            suppressPomMetadataWarningsFor("releaseTestFixturesVariantReleaseApiPublication")
+            suppressPomMetadataWarningsFor("releaseTestFixturesVariantReleaseRuntimePublication")
             pom {
                 name = "HermesAPI for Android"
                 description = "Generated Kotlin client for stable Hermes Agent releases, with Android lifecycle and network adapters"

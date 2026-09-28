@@ -2,19 +2,20 @@ package hermes.api
 
 import java.net.URI
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -34,7 +35,6 @@ import hermes.api.runtime.GatewayConnectionState
 import hermes.api.runtime.GatewayCredential
 import hermes.api.runtime.GatewayHTTPTransport
 import hermes.api.runtime.GatewayNetworkMonitor
-import hermes.api.runtime.GatewayNetworkPath
 import hermes.api.runtime.GatewaySessionRecovery
 import hermes.api.runtime.GatewayTransport
 import hermes.api.runtime.HermesAuth
@@ -43,6 +43,13 @@ import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
 import hermes.api.runtime.HermesGatewayException
 import hermes.api.runtime.LocalTokenAuth
+import hermes.api.runtime.withHermesRequestTimeout
+import hermes.api.testing.GatewayFrames
+import hermes.api.testing.ScriptedGatewaySocket
+import hermes.api.testing.ScriptedGatewayTransport
+import hermes.api.testing.ScriptedNetworkMonitor
+import hermes.api.testing.SentAnswer
+import hermes.api.testing.SentCall
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -51,77 +58,8 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class HermesGatewayTest {
-    /** One fake Hermes socket. It answers `client.capabilities`, optionally answers heartbeats, and hands
-     *  every other frame the client sends to [outbound]. */
-    private class FakeSocket(private val answersHeartbeats: Boolean = false) : GatewayConnection {
-        val inbound = Channel<String>(Channel.UNLIMITED)
-        val outbound = Channel<String>(Channel.UNLIMITED)
-        val heartbeats = Channel<String>(Channel.UNLIMITED)
-        @Volatile var isClosed = false
-        /** The socket died, but its reader has not noticed: sends fail, reads still wait. */
-        @Volatile var sendsFail = false
-
-        override suspend fun send(text: String) {
-            check(!isClosed && !sendsFail) { "closed" }
-            val frame = Json.parseToJsonElement(text).jsonObject
-            when (frame["method"]?.jsonPrimitive?.content) {
-                "client.capabilities" ->
-                    inbound.send("""{"jsonrpc":"2.0","id":${frame["id"]},"result":{"server_requests":[]}}""")
-                "gateway.ping" -> {
-                    heartbeats.send(frame["id"]?.jsonPrimitive?.content.orEmpty())
-                    if (answersHeartbeats) inbound.send("""{"jsonrpc":"2.0","id":${frame["id"]},"result":{"ok":true}}""")
-                }
-                else -> outbound.send(text)
-            }
-        }
-
-        override suspend fun receive(): String = inbound.receive()
-
-        override suspend fun close() {
-            isClosed = true
-            inbound.close()
-        }
-
-        /** Hermes (or the network) ends the socket. */
-        fun sever() { inbound.close(IllegalStateException("severed")) }
-
-        suspend fun sent(): JsonObject = Json.parseToJsonElement(withTimeout(3_000) { outbound.receive() }).jsonObject
-    }
-
-    private sealed interface Step {
-        data class Socket(val socket: FakeSocket) : Step
-        data class Failure(val error: HermesGatewayException) : Step
-    }
-
-    /** Hands out scripted sockets or failures in order; once exhausted, attempts wait until cancelled. */
-    private class SequenceTransport(steps: List<Step>) : GatewayTransport {
-        private val remaining = steps.toMutableList()
-        @Volatile var attempts = 0
-
-        override suspend fun connect(uri: URI, headers: Map<String, String>, protocols: List<String>): GatewayConnection {
-            attempts++
-            if (remaining.isEmpty()) awaitCancellation()
-            return when (val step = remaining.removeAt(0)) {
-                is Step.Socket -> step.socket
-                is Step.Failure -> throw step.error
-            }
-        }
-    }
-
-    private class TestNetworkMonitor(initial: GatewayNetworkPath) : GatewayNetworkMonitor {
-        private val flow = MutableSharedFlow<GatewayNetworkPath>(replay = 1).also { it.tryEmit(initial) }
-
-        override fun paths() = flow
-
-        fun change(path: GatewayNetworkPath) { flow.tryEmit(path) }
-    }
-
-    private val wifi = GatewayNetworkPath(true, "wifi-1")
-    private val cellular = GatewayNetworkPath(true, "cellular-2")
-    private val offline = GatewayNetworkPath(false, null)
-
     private fun TestScope.client(
-        transport: SequenceTransport, monitor: GatewayNetworkMonitor? = null, reconnectDelay: Long = 0,
+        transport: ScriptedGatewayTransport, monitor: GatewayNetworkMonitor? = null, reconnectDelay: Long = 0,
         heartbeat: Long = 60_000, deadline: Long = 120_000, timeout: Long = 3_000,
         minimumContract: Int = HermesGatewayContract.desktopContract,
     ) = HermesGateway(HermesGatewayConfiguration(
@@ -130,34 +68,38 @@ class HermesGatewayTest {
         heartbeatIntervalMillis = heartbeat, heartbeatDeadlineMillis = deadline, minimumContract = minimumContract,
     ), scope = backgroundScope)
 
-    private fun sockets(vararg sockets: FakeSocket) = SequenceTransport(sockets.map { Step.Socket(it) })
+    private fun sockets(vararg sockets: ScriptedGatewaySocket) = ScriptedGatewayTransport(*sockets)
+
+    /** The next frame the client sent, as a parsed call. */
+    private suspend fun ScriptedGatewaySocket.next(): SentCall = SentCall(withTimeout(3_000) { sent.receive() })
 
     private fun event(type: String, session: String, seq: Int, payload: String = "{}") =
-        """{"jsonrpc":"2.0","method":"event","params":{"type":"$type","session_id":"$session","seq":$seq,"payload":$payload}}"""
+        GatewayFrames.event(type, session, seq.toLong(), payload)
 
-    private fun result(frame: JsonObject, json: String) = """{"jsonrpc":"2.0","id":${frame["id"]},"result":$json}"""
+    private fun result(call: SentCall, json: String) = GatewayFrames.result(call.id, json)
 
-    private fun error(frame: JsonObject, code: Int, message: String) =
-        """{"jsonrpc":"2.0","id":${frame["id"]},"error":{"code":$code,"message":"$message"}}"""
+    private fun error(call: SentCall, code: Int, message: String) = GatewayFrames.error(call.id, code, message)
 
-    private fun JsonObject.method() = this["method"]?.jsonPrimitive?.content
+    private fun SentCall.method() = method
+
+    private val SentCall.fields: JsonObject get() = params.jsonObject
 
     private suspend fun HermesGateway.awaitState(matches: (GatewayConnectionState) -> Boolean) =
         withTimeout(5_000) { connectionStates.first(matches) }
 
-    private suspend fun HermesGateway.awaitConnectedAfter(transport: SequenceTransport, attempts: Int) =
+    private suspend fun HermesGateway.awaitConnectedAfter(transport: ScriptedGatewayTransport, attempts: Int) =
         withTimeout(10_000) {
             while (transport.attempts < attempts || connectionStates.value != GatewayConnectionState.Connected) delay(10)
         }
 
     /** Creates a session through the client and answers it with a stored id. */
     private suspend fun TestScope.createSession(
-        gateway: HermesGateway, socket: FakeSocket, id: String, stored: String, closeOnDisconnect: Boolean? = null,
+        gateway: HermesGateway, socket: ScriptedGatewaySocket, id: String, stored: String, closeOnDisconnect: Boolean? = null,
     ) {
         val created = async { gateway.methods.session.create(SessionCreateParams(closeOnDisconnect = closeOnDisconnect)) }
-        val frame = socket.sent()
+        val frame = socket.next()
         assertEquals("session.create", frame.method())
-        socket.inbound.send(result(frame,
+        socket.inject(result(frame,
             """{"session_id":"$id","stored_session_id":"$stored","message_count":0,"messages":[],"info":{}}"""))
         runCatching { created.await() }
     }
@@ -166,7 +108,7 @@ class HermesGatewayTest {
 
     @Test
     fun connectsAndCorrelatesOutOfOrderCalls() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         var observedURI: URI? = null
         val transport = object : GatewayTransport {
             override suspend fun connect(uri: URI, headers: Map<String, String>, protocols: List<String>): GatewayConnection {
@@ -181,10 +123,10 @@ class HermesGatewayTest {
         assertEquals("ws://localhost:3000/api/ws?token=secret", observedURI.toString())
         val first = async { gateway.methods.ping(PingParams()) }
         val second = async { gateway.methods.ping(PingParams()) }
-        val frame1 = socket.sent()
-        val frame2 = socket.sent()
-        socket.inbound.send(result(frame2, """{"pong":true}"""))
-        socket.inbound.send(result(frame1, """{"pong":true}"""))
+        val frame1 = socket.next()
+        val frame2 = socket.next()
+        socket.inject(result(frame2, """{"pong":true}"""))
+        socket.inject(result(frame1, """{"pong":true}"""))
         assertTrue(first.await().pong)
         assertTrue(second.await().pong)
         gateway.disconnect()
@@ -192,26 +134,26 @@ class HermesGatewayTest {
 
     @Test
     fun rpcErrorsAreTyped() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.connect()
         val request = async { runCatching { gateway.methods.ping(PingParams()) } }
-        socket.inbound.send(error(socket.sent(), 4015, "missing session"))
+        socket.inject(error(socket.next(), 4015, "missing session"))
         val failure = assertFailsWith<HermesGatewayException.RPC> { request.await().getOrThrow() }
         assertEquals(4015, failure.code)
         gateway.disconnect()
     }
 
     /** Answers one ping with a session result that reports [contract]. */
-    private suspend fun TestScope.pingReporting(contract: Int, gateway: HermesGateway, socket: FakeSocket): Result<PingResult> {
+    private suspend fun TestScope.pingReporting(contract: Int, gateway: HermesGateway, socket: ScriptedGatewaySocket): Result<PingResult> {
         val request = async { runCatching { gateway.methods.ping(PingParams()) } }
-        socket.inbound.send(result(socket.sent(), """{"pong":true,"info":{"desktop_contract":$contract}}"""))
+        socket.inject(result(socket.next(), """{"pong":true,"info":{"desktop_contract":$contract}}"""))
         return request.await()
     }
 
     @Test
     fun rejectsABackendBelowTheMinimumContract() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.connect()
         val older = HermesGatewayContract.desktopContract - 1
@@ -225,7 +167,7 @@ class HermesGatewayTest {
 
     @Test
     fun acceptsNewerContractsAndOlderOnesTheAppAllows() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val older = HermesGatewayContract.desktopContract - 1
         val gateway = client(sockets(socket), minimumContract = older)
         gateway.connect()
@@ -239,67 +181,67 @@ class HermesGatewayTest {
 
     @Test
     fun callsDuringAReconnectWaitForTheNewSocket() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second), reconnectDelay = 500)
         gateway.connect()
         first.sever()
         gateway.awaitState { it is GatewayConnectionState.Reconnecting }
         val probe = async { gateway.methods.ping(PingParams()) }
-        val frame = second.sent()
+        val frame = second.next()
         assertEquals("ping", frame.method())
-        second.inbound.send(result(frame, """{"pong":true}"""))
+        second.inject(result(frame, """{"pong":true}"""))
         assertTrue(probe.await().pong)
         gateway.disconnect()
     }
 
     @Test
     fun readOnlyCallsAreRepeatedAfterALostConnection() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second), timeout = 5_000)
         gateway.connect()
         val call = async { gateway.methods.ping(PingParams()) }
-        assertEquals("ping", first.sent().method())
+        assertEquals("ping", first.next().method())
         first.sever()
-        val frame = second.sent()
+        val frame = second.next()
         assertEquals("ping", frame.method())
-        second.inbound.send(result(frame, """{"pong":true}"""))
+        second.inject(result(frame, """{"pong":true}"""))
         assertTrue(call.await().pong)
         gateway.disconnect()
     }
 
     @Test
     fun callsThatMayHaveRunAreNotRepeated() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second), timeout = 5_000)
         gateway.connect()
         val call = async { runCatching { gateway.call("probe", PingParams(), PingParams.serializer(), PingResult.serializer()) } }
-        assertEquals("probe", first.sent().method())
+        assertEquals("probe", first.next().method())
         first.sever()
         assertIs<HermesGatewayException.Transport>(call.await().exceptionOrNull())
         // The next frame on the new socket is the next call, not a repeat of the one that may have run.
         gateway.awaitState { it == GatewayConnectionState.Connected }
         val next = async { gateway.methods.ping(PingParams()) }
-        val frame = second.sent()
+        val frame = second.next()
         assertEquals("ping", frame.method())
-        second.inbound.send(result(frame, """{"pong":true}"""))
+        second.inject(result(frame, """{"pong":true}"""))
         next.await()
         gateway.disconnect()
     }
 
     @Test
     fun undeliveredCallsAreSentOnTheNextConnection() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second), timeout = 5_000)
         gateway.connect()
-        first.sendsFail = true
+        first.failSends()
         val call = async { gateway.call("probe", PingParams(), PingParams.serializer(), PingResult.serializer()) }
-        val frame = second.sent()
+        val frame = second.next()
         assertEquals("probe", frame.method())
-        second.inbound.send(result(frame, """{"pong":true}"""))
+        second.inject(result(frame, """{"pong":true}"""))
         assertTrue(call.await().pong)
         assertTrue(first.isClosed)
         gateway.disconnect()
@@ -307,13 +249,13 @@ class HermesGatewayTest {
 
     @Test
     fun retiringBackendTriggersAReconnect() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val transport = sockets(first, second)
         val gateway = client(transport)
         gateway.connect()
         val call = async { runCatching { gateway.methods.ping(PingParams()) } }
-        first.inbound.send(error(first.sent(), 5035, "backend is retiring; reconnect to continue"))
+        first.inject(error(first.next(), 5035, "backend is retiring; reconnect to continue"))
         assertIs<HermesGatewayException.RPC>(call.await().exceptionOrNull())
         gateway.awaitConnectedAfter(transport, attempts = 2)
         assertTrue(first.isClosed)
@@ -322,16 +264,16 @@ class HermesGatewayTest {
 
     @Test
     fun genericFailureWithTheRetiringCodeKeepsTheConnection() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val transport = sockets(socket)
         val gateway = client(transport)
         gateway.connect()
         val call = async { runCatching { gateway.methods.ping(PingParams()) } }
         // tools.configure answers 5035 for its own failures too; only the retiring message means Hermes is leaving.
-        socket.inbound.send(error(socket.sent(), 5035, "could not write the toolset config"))
+        socket.inject(error(socket.next(), 5035, "could not write the toolset config"))
         assertIs<HermesGatewayException.RPC>(call.await().exceptionOrNull())
         val ping = async { gateway.methods.ping(PingParams()) }
-        socket.inbound.send(result(socket.sent(), """{"pong":true}"""))
+        socket.inject(result(socket.next(), """{"pong":true}"""))
         assertTrue(ping.await().pong)
         assertFalse(socket.isClosed)
         gateway.disconnect()
@@ -357,7 +299,7 @@ class HermesGatewayTest {
 
     @Test
     fun connectionsKeepTheBaseURLPath() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         var ticketURI: URI? = null
         var socketURI: URI? = null
         var socketProtocols: List<String> = emptyList()
@@ -387,13 +329,13 @@ class HermesGatewayTest {
 
     @Test
     fun everyConnectionAttemptResolvesTheAddressAfterThePreviousFailure() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val addresses = ArrayDeque(listOf("http://primary.example", "http://fallback.example", "http://primary.example"))
         val failures = mutableListOf<String?>()
         val connected = mutableListOf<String>()
-        val scripted = SequenceTransport(listOf(
-            Step.Failure(HermesGatewayException.Transport("primary unreachable")), Step.Socket(first), Step.Socket(second),
+        val scripted = ScriptedGatewayTransport(listOf(
+            ScriptedGatewayTransport.Step.Failure(HermesGatewayException.Transport("primary unreachable")), ScriptedGatewayTransport.Step.Socket(first), ScriptedGatewayTransport.Step.Socket(second),
         ))
         val transport = object : GatewayTransport {
             override suspend fun connect(uri: URI, headers: Map<String, String>, protocols: List<String>): GatewayConnection {
@@ -413,7 +355,7 @@ class HermesGatewayTest {
         gateway.awaitConnectedAfter(scripted, 3)
         assertEquals(listOf("ws://primary.example/api/ws", "ws://fallback.example/api/ws", "ws://primary.example/api/ws"),
             connected)
-        assertEquals(listOf(null, "primary unreachable", "severed"), failures)
+        assertEquals(listOf(null, "primary unreachable", "closed"), failures)
         gateway.disconnect()
     }
 
@@ -443,7 +385,7 @@ class HermesGatewayTest {
     @Test
     fun aRenewedCredentialRetriesTheRejectedAttempt() = runTest {
         val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 401")
-        val transport = SequenceTransport(listOf(Step.Failure(rejected), Step.Socket(FakeSocket())))
+        val transport = ScriptedGatewayTransport(listOf(ScriptedGatewayTransport.Step.Failure(rejected), ScriptedGatewayTransport.Step.Socket(ScriptedGatewaySocket())))
         val auth = RenewingAuth()
         val gateway = HermesGateway(HermesGatewayConfiguration(
             HermesDashboardAddress(URI("http://localhost:3000")), auth, transport, requestTimeoutMillis = 3_000,
@@ -458,7 +400,7 @@ class HermesGatewayTest {
     @Test
     fun aCredentialRenewsOncePerAttempt() = runTest {
         val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 403")
-        val transport = SequenceTransport(listOf(Step.Failure(rejected), Step.Failure(rejected)))
+        val transport = ScriptedGatewayTransport(listOf(ScriptedGatewayTransport.Step.Failure(rejected), ScriptedGatewayTransport.Step.Failure(rejected)))
         val auth = RenewingAuth()
         val gateway = HermesGateway(HermesGatewayConfiguration(
             HermesDashboardAddress(URI("http://localhost:3000")), auth, transport, requestTimeoutMillis = 3_000,
@@ -471,7 +413,7 @@ class HermesGatewayTest {
     @Test
     fun initialAuthenticationFailureIsTerminal() = runTest {
         val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 403")
-        val transport = SequenceTransport(listOf(Step.Failure(rejected)))
+        val transport = ScriptedGatewayTransport(listOf(ScriptedGatewayTransport.Step.Failure(rejected)))
         val gateway = client(transport)
         assertEquals(rejected, assertFailsWith<HermesGatewayException.AuthenticationFailed> { gateway.connect() })
         assertEquals(GatewayConnectionState.Failed(rejected), gateway.connectionStates.value)
@@ -481,9 +423,9 @@ class HermesGatewayTest {
 
     @Test
     fun authenticationFailureDuringReconnectStopsRetrying() = runTest {
-        val first = FakeSocket()
+        val first = ScriptedGatewaySocket()
         val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 403")
-        val transport = SequenceTransport(listOf(Step.Socket(first), Step.Failure(rejected)))
+        val transport = ScriptedGatewayTransport(listOf(ScriptedGatewayTransport.Step.Socket(first), ScriptedGatewayTransport.Step.Failure(rejected)))
         val gateway = client(transport)
         gateway.connect()
         first.sever()
@@ -496,14 +438,14 @@ class HermesGatewayTest {
 
     @Test
     fun everyCollectorReceivesEveryEventOnce() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         val first = backgroundScope.async { gateway.events.take(2).toList() }
         val second = backgroundScope.async { gateway.events.take(2).toList() }
         gateway.connect()
-        socket.inbound.send(event("message.start", "s", 1))
-        socket.inbound.send(event("message.start", "s", 1))
-        socket.inbound.send(event("message.start", "s", 2))
+        socket.inject(event("message.start", "s", 1))
+        socket.inject(event("message.start", "s", 1))
+        socket.inject(event("message.start", "s", 2))
         assertEquals(listOf(1L, 2L), withTimeout(3_000) { first.await() }.map { it.seq })
         assertEquals(listOf(1L, 2L), withTimeout(3_000) { second.await() }.map { it.seq })
         gateway.disconnect()
@@ -511,13 +453,13 @@ class HermesGatewayTest {
 
     @Test
     fun aStalledCollectorDoesNotStallTheSocket() = runTest {
-        val socket = FakeSocket(answersHeartbeats = true)
+        val socket = ScriptedGatewaySocket(answersHeartbeats = true)
         val transport = sockets(socket)
         val gateway = client(transport, heartbeat = 1_000, deadline = 3_000)
         val stuck = CompletableDeferred<Unit>()
         backgroundScope.launch { gateway.events.collect { stuck.await() } }
         gateway.connect()
-        repeat(2_000) { socket.inbound.send(event("message.delta", "s", it + 1, """{"text":"x"}""")) }
+        repeat(2_000) { socket.inject(event("message.delta", "s", it + 1, """{"text":"x"}""")) }
         // Heartbeat replies still get through behind thousands of undelivered events.
         repeat(5) { withTimeout(5_000) { socket.heartbeats.receive() } }
         assertEquals(GatewayConnectionState.Connected, gateway.connectionStates.value)
@@ -527,13 +469,13 @@ class HermesGatewayTest {
 
     @Test
     fun undecodableEventPayloadKeepsTheConnection() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         val received = backgroundScope.async { gateway.events.take(2).toList() }
         gateway.connect()
-        socket.inbound.send(event("message.delta", "s", 1, """{"text":{"nested":true}}"""))
-        socket.inbound.send("not json")
-        socket.inbound.send(event("message.start", "s", 2))
+        socket.inject(event("message.delta", "s", 1, """{"text":{"nested":true}}"""))
+        socket.inject("not json")
+        socket.inject(event("message.start", "s", 2))
         val events = withTimeout(3_000) { received.await() }
         assertEquals("message.delta", assertIs<GatewayEventPayload.Unknown>(events[0].payload).type)
         assertEquals(2L, events[1].seq)
@@ -545,57 +487,57 @@ class HermesGatewayTest {
 
     @Test
     fun answersTypedServerRequest() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.setServerRequestHandler { ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Once)) }
         gateway.connect()
-        socket.inbound.send("""{"jsonrpc":"2.0","id":"srq-1","method":"approval","params":{"session_id":"s","request_id":"req"}}""")
-        val reply = socket.sent()
-        assertEquals("srq-1", reply["id"]?.jsonPrimitive?.content)
-        assertEquals("once", checkNotNull(reply["result"]).jsonObject["choice"]?.jsonPrimitive?.content)
+        socket.inject(GatewayFrames.serverRequest("srq-1", "approval", """{"session_id":"s","request_id":"req"}"""))
+        val reply = SentAnswer(withTimeout(3_000) { socket.sent.receive() })
+        assertEquals("srq-1", reply.id)
+        assertEquals("once", checkNotNull(reply.result).jsonObject["choice"]?.jsonPrimitive?.content)
         gateway.disconnect()
     }
 
     @Test
     fun rejectsServerRequestWithInvalidParams() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.setServerRequestHandler { ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Deny)) }
         gateway.connect()
-        socket.inbound.send("""{"jsonrpc":"2.0","id":"srq-1","method":"approval","params":{"command":7}}""")
-        val reply = socket.sent()
-        assertEquals("srq-1", reply["id"]?.jsonPrimitive?.content)
-        assertEquals("-32602", checkNotNull(reply["error"]).jsonObject["code"]?.jsonPrimitive?.content)
+        socket.inject(GatewayFrames.serverRequest("srq-1", "approval", """{"command":7}"""))
+        val reply = SentAnswer(withTimeout(3_000) { socket.sent.receive() })
+        assertEquals("srq-1", reply.id)
+        assertEquals("-32602", checkNotNull(reply.error).jsonObject["code"]?.jsonPrimitive?.content)
         gateway.disconnect()
     }
 
     @Test
     fun handlerThatGivesUpIsAnsweredWithAnError() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.setServerRequestHandler { throw kotlinx.coroutines.CancellationException("user dismissed") }
         gateway.connect()
-        socket.inbound.send("""{"jsonrpc":"2.0","id":"srq-1","method":"approval","params":{"session_id":"s","request_id":"req"}}""")
-        val reply = socket.sent()
-        assertEquals("srq-1", reply["id"]?.jsonPrimitive?.content)
-        assertEquals("-32603", checkNotNull(reply["error"]).jsonObject["code"]?.jsonPrimitive?.content)
+        socket.inject(GatewayFrames.serverRequest("srq-1", "approval", """{"session_id":"s","request_id":"req"}"""))
+        val reply = SentAnswer(withTimeout(3_000) { socket.sent.receive() })
+        assertEquals("srq-1", reply.id)
+        assertEquals("-32603", checkNotNull(reply.error).jsonObject["code"]?.jsonPrimitive?.content)
         gateway.disconnect()
     }
 
     @Test
     fun withdrawnRequestIsNotAnswered() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.setServerRequestHandler { awaitCancellation() }
         gateway.connect()
-        socket.inbound.send("""{"jsonrpc":"2.0","id":"srq-1","method":"approval","params":{"session_id":"s","request_id":"req"}}""")
-        socket.inbound.send("""{"jsonrpc":"2.0","method":"event","params":{"type":"request.cancel","session_id":"s","payload":{"id":"srq-1","method":"approval","reason":"timeout"}}}""")
+        socket.inject(GatewayFrames.serverRequest("srq-1", "approval", """{"session_id":"s","request_id":"req"}"""))
+        socket.inject(GatewayFrames.event("request.cancel", "s", payload = """{"id":"srq-1","method":"approval","reason":"timeout"}"""))
         delay(100)
         // The next frame is the caller's own call, not an answer to the withdrawn request.
         val ping = async { gateway.methods.ping(PingParams()) }
-        val next = socket.sent()
+        val next = socket.next()
         assertEquals("ping", next.method())
-        socket.inbound.send(result(next, """{"pong":true}"""))
+        socket.inject(result(next, """{"pong":true}"""))
         assertTrue(ping.await().pong)
         gateway.disconnect()
     }
@@ -604,22 +546,22 @@ class HermesGatewayTest {
 
     @Test
     fun reconnectReplaysGapBeforeLiveEvents() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second))
         val received = backgroundScope.async { gateway.events.take(3).toList() }
         gateway.connect()
-        first.inbound.send(event("message.start", "s", 1))
+        first.inject(event("message.start", "s", 1))
         delay(100)
         first.sever()
-        val activate = second.sent()
+        val activate = second.next()
         assertEquals("session.activate", activate.method())
         // A live frame racing the rebind is held until the gap replay lands.
-        second.inbound.send(event("message.start", "s", 3))
-        second.inbound.send(result(activate, """{"session_id":"s"}"""))
-        val replay = second.sent()
+        second.inject(event("message.start", "s", 3))
+        second.inject(result(activate, """{"session_id":"s"}"""))
+        val replay = second.next()
         assertEquals("session.events.since", replay.method())
-        second.inbound.send(result(replay, """{"events":[{"type":"message.start","session_id":"s","seq":2,"payload":{}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
+        second.inject(result(replay, """{"events":[{"type":"message.start","session_id":"s","seq":2,"payload":{}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
         val events = withTimeout(3_000) { received.await() }
         assertEquals(listOf(1L, 2L, 3L), events.map { it.seq })
         assertEquals(listOf(false, true, false), events.map { it.replayed })
@@ -628,28 +570,28 @@ class HermesGatewayTest {
 
     @Test
     fun failedReplayRetriesTheGapInsteadOfSkippingIt() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
-        val third = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val third = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second, third))
         val received = backgroundScope.async { gateway.events.take(3).toList() }
         gateway.connect()
-        first.inbound.send(event("message.start", "s", 1))
+        first.inject(event("message.start", "s", 1))
         delay(100)
         first.sever()
-        val activate = second.sent()
-        second.inbound.send(event("message.delta", "s", 3, """{"text":"b"}"""))
-        second.inbound.send(result(activate, """{"session_id":"s"}"""))
-        val replay = second.sent()
+        val activate = second.next()
+        second.inject(event("message.delta", "s", 3, """{"text":"b"}"""))
+        second.inject(result(activate, """{"session_id":"s"}"""))
+        val replay = second.next()
         // The socket stays up but the replay is unusable: releasing seq 3 now would skip seq 2 for good.
-        second.inbound.send(result(replay, """{"unexpected":true}"""))
-        val retryActivate = third.sent()
+        second.inject(result(replay, """{"unexpected":true}"""))
+        val retryActivate = third.next()
         assertEquals("session.activate", retryActivate.method())
-        third.inbound.send(result(retryActivate, """{"session_id":"s"}"""))
-        val retryReplay = third.sent()
+        third.inject(result(retryActivate, """{"session_id":"s"}"""))
+        val retryReplay = third.next()
         assertEquals("session.events.since", retryReplay.method())
-        assertEquals(1L, retryReplay["params"]?.jsonObject?.get("last_seen")?.jsonPrimitive?.long)
-        third.inbound.send(result(retryReplay, """{"events":[{"type":"message.delta","session_id":"s","seq":2,"payload":{"text":"a"}},{"type":"message.delta","session_id":"s","seq":3,"payload":{"text":"b"}}],"latest_seq":3,"truncated":false,"count":2,"epoch":"same","open_requests":[]}"""))
+        assertEquals(1L, retryReplay.fields["last_seen"]?.jsonPrimitive?.long)
+        third.inject(result(retryReplay, """{"events":[{"type":"message.delta","session_id":"s","seq":2,"payload":{"text":"a"}},{"type":"message.delta","session_id":"s","seq":3,"payload":{"text":"b"}}],"latest_seq":3,"truncated":false,"count":2,"epoch":"same","open_requests":[]}"""))
         val events = withTimeout(3_000) { received.await() }
         assertEquals(listOf(1L, 2L, 3L), events.map { it.seq })
         gateway.disconnect()
@@ -657,14 +599,14 @@ class HermesGatewayTest {
 
     @Test
     fun reconnectRebindsCreatedSessionsWithoutEvents() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second))
         gateway.connect()
         createSession(gateway, first, "quiet", "stored-quiet")
         first.sever()
-        val activate = second.sent()
-        val params = checkNotNull(activate["params"]).jsonObject
+        val activate = second.next()
+        val params = activate.fields
         assertEquals("session.activate", activate.method())
         assertEquals("quiet", params["session_id"]?.jsonPrimitive?.content)
         assertEquals("true", params["omit_messages"]?.jsonPrimitive?.content)
@@ -673,18 +615,18 @@ class HermesGatewayTest {
 
     @Test
     fun reconnectResumesReclaimedSessions() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second))
         val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
         gateway.connect()
         createSession(gateway, first, "runtime-1", "stored-1")
         first.sever()
-        second.inbound.send(error(second.sent(), 4001, "session not found"))
-        val resume = second.sent()
+        second.inject(error(second.next(), 4001, "session not found"))
+        val resume = second.next()
         assertEquals("session.resume", resume.method())
-        assertEquals("stored-1", checkNotNull(resume["params"]).jsonObject["session_id"]?.jsonPrimitive?.content)
-        second.inbound.send(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":3,"messages":[],"info":{}}"""))
+        assertEquals("stored-1", resume.fields["session_id"]?.jsonPrimitive?.content)
+        second.inject(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":3,"messages":[],"info":{}}"""))
         assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await() })
         gateway.awaitState { it == GatewayConnectionState.Connected }
         gateway.disconnect()
@@ -692,116 +634,116 @@ class HermesGatewayTest {
 
     @Test
     fun turnOfADroppedSessionKeepsStreamingFromTheReplayBuffer() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second))
         val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
         val received = backgroundScope.async { gateway.events.take(3).toList() }
         gateway.connect()
         createSession(gateway, first, "runtime-1", "stored-1")
-        first.inbound.send(event("message.start", "runtime-1", 1))
+        first.inject(event("message.start", "runtime-1", 1))
         delay(100)
         first.sever()
         // Hermes dropped the session while its turn kept writing to the replay buffer.
-        second.inbound.send(error(second.sent(), 4001, "session not found"))
-        val replay = second.sent()
+        second.inject(error(second.next(), 4001, "session not found"))
+        val replay = second.next()
         assertEquals("session.events.since", replay.method())
-        assertEquals("runtime-1", checkNotNull(replay["params"]).jsonObject["session_id"]?.jsonPrimitive?.content)
-        second.inbound.send(result(replay, """{"events":[{"type":"message.delta","session_id":"runtime-1","seq":2,"payload":{"text":"a"}}],"latest_seq":2,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
-        val resume = second.sent()
+        assertEquals("runtime-1", replay.fields["session_id"]?.jsonPrimitive?.content)
+        second.inject(result(replay, """{"events":[{"type":"message.delta","session_id":"runtime-1","seq":2,"payload":{"text":"a"}}],"latest_seq":2,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
+        val resume = second.next()
         assertEquals("session.resume", resume.method())
-        second.inbound.send(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":1,"messages":[],"info":{}}"""))
+        second.inject(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":1,"messages":[],"info":{}}"""))
         assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await() })
         // Connected again, the client keeps fetching the old id's buffer until the turn completes.
-        val drain = second.sent()
+        val drain = second.next()
         assertEquals("session.events.since", drain.method())
-        assertEquals(2L, checkNotNull(drain["params"]).jsonObject["last_seen"]?.jsonPrimitive?.long)
-        second.inbound.send(result(drain, """{"events":[{"type":"message.complete","session_id":"runtime-1","seq":3,"payload":{"text":"ab"}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
+        assertEquals(2L, drain.fields["last_seen"]?.jsonPrimitive?.long)
+        second.inject(result(drain, """{"events":[{"type":"message.complete","session_id":"runtime-1","seq":3,"payload":{"text":"ab"}}],"latest_seq":3,"truncated":false,"count":1,"epoch":"same","open_requests":[]}"""))
         val events = withTimeout(5_000) { received.await() }
         assertEquals(listOf("message.start", "message.delta", "message.complete"), events.map { it.type })
         assertTrue(events.drop(1).all { it.replayed && it.sessionId == "runtime-1" })
         // The turn is over: the next frame is the caller's own call, not another fetch.
         val ping = async { gateway.methods.ping(PingParams()) }
-        val next = second.sent()
+        val next = second.next()
         assertEquals("ping", next.method())
-        second.inbound.send(result(next, """{"pong":true}"""))
+        second.inject(result(next, """{"pong":true}"""))
         assertTrue(ping.await().pong)
         gateway.disconnect()
     }
 
     @Test
     fun reconnectReportsSessionsItCannotRecover() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second))
         val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
         gateway.connect()
-        first.inbound.send(event("message.start", "gone", 4))
+        first.inject(event("message.start", "gone", 4))
         delay(100)
         first.sever()
-        val activate = second.sent()
+        val activate = second.next()
         assertEquals("session.activate", activate.method())
-        second.inbound.send(error(activate, 4001, "session not found"))
+        second.inject(error(activate, 4001, "session not found"))
         // Its turn was still running, so the client first fetches what Hermes buffered for it.
-        val replay = second.sent()
+        val replay = second.next()
         assertEquals("session.events.since", replay.method())
-        second.inbound.send(result(replay, """{"events":[],"latest_seq":4,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"""))
+        second.inject(result(replay, """{"events":[],"latest_seq":4,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"""))
         // No stored id is known for a session only seen through events, so it cannot be resumed.
         assertEquals(GatewaySessionRecovery.Unavailable("gone", "session not found"), withTimeout(3_000) { recovery.await() })
         val ping = async { gateway.methods.ping(PingParams()) }
-        val next = second.sent()
+        val next = second.next()
         assertEquals("ping", next.method())
-        second.inbound.send(result(next, """{"pong":true}"""))
+        second.inject(result(next, """{"pong":true}"""))
         assertTrue(ping.await().pong)
         gateway.disconnect()
     }
 
     @Test
     fun truncatedReplayIsReported() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second))
         val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
         gateway.connect()
         createSession(gateway, first, "long", "stored-long")
         first.sever()
-        second.inbound.send(result(second.sent(), """{"session_id":"long"}"""))
-        second.inbound.send(result(second.sent(), """{"events":[],"latest_seq":900,"truncated":true,"count":0,"epoch":"same","open_requests":[]}"""))
+        second.inject(result(second.next(), """{"session_id":"long"}"""))
+        second.inject(result(second.next(), """{"events":[],"latest_seq":900,"truncated":true,"count":0,"epoch":"same","open_requests":[]}"""))
         assertEquals(GatewaySessionRecovery.ReplayTruncated("long"), withTimeout(3_000) { recovery.await() })
         gateway.disconnect()
     }
 
     @Test
     fun closedAndCloseOnDisconnectSessionsAreNotRebound() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val gateway = client(sockets(first, second))
         val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
         gateway.connect()
         createSession(gateway, first, "done", "stored-done")
         createSession(gateway, first, "ephemeral", "stored-e", closeOnDisconnect = true)
         val closed = async { gateway.methods.session.close(SessionCloseParams("done")) }
-        first.inbound.send(result(first.sent(), """{"closed":true}"""))
+        first.inject(result(first.next(), """{"closed":true}"""))
         assertTrue(closed.await().closed)
         first.sever()
         assertEquals(GatewaySessionRecovery.Unavailable("ephemeral", "Closed on disconnect"), withTimeout(3_000) { recovery.await() })
         gateway.awaitState { it == GatewayConnectionState.Connected }
         val ping = async { gateway.methods.ping(PingParams()) }
-        val next = second.sent()
+        val next = second.next()
         assertEquals("ping", next.method())
-        second.inbound.send(result(next, """{"pong":true}"""))
+        second.inject(result(next, """{"pong":true}"""))
         assertTrue(ping.await().pong)
         gateway.disconnect()
     }
 
     @Test
     fun reclaimedSessionIsReportedAndForgotten() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
         gateway.connect()
         createSession(gateway, socket, "idle", "stored-idle")
-        socket.inbound.send("""{"jsonrpc":"2.0","method":"event","params":{"type":"session.reclaimed","session_id":"","payload":{"session_id":"idle","stored_session_id":"stored-idle","reason":"idle_timeout"}}}""")
+        socket.inject(GatewayFrames.event("session.reclaimed", "", payload = """{"session_id":"idle","stored_session_id":"stored-idle","reason":"idle_timeout"}"""))
         assertEquals(GatewaySessionRecovery.Reclaimed("idle", "stored-idle", "idle_timeout"), withTimeout(3_000) { recovery.await() })
         gateway.disconnect()
     }
@@ -810,8 +752,8 @@ class HermesGatewayTest {
 
     @Test
     fun silentSocketIsReplacedAfterTheHeartbeatDeadline() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val transport = sockets(first, second)
         val gateway = client(transport, heartbeat = 1_000, deadline = 3_000)
         gateway.connect()
@@ -824,7 +766,7 @@ class HermesGatewayTest {
 
     @Test
     fun answeredHeartbeatsKeepTheConnection() = runTest {
-        val socket = FakeSocket(answersHeartbeats = true)
+        val socket = ScriptedGatewaySocket(answersHeartbeats = true)
         val transport = sockets(socket)
         val gateway = client(transport, heartbeat = 1_000, deadline = 3_000)
         gateway.connect()
@@ -836,11 +778,11 @@ class HermesGatewayTest {
 
     @Test
     fun streamingTrafficNeedsNoHeartbeat() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket), heartbeat = 1_000, deadline = 3_000)
         gateway.connect()
         repeat(12) {
-            socket.inbound.send(event("message.delta", "s", it + 1, """{"text":"x"}"""))
+            socket.inject(event("message.delta", "s", it + 1, """{"text":"x"}"""))
             delay(400)
         }
         assertTrue(socket.heartbeats.tryReceive().isFailure)
@@ -851,31 +793,31 @@ class HermesGatewayTest {
 
     @Test
     fun losingTheNetworkWaitsWithoutRetrying() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val transport = sockets(first, second)
-        val monitor = TestNetworkMonitor(wifi)
+        val monitor = ScriptedNetworkMonitor(ScriptedNetworkMonitor.wifi)
         val gateway = client(transport, monitor = monitor)
         gateway.connect()
-        monitor.change(offline)
+        monitor.change(ScriptedNetworkMonitor.offline)
         gateway.awaitState { it == GatewayConnectionState.WaitingForNetwork }
         assertTrue(first.isClosed)
         delay(60_000)
         assertEquals(1, transport.attempts)
-        monitor.change(wifi)
+        monitor.change(ScriptedNetworkMonitor.wifi)
         gateway.awaitConnectedAfter(transport, attempts = 2)
         gateway.disconnect()
     }
 
     @Test
     fun switchingNetworksReconnectsAtOnce() = runTest {
-        val first = FakeSocket(answersHeartbeats = true)
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket(answersHeartbeats = true)
+        val second = ScriptedGatewaySocket()
         val transport = sockets(first, second)
-        val monitor = TestNetworkMonitor(wifi)
+        val monitor = ScriptedNetworkMonitor(ScriptedNetworkMonitor.wifi)
         val gateway = client(transport, monitor = monitor, reconnectDelay = 30_000)
         gateway.connect()
-        monitor.change(cellular)
+        monitor.change(ScriptedNetworkMonitor.cellular)
         // The first retry after a network switch is immediate, so a 30 s backoff never applies.
         withTimeout(1_000) {
             while (transport.attempts < 2 || gateway.connectionStates.value != GatewayConnectionState.Connected) delay(10)
@@ -886,8 +828,8 @@ class HermesGatewayTest {
 
     @Test
     fun backgroundClosesTheSocketAndForegroundReconnects() = runTest {
-        val first = FakeSocket()
-        val second = FakeSocket()
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
         val transport = sockets(first, second)
         val gateway = client(transport)
         gateway.connect()
@@ -903,15 +845,15 @@ class HermesGatewayTest {
 
     @Test
     fun backgroundLetsARunningTurnFinish() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.connect()
-        socket.inbound.send(event("message.start", "s", 1))
+        socket.inject(event("message.start", "s", 1))
         delay(100)
         val backgrounded = async { gateway.enterBackground(graceMillis = 20_000) }
         delay(5_000)
         assertFalse(socket.isClosed)
-        socket.inbound.send(event("message.complete", "s", 2, """{"text":"done"}"""))
+        socket.inject(event("message.complete", "s", 2, """{"text":"done"}"""))
         backgrounded.await()
         assertTrue(socket.isClosed)
         assertEquals(GatewayConnectionState.Suspended, gateway.connectionStates.value)
@@ -920,14 +862,79 @@ class HermesGatewayTest {
 
     @Test
     fun backgroundGraceBoundsAStuckTurn() = runTest {
-        val socket = FakeSocket()
+        val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))
         gateway.connect()
-        socket.inbound.send(event("message.start", "s", 1))
+        socket.inject(event("message.start", "s", 1))
         delay(100)
         gateway.enterBackground(graceMillis = 1_000)
         assertTrue(socket.isClosed)
         assertEquals(GatewayConnectionState.Suspended, gateway.connectionStates.value)
+        gateway.disconnect()
+    }
+
+    // Delivery to several collectors
+
+    @Test
+    fun aSlowCollectorDoesNotDelayAFastOne() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val stuck = CompletableDeferred<Unit>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) { gateway.events.collect { stuck.await() } }
+        val fast = backgroundScope.async(start = CoroutineStart.UNDISPATCHED) { gateway.events.take(2_000).toList() }
+        gateway.connect()
+        repeat(2_000) { socket.inject(event("message.delta", "s", it + 1, """{"text":"x"}""")) }
+        // A shared buffer would fill behind the stuck collector and hold the fast one back.
+        assertEquals((1L..2_000L).toList(), withTimeout(5_000) { fast.await() }.map { it.seq })
+        gateway.disconnect()
+    }
+
+    @Test
+    fun everyRecoveryReachesASlowCollector() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val count = 300
+        val release = CompletableDeferred<Unit>()
+        val recoveries = backgroundScope.async(start = CoroutineStart.UNDISPATCHED) {
+            gateway.sessionRecoveries.onEach { release.await() }.take(count).toList()
+        }
+        val reclaimedAll = backgroundScope.async(start = CoroutineStart.UNDISPATCHED) {
+            gateway.events.filter { it.type == "session.reclaimed" }.take(count).toList()
+        }
+        gateway.connect()
+        for (index in 1..count) socket.inject(event("message.start", "s$index", 1))
+        for (index in 1..count) {
+            socket.inject(GatewayFrames.event("session.reclaimed", "",
+                payload = """{"session_id":"s$index","stored_session_id":"stored-$index","reason":"idle_timeout"}"""))
+        }
+        withTimeout(5_000) { reclaimedAll.await() }
+        release.complete(Unit)
+        val delivered = withTimeout(5_000) { recoveries.await() }
+        assertEquals((1..count).map { GatewaySessionRecovery.Reclaimed("s$it", "stored-$it", "idle_timeout") }, delivered)
+        gateway.disconnect()
+    }
+
+    // Scoped timeouts
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun aScopedTimeoutBoundsAppCalls() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket), timeout = 120_000)
+        gateway.connect()
+        val started = testScheduler.currentTime
+        val failure = assertFailsWith<HermesGatewayException.Timeout> {
+            withHermesRequestTimeout(1_000) { gateway.methods.ping(PingParams()) }
+        }
+        assertEquals("ping", failure.method)
+        assertEquals(1_000, testScheduler.currentTime - started)
+        // Outside the scope the configured timeout applies again.
+        val call = async { runCatching { gateway.methods.ping(PingParams()) } }
+        assertEquals("ping", socket.next().method)
+        assertEquals("ping", socket.next().method)
+        delay(60_000)
+        assertFalse(call.isCompleted)
+        assertIs<HermesGatewayException.Timeout>(call.await().exceptionOrNull())
         gateway.disconnect()
     }
 }

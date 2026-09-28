@@ -12,11 +12,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -80,7 +79,7 @@ public class HermesGateway(
     private val configuration: HermesGatewayConfiguration,
     private val json: Json = Json { ignoreUnknownKeys = true; explicitNulls = true },
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-) : GatewayCaller {
+) : HermesGatewayClient {
     private val confined: CoroutineDispatcher =
         ((scope.coroutineContext[ContinuationInterceptor] as? CoroutineDispatcher) ?: Dispatchers.IO).limitedParallelism(1)
     private val logger = configuration.logger
@@ -123,30 +122,22 @@ public class HermesGateway(
     private var drainJob: Job? = null
 
     /** The desktop contract Hermes last reported in a session result, or `null` before the first one. */
-    @Volatile public var backendContract: Int? = null
+    @Volatile override var backendContract: Int? = null
         private set
 
-    // Events leave the reader through an unbounded queue, so a slow collector delays delivery but never
-    // stalls the socket (and with it heartbeat replies).
-    private val eventQueue = Channel<GatewayEvent>(Channel.UNLIMITED)
-    private val mutableEvents = MutableSharedFlow<GatewayEvent>(extraBufferCapacity = 1024)
+    // Every collector buffers independently and without bound, so a slow collector delays only itself and
+    // never stalls the socket (and with it heartbeat replies).
+    private val eventBroadcast = Broadcast<GatewayEvent>()
     private val mutableStates = MutableStateFlow<GatewayConnectionState>(GatewayConnectionState.Idle)
-    private val mutableRecoveries = MutableSharedFlow<GatewaySessionRecovery>(extraBufferCapacity = 256)
+    private val recoveryBroadcast = Broadcast<GatewaySessionRecovery>()
     private val turnActivity = MutableStateFlow(0)
 
-    public val methods: GatewayMethodCatalog = GatewayMethodCatalog(this)
-    /** Gateway notifications for every collector. Collect before [connect] to see the first events. */
-    public val events: SharedFlow<GatewayEvent> = mutableEvents
-    /** The current connection state. As a StateFlow it conflates quick transitions. */
-    public val connectionStates: StateFlow<GatewayConnectionState> = mutableStates
-    /** Session recoveries after reconnects. See [GatewaySessionRecovery]. */
-    public val sessionRecoveries: SharedFlow<GatewaySessionRecovery> = mutableRecoveries
+    override val methods: GatewayMethodCatalog = GatewayMethodCatalog(this)
+    override val events: Flow<GatewayEvent> = eventBroadcast.flow
+    override val connectionStates: StateFlow<GatewayConnectionState> = mutableStates
+    override val sessionRecoveries: Flow<GatewaySessionRecovery> = recoveryBroadcast.flow
 
-    init {
-        scope.launch { for (event in eventQueue) mutableEvents.emit(event) }
-    }
-
-    public fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult) {
+    override fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult) {
         handler = value
     }
 
@@ -155,7 +146,7 @@ public class HermesGateway(
     /** Connects and keeps the connection alive until [disconnect]. Returns once connected; while the
      *  network is down or the server unreachable it keeps retrying. Throws only a failure retrying cannot
      *  fix ([HermesGatewayException.AuthenticationFailed], [HermesGatewayException.IncompatibleServer]). */
-    public suspend fun connect() {
+    override suspend fun connect() {
         val alreadyReady = withContext(confined) {
             if (ready) return@withContext true
             wantsConnection = true
@@ -174,7 +165,7 @@ public class HermesGateway(
 
     /** Closes the connection and stops reconnecting. Tracked sessions stay known, so a later [connect]
      *  rebinds or resumes them. */
-    public suspend fun disconnect(): Unit = withContext(confined + NonCancellable) {
+    override suspend fun disconnect(): Unit = withContext(confined + NonCancellable) {
         wantsConnection = false
         cancelMaintaining()
         monitor?.cancel()
@@ -190,7 +181,7 @@ public class HermesGateway(
     /** Call when the app moves to the background (for example from `ProcessLifecycleOwner.onStop`). A
      *  streaming turn gets up to [graceMillis] to finish; then the socket closes and nothing runs until
      *  [enterForeground]. Hermes keeps running turns alive and replays what the client missed. */
-    public suspend fun enterBackground(graceMillis: Long = 25_000): Unit = withContext(confined) {
+    override suspend fun enterBackground(graceMillis: Long): Unit = withContext(confined) {
         if (inBackground) return@withContext
         inBackground = true
         cancelMaintaining()
@@ -208,7 +199,7 @@ public class HermesGateway(
     }
 
     /** Call when the app returns to the foreground. Reconnects at once and replays what was missed. */
-    public suspend fun enterForeground(): Unit = withContext(confined) {
+    override suspend fun enterForeground(): Unit = withContext(confined) {
         if (!inBackground) return@withContext
         inBackground = false
         if (!wantsConnection || socket != null || maintainer != null || opening) return@withContext
@@ -410,12 +401,15 @@ public class HermesGateway(
 
     // Calls
 
+    /** Bounded by [HermesGatewayConfiguration.requestTimeoutMillis], or by the timeout of an enclosing
+     *  [withHermesRequestTimeout]. */
     override suspend fun <Params : Any, Result : Any> call(
         method: String,
         params: Params,
         paramsSerializer: KSerializer<Params>,
         resultSerializer: KSerializer<Result>,
-    ): Result = call(method, params, paramsSerializer, resultSerializer, configuration.requestTimeoutMillis,
+    ): Result = call(method, params, paramsSerializer, resultSerializer,
+        currentCoroutineContext()[HermesRequestTimeout]?.millis ?: configuration.requestTimeoutMillis,
         waitsForConnection = true)
 
     /** App calls made while reconnecting wait for the connection, up to their timeout. When the connection
@@ -502,7 +496,10 @@ public class HermesGateway(
             }
             validateContract(result)
             val decoded = try { json.decodeFromJsonElement(resultSerializer, result) }
-            catch (error: Exception) { throw HermesGatewayException.Protocol("Cannot decode $method result: ${error.message}") }
+            catch (error: Exception) {
+                // The first line only: serialization messages go on to quote the payload, which logs must not carry.
+                throw HermesGatewayException.Protocol("Cannot decode $method result: ${error.message?.lineSequence()?.first()}")
+            }
             withContext(confined) { trackSession(method, encodedParams, result) }
             return decoded
         } catch (error: HermesGatewayException.RPC) {
@@ -636,14 +633,14 @@ public class HermesGateway(
                 val reclaimed = payload.payload
                 if (reclaimed.sessionId in sessions || reclaimed.sessionId in lastSequence) {
                     forgetSession(reclaimed.sessionId)
-                    mutableRecoveries.tryEmit(GatewaySessionRecovery.Reclaimed(
+                    recoveryBroadcast.emit(GatewaySessionRecovery.Reclaimed(
                         reclaimed.sessionId, reclaimed.storedSessionId, reclaimed.reason))
                 }
             }
             else -> Unit
         }
         if (sessionId != null && seq != null) lastSequence[sessionId] = seq
-        eventQueue.trySend(GatewayEvent(type, sessionId, seq, payload, replayed))
+        eventBroadcast.emit(GatewayEvent(type, sessionId, seq, payload, replayed))
     }
 
     private fun setTurn(sessionId: String, active: Boolean) {
@@ -766,7 +763,7 @@ public class HermesGateway(
         val session = sessions[sessionId] ?: TrackedSession()
         if (session.closeOnDisconnect) {
             forgetSession(sessionId)
-            mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, "Closed on disconnect"))
+            recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, "Closed on disconnect"))
         } else {
             val outcome = rebind(sessionId)
             logger.log(GatewayLogLevel.DEBUG, "Rebind $sessionId: $outcome")
@@ -809,7 +806,7 @@ public class HermesGateway(
         val storedId = session.storedId
         if (!configuration.resumesReclaimedSessions || storedId == null) {
             retire(sessionId)
-            mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, reason))
+            recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, reason))
             return
         }
         try {
@@ -822,10 +819,10 @@ public class HermesGateway(
                 configuration.requestTimeoutMillis, waitsForConnection = false)
             retire(sessionId)
             logger.log(GatewayLogLevel.INFO, "Resumed a reclaimed session under a new runtime id")
-            mutableRecoveries.tryEmit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, storedId))
+            recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, storedId))
         } catch (error: HermesGatewayException.RPC) {
             retire(sessionId)
-            mutableRecoveries.tryEmit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))
+            recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))
         }
     }
 
@@ -891,7 +888,7 @@ public class HermesGateway(
         } catch (error: HermesGatewayException.RPC) {
             // Hermes answered but cannot replay; the caller must reload what it shows.
             logger.log(GatewayLogLevel.ERROR, "Replay refused: ${error.message}")
-            mutableRecoveries.tryEmit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+            recoveryBroadcast.emit(GatewaySessionRecovery.ReplayTruncated(sessionId))
             return
         }
         apply(result, sessionId)
@@ -910,7 +907,7 @@ public class HermesGateway(
             replayEpoch = result.epoch
         } else if (result.truncated) {
             lastSequence[sessionId] = result.latestSeq
-            mutableRecoveries.tryEmit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+            recoveryBroadcast.emit(GatewaySessionRecovery.ReplayTruncated(sessionId))
         } else {
             result.events.forEach { handleEvent(JsonObject(it), true) }
         }

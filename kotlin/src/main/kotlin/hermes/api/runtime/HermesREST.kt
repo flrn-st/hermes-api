@@ -20,6 +20,7 @@ import io.ktor.http.content.ByteArrayContent
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.KSerializer
@@ -260,7 +261,8 @@ public data class HermesRESTConfiguration(
     /** Extra headers on every request, for example a reverse proxy's credential. */
     val headers: suspend () -> Map<String, String> = { emptyMap() },
     val transport: RESTTransport = KtorRESTTransport(),
-    /** Bounds each attempt, from sending the request to the last byte of the response. */
+    /** Bounds each attempt, from sending the request to the last byte of the response. An enclosing
+     *  [withHermesRequestTimeout] replaces it for the calls it wraps. */
     val timeoutMillis: Long = 60_000,
     val retry: RESTRetryPolicy = RESTRetryPolicy(),
     /** [RESTDecoding.Strict] by default; apps that must keep working with newer Hermes releases choose
@@ -317,8 +319,9 @@ public class HermesREST(
             }
             attempt += 1
             previousFailure = failure
-            configuration.logger.log(GatewayLogLevel.INFO,
-                "Retrying ${request.method} (attempt $attempt) after ${failure.message}")
+            // Only the status for HTTP failures: logs never carry response bodies.
+            val reason = if (failure is HermesRESTException.HTTP) "HTTP ${failure.status}" else failure.message
+            configuration.logger.log(GatewayLogLevel.INFO, "Retrying ${request.method} (attempt $attempt) after $reason")
             delay(retry.delayMillis(attempt, retryAfterMillis))
         }
     }
@@ -346,7 +349,8 @@ public class HermesREST(
 
     private suspend fun perform(request: RESTRequest, uri: URI, headers: Map<String, String>): RESTResponse {
         val response = try {
-            withTimeout(configuration.timeoutMillis) {
+            val timeoutMillis = currentCoroutineContext()[HermesRequestTimeout]?.millis ?: configuration.timeoutMillis
+            withTimeout(timeoutMillis) {
                 configuration.transport.request(request.method, uri, headers, request.body, request.contentType)
             }
         } catch (error: TimeoutCancellationException) {

@@ -1,14 +1,13 @@
 package hermes.api
 
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import hermes.api.generated.gateway.GatewayEventPayload
-import hermes.api.generated.gateway.GatewayMethodCatalog
 import hermes.api.generated.gateway.PingParams
-import hermes.api.runtime.GatewayCaller
+import hermes.api.testing.RecordedCall
+import hermes.api.testing.ScriptedGatewayCaller
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -19,20 +18,10 @@ class GeneratedGatewayAPITest {
 
     @Test
     fun generatedMethodCallsItsWireName() = runTest {
-        val caller = object : GatewayCaller {
-            override suspend fun <Params : Any, Result : Any> call(
-                method: String,
-                params: Params,
-                paramsSerializer: KSerializer<Params>,
-                resultSerializer: KSerializer<Result>,
-            ): Result {
-                assertEquals("ping", method)
-                assertEquals("{}", json.encodeToString(paramsSerializer, params))
-                return json.decodeFromString(resultSerializer, """{"pong":true}""")
-            }
-        }
-        val result = GatewayMethodCatalog(caller).ping(PingParams())
+        val caller = ScriptedGatewayCaller(mapOf("ping" to JsonObject(mapOf("pong" to JsonPrimitive(true)))))
+        val result = caller.methods.ping(PingParams())
         assertTrue(result.pong)
+        assertEquals(listOf(RecordedCall("ping", JsonObject(emptyMap()))), caller.calls)
     }
 
     @Test

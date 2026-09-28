@@ -172,6 +172,20 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
     await gateway.disconnect()
 }
 
+@Test func aScopedTimeoutOverridesTheCallTimeout() async throws {
+    let socket = ScriptedGatewaySocket()
+    let gateway = client(socket: socket, timeout: .seconds(60))
+    try await gateway.connect()
+    let started = ContinuousClock.now
+    await #expect(throws: HermesGatewayError.timeout) {
+        try await withHermesRequestTimeout(.milliseconds(80)) {
+            try await gateway.call("hang", params: PingParams(), as: PingResult.self)
+        }
+    }
+    #expect(ContinuousClock.now - started < .seconds(5))
+    await gateway.disconnect()
+}
+
 @Test func callsDuringAReconnectWaitForTheNewSocket() async throws {
     let first = ScriptedGatewaySocket()
     let second = ScriptedGatewaySocket()

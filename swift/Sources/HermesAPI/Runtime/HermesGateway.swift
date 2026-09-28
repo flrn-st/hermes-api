@@ -236,7 +236,7 @@ public actor HermesGateway: HermesGatewayClient {
             } catch {
                 if Task.isCancelled { break }
                 previousFailure = Self.gatewayError(error)
-                configuration.logger.info("Connection attempt \(attempt) failed: \(String(describing: error), privacy: .public)")
+                configuration.logger.info("Connection attempt \(attempt) failed: \(Self.gatewayError(error).logDescription)")
             }
         }
         if run == reconnectRun { reconnectTask = nil }
@@ -312,7 +312,7 @@ public actor HermesGateway: HermesGatewayClient {
     }
 
     private func fail(_ error: HermesGatewayError) {
-        configuration.logger.error("Gateway failed: \(String(describing: error), privacy: .public)")
+        configuration.logger.error("Gateway failed: \(error.logDescription)")
         wantsConnection = false
         cancelReconnect()
         publish(.failed(error))
@@ -326,7 +326,7 @@ public actor HermesGateway: HermesGatewayClient {
         guard current == generation else { return }
         let wasReady = ready
         generation += 1
-        configuration.logger.info("Connection lost: \(String(describing: error), privacy: .public)")
+        configuration.logger.info("Connection lost: \(error.logDescription)")
         await closeConnection(error: error)
         // During `open()` the attempt itself reports the failure.
         guard wasReady, wantsConnection else { return }
@@ -433,8 +433,8 @@ public actor HermesGateway: HermesGatewayClient {
     public func call<Params: Encodable & Sendable, Result: Decodable & Sendable>(
         _ method: String, params: Params, as resultType: Result.Type
     ) async throws -> Result {
-        try await call(method, params: params, as: resultType, timeout: configuration.requestTimeout,
-                       waitsForConnection: true)
+        try await call(method, params: params, as: resultType,
+                       timeout: RequestTimeout.current ?? configuration.requestTimeout, waitsForConnection: true)
     }
 
     /// App calls made while reconnecting wait for the connection, up to their timeout. When the connection
@@ -458,7 +458,7 @@ public actor HermesGateway: HermesGatewayClient {
                 }
                 attempt += 1
                 configuration.logger.info(
-                    "Repeating \(method, privacy: .public) after a lost connection (attempt \(attempt))")
+                    "Repeating \(method) after a lost connection (attempt \(attempt))")
             }
         }
     }
@@ -847,7 +847,7 @@ public actor HermesGateway: HermesGatewayClient {
             recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: "Closed on disconnect"))
         } else {
             let outcome = try await rebind(sessionID)
-            configuration.logger.debug("Rebind \(sessionID, privacy: .public): \(String(describing: outcome), privacy: .public)")
+            configuration.logger.debug("Rebind \(sessionID): \(String(describing: outcome))")
             switch outcome {
             case .bound: try await replay(sessionID, socket: socket, generation: current)
             case .gone(let reason):
@@ -973,13 +973,13 @@ public actor HermesGateway: HermesGatewayClient {
             )
         } catch HermesGatewayError.rpc(_, let message, _) {
             // Hermes answered but cannot replay; the caller must reload what it shows.
-            configuration.logger.error("Replay refused: \(message, privacy: .public)")
+            configuration.logger.error("Replay refused: \(message)")
             recoveryBroadcast.yield(.replayTruncated(sessionID: sessionID))
             return
         }
         configuration.logger.debug("""
-            Replay \(sessionID, privacy: .public) after \(self.lastSequence[sessionID] ?? 0): \(result.events.count) events, \
-            latest \(result.latestSeq), truncated \(result.truncated), epoch \(result.epoch == self.replayEpoch ? "same" : "changed", privacy: .public)
+            Replay \(sessionID) after \(self.lastSequence[sessionID] ?? 0): \(result.events.count) events, \
+            latest \(result.latestSeq), truncated \(result.truncated), epoch \(result.epoch == self.replayEpoch ? "same" : "changed")
             """)
         apply(result, for: sessionID)
         for request in result.openRequests {

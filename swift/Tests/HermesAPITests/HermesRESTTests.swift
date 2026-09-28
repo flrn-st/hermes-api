@@ -1,4 +1,5 @@
 import Foundation
+import os
 import HermesAPI
 import HermesAPITesting
 @testable import HermesAPILiveScenarios
@@ -316,4 +317,32 @@ private actor RotationLog {
         #expect(try JSONValue(jsonData: data) == JSONDecoder().decode(JSONValue.self, from: data), "\(document)")
     }
     #expect(throws: (any Error).self) { try JSONValue(jsonData: Data("{".utf8)) }
+}
+
+@Test func aScopedTimeoutOverridesTheAttemptTimeout() async throws {
+    let rest = client(ScriptedHTTPTransport([.hang, .hang, .hang]), timeout: .seconds(60))
+    let started = ContinuousClock.now
+    await #expect(throws: HermesRESTError.timeout) {
+        try await withHermesRequestTimeout(.milliseconds(50)) { try await rest.sessions.emptyCount() }
+    }
+    #expect(ContinuousClock.now - started < .seconds(5))
+}
+
+/// Keeps every message it receives.
+private final class RecordingLogger: GatewayLogger {
+    private let messages = OSAllocatedUnfairLock<[String]>(initialState: [])
+
+    var logged: [String] { messages.withLock { $0 } }
+
+    func log(_ level: GatewayLogLevel, _ message: String) { messages.withLock { $0.append(message) } }
+}
+
+@Test func retryLogsLeaveResponseBodiesOut() async throws {
+    let logger = RecordingLogger()
+    let transport = ScriptedHTTPTransport([.respond(503, #"{"detail":"secret-body"}"#), .respond(200, #"{"count":1}"#)])
+    let rest = HermesREST(configuration: .init(address: HermesDashboardAddress(base), transport: transport,
+                                               retry: fastRetry, logger: logger))
+    #expect(try await rest.sessions.emptyCount().count == 1)
+    #expect(logger.logged.count == 1)
+    #expect(logger.logged.allSatisfy { $0.contains("HTTP 503") && !$0.contains("secret-body") })
 }

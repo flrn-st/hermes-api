@@ -266,7 +266,7 @@ public struct HermesRESTConfiguration: Sendable {
     public let retry: RESTRetryPolicy
     /// `.strict` by default; apps that must keep working with newer Hermes releases choose `.tolerant`.
     public let decoding: RESTDecoding
-    public let logger: Logger
+    public let logger: any GatewayLogger
 
     public init(
         address: HermesDashboardAddress,
@@ -276,7 +276,7 @@ public struct HermesRESTConfiguration: Sendable {
         timeout: Duration = .seconds(60),
         retry: RESTRetryPolicy = RESTRetryPolicy(),
         decoding: RESTDecoding = .strict,
-        logger: Logger = Logger(subsystem: "hermes.api", category: "rest")
+        logger: any GatewayLogger = OSLogGatewayLogger(category: "rest")
     ) {
         self.address = address
         self.auth = auth
@@ -342,7 +342,7 @@ public struct HermesREST: RESTCalling {
             previousFailure = failure
             let delay = retry.delay(beforeAttempt: attempt, retryAfter: retryAfter)
             configuration.logger.info(
-                "Retrying \(request.method, privacy: .public) \(request.path, privacy: .private) (attempt \(attempt)) after \(String(describing: failure), privacy: .public)")
+                "Retrying \(request.method) (attempt \(attempt)) after \(failure.logDescription)")
             try await Task.sleep(for: delay)
         }
     }
@@ -373,10 +373,13 @@ public struct HermesREST: RESTCalling {
         urlRequest.httpMethod = request.method
         urlRequest.httpBody = request.body
         // The attempt deadline below is authoritative; URLSession's own idle timer must not undercut it.
-        urlRequest.timeoutInterval = max(1, Double(configuration.timeout.components.seconds) + 1)
+        urlRequest.timeoutInterval = max(1, Double(attemptTimeout.components.seconds) + 1)
         if let contentType = request.contentType { urlRequest.setValue(contentType, forHTTPHeaderField: "Content-Type") }
         return urlRequest
     }
+
+    /// `withHermesRequestTimeout(_:operation:)` overrides the configured deadline of each attempt.
+    private var attemptTimeout: Duration { RequestTimeout.current ?? configuration.timeout }
 
     /// How one attempt failed, before the retry policy decides.
     private enum Attempt: Error {
@@ -389,7 +392,7 @@ public struct HermesREST: RESTCalling {
 
     private func perform(_ request: URLRequest) async throws -> RESTResponse {
         let transport = configuration.transport
-        let timeout = configuration.timeout
+        let timeout = attemptTimeout
         let (data, response): (Data, HTTPURLResponse)
         do {
             (data, response) = try await withThrowingTaskGroup(of: (Data, HTTPURLResponse)?.self) { group in

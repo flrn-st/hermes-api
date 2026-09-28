@@ -93,7 +93,7 @@ public struct HermesGatewayConfiguration: Sendable {
     /// `incompatibleServer`. Contracts only grow, so any higher one is accepted. Lower it to keep working
     /// with older backends, and branch on `HermesGateway.backendContract` for what they lack.
     public let minimumContract: Int
-    public let logger: Logger
+    public let logger: any GatewayLogger
 
     public init(
         address: HermesDashboardAddress,
@@ -112,7 +112,7 @@ public struct HermesGatewayConfiguration: Sendable {
         heartbeatDeadline: Duration = .seconds(45),
         resumesReclaimedSessions: Bool = true,
         minimumContract: Int = HermesGatewayContract.desktopContract,
-        logger: Logger = Logger(subsystem: "hermes.api", category: "gateway")
+        logger: any GatewayLogger = OSLogGatewayLogger(category: "gateway")
     ) {
         self.address = address
         self.auth = auth

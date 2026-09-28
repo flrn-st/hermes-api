@@ -150,6 +150,6 @@ Depend on `any HermesGatewayClient` (Kotlin: `HermesGatewayClient`) and `any RES
 
 ## What the package does not cover
 
-- **Plugin routes a dashboard serves beyond Hermes' bundled ones** (`/api/plugins/<name>/…` of third-party plugins): write a client beside HermesAPI, reusing `HermesDashboardAddress`, the credential and the transport.
+- **Plugin routes a dashboard serves beyond Hermes' bundled ones** (`/api/plugins/<name>/…` of third-party plugins): describe them in OpenAPI and generate a client beside HermesAPI that runs over the same `HermesREST` (see [the REST guide](rest.md#services-beside-hermes)), or call them with `RESTCalling.send`.
 - **Other WebSocket endpoints** (the kanban plugin's event stream, the display socket): not part of the generated contracts.
 - **Methods or routes the pinned release does not have:** `gateway.call(_:params:as:)` (Kotlin: `call` with serializers) reaches any gateway method untyped, and `RESTCalling.send` any route.

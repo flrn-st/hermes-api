@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from tools.fetch_spec import ROOT
@@ -47,7 +48,7 @@ class Param:
     swift_type: str
     kotlin_type: str
     required: bool
-    location: str  # "path", "query" or "form"
+    location: str  # "path", "query", "header" or "form"
     file: bool = False
     # Value constraints the server enforces (it answers 422 otherwise), for the generated doc comment.
     constraints: str | None = None
@@ -159,12 +160,17 @@ def _segments(path: str) -> tuple[str, list[str]]:
     return camel(namespace), [word for word in (w.strip(".-_") for w in words) if word]
 
 
-def _names(document: dict) -> dict[tuple[str, str], tuple[str, str]]:
+def reviewed(operation: dict) -> bool:
+    """The pinned release generates only operations with a reviewed response contract."""
+    return "x-handler-hash" in operation
+
+
+def _names(document: dict, include: Callable[[dict], bool] = reviewed) -> dict[tuple[str, str], tuple[str, str]]:
     """(method, path) -> (namespace, name), unique per namespace and stable for a given path set."""
     entries: list[tuple[str, str, str, str, int]] = []
     for path, methods in document["paths"].items():
         for method, operation in methods.items():
-            if "x-handler-hash" not in operation:
+            if not include(operation):
                 continue
             namespace, words = _segments(path)
             stem = camel("_".join(words)) if words else ""
@@ -224,12 +230,12 @@ def _outcomes(operation: dict, where: str, graph: SchemaGraph, hint: str) -> lis
     return result
 
 
-def _roots(document: dict) -> tuple[list[dict], list[dict]]:
+def _roots(document: dict, include: Callable[[dict], bool] = reviewed) -> tuple[list[dict], list[dict]]:
     responses: list[dict] = []
     requests: list[dict] = []
     for methods in document["paths"].values():
         for operation in methods.values():
-            if "x-handler-hash" not in operation:
+            if not include(operation):
                 continue
             for status, response in operation["responses"].items():
                 if status[0] in "23":
@@ -240,17 +246,19 @@ def _roots(document: dict) -> tuple[list[dict], list[dict]]:
     return responses + requests, requests
 
 
-def build(document: dict, reserved: set[str]) -> tuple[SchemaGraph, list[Operation]]:
+def build(document: dict, reserved: set[str],
+          include: Callable[[dict], bool] = reviewed) -> tuple[SchemaGraph, list[Operation]]:
+    """The type graph and operations of ``document``: those ``include`` accepts, reviewed ones by default."""
     schemas = document.get("components", {}).get("schemas", {})
-    roots, request_roots = _roots(document)
+    roots, request_roots = _roots(document, include)
     # A REST type named like a gateway model gets a prefix in both languages; Swift shares one module.
     rename = {name: f"REST{name}" for name in schemas if name in reserved | RUNTIME_NAMES}
     graph = SchemaGraph.for_rest(schemas, roots, request_roots, rename)
-    names = _names(document)
+    names = _names(document, include)
     operations: list[Operation] = []
     for path, methods in sorted(document["paths"].items()):
         for method, item in sorted(methods.items(), key=lambda pair: METHODS.index(pair[0])):
-            if "x-handler-hash" not in item:
+            if not include(item):
                 continue
             where = f"{method.upper()} {path}"
             namespace, name = names[(method, path)]
@@ -265,10 +273,13 @@ def build(document: dict, reserved: set[str]) -> tuple[SchemaGraph, list[Operati
                 params.append(Param(wire, camel(wire), swift, kotlin, True, "path",
                                     constraints=_param_constraints(parameter["schema"])))
             for wire, parameter in declared.items():
-                if parameter.get("in") != "query":
-                    raise ValueError(f"Unsupported REST {parameter.get('in')} parameter {wire}: {where}")
+                location = parameter.get("in")
+                if location not in ("query", "header"):
+                    raise ValueError(f"Unsupported REST {location} parameter {wire}: {where}")
                 swift, kotlin, _ = _scalar(parameter["schema"], f"{where} {wire}")
-                params.append(Param(wire, camel(wire), swift, kotlin, parameter.get("required", False), "query",
+                if location == "header" and swift != "String":
+                    raise ValueError(f"Unsupported REST header parameter type {wire}: {where}")
+                params.append(Param(wire, camel(wire), swift, kotlin, parameter.get("required", False), location,
                                     constraints=_param_constraints(parameter["schema"])))
             body: TypeRef | None = None
             body_required = False
@@ -383,6 +394,15 @@ def _swift_method(op: Operation) -> list[str]:
         else:
             inner = "value" if param.swift_type == "String" else "String(value)"
             lines.append(f'        if let value = {name} {{ query["{param.wire}"] = {inner} }}')
+    headers = [param for param in op.params if param.location == "header"]
+    if headers:
+        lines.append("        var headers: [String: String] = [:]")
+    for param in headers:
+        name = _swift(param.name)
+        if param.required:
+            lines.append(f'        headers["{param.wire}"] = {name}')
+        else:
+            lines.append(f'        if let value = {name} {{ headers["{param.wire}"] = value }}')
     body, content_type = "nil", "nil"
     if op.multipart:
         lines.append("        var form = RESTMultipart()")
@@ -405,6 +425,7 @@ def _swift_method(op: Operation) -> list[str]:
             body = "try body.map { try JSONEncoder().encode($0) }"
         content_type = '"application/json"'
     extra = "" if body == "nil" else f", body: {body}, contentType: {content_type}"
+    extra += ", headers: headers" if headers else ""
     lines.append(f'        let response = try await caller.send(RESTRequest(method: "{op.method}", '
                  f'path: "{_swift_path(op)}", query: query{extra}))')
     if op.result_name is None:
@@ -455,6 +476,16 @@ def _kotlin_method(op: Operation) -> list[str]:
         lines.append("        }")
     else:
         lines.append("        val query = emptyMap<String, String>()")
+    headers = [param for param in op.params if param.location == "header"]
+    if headers:
+        lines.append("        val headers = buildMap<String, String> {")
+        for param in headers:
+            name = _kotlin(param.name)
+            if param.required:
+                lines.append(f'            put("{param.wire}", {name})')
+            else:
+                lines.append(f'            {name}?.let {{ put("{param.wire}", it) }}')
+        lines.append("        }")
     body, content_type = "null", "null"
     if op.multipart:
         lines.append("        val form = RESTMultipart()")
@@ -474,6 +505,7 @@ def _kotlin_method(op: Operation) -> list[str]:
         body = encode if op.body_required else f"body?.let {{ {encode.replace('), body)', '), it)')} }}"
         content_type = '"application/json"'
     extra = "" if body == "null" else f", {body}, {content_type}"
+    extra += ", headers = headers" if headers else ""
     lines.append(f'        val response = caller.send(RESTRequest("{op.method}", "{_kotlin_path(op)}", query{extra}))')
     if op.result_name is None:
         outcome = op.outcomes[0]
@@ -591,7 +623,13 @@ def _body_index(op: Operation) -> int:
     return sum(1 for param in op.params if param.location == "path")
 
 
+def _unsupported_live_headers(op: Operation) -> None:
+    if any(param.location == "header" for param in op.params):
+        raise ValueError(f"Live scenarios do not drive header parameters: {op.method} {op.path}")
+
+
 def _swift_arguments(op: Operation) -> str:
+    _unsupported_live_headers(op)
     args: list[str] = []
     for param in op.params:
         accessor = ACCESSORS[param.swift_type]
@@ -605,6 +643,7 @@ def _swift_arguments(op: Operation) -> str:
 
 
 def _kotlin_arguments(op: Operation) -> str:
+    _unsupported_live_headers(op)
     args: list[str] = []
     for param in op.params:
         accessor = KOTLIN_ACCESSORS[param.kotlin_type]

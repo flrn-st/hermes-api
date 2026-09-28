@@ -8,7 +8,7 @@ from copy import deepcopy
 import pytest
 
 from tools.fetch_spec import ROOT
-from tools.gen_rest_api import build, generate
+from tools.gen_rest_api import _kotlin_method, _swift_method, build, generate
 from tools.ref_policy import current_release
 
 CURRENT = current_release()
@@ -134,8 +134,35 @@ def test_method_names_are_unique_per_namespace() -> None:
         "DELETE deleteJobs", "GET jobs", "GET jobsByJobId", "POST setJobs"]
 
 
+def test_header_parameters_are_sent_as_request_headers() -> None:
+    document = _document({"/api/items/{item_id}": {"post": {
+        "parameters": [{"name": "item_id", "in": "path", "required": True, "schema": {"type": "string"}},
+                       {"name": "X-Item-Token", "in": "header", "required": True, "schema": {"type": "string"}},
+                       {"name": "X-Trace", "in": "header", "schema": {"type": "string"}}],
+        **_json({"$ref": "#/components/schemas/Item"}),
+    }}}, {"Item": ITEM})
+    _, (operation,) = build(document, set())
+    assert [(p.name, p.location, p.required) for p in operation.params] == [
+        ("itemId", "path", True), ("xItemToken", "header", True), ("xTrace", "header", False)]
+    swift = "\n".join(_swift_method(operation))
+    assert 'headers["X-Item-Token"] = xItemToken' in swift
+    assert 'if let value = xTrace { headers["X-Trace"] = value }' in swift
+    assert "query: query, headers: headers))" in swift
+    kotlin = "\n".join(_kotlin_method(operation))
+    assert 'put("X-Item-Token", xItemToken)' in kotlin and "query, headers = headers))" in kotlin
+
+
+def test_every_operation_is_generated_when_the_caller_includes_them() -> None:
+    document = {"paths": {"/api/plugins/demo/items": {"get": _json({"$ref": "#/components/schemas/Item"})}},
+                "components": {"schemas": {"Item": ITEM}}}
+    assert build(document, set())[1] == []
+    _, (operation,) = build(document, set(), include=lambda _: True)
+    assert (operation.namespace, operation.name) == ("demo", "items")
+
+
 @pytest.mark.parametrize(("mutate", "message"), [
-    (lambda op: op.update(parameters=[{"name": "x", "in": "header", "schema": {"type": "string"}}]), "header parameter"),
+    (lambda op: op.update(parameters=[{"name": "x", "in": "cookie", "schema": {"type": "string"}}]), "cookie parameter"),
+    (lambda op: op.update(parameters=[{"name": "x", "in": "header", "schema": {"type": "integer"}}]), "header parameter type"),
     (lambda op: op.update(parameters=[{"name": "x", "in": "query", "schema": {"type": "array"}}]), "parameter type"),
     (lambda op: op.update(requestBody={"content": {"application/xml": {"schema": {}}}}), "request media"),
     (lambda op: op.update(requestBody={"content": {"application/json": {"schema": {"type": "object"}}}}), "named schema"),

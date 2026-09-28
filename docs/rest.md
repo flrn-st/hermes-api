@@ -101,3 +101,21 @@ tagged Hermes test suite validates every response it produces against the contra
 (`tools/contract_gate.py`), `make record` runs `scenarios/rest.yaml` against an isolated tagged server
 and validates every response, and both clients run the same scenario live through their generated
 methods. See `coverage/<release>.md` for the per-operation state.
+
+## Services beside Hermes
+
+Routes Hermes does not define, such as a dashboard plugin's `/api/plugins/<plugin>/…`, can be
+generated into their own Swift module from OpenAPI 3 documents the service owner writes:
+
+```sh
+uv run python -m tools.gen_openapi_client --spec mail.yaml --spec vault.yaml \
+    --catalog PluginCatalog --swift-out ../app/Sources/PluginAPI/Generated --origin "plugin contracts"
+```
+
+Every operation of the documents is generated with the rules above (names, models, strict or
+tolerant decoding, `Patch`, several success statuses) into one catalog type, one namespace per
+plugin. Parameters may be path, query or header parameters, and may be shared through
+`components/parameters` or at the path level. The module imports `HermesAPI` and its methods take
+any `RESTCalling`, so `PluginCatalog(caller: rest)` shares an existing `HermesREST` client's
+credential, address, retries, deadlines and decoding mode, and `ScriptedRESTCaller` answers it in
+tests. `--check` fails when the committed sources are stale. Only Swift is generated.

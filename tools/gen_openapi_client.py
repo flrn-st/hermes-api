@@ -27,6 +27,7 @@ from tools.gen_rest_api import (
     RUNTIME_NAMES,
     Operation,
     _swift,
+    _swift_decode,
     _swift_method,
     _swift_result_enum,
     build,
@@ -142,10 +143,42 @@ def _catalog(ops: list[Operation], catalog: str, sources: list[str], taken: set[
             lines.extend("    " + line for line in _swift_method(op))
         lines.append("    }")
     lines.append("}")
+    lines.extend(["", *_decoders(ops, catalog)])
     for op in ops:
         if op.result_name:
             lines.extend(["", _swift_result_enum(op)])
     return "\n".join(lines) + "\n"
+
+
+def _decoders(ops: list[Operation], catalog: str) -> list[str]:
+    """Every operation by `METHOD /path`, and a decoder for recorded responses, for contract tests."""
+    lines = [f"extension {catalog} {{", "    /// Every operation, as `METHOD /path`.",
+             "    public static let operations: [String] = [",
+             *[f'        "{op.method} {op.path}",' for op in ops], "    ]", "",
+             "    /// Decodes a response to `operation` (`METHOD /path`) with its generated result type, the way",
+             "    /// the operation's method does; for checking recorded responses against the contract.",
+             "    public static func decode(_ operation: String, _ response: RESTResponse) throws -> any Sendable {",
+             "        switch operation {"]
+    for op in ops:
+        lines.append(f'        case "{op.method} {op.path}":')
+        outcomes = op.outcomes
+        if len(outcomes) == 1:
+            outcome = outcomes[0]
+            if outcome.kind == "empty":
+                lines.append(f"            try response.empty(status: {outcome.status}); return ()")
+            else:
+                lines.append(f"            return {_swift_decode(outcome)}")
+            continue
+        lines.append("            switch response.status {")
+        for outcome in outcomes:
+            if outcome.kind == "empty":
+                lines.append(f"            case {outcome.status}: try response.empty(status: {outcome.status}); return ()")
+            else:
+                lines.append(f"            case {outcome.status}: return {_swift_decode(outcome)}")
+        lines.extend(["            default: throw response.undocumented()", "            }"])
+    lines.extend(['        default: throw HermesRESTError.decoding("Unknown operation \\(operation)")', "        }",
+                  "    }", "}"])
+    return lines
 
 
 def outputs(specs: list[Path], catalog: str, out: Path, origin: str) -> tuple[dict[Path, str], list[Operation]]:

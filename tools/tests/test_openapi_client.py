@@ -43,6 +43,9 @@ def test_documents_merge_into_one_catalog_with_a_namespace_each(tmp_path: Path) 
     assert "        public func items(itemId: String) async throws -> Item {" in catalog
     assert '/api/plugins/demo_vault/items/\\(RESTPath.segment(itemId))' in catalog
     assert "public struct Item: Codable, Sendable, Hashable" in (out / "Models00.swift").read_text()
+    assert '"GET /api/plugins/demo_vault/items/{item_id}",' in catalog
+    assert ('case "GET /api/plugins/demo-mail/items":\n            return try response.json(Item.self, status: 200)'
+            in catalog)
     assert f'CodingUserInfoKey(rawValue: "{DECODING_KEY}")' in (out / "Support.swift").read_text()
     assert generate([first, second], "DemoCatalog", out, "demo contracts", check=True) == 2
     (out / "Stale.swift").write_text("")

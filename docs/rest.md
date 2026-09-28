@@ -118,4 +118,6 @@ plugin. Parameters may be path, query or header parameters, and may be shared th
 `components/parameters` or at the path level. The module imports `HermesAPI` and its methods take
 any `RESTCalling`, so `PluginCatalog(caller: rest)` shares an existing `HermesREST` client's
 credential, address, retries, deadlines and decoding mode, and `ScriptedRESTCaller` answers it in
-tests. `--check` fails when the committed sources are stale. Only Swift is generated.
+tests. The catalog also lists its `operations` and decodes a recorded response to any of them
+(`decode(_:_:)`), so a test can check recorded responses against the contract. `--check` fails
+when the committed sources are stale. Only Swift is generated.

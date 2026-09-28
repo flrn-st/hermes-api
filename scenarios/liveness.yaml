@@ -31,6 +31,33 @@ calls:
     wait_for_server_request: approval
     wait_for_event: message.complete
     expect_event_text: HermesAPI approval denied as expected.
+  - method: prompt.submit
+    params:
+      session_id: ${session_id}
+      text: Run the fixture command that needs approval and report the result.
+    wait_for_server_request: approval
+    server_requests:
+      approval:
+        choice: once
+    wait_for_event: message.complete
+    expect_event_text: HermesAPI approval accepted.
+  - method: prompt.submit
+    params:
+      session_id: ${session_id}
+      text: Load the HermesAPI fixture skill that needs a secret.
+    wait_for_server_request: secret
+    wait_for_event: message.complete
+    expect_event_text: HermesAPI secret request answered.
+  - method: prompt.submit
+    params:
+      session_id: ${session_id}
+      text: Ask a HermesAPI question that will be withdrawn.
+    wait_for_server_request: clarify
+    withhold_server_requests: [clarify]
+  - method: session.interrupt
+    params:
+      session_id: ${session_id}
+    wait_for_event: request.cancel
   - method: session.list
     params: {}
   - method: session.close
@@ -42,3 +69,6 @@ server_requests:
       q0: Stable
   approval:
     choice: deny
+  # Skipped: Hermes stores nothing and asks again next time.
+  secret:
+    value: ""

@@ -27,9 +27,10 @@ private func collapsingOptionalNulls(_ value: JSONValue) -> JSONValue {
 /// Every reply and tool the stub model answers the recorded scenarios with (`harness/stub_llm.py`).
 private let fixtureReplies: Set<String> = [
     "HermesAPI fixture reply.", "HermesAPI stable release selected.", "HermesAPI approval denied as expected.",
-    "HermesAPI reasoning complete.", "HermesAPI subagent finished.",
+    "HermesAPI reasoning complete.", "HermesAPI subagent finished.", "HermesAPI approval accepted.",
+    "HermesAPI secret request answered.",
 ]
-private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task"]
+private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task", "skill_view"]
 
 @Test func recordedLivenessFramesDecodeInSwift() throws {
     let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
@@ -54,6 +55,11 @@ private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task"]
                 guard case .value(let questions) = request.questions else {
                     throw HermesGatewayError.decoding("Missing recorded clarification")
                 }
+                if record.answer == nil || record.answer == .null {
+                    // Left open for Hermes to withdraw.
+                    #expect(questions.count == 1 && questions[0].question == "Which HermesAPI question will be withdrawn?")
+                    continue
+                }
                 #expect(questions.count == 1 && questions[0].question == "Which release channel?")
                 let answer = try decoder.decode(ClarifyResult.self,
                                                 from: JSONEncoder().encode(record.answer))
@@ -62,11 +68,21 @@ private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task"]
             case "approval":
                 let request = try decoder.decode(ApprovalRequestParams.self,
                                                  from: JSONEncoder().encode(frame["params"]))
-                #expect(request.command == "rm -rf /tmp/hermes-api-fixture-approval-target")
                 #expect(request.choices?.contains(.deny) == true)
                 let answer = try decoder.decode(ApprovalResult.self,
                                                 from: JSONEncoder().encode(record.answer))
-                #expect(answer.choice == .deny)
+                switch request.command ?? "" {
+                case "rm -rf /tmp/hermes-api-fixture-approval-target": #expect(answer.choice == .deny)
+                case "rm -rf /tmp/hermes-api-fixture-accepted-target": #expect(answer.choice == .once)
+                default: Issue.record("Unexpected recorded approval: \(request.command ?? "")")
+                }
+                #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(answer)) == record.answer)
+            case "secret":
+                let request = try decoder.decode(SecretRequestParams.self,
+                                                 from: JSONEncoder().encode(frame["params"]))
+                #expect(request.envVar == "HERMES_API_FIXTURE_SECRET")
+                let answer = try decoder.decode(ValueResult.self, from: JSONEncoder().encode(record.answer))
+                #expect(answer.value.isEmpty)
                 #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(answer)) == record.answer)
             default:
                 Issue.record("Unexpected server request: \(record.name)")

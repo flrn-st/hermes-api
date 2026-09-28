@@ -38,6 +38,18 @@ DELEGATE_REPLY = "HermesAPI subagent finished."
 REASONING_PROMPT = "Think about the HermesAPI fixture before answering."
 REASONING_CHUNKS = ["Considering ", "the HermesAPI ", "fixture."]
 REASONING_REPLY = "HermesAPI reasoning complete."
+# An approved command: it matches a dangerous pattern, so Hermes asks, and removes a path that never exists.
+ACCEPT_PROMPT = "Run the fixture command that needs approval and report the result."
+ACCEPT_COMMAND = "rm -rf /tmp/hermes-api-fixture-accepted-target"
+ACCEPT_REPLY = "HermesAPI approval accepted."
+# A skill that declares an environment variable Hermes asks the client for; the fixture skips it.
+SECRET_SKILL = "hermes-api-fixture-secret"
+SECRET_ENV_VAR = "HERMES_API_FIXTURE_SECRET"
+SECRET_PROMPT = "Load the HermesAPI fixture skill that needs a secret."
+SECRET_REPLY = "HermesAPI secret request answered."
+# A question the client leaves open until the turn is interrupted, so Hermes withdraws it.
+WITHDRAWN_PROMPT = "Ask a HermesAPI question that will be withdrawn."
+WITHDRAWN_REPLY = "HermesAPI question withdrawn."
 # Prompts answered with one tool call, then with a reply once the tool result is in.
 SCRIPTED_TOOLS = {
     CLARIFY_PROMPT: ("clarify", {"questions": [{"question": "Which release channel?", "choices": ["Stable", "Beta"]}]},
@@ -46,10 +58,30 @@ SCRIPTED_TOOLS = {
     TODO_PROMPT: ("todo_list", {"todos": [{"id": "1", "content": "Check the HermesAPI fixture", "status": "in_progress"},
                                           {"id": "2", "content": "Report the result", "status": "pending"}]},
                   TODO_REPLY),
+    ACCEPT_PROMPT: ("terminal", {"command": ACCEPT_COMMAND}, ACCEPT_REPLY),
+    SECRET_PROMPT: ("skill_view", {"name": SECRET_SKILL}, SECRET_REPLY),
+    WITHDRAWN_PROMPT: ("clarify", {"questions": [{"question": "Which HermesAPI question will be withdrawn?",
+                                                  "choices": ["First", "Second"]}]}, WITHDRAWN_REPLY),
     DELEGATE_PROMPT: ("delegate_task", {"tasks": [{"goal": "Reply with a short greeting.",
                                                    "context": "HermesAPI fixture subagent."}]},
                       DELEGATE_REPLY),
 }
+
+
+def seed_secret_skill(home: Path) -> Path:
+    """Install the skill whose required environment variable makes Hermes send a ``secret`` request, and
+    return its directory for ``skills.external_dirs``. An external directory keeps it out of the learning
+    graph, whose nodes the REST scenario edits."""
+    directory = home / "fixture-skills"
+    skill = directory / SECRET_SKILL
+    skill.mkdir(parents=True, exist_ok=True)
+    (skill / "SKILL.md").write_text(
+        f"---\nname: {SECRET_SKILL}\ndescription: HermesAPI fixture skill that needs a secret.\n"
+        f"required_environment_variables:\n  - name: {SECRET_ENV_VAR}\n"
+        "    prompt: Enter the HermesAPI fixture secret\n---\n\nThe HermesAPI fixture skill.\n",
+        encoding="utf-8",
+    )
+    return directory
 
 
 class StubLLM:

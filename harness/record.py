@@ -248,6 +248,8 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
     seen_session_events: list[tuple[str, object]] = []
     seen_requests: list[str] = []
     seen_frames: dict[str, dict] = {}
+    # The running call's own answers (`server_requests`) and the requests it leaves open (`withhold`).
+    current: dict[str, object] = {"answers": {}, "withhold": []}
     async with connect(f"{url}/api/ws?token={token}", origin=os.environ["HERMES_LIVE_URL"]) as socket:
         async def receive(expected_id: int | None = None) -> dict:
             while True:
@@ -277,10 +279,15 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
                     name = frame["method"]
                     contract = SERVER_REQUESTS[name]
                     contract.params.model_validate(frame.get("params", {}))
-                    answer = _resolve(definition.get("server_requests", {})[name], captured)
+                    seen_requests.append(name)
+                    if name in current["withhold"]:
+                        # Left open for Hermes to withdraw with request.cancel.
+                        entries.append({"kind": "server_request", "name": name, "frame": frame, "answer": None})
+                        continue
+                    answers = {**definition.get("server_requests", {}), **current["answers"]}
+                    answer = _resolve(answers[name], captured)
                     contract.result.model_validate(answer)
                     await socket.send(json.dumps({"jsonrpc": "2.0", "id": frame["id"], "result": answer}))
-                    seen_requests.append(name)
                     entries.append({"kind": "server_request", "name": name, "frame": frame,
                                     "answer": answer})
                     continue
@@ -297,6 +304,8 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
             seen_requests.clear()
             seen_frames.clear()
             method = call["method"]
+            current["answers"] = call.get("server_requests", {})
+            current["withhold"] = call.get("withhold_server_requests", [])
             contract = METHODS[method]
             params = contract.params.model_validate(_resolve(call["params"], captured)).model_dump(exclude_unset=True)
             await socket.send(json.dumps({"jsonrpc": "2.0", "id": identifier,
@@ -318,6 +327,9 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
                     if actual != expected_text:
                         raise ValueError(f"Unexpected {wait_for} text: {actual!r}")
             expected_request = call.get("wait_for_server_request")
+            if expected_request and not wait_for:
+                while expected_request not in seen_requests:
+                    await receive()
             if expected_request and expected_request not in seen_requests:
                 raise ValueError(f"Expected server request {expected_request} was not received")
         gateway_calls = (json.loads(gateway_scenario.read_text(encoding="utf-8"))["calls"]

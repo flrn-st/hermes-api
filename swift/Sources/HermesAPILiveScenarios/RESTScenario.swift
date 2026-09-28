@@ -7,10 +7,14 @@ struct RESTScenarioDocument: Decodable, Sendable {
     struct Gated: Decodable, Sendable {
         let url: URL
         let calls: [RESTScenarioCall]
+        let username: String?
+        let password: String?
     }
 
     let calls: [RESTScenarioCall]
     let gated: Gated?
+    /// The main server behind a self-signed certificate.
+    let tls: ConnectionScenarios.PinnedServer?
 }
 
 /// One call of the REST scenario.

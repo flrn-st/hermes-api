@@ -23,7 +23,8 @@ from pathlib import Path
 import yaml
 
 from harness.faults import ControlServer, FaultProxy
-from harness.stub_llm import APPROVAL_TARGET, MODEL, StubLLM
+from harness.stub_llm import APPROVAL_TARGET, MODEL, StubLLM, seed_secret_skill
+from harness.tls import TLSFront
 from tools.extract_openapi import extract
 from tools.fetch_spec import ROOT
 from tools.ref_policy import require_release
@@ -260,10 +261,12 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
     python = repo / ".venv" / "bin" / "python"
     with tempfile.TemporaryDirectory(prefix="hermes-api-live-") as home:
         stub = StubLLM()
+        fixture_skills = seed_secret_skill(Path(home))
         (Path(home) / "config.yaml").write_text(
             f"model:\n  default: {MODEL}\n  provider: custom\n"
             f"  base_url: {stub.base_url}\n  api_key: fixture-key\n"
-            "  api_mode: chat_completions\napprovals:\n  mode: manual\n", encoding="utf-8",
+            "  api_mode: chat_completions\napprovals:\n  mode: manual\n"
+            f"skills:\n  external_dirs:\n    - {fixture_skills}\n", encoding="utf-8",
         )
         port = _free_port()
         token = secrets.token_urlsafe(24)
@@ -288,10 +291,12 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
         gated = GatedServer(repo, python, Path(home) / "gated-home", env, Path(home) / "gated-server.log")
         proxy: FaultProxy | None = None
         control: ControlServer | None = None
+        tls: TLSFront | None = None
         try:
             server.start()
             gated.start()
             proxy = FaultProxy(port)
+            tls = TLSFront(port)
             rest_scenario = _rest_scenario(Path(home))
             resolved_scenario = Path(home) / "rest-scenario.json"
             resolved_scenario.write_text(json.dumps(rest_scenario), encoding="utf-8")
@@ -299,7 +304,10 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
             resolved_gateway.write_text(json.dumps(rest_scenario["gateway"]), encoding="utf-8")
             control = ControlServer(proxy, server.restart, {
                 "calls": rest_scenario["calls"],
-                "gated": {"url": gated.url, "calls": rest_scenario["gated_calls"]},
+                "gated": {"url": gated.url, "calls": rest_scenario["gated_calls"],
+                          "username": GATED_USER, "password": GATED_PASSWORD},
+                # The main server behind a self-signed certificate the clients pin.
+                "tls": {"url": tls.url, "certificate": tls.certificate},
             }, gateway_scenario=rest_scenario["gateway"])
             env["HERMES_LIVE_URL"] = f"http://127.0.0.1:{proxy.port}"
             env["HERMES_LIVE_CONTROL"] = control.url
@@ -374,6 +382,8 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                             else "<redacted server frame>" for line in diagnostic)[-4000:])
             raise
         finally:
+            if tls is not None:
+                tls.close()
             if control is not None:
                 control.close()
             if proxy is not None:

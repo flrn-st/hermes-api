@@ -49,6 +49,14 @@ enum Fixture {
     static let approvalReply = "HermesAPI approval denied as expected."
     static let reconnectPrompt = "Stream the HermesAPI reconnect fixture slowly."
     static let reconnectReply = (1...16).map { String(format: "part%02d", $0) }.joined(separator: " ")
+    static let acceptPrompt = "Run the fixture command that needs approval and report the result."
+    static let acceptCommand = "rm -rf /tmp/hermes-api-fixture-accepted-target"
+    static let acceptReply = "HermesAPI approval accepted."
+    static let secretPrompt = "Load the HermesAPI fixture skill that needs a secret."
+    static let secretEnvVar = "HERMES_API_FIXTURE_SECRET"
+    static let secretReply = "HermesAPI secret request answered."
+    static let withdrawnPrompt = "Ask a HermesAPI question that will be withdrawn."
+    static let withdrawnQuestion = "Which HermesAPI question will be withdrawn?"
     static let greetingPrompt = "Reply with a short greeting."
     static let longPrompt = "Stream the HermesAPI long fixture."
     static let pacedPrompt = "Stream the HermesAPI paced fixture."
@@ -74,6 +82,13 @@ public enum LiveScenarios {
                 let transport = URLSessionHTTPTransport(session: URLSession(configuration: .ephemeral))
                 try await RESTScenario.run(gated.calls, baseURL: gated.url, auth: nil, transport: transport,
                                            observations: observations)
+                if let username = gated.username, let password = gated.password {
+                    try await ConnectionScenarios.passwordSession(
+                        .init(url: gated.url, username: username, password: password))
+                }
+            }
+            if let tls = scenario.tls {
+                try await ConnectionScenarios.pinnedServer(tls, token: token)
             }
         }
         if environment.lifecycle {
@@ -89,20 +104,39 @@ public enum LiveScenarios {
         let gateway = HermesGateway(configuration: .init(
             address: HermesDashboardAddress(environment.url), auth: environment.auth,
             transport: ObservingTransport(inner: URLSessionGatewayTransport(), observations: observations)))
+        let requests = RequestLog()
         await gateway.setServerRequestHandler { request in
             switch request {
             case .clarify(let params):
-                guard case .value(let questions) = params.questions,
-                      questions.count == 1,
-                      questions[0].question == "Which release channel?" else {
+                guard case .value(let questions) = params.questions, questions.count == 1 else {
+                    throw LiveScenarioError("Unexpected clarification request")
+                }
+                if questions[0].question == Fixture.withdrawnQuestion {
+                    // Left open until Hermes withdraws it; the gateway then cancels this handler.
+                    await requests.opened()
+                    do {
+                        try await Task.sleep(for: .seconds(300))
+                    } catch {
+                        await requests.withdrawn()
+                        throw error
+                    }
+                    throw LiveScenarioError("The open question was never withdrawn")
+                }
+                guard questions[0].question == "Which release channel?" else {
                     throw LiveScenarioError("Unexpected clarification request")
                 }
                 return .clarify(ClarifyResult(answers: [questions[0].qid: "Stable"]))
             case .approval(let params):
-                guard params.command == Fixture.approvalCommand else {
-                    throw LiveScenarioError("Unexpected approval command")
+                switch params.command {
+                case Fixture.approvalCommand: return .approval(ApprovalResult(choice: .deny))
+                case Fixture.acceptCommand: return .approval(ApprovalResult(choice: .once))
+                default: throw LiveScenarioError("Unexpected approval command")
                 }
-                return .approval(ApprovalResult(choice: .deny))
+            case .secret(let params):
+                guard params.envVar == Fixture.secretEnvVar else { throw LiveScenarioError("Unexpected secret request") }
+                await requests.secret()
+                // An empty value skips the variable, so Hermes stores nothing and asks again next run.
+                return .secret(ValueResult(value: ""))
             default:
                 throw LiveScenarioError("Unexpected server request")
             }
@@ -115,7 +149,7 @@ public enum LiveScenarios {
             if environment.lifecycle {
                 // Only against the tagged server: the ticket probe answers every method as unknown.
                 try await refusals(gateway)
-                try await lifecycle(gateway, environment: environment)
+                try await lifecycle(gateway, environment: environment, requests: requests)
             }
             await gateway.disconnect()
         } catch {
@@ -146,6 +180,9 @@ public enum LiveScenarios {
         try await refused(.profileNotFound, .notFound) {
             _ = try await gateway.profiles.describe(.init(name: .value("hermes-api-missing-profile")))
         }
+        try await refused(.paramsRejected, .invalidRequest) {
+            _ = try await gateway.spawnTree.load(.init(path: ""))
+        }
     }
 
     private static func refused(
@@ -162,7 +199,9 @@ public enum LiveScenarios {
         throw LiveScenarioError("Expected Hermes to refuse with \(known), but the call succeeded")
     }
 
-    private static func lifecycle(_ gateway: HermesGateway, environment: LiveScenarioEnvironment) async throws {
+    private static func lifecycle(
+        _ gateway: HermesGateway, environment: LiveScenarioEnvironment, requests: RequestLog
+    ) async throws {
         // Hermes broadcasts sessions.changed (at most every 2 s) once a turn writes the session store.
         let listChanges = gateway.events()
         let session = try await gateway.session.create(.init(
@@ -188,6 +227,18 @@ public enum LiveScenarios {
               result["exit_code"] == .integer(-1) else {
             throw LiveScenarioError("Denied terminal command was not blocked")
         }
+        let accepted = try await runTurn(gateway, sessionID: session.sessionId,
+                                         prompt: Fixture.acceptPrompt, tool: "terminal")
+        try accepted.expect(reply: Fixture.acceptReply)
+        guard case .object(let ran)? = accepted.toolResult, ran["exit_code"] == .integer(0) else {
+            throw LiveScenarioError("Approved terminal command did not run: \(String(describing: accepted.toolResult))")
+        }
+        let secret = try await runTurn(gateway, sessionID: session.sessionId,
+                                       prompt: Fixture.secretPrompt, tool: "skill_view")
+        try secret.expect(reply: Fixture.secretReply)
+        guard await requests.secrets == 1 else { throw LiveScenarioError("Hermes did not ask for the skill's secret") }
+        try await withdrawnQuestion(gateway, sessionID: session.sessionId, requests: requests)
+        try await busySession(gateway, sessionID: session.sessionId)
         _ = try await gateway.session.list(.init())
         let closed = try await gateway.session.close(.init(sessionId: session.sessionId))
         guard closed.closed else { throw LiveScenarioError("Gateway session did not close") }
@@ -207,6 +258,58 @@ public enum LiveScenarios {
         }
         let count = try await rest.sessions.emptyCount(profile: "default")
         guard count.count >= 0 else { throw LiveScenarioError("Invalid empty session count") }
+    }
+
+    /// Leaves a question open and interrupts the turn: Hermes withdraws it with `request.cancel`, and the
+    /// gateway cancels the handler still waiting on the user.
+    private static func withdrawnQuestion(_ gateway: HermesGateway, sessionID: String, requests: RequestLog) async throws {
+        let events = gateway.events()
+        _ = try await gateway.prompt.submit(.init(sessionId: sessionID, text: .string(Fixture.withdrawnPrompt)))
+        try await withDeadline(.seconds(60), "the question to reach the handler") {
+            while await !requests.isOpen { try await Task.sleep(for: .milliseconds(100)) }
+        }
+        _ = try await gateway.session.interrupt(.init(sessionId: sessionID))
+        try await withDeadline(.seconds(30), "Hermes to withdraw the question and end the turn") {
+            var withdrawn = false
+            for await event in events where event.sessionID == sessionID {
+                switch event.payload {
+                case .requestCancel(let cancel):
+                    guard cancel.method == "clarify" else { throw LiveScenarioError("Unexpected withdrawn request") }
+                    withdrawn = true
+                case .messageComplete:
+                    guard withdrawn else { throw LiveScenarioError("The turn ended without withdrawing the question") }
+                    return
+                default:
+                    continue
+                }
+            }
+            throw LiveScenarioError("Event stream ended before the question was withdrawn")
+        }
+        try await withDeadline(.seconds(10), "the gateway to cancel the waiting handler") {
+            while await !requests.isWithdrawn { try await Task.sleep(for: .milliseconds(100)) }
+        }
+    }
+
+    /// A call Hermes refuses while a turn runs, and the interrupt that ends the turn.
+    private static func busySession(_ gateway: HermesGateway, sessionID: String) async throws {
+        let events = gateway.events()
+        _ = try await gateway.prompt.submit(.init(sessionId: sessionID, text: .string(Fixture.pacedPrompt)))
+        try await withDeadline(.seconds(60), "the paced turn to start streaming") {
+            for await event in events where event.sessionID == sessionID {
+                if case .messageDelta = event.payload { return }
+            }
+            throw LiveScenarioError("Event stream ended before the paced turn streamed")
+        }
+        try await refused(.sessionBusy, .busy) {
+            _ = try await gateway.session.cwdSet(.init(sessionId: sessionID, cwd: "/tmp"))
+        }
+        _ = try await gateway.session.interrupt(.init(sessionId: sessionID))
+        try await withDeadline(.seconds(30), "the interrupted turn to end") {
+            for await event in events where event.sessionID == sessionID {
+                if case .messageComplete = event.payload { return }
+            }
+            throw LiveScenarioError("Event stream ended before the interrupted turn ended")
+        }
     }
 
     /// Loses the socket mid-stream, silently, and with a question open, then resumes the session after a
@@ -628,4 +731,15 @@ func withDeadline<T: Sendable>(
         guard let first = try await group.next() else { throw LiveScenarioError("No result for \(waitingFor)") }
         return first
     }
+}
+
+/// What the live handler saw of the requests the lifecycle provokes.
+actor RequestLog {
+    private(set) var isOpen = false
+    private(set) var isWithdrawn = false
+    private(set) var secrets = 0
+
+    func opened() { isOpen = true }
+    func withdrawn() { isWithdrawn = true }
+    func secret() { secrets += 1 }
 }

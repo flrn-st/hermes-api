@@ -546,6 +546,36 @@ class HermesGatewayTest {
     // Server requests
 
     @Test
+    fun concurrentHandlersKeepTheirWireIdentityAcrossSuspension() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val arrived = kotlinx.coroutines.channels.Channel<String>(2)
+        val release = CompletableDeferred<Unit>()
+        gateway.setServerRequestHandler {
+            val context = checkNotNull(kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext])
+            arrived.send(context.id)
+            release.await()
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                assertEquals(context, kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext])
+                assertEquals("approval", context.method)
+            }
+            ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Once))
+        }
+        gateway.connect()
+        try {
+            for (id in listOf("first", "second")) socket.inject(GatewayFrames.serverRequest(id, "approval", """{"session_id":"s","request_id":"different-param-id"}"""))
+            assertEquals(setOf("first", "second"), setOf(arrived.receive(), arrived.receive()))
+            assertEquals(null, kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext])
+            release.complete(Unit)
+            val replies = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                List(2) { SentAnswer(withTimeout(3_000) { socket.sent.receive() }) }
+            }
+            assertEquals(setOf("first", "second"), replies.map { it.id }.toSet())
+            assertTrue(replies.all { it.error == null })
+        } finally { gateway.disconnect() }
+    }
+
+    @Test
     fun answersTypedServerRequest() = runTest {
         val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))

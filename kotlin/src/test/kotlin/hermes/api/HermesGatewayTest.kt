@@ -383,6 +383,66 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun ticketTransportFailuresRecoverDuringInitialConnectAndBackgroundReconnect() = runTest {
+        val first = ScriptedGatewaySocket()
+        val transport = ScriptedGatewayTransport(first, ScriptedGatewaySocket())
+        var credentials = 0
+        val failures = mutableListOf<Throwable?>()
+        val auth = object : HermesAuth {
+            override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential {
+                credentials++
+                if (credentials == 1 || credentials == 3) throw java.io.IOException("Ticket endpoint ended its response")
+                return GatewayCredential.LocalToken("fixture", emptyMap())
+            }
+        }
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress { failure -> failures += failure; URI("http://localhost:3000") }, auth, transport,
+            reconnectDelayMillis = { 100 }, requestTimeoutMillis = 3_000,
+        ), scope = backgroundScope)
+        withTimeout(3_000) { gateway.connect() }
+        assertEquals(2, credentials)
+        first.sever()
+        gateway.awaitState { it == GatewayConnectionState.Connected && credentials == 4 }
+        assertEquals(2, transport.attempts)
+        assertEquals(2, failures.count { it is HermesGatewayException.Transport && it.message == "Ticket endpoint ended its response" })
+        gateway.disconnect()
+    }
+
+    @Test
+    fun renewedAuthenticationResolvesTheAddressAgainBeforeRequestingItsTicketAndSocket() = runTest {
+        val primary = URI("https://primary.test/main")
+        val fallback = URI("https://fallback.test/backup")
+        var selected = primary
+        val credentialAddresses = mutableListOf<URI>()
+        val resolutionFailures = mutableListOf<Throwable?>()
+        val transport = ScriptedGatewayTransport(ScriptedGatewaySocket())
+        var renewals = 0
+        val auth = object : HermesAuth {
+            override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential {
+                credentialAddresses += baseURI
+                if (baseURI == primary) throw HermesGatewayException.AuthenticationFailed("Primary session expired")
+                return GatewayCredential.Ticket("fallback-ticket", emptyMap())
+            }
+            override suspend fun renew(failure: HermesGatewayException.AuthenticationFailed): Boolean {
+                renewals++
+                selected = fallback
+                return true
+            }
+        }
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress { failure -> resolutionFailures += failure; selected }, auth, transport,
+            requestTimeoutMillis = 3_000,
+        ), scope = backgroundScope)
+        gateway.connect()
+        assertEquals(listOf(primary, fallback), credentialAddresses)
+        assertEquals(1, renewals)
+        assertIs<HermesGatewayException.AuthenticationFailed>(resolutionFailures.last())
+        assertEquals("fallback.test", transport.uris.single().host)
+        assertTrue(transport.uris.single().path.startsWith("/backup/"))
+        gateway.disconnect()
+    }
+
+    @Test
     fun aRenewedCredentialRetriesTheRejectedAttempt() = runTest {
         val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 401")
         val transport = ScriptedGatewayTransport(listOf(ScriptedGatewayTransport.Step.Failure(rejected), ScriptedGatewayTransport.Step.Socket(ScriptedGatewaySocket())))

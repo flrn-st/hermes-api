@@ -282,7 +282,11 @@ public class HermesGateway(
                 generation++
                 withContext(NonCancellable) { closeConnection(gatewayError(error)) }
             }
-            throw error
+            // Credential providers may use their own HTTP client. Normalize
+            // ordinary failures too, so a ticket endpoint dropping its response
+            // cannot escape the background maintainer and crash its application.
+            // Cancellation and fatal VM errors keep their original semantics.
+            throw if (error is Exception && error !is CancellationException) gatewayError(error) else error
         } finally {
             opening = false
         }
@@ -292,10 +296,11 @@ public class HermesGateway(
      *  once and the socket is opened again with the new one. */
     private suspend fun openSocket(baseURI: URI): GatewayConnection {
         var renewed = false
+        var currentBase = baseURI
         while (true) {
             try {
-                val credential = configuration.auth.credential(baseURI, configuration.httpTransport)
-                val (uri, headers, protocols) = socketRequest(baseURI, credential)
+                val credential = configuration.auth.credential(currentBase, configuration.httpTransport)
+                val (uri, headers, protocols) = socketRequest(currentBase, credential)
                 return try { configuration.transport.connect(uri, headers, protocols) }
                 catch (error: CancellationException) { throw error }
                 catch (error: HermesGatewayException) { throw error }
@@ -303,6 +308,9 @@ public class HermesGateway(
             } catch (error: HermesGatewayException.AuthenticationFailed) {
                 if (renewed || !configuration.auth.renew(error)) throw error
                 renewed = true
+                // Renewal may select a different endpoint with its own saved
+                // session. Both its ticket and socket must use the new address.
+                currentBase = configuration.address.resolve(error)
                 logger.log(GatewayLogLevel.INFO, "Hermes rejected the credential; retrying with the renewed one")
             }
         }

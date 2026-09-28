@@ -3,6 +3,7 @@ package hermes.api.runtime
 import java.net.URI
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonElement
+import hermes.api.generated.gateway.SessionResumeResult
 import hermes.api.generated.gateway.GatewayEventPayload
 import hermes.api.generated.gateway.HermesGatewayContract
 import kotlin.random.Random
@@ -43,8 +44,10 @@ public sealed interface GatewaySessionRecovery {
     /** Hermes had reclaimed the session while this client was away. The gateway resumed it from storage;
      *  it continues under a new runtime [sessionId], and its history is intact. [storedSessionId] is
      *  the resolved stored ID returned by Hermes (which can change after compression), or the requested
-     *  stored ID when the response omits one. */
-    public data class Resumed(val previousSessionId: String, val sessionId: String, val storedSessionId: String) :
+     *  stored ID when the response omits one. [snapshot] contains the effective settings, turn state and
+     *  pending requests returned by the server, so consumers need not retain the old runtime state. */
+    public data class Resumed(val previousSessionId: String, val sessionId: String, val storedSessionId: String,
+        val snapshot: SessionResumeResult? = null) :
         GatewaySessionRecovery
     /** Hermes no longer buffers every event since the last one delivered. Reload the transcript. */
     public data class ReplayTruncated(val sessionId: String) : GatewaySessionRecovery

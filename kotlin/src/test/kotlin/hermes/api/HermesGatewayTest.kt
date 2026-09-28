@@ -794,8 +794,36 @@ class HermesGatewayTest {
         assertEquals("session.resume", resume.method())
         assertEquals("stored-1", resume.fields["session_id"]?.jsonPrimitive?.content)
         second.inject(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":3,"messages":[],"info":{}}"""))
-        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.awaitState { it == GatewayConnectionState.Connected }
+        gateway.disconnect()
+    }
+
+    private fun GatewaySessionRecovery.withoutSnapshot(): GatewaySessionRecovery =
+        if (this is GatewaySessionRecovery.Resumed) copy(snapshot = null) else this
+
+    @Test
+    fun reconnectIncludesTheServersEffectiveRuntimeSnapshot() = runTest {
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val gateway = client(sockets(first, second))
+        val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "root")
+        first.sever()
+        second.inject(error(second.next(), 4001, "session not found"))
+        val resume = second.next()
+        second.inject(result(resume, """{"session_id":"runtime-2","stored_session_id":"tip","message_count":0,"messages":[],"running":false,"info":{"model":"effective-model","provider":"provider","reasoning_effort":"low","fast":false},"open_requests":[]}"""))
+        val resumed = withTimeout(3_000) { recovery.await() } as GatewaySessionRecovery.Resumed
+        val snapshot = checkNotNull(resumed.snapshot)
+        assertEquals("runtime-2", snapshot.sessionId)
+        assertEquals("tip", snapshot.storedSessionId)
+        assertEquals("effective-model", snapshot.info.model)
+        assertEquals("provider", snapshot.info.provider)
+        assertEquals("low", snapshot.info.reasoningEffort)
+        assertEquals(false, snapshot.info.fast)
+        assertEquals(false, snapshot.running)
+        assertEquals(emptyList(), snapshot.openRequests)
         gateway.disconnect()
     }
 
@@ -824,7 +852,7 @@ class HermesGatewayTest {
         assertEquals(listOf(
             GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "tip"),
             GatewaySessionRecovery.Resumed("runtime-2", "runtime-3", "final-tip")
-        ), withTimeout(3_000) { recoveries.await() })
+        ), withTimeout(3_000) { recoveries.await().map { it.withoutSnapshot() } })
         gateway.disconnect()
     }
 
@@ -840,7 +868,7 @@ class HermesGatewayTest {
         first.sever()
         second.inject(error(second.next(), 4001, "session not found"))
         second.inject(result(second.next(), """{"session_id":"runtime-2","message_count":0,"messages":[],"info":{}}"""))
-        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "root"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "root"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.awaitState { it == GatewayConnectionState.Connected }
         second.sever()
         third.inject(error(third.next(), 4001, "session not found"))
@@ -871,7 +899,7 @@ class HermesGatewayTest {
         val resume = second.next()
         assertEquals("session.resume", resume.method())
         second.inject(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":1,"messages":[],"info":{}}"""))
-        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         // Connected again, the client keeps fetching the old id's buffer until the turn completes.
         val drain = second.next()
         assertEquals("session.events.since", drain.method())
@@ -907,7 +935,7 @@ class HermesGatewayTest {
         assertEquals("session.events.since", replay.method())
         second.inject(result(replay, """{"events":[],"latest_seq":4,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"""))
         // No stored id is known for a session only seen through events, so it cannot be resumed.
-        assertEquals(GatewaySessionRecovery.Unavailable("gone", "session not found"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Unavailable("gone", "session not found"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         val ping = async { gateway.methods.ping(PingParams()) }
         val next = second.next()
         assertEquals("ping", next.method())
@@ -927,7 +955,7 @@ class HermesGatewayTest {
         first.sever()
         second.inject(result(second.next(), """{"session_id":"long"}"""))
         second.inject(result(second.next(), """{"events":[],"latest_seq":900,"truncated":true,"count":0,"epoch":"same","open_requests":[]}"""))
-        assertEquals(GatewaySessionRecovery.ReplayTruncated("long"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.ReplayTruncated("long"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.disconnect()
     }
 
@@ -944,7 +972,7 @@ class HermesGatewayTest {
         first.inject(result(first.next(), """{"closed":true}"""))
         assertTrue(closed.await().closed)
         first.sever()
-        assertEquals(GatewaySessionRecovery.Unavailable("ephemeral", "Closed on disconnect"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Unavailable("ephemeral", "Closed on disconnect"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.awaitState { it == GatewayConnectionState.Connected }
         val ping = async { gateway.methods.ping(PingParams()) }
         val next = second.next()
@@ -962,7 +990,7 @@ class HermesGatewayTest {
         gateway.connect()
         createSession(gateway, socket, "idle", "stored-idle")
         socket.inject(GatewayFrames.event("session.reclaimed", "", payload = """{"session_id":"idle","stored_session_id":"stored-idle","reason":"idle_timeout"}"""))
-        assertEquals(GatewaySessionRecovery.Reclaimed("idle", "stored-idle", "idle_timeout"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Reclaimed("idle", "stored-idle", "idle_timeout"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.disconnect()
     }
 

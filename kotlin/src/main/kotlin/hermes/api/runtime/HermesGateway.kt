@@ -845,7 +845,7 @@ public class HermesGateway(
                 configuration.requestTimeoutMillis, waitsForConnection = false)
             retire(sessionId)
             logger.log(GatewayLogLevel.INFO, "Resumed a reclaimed session under a new runtime id")
-            recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, result.storedSessionId ?: result.sessionKey ?: storedId))
+            recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, result.storedSessionId ?: result.sessionKey ?: storedId, result))
         } catch (error: HermesGatewayException.RPC) {
             retire(sessionId)
             recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))

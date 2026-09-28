@@ -1,5 +1,5 @@
 {
-  "complete": 336,
+  "complete": 338,
   "entries": [
     {
       "complete": true,
@@ -3600,17 +3600,17 @@
       "typed": true
     },
     {
-      "complete": false,
-      "decode": false,
+      "complete": true,
+      "decode": true,
       "exempt": null,
-      "fixture": false,
+      "fixture": true,
       "generated": true,
       "kind": "server_request",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "secret",
       "open": [],
-      "proposed": "Asked by a tool that needs a secret the user types in, such as an API key. Could be covered with a scripted tool turn.",
+      "proposed": null,
       "typed": true
     },
     {
@@ -4342,17 +4342,17 @@
       "typed": true
     },
     {
-      "complete": false,
-      "decode": false,
+      "complete": true,
+      "decode": true,
       "exempt": null,
-      "fixture": false,
+      "fixture": true,
       "generated": true,
       "kind": "event",
-      "live_kotlin": false,
-      "live_swift": false,
+      "live_kotlin": true,
+      "live_swift": true,
       "name": "request.cancel",
       "open": [],
-      "proposed": "Emitted when an open server request times out, which takes minutes.",
+      "proposed": null,
       "typed": true
     },
     {
@@ -9952,7 +9952,9 @@
   "errors": {
     "live_both": [
       "invalidParams",
+      "paramsRejected",
       "profileNotFound",
+      "sessionBusy",
       "sessionNotFound",
       "unknownMethod"
     ],
@@ -9962,9 +9964,7 @@
       "internalError",
       "malformedRequest",
       "messageNotSaved",
-      "paramsRejected",
       "parseError",
-      "sessionBusy",
       "sessionNotLive",
       "sessionSettling",
       "sessionStarting",
@@ -9979,16 +9979,16 @@
     "accepted": 0,
     "proposed": 135
   },
-  "proposed": 231,
+  "proposed": 229,
   "ref": "v0.21.5",
   "summary": {
     "event": {
-      "complete": 14,
-      "decode": 22,
+      "complete": 15,
+      "decode": 23,
       "exempt": 0,
-      "fixture": 22,
+      "fixture": 23,
       "generated": 73,
-      "live_both": 21,
+      "live_both": 22,
       "total": 73,
       "typed": 52
     },
@@ -10013,12 +10013,12 @@
       "typed": 296
     },
     "server_request": {
-      "complete": 2,
-      "decode": 2,
+      "complete": 3,
+      "decode": 3,
       "exempt": 0,
-      "fixture": 2,
+      "fixture": 3,
       "generated": 13,
-      "live_both": 2,
+      "live_both": 3,
       "total": 13,
       "typed": 13
     }

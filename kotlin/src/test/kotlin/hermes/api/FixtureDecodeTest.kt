@@ -152,9 +152,13 @@ class FixtureDecodeTest {
                         json.encodeToJsonElement(GatewayReadyPayload.serializer(), payload.payload))
                 }
                 if (payload is GatewayEventPayload.MessageComplete) {
-                    val reply = assertIs<hermes.api.generated.gateway.MessageCompletePayloadText.StringValue>(
-                        payload.payload.text)
-                    assertTrue(reply.value in FIXTURE_REPLIES)
+                    // An interrupted turn (the withdrawn question) completes without text.
+                    val interrupted = (rawPayload as? JsonObject)?.get("status")?.jsonPrimitive?.contentOrNull == "interrupted"
+                    if (!interrupted || payload.payload.text != null) {
+                        val reply = assertIs<hermes.api.generated.gateway.MessageCompletePayloadText.StringValue>(
+                            payload.payload.text)
+                        assertTrue(reply.value in FIXTURE_REPLIES)
+                    }
                 }
                 if (payload is GatewayEventPayload.MessageDelta) {
                     assertTrue(payload.payload.text.trim() in FIXTURE_REPLIES)
@@ -164,8 +168,11 @@ class FixtureDecodeTest {
                     assertTrue(payload.payload.name in FIXTURE_TOOLS)
                     if (payload.payload.name == "terminal") {
                         val result = assertIs<JsonObject>(payload.payload.result)
-                        assertEquals("blocked", result.getValue("status").jsonPrimitive.content)
-                        assertEquals("-1", result.getValue("exit_code").jsonPrimitive.content)
+                        // The denied command is blocked; the approved one runs and succeeds.
+                        val status = result["status"]?.jsonPrimitive?.content
+                        val exitCode = result.getValue("exit_code").jsonPrimitive.content
+                        assertTrue(status == "blocked" && exitCode == "-1" || status == null && exitCode == "0",
+                            "Unexpected terminal result $result")
                     }
                 }
                 continue

@@ -108,9 +108,6 @@ proposed:
   name: "reaction"
   reason: "Broadcast to the other viewers of a session; the scenario has a single viewer."
 - kind: event
-  name: "request.cancel"
-  reason: "Emitted when an open server request times out, which takes minutes."
-- kind: event
   name: "review.summary"
   reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
 - kind: event
@@ -674,9 +671,6 @@ proposed:
 - kind: server_request
   name: "preview.read"
   reason: "Asked by desktop tools that read or drive the user's own terminal, windows, preview pane or guided tour."
-- kind: server_request
-  name: "secret"
-  reason: "Asked by a tool that needs a secret the user types in, such as an API key. Could be covered with a scripted tool turn."
 - kind: server_request
   name: "sudo"
   reason: "Asks for the host's sudo password."

@@ -139,10 +139,11 @@ private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task",
                 #expect(fixtureTools.contains(completed.name))
                 if completed.name == "terminal" {
                     guard case .object(let result)? = completed.result else {
-                        throw HermesGatewayError.decoding("Missing denied terminal result")
+                        throw HermesGatewayError.decoding("Missing terminal result")
                     }
-                    #expect(result["status"] == .string("blocked"))
-                    #expect(result["exit_code"] == .integer(-1))
+                    // The denied command is blocked; the approved one runs and succeeds.
+                    #expect(result["status"] == .string("blocked") && result["exit_code"] == .integer(-1)
+                            || result["status"] == nil && result["exit_code"] == .integer(0))
                 }
             }
             continue

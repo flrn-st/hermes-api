@@ -12,6 +12,7 @@
     "message.start",
     "reasoning.available",
     "reasoning.delta",
+    "request.cancel",
     "session.control.update",
     "session.info",
     "session.title",
@@ -27,17 +28,21 @@
     "tool.start"
   ],
   "fixture": "fixtures/v0.21.5/liveness.jsonl",
-  "fixture_sha256": "1b00e25dfd40dd26b1586139b51872f04e5b1e9ffe902c0b4e51c65ce2d74e9b",
+  "fixture_sha256": "61d67e0110d332674b40cba449ac90deef2080bd41c4fdd5e6b7411a232a8f30",
   "live_errors": {
     "kotlin": [
       "invalidParams",
+      "paramsRejected",
       "profileNotFound",
+      "sessionBusy",
       "sessionNotFound",
       "unknownMethod"
     ],
     "swift": [
       "invalidParams",
+      "paramsRejected",
       "profileNotFound",
+      "sessionBusy",
       "sessionNotFound",
       "unknownMethod"
     ]
@@ -54,6 +59,7 @@
         "message.start",
         "reasoning.available",
         "reasoning.delta",
+        "request.cancel",
         "session.control.update",
         "session.info",
         "session.title",
@@ -208,7 +214,8 @@
       ],
       "server_requests": [
         "approval",
-        "clarify"
+        "clarify",
+        "secret"
       ]
     },
     "swift": {
@@ -222,6 +229,7 @@
         "message.start",
         "reasoning.available",
         "reasoning.delta",
+        "request.cancel",
         "session.control.update",
         "session.info",
         "session.title",
@@ -376,7 +384,8 @@
       ],
       "server_requests": [
         "approval",
-        "clarify"
+        "clarify",
+        "secret"
       ]
     }
   },
@@ -1335,6 +1344,7 @@
   "scenario": "liveness",
   "server_requests": [
     "approval",
-    "clarify"
+    "clarify",
+    "secret"
   ]
 }

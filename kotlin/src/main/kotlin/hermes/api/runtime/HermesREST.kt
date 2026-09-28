@@ -40,6 +40,9 @@ public data class RESTRequest(
     val query: Map<String, String> = emptyMap(),
     val body: ByteArray? = null,
     val contentType: String? = null,
+    /** Headers for this request only, such as `Range`. They override the configuration's headers; the
+     *  credential's headers override them. */
+    val headers: Map<String, String> = emptyMap(),
 )
 
 /** A REST response with any status; generated methods decide which statuses succeed. */
@@ -299,7 +302,7 @@ public class HermesREST(
         while (true) {
             val uri = uri(request, resolveAddress(previousFailure))
             val credential = configuration.auth?.authorizationHeaders() ?: emptyMap()
-            val headers = configuration.headers() + credential
+            val headers = configuration.headers() + request.headers + credential
             var retryAfterMillis: Long? = null
             val failure: HermesRESTException = try {
                 val response = perform(request, uri, headers)

@@ -393,3 +393,17 @@ private final class RecordingLogger: GatewayLogger {
     #expect(await cookies.requests.map { $0.url?.path } == ["/api/auth/ws-ticket"])
     #expect(await other.requests.isEmpty)
 }
+
+@Test func requestHeadersSitBetweenTheConfigurationAndTheCredential() async throws {
+    let transport = ScriptedHTTPTransport([.respond(200, "{}")])
+    let rest = HermesREST(configuration: .init(
+        address: HermesDashboardAddress(base), auth: StaticHeadersAuth(["Authorization": "Bearer app"]),
+        headers: { ["X-Proxy": "configured", "Range": "bytes=0-1"] }, transport: transport, retry: fastRetry))
+    _ = try await rest.send(RESTRequest(method: "GET", path: "/api/plugins/example/items",
+                                        headers: ["Range": "bytes=10-", "Authorization": "ignored", "X-Device": "d1"]))
+    let sent = try #require(await transport.requests.first)
+    #expect(sent.value(forHTTPHeaderField: "X-Proxy") == "configured")
+    #expect(sent.value(forHTTPHeaderField: "Range") == "bytes=10-")
+    #expect(sent.value(forHTTPHeaderField: "X-Device") == "d1")
+    #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer app")
+}

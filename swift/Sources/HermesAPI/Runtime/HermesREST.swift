@@ -8,14 +8,18 @@ public struct RESTRequest: Sendable, Hashable {
     public var query: [String: String]
     public var body: Data?
     public var contentType: String?
+    /// Headers for this request only, such as `Range`. They override the configuration's headers; the
+    /// credential's headers override them.
+    public var headers: [String: String]
 
     public init(method: String, path: String, query: [String: String] = [:], body: Data? = nil,
-                contentType: String? = nil) {
+                contentType: String? = nil, headers: [String: String] = [:]) {
         self.method = method
         self.path = path
         self.query = query
         self.body = body
         self.contentType = contentType
+        self.headers = headers
     }
 }
 
@@ -306,6 +310,7 @@ public struct HermesREST: RESTCalling {
             try Task.checkCancellation()
             var outgoing = try urlRequest(for: request, at: try await resolveAddress(after: previousFailure))
             for (name, value) in try await configuration.headers() { outgoing.setValue(value, forHTTPHeaderField: name) }
+            for (name, value) in request.headers { outgoing.setValue(value, forHTTPHeaderField: name) }
             let credential = try await configuration.auth?.authorizationHeaders() ?? [:]
             for (name, value) in credential { outgoing.setValue(value, forHTTPHeaderField: name) }
             let failure: HermesRESTError

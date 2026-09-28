@@ -34,9 +34,11 @@ import hermes.api.runtime.PasswordSessionAuth
 import hermes.api.runtime.RESTDecoding
 import hermes.api.runtime.RESTFile
 import hermes.api.runtime.RESTRedirect
+import hermes.api.runtime.RESTRequest
 import hermes.api.runtime.RESTResponse
 import hermes.api.runtime.RESTRetryPolicy
 import hermes.api.runtime.RESTTransport
+import hermes.api.runtime.StaticHeadersAuth
 import hermes.api.runtime.withHermesRequestTimeout
 import hermes.api.testing.ScriptedRESTTransport
 import kotlin.test.Test
@@ -424,5 +426,22 @@ class HermesRESTTest {
         assertEquals("cookie-ticket", credential.value)
         assertEquals(listOf("POST /api/auth/ws-ticket"), cookies.requests.map { "${it.method} ${it.uri.path}" })
         assertTrue(other.isEmpty())
+    }
+
+    @Test
+    fun requestHeadersSitBetweenTheConfigurationAndTheCredential() = runTest {
+        val transport = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(200, "{}"))
+        val rest = HermesREST(HermesRESTConfiguration(
+            HermesDashboardAddress(URI("https://dashboard.example")), StaticHeadersAuth(mapOf("Authorization" to "Bearer app")),
+            headers = { mapOf("X-Proxy" to "configured", "Range" to "bytes=0-1") }, transport = transport,
+            retry = RESTRetryPolicy.None,
+        ))
+        rest.send(RESTRequest("GET", "/api/plugins/example/items",
+            headers = mapOf("Range" to "bytes=10-", "Authorization" to "ignored", "X-Device" to "d1")))
+        val sent = transport.requests.single().headers
+        assertEquals("configured", sent["X-Proxy"])
+        assertEquals("bytes=10-", sent["Range"])
+        assertEquals("d1", sent["X-Device"])
+        assertEquals("Bearer app", sent["Authorization"])
     }
 }

@@ -132,6 +132,19 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
     return try await request.value
 }
 
+@Test func treatsAHermesWithoutTheHandshakeAsIncompatible() async throws {
+    let gateway = client(socket: ScriptedGatewaySocket(knowsCapabilities: false))
+    await #expect(throws: HermesGatewayError.incompatibleServer(6)) { try await gateway.connect() }
+    #expect(gateway.connectionState == .failed(.incompatibleServer(6)), "no retrying a server that is too old")
+}
+
+@Test func goesOnWithoutServerRequestsWhenTheClientDoesNotNeedThem() async throws {
+    let gateway = client(socket: ScriptedGatewaySocket(knowsCapabilities: false), minimumContract: 6)
+    try await gateway.connect()
+    #expect(gateway.connectionState == .connected)
+    await gateway.disconnect()
+}
+
 @Test func rejectsABackendBelowTheMinimumContract() async throws {
     let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)

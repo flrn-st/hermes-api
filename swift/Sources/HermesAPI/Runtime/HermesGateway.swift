@@ -262,10 +262,18 @@ public actor HermesGateway: HermesGatewayClient {
             }
             readTask = Task { await self.readLoop(socket, generation: current) }
             // Hermes forgets this per connection; without it every server request fails immediately.
-            let _: ClientCapabilitiesResult = try await call(
-                "client.capabilities", params: ClientCapabilitiesParams(serverRequests: true),
-                as: ClientCapabilitiesResult.self, timeout: configuration.connectTimeout, waitsForConnection: false
-            )
+            do {
+                let _: ClientCapabilitiesResult = try await call(
+                    "client.capabilities", params: ClientCapabilitiesParams(serverRequests: true),
+                    as: ClientCapabilitiesResult.self, timeout: configuration.connectTimeout, waitsForConnection: false
+                )
+            } catch HermesGatewayError.rpc(code: Self.methodNotFound, _, _) {
+                // A Hermes without the handshake predates server requests. A client that requires them
+                // cannot be served by retrying; one that does not goes on without them.
+                if configuration.minimumContract >= Self.capabilitiesContract {
+                    throw HermesGatewayError.incompatibleServer(backendContract ?? Self.capabilitiesContract - 1)
+                }
+            }
             guard current == generation, activeSocket != nil else {
                 throw HermesGatewayError.transport("Connection ended during handshake")
             }
@@ -768,6 +776,11 @@ public actor HermesGateway: HermesGatewayClient {
             await connectionLost(Self.gatewayError(error), generation: current)
         }
     }
+
+    /// The first desktop contract with `client.capabilities` and server requests.
+    private static let capabilitiesContract = 7
+    /// JSON-RPC's "method not found".
+    private static let methodNotFound = -32601
 
     private func validateContract(_ result: JSONValue) throws {
         guard case .object(let fields) = result else { return }

@@ -16,17 +16,21 @@ public actor ScriptedGatewaySocket: GatewayConnection {
     private var failure: HermesGatewayError?
     private let answersHeartbeats: Bool
     private let serverRequests: [String]
+    private let knowsCapabilities: Bool
     public private(set) var isClosed = false
     private var sendsFail = false
 
     /// - Parameters:
     ///   - answersHeartbeats: Reply to `gateway.ping` so an idle connection stays alive.
     ///   - serverRequests: The server request kinds the capability handshake reports.
-    public init(answersHeartbeats: Bool = false, serverRequests: [String] = ["approval"]) {
+    ///   - knowsCapabilities: Whether the handshake exists at all; `false` answers it as an unknown method,
+    ///     as a Hermes older than server requests does.
+    public init(answersHeartbeats: Bool = false, serverRequests: [String] = ["approval"], knowsCapabilities: Bool = true) {
         (sent, sentContinuation) = AsyncStream.makeStream(of: Data.self)
         (heartbeats, heartbeatContinuation) = AsyncStream.makeStream(of: String.self)
         self.answersHeartbeats = answersHeartbeats
         self.serverRequests = serverRequests
+        self.knowsCapabilities = knowsCapabilities
     }
 
     /// The socket died, but its reader has not noticed: sends fail, reads still wait.
@@ -38,6 +42,8 @@ public actor ScriptedGatewaySocket: GatewayConnection {
             throw HermesGatewayError.decoding("Outgoing frame is not a JSON object")
         }
         switch object["method"]?.stringValue {
+        case "client.capabilities" where !knowsCapabilities:
+            inject(GatewayFrames.error(object["id"]?.integerValue ?? 0, code: -32601, "unknown method: client.capabilities"))
         case "client.capabilities":
             let requests = serverRequests.map(JSONValue.string)
             inject(GatewayFrames.result(object["id"]?.integerValue ?? 0, .object(["server_requests": .array(requests)])))

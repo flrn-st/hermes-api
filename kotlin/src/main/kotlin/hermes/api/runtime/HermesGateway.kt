@@ -40,6 +40,7 @@ import hermes.api.generated.gateway.GatewayKnownError
 import hermes.api.generated.gateway.GatewayMethodCatalog
 import hermes.api.generated.gateway.HermesGatewayContract
 import hermes.api.generated.gateway.ServerRequest
+import hermes.api.generated.gateway.OpenRequestEntry
 import hermes.api.generated.gateway.ServerRequestResult
 import hermes.api.generated.gateway.SessionActivateParams
 import hermes.api.generated.gateway.SessionEventsSinceParams
@@ -106,6 +107,7 @@ public class HermesGateway(
 
     private val pending = mutableMapOf<Int, CompletableDeferred<JsonElement>>()
     private val serverJobs = mutableMapOf<String, Job>()
+    private val settledSnapshotRequests = mutableSetOf<String>()
     @Volatile private var handler: (suspend (ServerRequest) -> ServerRequestResult)? = null
     private var nextID = 1
 
@@ -139,6 +141,12 @@ public class HermesGateway(
 
     override fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult) {
         handler = value
+    }
+
+    override suspend fun restoreServerRequests(requests: List<OpenRequestEntry>): Unit = withContext(confined) {
+        if (requests.isEmpty()) return@withContext
+        val connection = socket?.takeIf { ready } ?: throw HermesGatewayException.Transport("Gateway is not connected")
+        requests.forEach { handleServerRequest(it.id, it.method, JsonObject(it.params), connection, generation, snapshot = true) }
     }
 
     // Connection lifecycle
@@ -347,6 +355,7 @@ public class HermesGateway(
         heartbeat = null
         serverJobs.values.forEach { it.cancel() }
         serverJobs.clear()
+        settledSnapshotRequests.clear()
         pending.values.forEach { it.completeExceptionally(error) }
         pending.clear()
         replayHold.clear()
@@ -634,7 +643,10 @@ public class HermesGateway(
                 // Older backends answer gateway.ping with an error, which still proves the socket alive.
                 heartbeatMethod = if (payload.payload.heartbeat == true) "gateway.ping" else "ping"
             }
-            is GatewayEventPayload.RequestCancel -> serverJobs.remove(payload.payload.id)?.cancel()
+            is GatewayEventPayload.RequestCancel -> {
+                settledSnapshotRequests.add(payload.payload.id)
+                serverJobs.remove(payload.payload.id)?.cancel()
+            }
             GatewayEventPayload.MessageStart -> sessionId?.let { setTurn(it, true) }
             is GatewayEventPayload.MessageComplete, is GatewayEventPayload.Error -> sessionId?.let { setTurn(it, false) }
             is GatewayEventPayload.SessionReclaimed -> {
@@ -656,7 +668,9 @@ public class HermesGateway(
         if (changed) turnActivity.value = activeTurns.size
     }
 
-    private suspend fun handleServerRequest(id: String, method: String, params: JsonElement, connection: GatewayConnection, current: Int) {
+    private suspend fun handleServerRequest(id: String, method: String, params: JsonElement, connection: GatewayConnection, current: Int, snapshot: Boolean = false) {
+        if (snapshot && id in settledSnapshotRequests) return
+        if (!snapshot) settledSnapshotRequests.remove(id)
         // A reconnect can deliver one request both live and through open_requests.
         if (id in serverJobs) return
         val request = try { ServerRequest.decode(method, params, json) }
@@ -687,7 +701,9 @@ public class HermesGateway(
                 if (!coroutineContext.isActive) throw error
                 withContext(confined) { answerWithError(id, -32603, error.message ?: "Handler failed", connection, current) }
             } finally {
-                withContext(confined + NonCancellable) { serverJobs.remove(id, delivery) }
+                withContext(confined + NonCancellable) {
+                    if (serverJobs.remove(id, delivery)) settledSnapshotRequests.add(id)
+                }
             }
         }
     }
@@ -902,7 +918,7 @@ public class HermesGateway(
         }
         apply(result, sessionId)
         result.openRequests.forEach {
-            handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current)
+            handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current, snapshot = true)
         }
     }
 

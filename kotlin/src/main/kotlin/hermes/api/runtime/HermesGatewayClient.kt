@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import hermes.api.generated.gateway.GatewayMethodCatalog
 import hermes.api.generated.gateway.ServerRequest
+import hermes.api.generated.gateway.OpenRequestEntry
 import hermes.api.generated.gateway.ServerRequestResult
 
 /**
@@ -30,6 +31,11 @@ public interface HermesGatewayClient : GatewayCaller {
     public val backendContract: Int?
 
     public fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult)
+
+    /** Re-delivers pending requests from a session snapshot after the app has registered its session
+     *  ownership. Returns after scheduling the handlers, not after the person answers. Requires a live
+     *  connection; active duplicates and requests answered or withdrawn on this connection are skipped. */
+    public suspend fun restoreServerRequests(requests: List<OpenRequestEntry>)
 
     public suspend fun connect()
 

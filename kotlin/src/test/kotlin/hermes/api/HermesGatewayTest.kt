@@ -618,6 +618,41 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun snapshotRestorationDeduplicatesLiveRequestsAndSkipsWithdrawnOnes() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val seen = kotlinx.coroutines.channels.Channel<String>(4)
+        val answer = CompletableDeferred<Unit>()
+        gateway.setServerRequestHandler {
+            seen.send(checkNotNull(kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext]).id)
+            answer.await()
+            ServerRequestResult.Approval(ApprovalResult(ApprovalChoice.Once))
+        }
+        gateway.connect()
+        try {
+            val params = """{"session_id":"s","request_id":"req"}"""
+            fun entry(id: String) = hermes.api.generated.gateway.OpenRequestEntry(id, "approval", kotlinx.serialization.json.Json.parseToJsonElement(params).jsonObject)
+            socket.inject(GatewayFrames.event("request.cancel", "s", payload = """{"id":"withdrawn","method":"approval","reason":"expired"}"""))
+            socket.inject(GatewayFrames.serverRequest("live", "approval", params))
+            assertEquals("live", seen.receive())
+            gateway.restoreServerRequests(listOf(entry("withdrawn"), entry("live"), entry("snapshot")))
+            assertEquals("snapshot", seen.receive())
+            gateway.restoreServerRequests(listOf(entry("snapshot")))
+            delay(100)
+            assertTrue(seen.tryReceive().isFailure)
+            answer.complete(Unit)
+            val replies = List(2) { SentAnswer(withTimeout(3_000) { socket.sent.receive() }) }
+            assertEquals(setOf("live", "snapshot"), replies.map { it.id }.toSet())
+            assertTrue(replies.all { it.error == null })
+            delay(100)
+            gateway.restoreServerRequests(listOf(entry("live"), entry("snapshot")))
+            delay(100)
+            assertTrue(seen.tryReceive().isFailure)
+            assertTrue(socket.sent.tryReceive().isFailure)
+        } finally { gateway.disconnect() }
+    }
+
+    @Test
     fun answersTypedServerRequest() = runTest {
         val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))

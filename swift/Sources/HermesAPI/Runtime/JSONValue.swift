@@ -74,6 +74,94 @@ public extension JSONValue {
     }
 }
 
+// MARK: - Reading
+
+public extension JSONValue {
+    /// A number of either case, and nothing else: not a numeric string.
+    var numberValue: Double? {
+        switch self {
+        case .integer(let value): Double(value)
+        case .number(let value): value
+        default: nil
+        }
+    }
+
+    /// The elements of an array; `nil`, not `[]`, when this is not one, so an
+    /// absent value stays apart from an empty one.
+    var arrayValue: [JSONValue]? { if case .array(let value) = self { value } else { nil } }
+
+    var isNull: Bool { if case .null = self { true } else { false } }
+
+    /// The value for `key`, or `nil` if this is not an object or has no such key.
+    subscript(key: String) -> JSONValue? { objectValue?[key] }
+
+    /// The element at `index`, or `nil` if this is not an array or the index is out of range.
+    subscript(index: Int) -> JSONValue? {
+        guard let array = arrayValue, array.indices.contains(index) else { return nil }
+        return array[index]
+    }
+}
+
+// MARK: - Building
+
+public extension JSONValue {
+    /// The case decoding would give `value`: an integral number such as `1.0`
+    /// is `.integer(1)`, so a value built in code equals the same value read
+    /// back from JSON.
+    static func numeric(_ value: Double) -> JSONValue {
+        value.rounded() == value && abs(value) < 9.0e15 ? .integer(Int(value)) : .number(value)
+    }
+}
+
+extension JSONValue: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) { self = .string(value) }
+}
+
+extension JSONValue: ExpressibleByIntegerLiteral {
+    public init(integerLiteral value: Int) { self = .integer(value) }
+}
+
+extension JSONValue: ExpressibleByFloatLiteral {
+    /// `1.0` is `.integer(1)`, as decoding reads it.
+    public init(floatLiteral value: Double) { self = .numeric(value) }
+}
+
+extension JSONValue: ExpressibleByBooleanLiteral {
+    public init(booleanLiteral value: Bool) { self = .boolean(value) }
+}
+
+extension JSONValue: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) { self = .null }
+}
+
+extension JSONValue: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: JSONValue...) { self = .array(elements) }
+}
+
+extension JSONValue: ExpressibleByDictionaryLiteral {
+    public init(dictionaryLiteral elements: (String, JSONValue)...) {
+        self = .object(Dictionary(elements, uniquingKeysWith: { _, last in last }))
+    }
+}
+
+extension JSONValue: CustomStringConvertible {
+    /// A compact rendering for logs and diagnostics: scalars as themselves,
+    /// arrays and objects as sorted JSON. Lossy; not for parsing back.
+    public var description: String {
+        switch self {
+        case .string(let value): return value
+        case .integer(let value): return String(value)
+        case .number(let value): return value == value.rounded() && abs(value) < 1e15 ? String(Int64(value)) : String(value)
+        case .boolean(let value): return value ? "true" : "false"
+        case .null: return "null"
+        case .array, .object:
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
+            return (try? encoder.encode(self)).map { String(decoding: $0, as: UTF8.self) } ?? ""
+        }
+    }
+}
+
 /// Distinguishes an omitted request field from an explicit JSON null.
 public enum Patch<Value: Sendable & Hashable>: Sendable, Hashable {
     case absent

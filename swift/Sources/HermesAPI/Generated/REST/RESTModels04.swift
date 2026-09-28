@@ -276,8 +276,22 @@ public struct ElevenLabsVoicesResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ElevenLabsVoicesResponseError: Codable, Sendable, Hashable {
+public enum ElevenLabsVoicesResponseError: Codable, Sendable, Hashable, RawRepresentable {
     case unauthorized
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "unauthorized": self = .unauthorized
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .unauthorized: "unauthorized"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -289,9 +303,7 @@ public enum ElevenLabsVoicesResponseError: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .unauthorized: try container.encode("unauthorized")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1127,10 +1139,28 @@ public struct GatewayDrainRequest: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum GatewayDrainRequestAction: Codable, Sendable, Hashable {
+public enum GatewayDrainRequestAction: Codable, Sendable, Hashable, RawRepresentable {
     case drain
     case cancel
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "drain": self = .drain
+        case "cancel": self = .cancel
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .drain: "drain"
+        case .cancel: "cancel"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1147,11 +1177,7 @@ public enum GatewayDrainRequestAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .drain: try container.encode("drain")
-        case .cancel: try container.encode("cancel")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1212,10 +1238,28 @@ public struct GatewayDrainResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum GatewayDrainResponseAction: Codable, Sendable, Hashable {
+public enum GatewayDrainResponseAction: Codable, Sendable, Hashable, RawRepresentable {
     case drain
     case cancel
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "drain": self = .drain
+        case "cancel": self = .cancel
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .drain: "drain"
+        case .cancel: "cancel"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1232,11 +1276,7 @@ public enum GatewayDrainResponseAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .drain: try container.encode("drain")
-        case .cancel: try container.encode("cancel")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

@@ -16,6 +16,25 @@ public sealed interface CatalogScanStatus {
     public data object Failed : CatalogScanStatus
     public data class Unknown(public val raw: kotlin.String) : CatalogScanStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Passed -> "passed"
+            Warnings -> "warnings"
+            Failed -> "failed"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CatalogScanStatus = when (raw) {
+            "passed" -> Passed
+            "warnings" -> Warnings
+            "failed" -> Failed
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CatalogScanStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CatalogScanStatus", PrimitiveKind.STRING)
 
@@ -27,13 +46,7 @@ public sealed interface CatalogScanStatus {
         }
 
         override fun serialize(encoder: Encoder, value: CatalogScanStatus) {
-            val raw: kotlin.String = when (value) {
-                Passed -> "passed"
-                Warnings -> "warnings"
-                Failed -> "failed"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -45,6 +58,23 @@ public sealed interface CatalogTier {
     public data object Community : CatalogTier
     public data class Unknown(public val raw: kotlin.String) : CatalogTier
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Official -> "official"
+            Community -> "community"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CatalogTier = when (raw) {
+            "official" -> Official
+            "community" -> Community
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CatalogTier> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CatalogTier", PrimitiveKind.STRING)
 
@@ -55,12 +85,7 @@ public sealed interface CatalogTier {
         }
 
         override fun serialize(encoder: Encoder, value: CatalogTier) {
-            val raw: kotlin.String = when (value) {
-                Official -> "official"
-                Community -> "community"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -154,6 +179,23 @@ public sealed interface ClarifyLockStatus {
     public data object Expired : ClarifyLockStatus
     public data class Unknown(public val raw: kotlin.String) : ClarifyLockStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Expired -> "expired"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ClarifyLockStatus = when (raw) {
+            "ok" -> Ok
+            "expired" -> Expired
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ClarifyLockStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ClarifyLockStatus", PrimitiveKind.STRING)
 
@@ -164,12 +206,7 @@ public sealed interface ClarifyLockStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ClarifyLockStatus) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Expired -> "expired"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

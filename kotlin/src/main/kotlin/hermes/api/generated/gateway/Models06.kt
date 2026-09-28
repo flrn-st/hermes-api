@@ -484,6 +484,23 @@ public sealed interface ForeignSource {
     public data object Codex : ForeignSource
     public data class Unknown(public val raw: kotlin.String) : ForeignSource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Claude -> "claude"
+            Codex -> "codex"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ForeignSource = when (raw) {
+            "claude" -> Claude
+            "codex" -> Codex
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ForeignSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ForeignSource", PrimitiveKind.STRING)
 
@@ -494,12 +511,7 @@ public sealed interface ForeignSource {
         }
 
         override fun serialize(encoder: Encoder, value: ForeignSource) {
-            val raw: kotlin.String = when (value) {
-                Claude -> "claude"
-                Codex -> "codex"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

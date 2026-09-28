@@ -89,6 +89,25 @@ public sealed interface ConnectionActor {
     public data object Clock : ConnectionActor
     public data class Unknown(public val raw: kotlin.String) : ConnectionActor
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            User -> "user"
+            BackendWatcher -> "backend_watcher"
+            Clock -> "clock"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionActor = when (raw) {
+            "user" -> User
+            "backend_watcher" -> BackendWatcher
+            "clock" -> Clock
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionActor> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionActor", PrimitiveKind.STRING)
 
@@ -100,13 +119,7 @@ public sealed interface ConnectionActor {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionActor) {
-            val raw: kotlin.String = when (value) {
-                User -> "user"
-                BackendWatcher -> "backend_watcher"
-                Clock -> "clock"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -156,6 +169,23 @@ public sealed interface ConnectionAnswerStatus {
     public data object Skipped : ConnectionAnswerStatus
     public data class Unknown(public val raw: kotlin.String) : ConnectionAnswerStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Approved -> "approved"
+            Skipped -> "skipped"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionAnswerStatus = when (raw) {
+            "approved" -> Approved
+            "skipped" -> Skipped
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionAnswerStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionAnswerStatus", PrimitiveKind.STRING)
 
@@ -166,12 +196,7 @@ public sealed interface ConnectionAnswerStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionAnswerStatus) {
-            val raw: kotlin.String = when (value) {
-                Approved -> "approved"
-                Skipped -> "skipped"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -492,6 +517,20 @@ public data class ConnectionRespondResult(
 public sealed interface ConnectionRespondResultStatus {
     public data object Ok : ConnectionRespondResultStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionRespondResultStatus? = when (raw) {
+            "ok" -> Ok
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionRespondResultStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionRespondResultStatus", PrimitiveKind.STRING)
 
@@ -501,10 +540,7 @@ public sealed interface ConnectionRespondResultStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionRespondResultStatus) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -518,6 +554,27 @@ public sealed interface ConnectionSettleReason {
     public data object Interrupt : ConnectionSettleReason
     public data class Unknown(public val raw: kotlin.String) : ConnectionSettleReason
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            AllResolved -> "all_resolved"
+            Continue -> "continue"
+            Deadline -> "deadline"
+            Interrupt -> "interrupt"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionSettleReason = when (raw) {
+            "all_resolved" -> AllResolved
+            "continue" -> Continue
+            "deadline" -> Deadline
+            "interrupt" -> Interrupt
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionSettleReason> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionSettleReason", PrimitiveKind.STRING)
 
@@ -530,14 +587,7 @@ public sealed interface ConnectionSettleReason {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionSettleReason) {
-            val raw: kotlin.String = when (value) {
-                AllResolved -> "all_resolved"
-                Continue -> "continue"
-                Deadline -> "deadline"
-                Interrupt -> "interrupt"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -552,6 +602,29 @@ public sealed interface ConnectionTargetAction {
     public data object Reconnect : ConnectionTargetAction
     public data class Unknown(public val raw: kotlin.String) : ConnectionTargetAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Authorize -> "authorize"
+            Connect -> "connect"
+            Enable -> "enable"
+            Install -> "install"
+            Reconnect -> "reconnect"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionTargetAction = when (raw) {
+            "authorize" -> Authorize
+            "connect" -> Connect
+            "enable" -> Enable
+            "install" -> Install
+            "reconnect" -> Reconnect
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionTargetAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionTargetAction", PrimitiveKind.STRING)
 
@@ -565,15 +638,7 @@ public sealed interface ConnectionTargetAction {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionTargetAction) {
-            val raw: kotlin.String = when (value) {
-                Authorize -> "authorize"
-                Connect -> "connect"
-                Enable -> "enable"
-                Install -> "install"
-                Reconnect -> "reconnect"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -602,6 +667,27 @@ public sealed interface ConnectionTargetKind {
     public data object Skill : ConnectionTargetKind
     public data class Unknown(public val raw: kotlin.String) : ConnectionTargetKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Connector -> "connector"
+            Mcp -> "mcp"
+            Plugin -> "plugin"
+            Skill -> "skill"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionTargetKind = when (raw) {
+            "connector" -> Connector
+            "mcp" -> Mcp
+            "plugin" -> Plugin
+            "skill" -> Skill
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionTargetKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionTargetKind", PrimitiveKind.STRING)
 
@@ -614,14 +700,7 @@ public sealed interface ConnectionTargetKind {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionTargetKind) {
-            val raw: kotlin.String = when (value) {
-                Connector -> "connector"
-                Mcp -> "mcp"
-                Plugin -> "plugin"
-                Skill -> "skill"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -638,6 +717,33 @@ public sealed interface ConnectionTargetState {
     public data object NotConnected : ConnectionTargetState
     public data class Unknown(public val raw: kotlin.String) : ConnectionTargetState
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Pending -> "pending"
+            Initiated -> "initiated"
+            Connected -> "connected"
+            Skipped -> "skipped"
+            Failed -> "failed"
+            Expired -> "expired"
+            NotConnected -> "not_connected"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionTargetState = when (raw) {
+            "pending" -> Pending
+            "initiated" -> Initiated
+            "connected" -> Connected
+            "skipped" -> Skipped
+            "failed" -> Failed
+            "expired" -> Expired
+            "not_connected" -> NotConnected
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionTargetState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionTargetState", PrimitiveKind.STRING)
 
@@ -653,17 +759,7 @@ public sealed interface ConnectionTargetState {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionTargetState) {
-            val raw: kotlin.String = when (value) {
-                Pending -> "pending"
-                Initiated -> "initiated"
-                Connected -> "connected"
-                Skipped -> "skipped"
-                Failed -> "failed"
-                Expired -> "expired"
-                NotConnected -> "not_connected"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -749,6 +845,20 @@ public data class ConnectionWakeResult(
 public sealed interface ConnectionWakeResultStatus {
     public data object Ok : ConnectionWakeResultStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionWakeResultStatus? = when (raw) {
+            "ok" -> Ok
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectionWakeResultStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionWakeResultStatus", PrimitiveKind.STRING)
 
@@ -758,10 +868,7 @@ public sealed interface ConnectionWakeResultStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectionWakeResultStatus) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -800,6 +907,31 @@ public sealed interface ConnectorAccountStatus {
     public data object Inactive : ConnectorAccountStatus
     public data class Unknown(public val raw: kotlin.String) : ConnectorAccountStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Pending -> "pending"
+            Active -> "active"
+            Failed -> "failed"
+            Expired -> "expired"
+            Revoked -> "revoked"
+            Inactive -> "inactive"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorAccountStatus = when (raw) {
+            "pending" -> Pending
+            "active" -> Active
+            "failed" -> Failed
+            "expired" -> Expired
+            "revoked" -> Revoked
+            "inactive" -> Inactive
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorAccountStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorAccountStatus", PrimitiveKind.STRING)
 
@@ -814,16 +946,7 @@ public sealed interface ConnectorAccountStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorAccountStatus) {
-            val raw: kotlin.String = when (value) {
-                Pending -> "pending"
-                Active -> "active"
-                Failed -> "failed"
-                Expired -> "expired"
-                Revoked -> "revoked"
-                Inactive -> "inactive"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -926,6 +1049,20 @@ public data class ConnectorAccountsRemoveResult(
 public sealed interface ConnectorAccountsRemoveResultStatus {
     public data object Removed : ConnectorAccountsRemoveResultStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Removed -> "removed"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorAccountsRemoveResultStatus? = when (raw) {
+            "removed" -> Removed
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorAccountsRemoveResultStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorAccountsRemoveResultStatus", PrimitiveKind.STRING)
 
@@ -935,10 +1072,7 @@ public sealed interface ConnectorAccountsRemoveResultStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorAccountsRemoveResultStatus) {
-            val raw: kotlin.String = when (value) {
-                Removed -> "removed"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -981,6 +1115,20 @@ public data class ConnectorChange(
 public sealed interface ConnectorChangeType {
     public data object Connector : ConnectorChangeType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Connector -> "connector"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorChangeType? = when (raw) {
+            "connector" -> Connector
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorChangeType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorChangeType", PrimitiveKind.STRING)
 
@@ -990,10 +1138,7 @@ public sealed interface ConnectorChangeType {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorChangeType) {
-            val raw: kotlin.String = when (value) {
-                Connector -> "connector"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -1026,6 +1171,65 @@ public sealed interface ConnectorErrorReason {
     public data object INVALIDPOLICY : ConnectorErrorReason
     public data class Unknown(public val raw: kotlin.String) : ConnectorErrorReason
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            INVALIDPARAMS -> "INVALID_PARAMS"
+            NOTOWNER -> "NOT_OWNER"
+            UNSUPPORTEDRUNTIME -> "UNSUPPORTED_RUNTIME"
+            CONNECTORREQUESTFAILED -> "CONNECTOR_REQUEST_FAILED"
+            INVALIDCONNECTORRESPONSE -> "INVALID_CONNECTOR_RESPONSE"
+            UNKNOWNTARGET -> "UNKNOWN_TARGET"
+            LINKSTILLVALID -> "LINK_STILL_VALID"
+            REISSUEREFUSED -> "REISSUE_REFUSED"
+            UNKNOWNOPERATION -> "UNKNOWN_OPERATION"
+            INVALIDANSWER -> "INVALID_ANSWER"
+            NEEDSNOUSAUTH -> "NEEDS_NOUS_AUTH"
+            CONNECTORNOTFOUND -> "CONNECTOR_NOT_FOUND"
+            TOOLSUNAVAILABLE -> "TOOLS_UNAVAILABLE"
+            CONNECTORSUNAVAILABLE -> "CONNECTORS_UNAVAILABLE"
+            CATALOGUNAVAILABLE -> "CATALOG_UNAVAILABLE"
+            ACCOUNTSUNAVAILABLE -> "ACCOUNTS_UNAVAILABLE"
+            CONNECTIONNOTFOUND -> "CONNECTION_NOT_FOUND"
+            POLICYUNAVAILABLE -> "POLICY_UNAVAILABLE"
+            POLICYCONFLICT -> "POLICY_CONFLICT"
+            FORBIDDENSCOPE -> "FORBIDDEN_SCOPE"
+            ORGREQUIRED -> "ORG_REQUIRED"
+            ORGACCESSDENIED -> "ORG_ACCESS_DENIED"
+            INVALIDPOLICY -> "INVALID_POLICY"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorErrorReason = when (raw) {
+            "INVALID_PARAMS" -> INVALIDPARAMS
+            "NOT_OWNER" -> NOTOWNER
+            "UNSUPPORTED_RUNTIME" -> UNSUPPORTEDRUNTIME
+            "CONNECTOR_REQUEST_FAILED" -> CONNECTORREQUESTFAILED
+            "INVALID_CONNECTOR_RESPONSE" -> INVALIDCONNECTORRESPONSE
+            "UNKNOWN_TARGET" -> UNKNOWNTARGET
+            "LINK_STILL_VALID" -> LINKSTILLVALID
+            "REISSUE_REFUSED" -> REISSUEREFUSED
+            "UNKNOWN_OPERATION" -> UNKNOWNOPERATION
+            "INVALID_ANSWER" -> INVALIDANSWER
+            "NEEDS_NOUS_AUTH" -> NEEDSNOUSAUTH
+            "CONNECTOR_NOT_FOUND" -> CONNECTORNOTFOUND
+            "TOOLS_UNAVAILABLE" -> TOOLSUNAVAILABLE
+            "CONNECTORS_UNAVAILABLE" -> CONNECTORSUNAVAILABLE
+            "CATALOG_UNAVAILABLE" -> CATALOGUNAVAILABLE
+            "ACCOUNTS_UNAVAILABLE" -> ACCOUNTSUNAVAILABLE
+            "CONNECTION_NOT_FOUND" -> CONNECTIONNOTFOUND
+            "POLICY_UNAVAILABLE" -> POLICYUNAVAILABLE
+            "POLICY_CONFLICT" -> POLICYCONFLICT
+            "FORBIDDEN_SCOPE" -> FORBIDDENSCOPE
+            "ORG_REQUIRED" -> ORGREQUIRED
+            "ORG_ACCESS_DENIED" -> ORGACCESSDENIED
+            "INVALID_POLICY" -> INVALIDPOLICY
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorErrorReason> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorErrorReason", PrimitiveKind.STRING)
 
@@ -1057,33 +1261,7 @@ public sealed interface ConnectorErrorReason {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorErrorReason) {
-            val raw: kotlin.String = when (value) {
-                INVALIDPARAMS -> "INVALID_PARAMS"
-                NOTOWNER -> "NOT_OWNER"
-                UNSUPPORTEDRUNTIME -> "UNSUPPORTED_RUNTIME"
-                CONNECTORREQUESTFAILED -> "CONNECTOR_REQUEST_FAILED"
-                INVALIDCONNECTORRESPONSE -> "INVALID_CONNECTOR_RESPONSE"
-                UNKNOWNTARGET -> "UNKNOWN_TARGET"
-                LINKSTILLVALID -> "LINK_STILL_VALID"
-                REISSUEREFUSED -> "REISSUE_REFUSED"
-                UNKNOWNOPERATION -> "UNKNOWN_OPERATION"
-                INVALIDANSWER -> "INVALID_ANSWER"
-                NEEDSNOUSAUTH -> "NEEDS_NOUS_AUTH"
-                CONNECTORNOTFOUND -> "CONNECTOR_NOT_FOUND"
-                TOOLSUNAVAILABLE -> "TOOLS_UNAVAILABLE"
-                CONNECTORSUNAVAILABLE -> "CONNECTORS_UNAVAILABLE"
-                CATALOGUNAVAILABLE -> "CATALOG_UNAVAILABLE"
-                ACCOUNTSUNAVAILABLE -> "ACCOUNTS_UNAVAILABLE"
-                CONNECTIONNOTFOUND -> "CONNECTION_NOT_FOUND"
-                POLICYUNAVAILABLE -> "POLICY_UNAVAILABLE"
-                POLICYCONFLICT -> "POLICY_CONFLICT"
-                FORBIDDENSCOPE -> "FORBIDDEN_SCOPE"
-                ORGREQUIRED -> "ORG_REQUIRED"
-                ORGACCESSDENIED -> "ORG_ACCESS_DENIED"
-                INVALIDPOLICY -> "INVALID_POLICY"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

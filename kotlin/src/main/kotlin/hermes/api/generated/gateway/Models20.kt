@@ -347,6 +347,25 @@ public sealed interface TurnStatus {
     public data object Interrupted : TurnStatus
     public data class Unknown(public val raw: kotlin.String) : TurnStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Complete -> "complete"
+            Error -> "error"
+            Interrupted -> "interrupted"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): TurnStatus = when (raw) {
+            "complete" -> Complete
+            "error" -> Error
+            "interrupted" -> Interrupted
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<TurnStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TurnStatus", PrimitiveKind.STRING)
 
@@ -358,13 +377,7 @@ public sealed interface TurnStatus {
         }
 
         override fun serialize(encoder: Encoder, value: TurnStatus) {
-            val raw: kotlin.String = when (value) {
-                Complete -> "complete"
-                Error -> "error"
-                Interrupted -> "interrupted"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -506,6 +519,23 @@ public sealed interface UsageBarKind {
     public data object Topup : UsageBarKind
     public data class Unknown(public val raw: kotlin.String) : UsageBarKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Plan -> "plan"
+            Topup -> "topup"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): UsageBarKind = when (raw) {
+            "plan" -> Plan
+            "topup" -> Topup
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<UsageBarKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("UsageBarKind", PrimitiveKind.STRING)
 
@@ -516,12 +546,7 @@ public sealed interface UsageBarKind {
         }
 
         override fun serialize(encoder: Encoder, value: UsageBarKind) {
-            val raw: kotlin.String = when (value) {
-                Plan -> "plan"
-                Topup -> "topup"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -708,6 +733,25 @@ public sealed interface VaultKind {
     public data object Address : VaultKind
     public data class Unknown(public val raw: kotlin.String) : VaultKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Login -> "login"
+            Payment -> "payment"
+            Address -> "address"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VaultKind = when (raw) {
+            "login" -> Login
+            "payment" -> Payment
+            "address" -> Address
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VaultKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VaultKind", PrimitiveKind.STRING)
 
@@ -719,13 +763,7 @@ public sealed interface VaultKind {
         }
 
         override fun serialize(encoder: Encoder, value: VaultKind) {
-            val raw: kotlin.String = when (value) {
-                Login -> "login"
-                Payment -> "payment"
-                Address -> "address"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

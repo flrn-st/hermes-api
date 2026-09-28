@@ -55,3 +55,12 @@ import Testing
         try JSONDecoder().decode(ConnectorPolicyEffectiveAllow.self, from: policy(version: 2))
     }
 }
+
+@Test func stringEnumsRoundTripTheirRawValues() throws {
+    #expect(ApprovalChoice(rawValue: "once") == .once)
+    #expect(ApprovalChoice(rawValue: "later") == .unknown("later"))
+    #expect(ApprovalChoice.deny.rawValue == "deny")
+    #expect(ApprovalChoice.unknown("later").rawValue == "later")
+    let encoded = try JSONEncoder().encode([ApprovalChoice.session, .unknown("later")])
+    #expect(String(decoding: encoded, as: UTF8.self) == #"["session","later"]"#)
+}

@@ -1198,12 +1198,34 @@ public struct HealthIdleResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum HealthIdleResponseReason: Codable, Sendable, Hashable {
+public enum HealthIdleResponseReason: Codable, Sendable, Hashable, RawRepresentable {
     case turnProbeUnavailable
     case turnInFlight
     case inputProbeUnavailable
     case awaitingHumanInput
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "turn_probe_unavailable": self = .turnProbeUnavailable
+        case "turn_in_flight": self = .turnInFlight
+        case "input_probe_unavailable": self = .inputProbeUnavailable
+        case "awaiting_human_input": self = .awaitingHumanInput
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .turnProbeUnavailable: "turn_probe_unavailable"
+        case .turnInFlight: "turn_in_flight"
+        case .inputProbeUnavailable: "input_probe_unavailable"
+        case .awaitingHumanInput: "awaiting_human_input"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1222,13 +1244,7 @@ public enum HealthIdleResponseReason: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .turnProbeUnavailable: try container.encode("turn_probe_unavailable")
-        case .turnInFlight: try container.encode("turn_in_flight")
-        case .inputProbeUnavailable: try container.encode("input_probe_unavailable")
-        case .awaitingHumanInput: try container.encode("awaiting_human_input")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1310,11 +1326,31 @@ public struct HealthRetirementRequest: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum HealthRetirementRequestAction: Codable, Sendable, Hashable {
+public enum HealthRetirementRequestAction: Codable, Sendable, Hashable, RawRepresentable {
     case prepare
     case commit
     case cancel
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "prepare": self = .prepare
+        case "commit": self = .commit
+        case "cancel": self = .cancel
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .prepare: "prepare"
+        case .commit: "commit"
+        case .cancel: "cancel"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1332,12 +1368,7 @@ public enum HealthRetirementRequestAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .prepare: try container.encode("prepare")
-        case .commit: try container.encode("commit")
-        case .cancel: try container.encode("cancel")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

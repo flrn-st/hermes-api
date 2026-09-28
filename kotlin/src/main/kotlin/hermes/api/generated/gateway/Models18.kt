@@ -211,6 +211,29 @@ public sealed interface SkillsAction {
     public data object Inspect : SkillsAction
     public data class Unknown(public val raw: kotlin.String) : SkillsAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            List -> "list"
+            Search -> "search"
+            Install -> "install"
+            Browse -> "browse"
+            Inspect -> "inspect"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SkillsAction = when (raw) {
+            "list" -> List
+            "search" -> Search
+            "install" -> Install
+            "browse" -> Browse
+            "inspect" -> Inspect
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SkillsAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillsAction", PrimitiveKind.STRING)
 
@@ -224,15 +247,7 @@ public sealed interface SkillsAction {
         }
 
         override fun serialize(encoder: Encoder, value: SkillsAction) {
-            val raw: kotlin.String = when (value) {
-                List -> "list"
-                Search -> "search"
-                Install -> "install"
-                Browse -> "browse"
-                Inspect -> "inspect"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -833,6 +848,23 @@ public sealed interface SteerStatus {
     public data object Rejected : SteerStatus
     public data class Unknown(public val raw: kotlin.String) : SteerStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Queued -> "queued"
+            Rejected -> "rejected"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SteerStatus = when (raw) {
+            "queued" -> Queued
+            "rejected" -> Rejected
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SteerStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SteerStatus", PrimitiveKind.STRING)
 
@@ -843,12 +875,7 @@ public sealed interface SteerStatus {
         }
 
         override fun serialize(encoder: Encoder, value: SteerStatus) {
-            val raw: kotlin.String = when (value) {
-                Queued -> "queued"
-                Rejected -> "rejected"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -1026,6 +1053,33 @@ public sealed interface SubagentStatus {
     public data object Interrupted : SubagentStatus
     public data class Unknown(public val raw: kotlin.String) : SubagentStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Queued -> "queued"
+            Running -> "running"
+            Completed -> "completed"
+            Failed -> "failed"
+            Error -> "error"
+            Timeout -> "timeout"
+            Interrupted -> "interrupted"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SubagentStatus = when (raw) {
+            "queued" -> Queued
+            "running" -> Running
+            "completed" -> Completed
+            "failed" -> Failed
+            "error" -> Error
+            "timeout" -> Timeout
+            "interrupted" -> Interrupted
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SubagentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SubagentStatus", PrimitiveKind.STRING)
 
@@ -1041,17 +1095,7 @@ public sealed interface SubagentStatus {
         }
 
         override fun serialize(encoder: Encoder, value: SubagentStatus) {
-            val raw: kotlin.String = when (value) {
-                Queued -> "queued"
-                Running -> "running"
-                Completed -> "completed"
-                Failed -> "failed"
-                Error -> "error"
-                Timeout -> "timeout"
-                Interrupted -> "interrupted"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

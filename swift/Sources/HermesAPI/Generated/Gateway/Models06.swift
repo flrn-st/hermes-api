@@ -924,10 +924,28 @@ public struct ForeignSessionRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ForeignSource: Codable, Sendable, Hashable {
+public enum ForeignSource: Codable, Sendable, Hashable, RawRepresentable {
     case claude
     case codex
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "claude": self = .claude
+        case "codex": self = .codex
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .claude: "claude"
+        case .codex: "codex"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -940,11 +958,7 @@ public enum ForeignSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .claude: try container.encode("claude")
-        case .codex: try container.encode("codex")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

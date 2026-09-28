@@ -77,4 +77,14 @@ class GeneratedModelTest {
             Json.decodeFromString(ConnectorPolicyEffectiveAllow.serializer(), policy(2))
         }
     }
+
+    @Test
+    fun stringEnumsRoundTripTheirRawValues() {
+        assertEquals(hermes.api.generated.gateway.ApprovalChoice.Once,
+            hermes.api.generated.gateway.ApprovalChoice.fromRawValue("once"))
+        assertEquals(hermes.api.generated.gateway.ApprovalChoice.Unknown("later"),
+            hermes.api.generated.gateway.ApprovalChoice.fromRawValue("later"))
+        assertEquals("deny", hermes.api.generated.gateway.ApprovalChoice.Deny.rawValue)
+        assertEquals("later", hermes.api.generated.gateway.ApprovalChoice.Unknown("later").rawValue)
+    }
 }

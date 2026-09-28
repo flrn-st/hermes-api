@@ -86,6 +86,20 @@ public data class WhatsAppOnboardingApplyResponse(
 public sealed interface WhatsAppOnboardingApplyResponsePlatform {
     public data object Whatsapp : WhatsAppOnboardingApplyResponsePlatform
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Whatsapp -> "whatsapp"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingApplyResponsePlatform? = when (raw) {
+            "whatsapp" -> Whatsapp
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<WhatsAppOnboardingApplyResponsePlatform> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingApplyResponsePlatform", PrimitiveKind.STRING)
 
@@ -95,10 +109,7 @@ public sealed interface WhatsAppOnboardingApplyResponsePlatform {
         }
 
         override fun serialize(encoder: Encoder, value: WhatsAppOnboardingApplyResponsePlatform) {
-            val raw: kotlin.String = when (value) {
-                Whatsapp -> "whatsapp"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -107,6 +118,20 @@ public sealed interface WhatsAppOnboardingApplyResponsePlatform {
 @Serializable(with = WhatsAppOnboardingApplyResponseRestartAction.Serializer::class)
 public sealed interface WhatsAppOnboardingApplyResponseRestartAction {
     public data object GatewayRestart : WhatsAppOnboardingApplyResponseRestartAction
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            GatewayRestart -> "gateway-restart"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingApplyResponseRestartAction? = when (raw) {
+            "gateway-restart" -> GatewayRestart
+            else -> null
+        }
+    }
 
     public object Serializer : KSerializer<WhatsAppOnboardingApplyResponseRestartAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingApplyResponseRestartAction", PrimitiveKind.STRING)
@@ -117,10 +142,7 @@ public sealed interface WhatsAppOnboardingApplyResponseRestartAction {
         }
 
         override fun serialize(encoder: Encoder, value: WhatsAppOnboardingApplyResponseRestartAction) {
-            val raw: kotlin.String = when (value) {
-                GatewayRestart -> "gateway-restart"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -157,6 +179,23 @@ public sealed interface WhatsAppOnboardingResponseMode {
     public data object SelfChat : WhatsAppOnboardingResponseMode
     public data class Unknown(public val raw: kotlin.String) : WhatsAppOnboardingResponseMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Bot -> "bot"
+            SelfChat -> "self-chat"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingResponseMode = when (raw) {
+            "bot" -> Bot
+            "self-chat" -> SelfChat
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<WhatsAppOnboardingResponseMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingResponseMode", PrimitiveKind.STRING)
 
@@ -167,12 +206,7 @@ public sealed interface WhatsAppOnboardingResponseMode {
         }
 
         override fun serialize(encoder: Encoder, value: WhatsAppOnboardingResponseMode) {
-            val raw: kotlin.String = when (value) {
-                Bot -> "bot"
-                SelfChat -> "self-chat"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -189,6 +223,33 @@ public sealed interface WhatsAppOnboardingResponseStatus {
     public data object Cancelled : WhatsAppOnboardingResponseStatus
     public data class Unknown(public val raw: kotlin.String) : WhatsAppOnboardingResponseStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Starting -> "starting"
+            Installing -> "installing"
+            Waiting -> "waiting"
+            Connected -> "connected"
+            Error -> "error"
+            Expired -> "expired"
+            Cancelled -> "cancelled"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingResponseStatus = when (raw) {
+            "starting" -> Starting
+            "installing" -> Installing
+            "waiting" -> Waiting
+            "connected" -> Connected
+            "error" -> Error
+            "expired" -> Expired
+            "cancelled" -> Cancelled
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<WhatsAppOnboardingResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingResponseStatus", PrimitiveKind.STRING)
 
@@ -204,17 +265,7 @@ public sealed interface WhatsAppOnboardingResponseStatus {
         }
 
         override fun serialize(encoder: Encoder, value: WhatsAppOnboardingResponseStatus) {
-            val raw: kotlin.String = when (value) {
-                Starting -> "starting"
-                Installing -> "installing"
-                Waiting -> "waiting"
-                Connected -> "connected"
-                Error -> "error"
-                Expired -> "expired"
-                Cancelled -> "cancelled"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

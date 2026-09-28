@@ -883,12 +883,34 @@ public struct CronBlueprintField: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum CronBlueprintFieldType: Codable, Sendable, Hashable {
+public enum CronBlueprintFieldType: Codable, Sendable, Hashable, RawRepresentable {
     case time
     case `enum`
     case text
     case weekdays
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "time": self = .time
+        case "enum": self = .`enum`
+        case "text": self = .text
+        case "weekdays": self = .weekdays
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .time: "time"
+        case .`enum`: "enum"
+        case .text: "text"
+        case .weekdays: "weekdays"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -907,13 +929,7 @@ public enum CronBlueprintFieldType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .time: try container.encode("time")
-        case .`enum`: try container.encode("enum")
-        case .text: try container.encode("text")
-        case .weekdays: try container.encode("weekdays")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1661,13 +1677,37 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum CronJobExecutionStatus: Codable, Sendable, Hashable {
+public enum CronJobExecutionStatus: Codable, Sendable, Hashable, RawRepresentable {
     case claimed
     case running
     case completed
     case failed
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "claimed": self = .claimed
+        case "running": self = .running
+        case "completed": self = .completed
+        case "failed": self = .failed
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .claimed: "claimed"
+        case .running: "running"
+        case .completed: "completed"
+        case .failed: "failed"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1687,14 +1727,7 @@ public enum CronJobExecutionStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .claimed: try container.encode("claimed")
-        case .running: try container.encode("running")
-        case .completed: try container.encode("completed")
-        case .failed: try container.encode("failed")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -2257,11 +2290,31 @@ public struct CronJobSchedule: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum CronJobScheduleKind: Codable, Sendable, Hashable {
+public enum CronJobScheduleKind: Codable, Sendable, Hashable, RawRepresentable {
     case once
     case interval
     case cron
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "once": self = .once
+        case "interval": self = .interval
+        case "cron": self = .cron
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .once: "once"
+        case .interval: "interval"
+        case .cron: "cron"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -2279,12 +2332,7 @@ public enum CronJobScheduleKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .once: try container.encode("once")
-        case .interval: try container.encode("interval")
-        case .cron: try container.encode("cron")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

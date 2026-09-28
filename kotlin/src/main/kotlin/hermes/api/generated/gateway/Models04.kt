@@ -26,6 +26,20 @@ public data class ConnectorPolicyAllowBody(
 public sealed interface ConnectorPolicyAllowBodyMode {
     public data object Allow : ConnectorPolicyAllowBodyMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Allow -> "allow"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyAllowBodyMode? = when (raw) {
+            "allow" -> Allow
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyAllowBodyMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyAllowBodyMode", PrimitiveKind.STRING)
 
@@ -35,10 +49,7 @@ public sealed interface ConnectorPolicyAllowBodyMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyAllowBodyMode) {
-            val raw: kotlin.String = when (value) {
-                Allow -> "allow"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -55,6 +66,20 @@ public data class ConnectorPolicyDenyAllBody(
 public sealed interface ConnectorPolicyDenyAllBodyMode {
     public data object DenyAll : ConnectorPolicyDenyAllBodyMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            DenyAll -> "deny-all"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyDenyAllBodyMode? = when (raw) {
+            "deny-all" -> DenyAll
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyDenyAllBodyMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyDenyAllBodyMode", PrimitiveKind.STRING)
 
@@ -64,10 +89,7 @@ public sealed interface ConnectorPolicyDenyAllBodyMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyDenyAllBodyMode) {
-            val raw: kotlin.String = when (value) {
-                DenyAll -> "deny-all"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -90,6 +112,20 @@ public data class ConnectorPolicyDenyBody(
 public sealed interface ConnectorPolicyDenyBodyMode {
     public data object Deny : ConnectorPolicyDenyBodyMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Deny -> "deny"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyDenyBodyMode? = when (raw) {
+            "deny" -> Deny
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyDenyBodyMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyDenyBodyMode", PrimitiveKind.STRING)
 
@@ -99,10 +135,7 @@ public sealed interface ConnectorPolicyDenyBodyMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyDenyBodyMode) {
-            val raw: kotlin.String = when (value) {
-                Deny -> "deny"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -137,6 +170,20 @@ public data class ConnectorPolicyEffectiveAllow(
 public sealed interface ConnectorPolicyEffectiveAllowMode {
     public data object Allow : ConnectorPolicyEffectiveAllowMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Allow -> "allow"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveAllowMode? = when (raw) {
+            "allow" -> Allow
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyEffectiveAllowMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveAllowMode", PrimitiveKind.STRING)
 
@@ -146,10 +193,7 @@ public sealed interface ConnectorPolicyEffectiveAllowMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveAllowMode) {
-            val raw: kotlin.String = when (value) {
-                Allow -> "allow"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -203,6 +247,20 @@ public data class ConnectorPolicyEffectiveDenyAll(
 public sealed interface ConnectorPolicyEffectiveDenyAllMode {
     public data object DenyAll : ConnectorPolicyEffectiveDenyAllMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            DenyAll -> "deny-all"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveDenyAllMode? = when (raw) {
+            "deny-all" -> DenyAll
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyEffectiveDenyAllMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveDenyAllMode", PrimitiveKind.STRING)
 
@@ -212,10 +270,7 @@ public sealed interface ConnectorPolicyEffectiveDenyAllMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveDenyAllMode) {
-            val raw: kotlin.String = when (value) {
-                DenyAll -> "deny-all"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -224,6 +279,20 @@ public sealed interface ConnectorPolicyEffectiveDenyAllMode {
 @Serializable(with = ConnectorPolicyEffectiveDenyMode.Serializer::class)
 public sealed interface ConnectorPolicyEffectiveDenyMode {
     public data object Deny : ConnectorPolicyEffectiveDenyMode
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Deny -> "deny"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveDenyMode? = when (raw) {
+            "deny" -> Deny
+            else -> null
+        }
+    }
 
     public object Serializer : KSerializer<ConnectorPolicyEffectiveDenyMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveDenyMode", PrimitiveKind.STRING)
@@ -234,10 +303,7 @@ public sealed interface ConnectorPolicyEffectiveDenyMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveDenyMode) {
-            val raw: kotlin.String = when (value) {
-                Deny -> "deny"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -266,6 +332,20 @@ public data class ConnectorPolicyEffectiveUnrestricted(
 public sealed interface ConnectorPolicyEffectiveUnrestrictedMode {
     public data object Unrestricted : ConnectorPolicyEffectiveUnrestrictedMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Unrestricted -> "unrestricted"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveUnrestrictedMode? = when (raw) {
+            "unrestricted" -> Unrestricted
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyEffectiveUnrestrictedMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveUnrestrictedMode", PrimitiveKind.STRING)
 
@@ -275,10 +355,7 @@ public sealed interface ConnectorPolicyEffectiveUnrestrictedMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveUnrestrictedMode) {
-            val raw: kotlin.String = when (value) {
-                Unrestricted -> "unrestricted"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -399,6 +476,25 @@ public sealed interface ConnectorPolicyLayerKind {
     public data object Member : ConnectorPolicyLayerKind
     public data class Unknown(public val raw: kotlin.String) : ConnectorPolicyLayerKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Org -> "org"
+            Role -> "role"
+            Member -> "member"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyLayerKind = when (raw) {
+            "org" -> Org
+            "role" -> Role
+            "member" -> Member
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyLayerKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyLayerKind", PrimitiveKind.STRING)
 
@@ -410,13 +506,7 @@ public sealed interface ConnectorPolicyLayerKind {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyLayerKind) {
-            val raw: kotlin.String = when (value) {
-                Org -> "org"
-                Role -> "role"
-                Member -> "member"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -575,6 +665,20 @@ public data class ConnectorPolicyUnrestrictedBody(
 public sealed interface ConnectorPolicyUnrestrictedBodyMode {
     public data object Unrestricted : ConnectorPolicyUnrestrictedBodyMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Unrestricted -> "unrestricted"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyUnrestrictedBodyMode? = when (raw) {
+            "unrestricted" -> Unrestricted
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorPolicyUnrestrictedBodyMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyUnrestrictedBodyMode", PrimitiveKind.STRING)
 
@@ -584,10 +688,7 @@ public sealed interface ConnectorPolicyUnrestrictedBodyMode {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorPolicyUnrestrictedBodyMode) {
-            val raw: kotlin.String = when (value) {
-                Unrestricted -> "unrestricted"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -620,6 +721,31 @@ public sealed interface ConnectorRowConnectionStatus {
     public data object Inactive : ConnectorRowConnectionStatus
     public data class Unknown(public val raw: kotlin.String) : ConnectorRowConnectionStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Pending -> "pending"
+            Active -> "active"
+            Failed -> "failed"
+            Expired -> "expired"
+            Revoked -> "revoked"
+            Inactive -> "inactive"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorRowConnectionStatus = when (raw) {
+            "pending" -> Pending
+            "active" -> Active
+            "failed" -> Failed
+            "expired" -> Expired
+            "revoked" -> Revoked
+            "inactive" -> Inactive
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorRowConnectionStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorRowConnectionStatus", PrimitiveKind.STRING)
 
@@ -634,16 +760,7 @@ public sealed interface ConnectorRowConnectionStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorRowConnectionStatus) {
-            val raw: kotlin.String = when (value) {
-                Pending -> "pending"
-                Active -> "active"
-                Failed -> "failed"
-                Expired -> "expired"
-                Revoked -> "revoked"
-                Inactive -> "inactive"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -657,6 +774,27 @@ public sealed interface ConnectorToolFacet {
     public data object Unclassified : ConnectorToolFacet
     public data class Unknown(public val raw: kotlin.String) : ConnectorToolFacet
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Read -> "read"
+            Write -> "write"
+            Destructive -> "destructive"
+            Unclassified -> "unclassified"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorToolFacet = when (raw) {
+            "read" -> Read
+            "write" -> Write
+            "destructive" -> Destructive
+            "unclassified" -> Unclassified
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorToolFacet> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorToolFacet", PrimitiveKind.STRING)
 
@@ -669,14 +807,7 @@ public sealed interface ConnectorToolFacet {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorToolFacet) {
-            val raw: kotlin.String = when (value) {
-                Read -> "read"
-                Write -> "write"
-                Destructive -> "destructive"
-                Unclassified -> "unclassified"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -770,6 +901,25 @@ public sealed interface ConnectorToolsSource {
     public data object Revalidated : ConnectorToolsSource
     public data class Unknown(public val raw: kotlin.String) : ConnectorToolsSource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Cache -> "cache"
+            Network -> "network"
+            Revalidated -> "revalidated"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorToolsSource = when (raw) {
+            "cache" -> Cache
+            "network" -> Network
+            "revalidated" -> Revalidated
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorToolsSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorToolsSource", PrimitiveKind.STRING)
 
@@ -781,13 +931,7 @@ public sealed interface ConnectorToolsSource {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorToolsSource) {
-            val raw: kotlin.String = when (value) {
-                Cache -> "cache"
-                Network -> "network"
-                Revalidated -> "revalidated"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

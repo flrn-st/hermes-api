@@ -20,6 +20,20 @@ public data class AccountOwner(
 public sealed interface AccountOwnerType {
     public data object Account : AccountOwnerType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Account -> "account"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): AccountOwnerType? = when (raw) {
+            "account" -> Account
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<AccountOwnerType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AccountOwnerType", PrimitiveKind.STRING)
 
@@ -29,10 +43,7 @@ public sealed interface AccountOwnerType {
         }
 
         override fun serialize(encoder: Encoder, value: AccountOwnerType) {
-            val raw: kotlin.String = when (value) {
-                Account -> "account"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -214,6 +225,27 @@ public sealed interface ApprovalChoice {
     public data object Deny : ApprovalChoice
     public data class Unknown(public val raw: kotlin.String) : ApprovalChoice
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Once -> "once"
+            Session -> "session"
+            Always -> "always"
+            Deny -> "deny"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ApprovalChoice = when (raw) {
+            "once" -> Once
+            "session" -> Session
+            "always" -> Always
+            "deny" -> Deny
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ApprovalChoice> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ApprovalChoice", PrimitiveKind.STRING)
 
@@ -226,14 +258,7 @@ public sealed interface ApprovalChoice {
         }
 
         override fun serialize(encoder: Encoder, value: ApprovalChoice) {
-            val raw: kotlin.String = when (value) {
-                Once -> "once"
-                Session -> "session"
-                Always -> "always"
-                Deny -> "deny"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -499,6 +524,25 @@ public sealed interface ArgumentMode {
     public data object Mixed : ArgumentMode
     public data class Unknown(public val raw: kotlin.String) : ArgumentMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Options -> "options"
+            Text -> "text"
+            Mixed -> "mixed"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ArgumentMode = when (raw) {
+            "options" -> Options
+            "text" -> Text
+            "mixed" -> Mixed
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ArgumentMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ArgumentMode", PrimitiveKind.STRING)
 
@@ -510,13 +554,7 @@ public sealed interface ArgumentMode {
         }
 
         override fun serialize(encoder: Encoder, value: ArgumentMode) {
-            val raw: kotlin.String = when (value) {
-                Options -> "options"
-                Text -> "text"
-                Mixed -> "mixed"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -565,6 +603,25 @@ public sealed interface AutoReloadCardKind {
     public data object None : AutoReloadCardKind
     public data class Unknown(public val raw: kotlin.String) : AutoReloadCardKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Canonical -> "canonical"
+            Distinct -> "distinct"
+            None -> "none"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AutoReloadCardKind = when (raw) {
+            "canonical" -> Canonical
+            "distinct" -> Distinct
+            "none" -> None
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<AutoReloadCardKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AutoReloadCardKind", PrimitiveKind.STRING)
 
@@ -576,13 +633,7 @@ public sealed interface AutoReloadCardKind {
         }
 
         override fun serialize(encoder: Encoder, value: AutoReloadCardKind) {
-            val raw: kotlin.String = when (value) {
-                Canonical -> "canonical"
-                Distinct -> "distinct"
-                None -> "none"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -597,6 +648,29 @@ public sealed interface BatteryCategory {
     public data object Dim : BatteryCategory
     public data class Unknown(public val raw: kotlin.String) : BatteryCategory
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Good -> "good"
+            Warn -> "warn"
+            Bad -> "bad"
+            Critical -> "critical"
+            Dim -> "dim"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): BatteryCategory = when (raw) {
+            "good" -> Good
+            "warn" -> Warn
+            "bad" -> Bad
+            "critical" -> Critical
+            "dim" -> Dim
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<BatteryCategory> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("BatteryCategory", PrimitiveKind.STRING)
 
@@ -610,15 +684,7 @@ public sealed interface BatteryCategory {
         }
 
         override fun serialize(encoder: Encoder, value: BatteryCategory) {
-            val raw: kotlin.String = when (value) {
-                Good -> "good"
-                Warn -> "warn"
-                Bad -> "bad"
-                Critical -> "critical"
-                Dim -> "dim"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

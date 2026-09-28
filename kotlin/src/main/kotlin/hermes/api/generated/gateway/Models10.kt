@@ -252,6 +252,20 @@ public data class OnboardingEnsureSetupProfileResult(
 public sealed interface OnboardingEnsureSetupProfileResultRole {
     public data object Setup : OnboardingEnsureSetupProfileResultRole
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Setup -> "setup"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): OnboardingEnsureSetupProfileResultRole? = when (raw) {
+            "setup" -> Setup
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<OnboardingEnsureSetupProfileResultRole> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OnboardingEnsureSetupProfileResultRole", PrimitiveKind.STRING)
 
@@ -261,10 +275,7 @@ public sealed interface OnboardingEnsureSetupProfileResultRole {
         }
 
         override fun serialize(encoder: Encoder, value: OnboardingEnsureSetupProfileResultRole) {
-            val raw: kotlin.String = when (value) {
-                Setup -> "setup"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -394,6 +405,25 @@ public sealed interface PaymentMethodKind {
     public data object KnownUnknown : PaymentMethodKind
     public data class Unknown(public val raw: kotlin.String) : PaymentMethodKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Card -> "card"
+            Link -> "link"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PaymentMethodKind = when (raw) {
+            "card" -> Card
+            "link" -> Link
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PaymentMethodKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PaymentMethodKind", PrimitiveKind.STRING)
 
@@ -405,13 +435,7 @@ public sealed interface PaymentMethodKind {
         }
 
         override fun serialize(encoder: Encoder, value: PaymentMethodKind) {
-            val raw: kotlin.String = when (value) {
-                Card -> "card"
-                Link -> "link"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

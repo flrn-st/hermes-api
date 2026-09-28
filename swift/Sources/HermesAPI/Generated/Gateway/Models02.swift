@@ -2,11 +2,31 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum CatalogScanStatus: Codable, Sendable, Hashable {
+public enum CatalogScanStatus: Codable, Sendable, Hashable, RawRepresentable {
     case passed
     case warnings
     case failed
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "passed": self = .passed
+        case "warnings": self = .warnings
+        case "failed": self = .failed
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .passed: "passed"
+        case .warnings: "warnings"
+        case .failed: "failed"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -20,20 +40,33 @@ public enum CatalogScanStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .passed: try container.encode("passed")
-        case .warnings: try container.encode("warnings")
-        case .failed: try container.encode("failed")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum CatalogTier: Codable, Sendable, Hashable {
+public enum CatalogTier: Codable, Sendable, Hashable, RawRepresentable {
     case official
     case community
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "official": self = .official
+        case "community": self = .community
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .official: "official"
+        case .community: "community"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -46,11 +79,7 @@ public enum CatalogTier: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .official: try container.encode("official")
-        case .community: try container.encode("community")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -162,10 +191,28 @@ public struct ClarifyLockResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ClarifyLockStatus: Codable, Sendable, Hashable {
+public enum ClarifyLockStatus: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case expired
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "expired": self = .expired
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .expired: "expired"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -178,11 +225,7 @@ public enum ClarifyLockStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .expired: try container.encode("expired")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

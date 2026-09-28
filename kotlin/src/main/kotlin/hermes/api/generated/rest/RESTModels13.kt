@@ -20,6 +20,31 @@ public sealed interface OAuthSessionPollResponseStatus {
     public data object Cancelled : OAuthSessionPollResponseStatus
     public data class Unknown(public val raw: kotlin.String) : OAuthSessionPollResponseStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Pending -> "pending"
+            Approved -> "approved"
+            Denied -> "denied"
+            Expired -> "expired"
+            Error -> "error"
+            Cancelled -> "cancelled"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): OAuthSessionPollResponseStatus = when (raw) {
+            "pending" -> Pending
+            "approved" -> Approved
+            "denied" -> Denied
+            "expired" -> Expired
+            "error" -> Error
+            "cancelled" -> Cancelled
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<OAuthSessionPollResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OAuthSessionPollResponseStatus", PrimitiveKind.STRING)
 
@@ -34,16 +59,7 @@ public sealed interface OAuthSessionPollResponseStatus {
         }
 
         override fun serialize(encoder: Encoder, value: OAuthSessionPollResponseStatus) {
-            val raw: kotlin.String = when (value) {
-                Pending -> "pending"
-                Approved -> "approved"
-                Denied -> "denied"
-                Expired -> "expired"
-                Error -> "error"
-                Cancelled -> "cancelled"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -377,6 +393,37 @@ public sealed interface PluginCatalogEntryRowCategory {
     public data object General : PluginCatalogEntryRowCategory
     public data class Unknown(public val raw: kotlin.String) : PluginCatalogEntryRowCategory
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Desktop -> "desktop"
+            Memory -> "memory"
+            Platform -> "platform"
+            Web -> "web"
+            Tools -> "tools"
+            Voice -> "voice"
+            Automation -> "automation"
+            Models -> "models"
+            General -> "general"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginCatalogEntryRowCategory = when (raw) {
+            "desktop" -> Desktop
+            "memory" -> Memory
+            "platform" -> Platform
+            "web" -> Web
+            "tools" -> Tools
+            "voice" -> Voice
+            "automation" -> Automation
+            "models" -> Models
+            "general" -> General
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginCatalogEntryRowCategory> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginCatalogEntryRowCategory", PrimitiveKind.STRING)
 
@@ -394,19 +441,7 @@ public sealed interface PluginCatalogEntryRowCategory {
         }
 
         override fun serialize(encoder: Encoder, value: PluginCatalogEntryRowCategory) {
-            val raw: kotlin.String = when (value) {
-                Desktop -> "desktop"
-                Memory -> "memory"
-                Platform -> "platform"
-                Web -> "web"
-                Tools -> "tools"
-                Voice -> "voice"
-                Automation -> "automation"
-                Models -> "models"
-                General -> "general"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -419,6 +454,25 @@ public sealed interface PluginCatalogEntryRowRuntimeStatus {
     public data object Inactive : PluginCatalogEntryRowRuntimeStatus
     public data class Unknown(public val raw: kotlin.String) : PluginCatalogEntryRowRuntimeStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Enabled -> "enabled"
+            Disabled -> "disabled"
+            Inactive -> "inactive"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginCatalogEntryRowRuntimeStatus = when (raw) {
+            "enabled" -> Enabled
+            "disabled" -> Disabled
+            "inactive" -> Inactive
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginCatalogEntryRowRuntimeStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginCatalogEntryRowRuntimeStatus", PrimitiveKind.STRING)
 
@@ -430,13 +484,7 @@ public sealed interface PluginCatalogEntryRowRuntimeStatus {
         }
 
         override fun serialize(encoder: Encoder, value: PluginCatalogEntryRowRuntimeStatus) {
-            val raw: kotlin.String = when (value) {
-                Enabled -> "enabled"
-                Disabled -> "disabled"
-                Inactive -> "inactive"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -448,6 +496,23 @@ public sealed interface PluginCatalogEntryRowTier {
     public data object Community : PluginCatalogEntryRowTier
     public data class Unknown(public val raw: kotlin.String) : PluginCatalogEntryRowTier
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Official -> "official"
+            Community -> "community"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginCatalogEntryRowTier = when (raw) {
+            "official" -> Official
+            "community" -> Community
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginCatalogEntryRowTier> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginCatalogEntryRowTier", PrimitiveKind.STRING)
 
@@ -458,12 +523,7 @@ public sealed interface PluginCatalogEntryRowTier {
         }
 
         override fun serialize(encoder: Encoder, value: PluginCatalogEntryRowTier) {
-            val raw: kotlin.String = when (value) {
-                Official -> "official"
-                Community -> "community"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -553,6 +613,25 @@ public sealed interface PluginsHubPluginRowRuntimeStatus {
     public data object Inactive : PluginsHubPluginRowRuntimeStatus
     public data class Unknown(public val raw: kotlin.String) : PluginsHubPluginRowRuntimeStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Enabled -> "enabled"
+            Disabled -> "disabled"
+            Inactive -> "inactive"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginsHubPluginRowRuntimeStatus = when (raw) {
+            "enabled" -> Enabled
+            "disabled" -> Disabled
+            "inactive" -> Inactive
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginsHubPluginRowRuntimeStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginsHubPluginRowRuntimeStatus", PrimitiveKind.STRING)
 
@@ -564,13 +643,7 @@ public sealed interface PluginsHubPluginRowRuntimeStatus {
         }
 
         override fun serialize(encoder: Encoder, value: PluginsHubPluginRowRuntimeStatus) {
-            val raw: kotlin.String = when (value) {
-                Enabled -> "enabled"
-                Disabled -> "disabled"
-                Inactive -> "inactive"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -584,6 +657,27 @@ public sealed interface PluginsHubPluginRowSource {
     public data object Entrypoint : PluginsHubPluginRowSource
     public data class Unknown(public val raw: kotlin.String) : PluginsHubPluginRowSource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Bundled -> "bundled"
+            User -> "user"
+            Git -> "git"
+            Entrypoint -> "entrypoint"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginsHubPluginRowSource = when (raw) {
+            "bundled" -> Bundled
+            "user" -> User
+            "git" -> Git
+            "entrypoint" -> Entrypoint
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginsHubPluginRowSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginsHubPluginRowSource", PrimitiveKind.STRING)
 
@@ -596,14 +690,7 @@ public sealed interface PluginsHubPluginRowSource {
         }
 
         override fun serialize(encoder: Encoder, value: PluginsHubPluginRowSource) {
-            val raw: kotlin.String = when (value) {
-                Bundled -> "bundled"
-                User -> "user"
-                Git -> "git"
-                Entrypoint -> "entrypoint"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

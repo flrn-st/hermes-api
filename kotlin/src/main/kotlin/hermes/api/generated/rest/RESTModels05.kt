@@ -409,6 +409,27 @@ public sealed interface HealthIdleResponseReason {
     public data object AwaitingHumanInput : HealthIdleResponseReason
     public data class Unknown(public val raw: kotlin.String) : HealthIdleResponseReason
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            TurnProbeUnavailable -> "turn_probe_unavailable"
+            TurnInFlight -> "turn_in_flight"
+            InputProbeUnavailable -> "input_probe_unavailable"
+            AwaitingHumanInput -> "awaiting_human_input"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): HealthIdleResponseReason = when (raw) {
+            "turn_probe_unavailable" -> TurnProbeUnavailable
+            "turn_in_flight" -> TurnInFlight
+            "input_probe_unavailable" -> InputProbeUnavailable
+            "awaiting_human_input" -> AwaitingHumanInput
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<HealthIdleResponseReason> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("HealthIdleResponseReason", PrimitiveKind.STRING)
 
@@ -421,14 +442,7 @@ public sealed interface HealthIdleResponseReason {
         }
 
         override fun serialize(encoder: Encoder, value: HealthIdleResponseReason) {
-            val raw: kotlin.String = when (value) {
-                TurnProbeUnavailable -> "turn_probe_unavailable"
-                TurnInFlight -> "turn_in_flight"
-                InputProbeUnavailable -> "input_probe_unavailable"
-                AwaitingHumanInput -> "awaiting_human_input"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -461,6 +475,25 @@ public sealed interface HealthRetirementRequestAction {
     public data object Cancel : HealthRetirementRequestAction
     public data class Unknown(public val raw: kotlin.String) : HealthRetirementRequestAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Prepare -> "prepare"
+            Commit -> "commit"
+            Cancel -> "cancel"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): HealthRetirementRequestAction = when (raw) {
+            "prepare" -> Prepare
+            "commit" -> Commit
+            "cancel" -> Cancel
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<HealthRetirementRequestAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("HealthRetirementRequestAction", PrimitiveKind.STRING)
 
@@ -472,13 +505,7 @@ public sealed interface HealthRetirementRequestAction {
         }
 
         override fun serialize(encoder: Encoder, value: HealthRetirementRequestAction) {
-            val raw: kotlin.String = when (value) {
-                Prepare -> "prepare"
-                Commit -> "commit"
-                Cancel -> "cancel"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

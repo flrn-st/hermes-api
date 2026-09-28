@@ -637,6 +637,25 @@ public sealed interface BrowserAction {
     public data object Disconnect : BrowserAction
     public data class Unknown(public val raw: kotlin.String) : BrowserAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Status -> "status"
+            Connect -> "connect"
+            Disconnect -> "disconnect"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): BrowserAction = when (raw) {
+            "status" -> Status
+            "connect" -> Connect
+            "disconnect" -> Disconnect
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<BrowserAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("BrowserAction", PrimitiveKind.STRING)
 
@@ -648,13 +667,7 @@ public sealed interface BrowserAction {
         }
 
         override fun serialize(encoder: Encoder, value: BrowserAction) {
-            val raw: kotlin.String = when (value) {
-                Status -> "status"
-                Connect -> "connect"
-                Disconnect -> "disconnect"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -916,6 +929,27 @@ public sealed interface CatalogAppState {
     public data object KnownUnknown : CatalogAppState
     public data class Unknown(public val raw: kotlin.String) : CatalogAppState
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Present -> "present"
+            MissingApp -> "missing_app"
+            AppNotRunning -> "app_not_running"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CatalogAppState = when (raw) {
+            "present" -> Present
+            "missing_app" -> MissingApp
+            "app_not_running" -> AppNotRunning
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CatalogAppState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CatalogAppState", PrimitiveKind.STRING)
 
@@ -928,14 +962,7 @@ public sealed interface CatalogAppState {
         }
 
         override fun serialize(encoder: Encoder, value: CatalogAppState) {
-            val raw: kotlin.String = when (value) {
-                Present -> "present"
-                MissingApp -> "missing_app"
-                AppNotRunning -> "app_not_running"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

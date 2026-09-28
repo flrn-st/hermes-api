@@ -386,6 +386,20 @@ public data class ProfileSessionsResponse(
 public sealed interface ProfileSessionsResponseStorageValue {
     public data object Corrupt : ProfileSessionsResponseStorageValue
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Corrupt -> "corrupt"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ProfileSessionsResponseStorageValue? = when (raw) {
+            "corrupt" -> Corrupt
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ProfileSessionsResponseStorageValue> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ProfileSessionsResponseStorageValue", PrimitiveKind.STRING)
 
@@ -395,10 +409,7 @@ public sealed interface ProfileSessionsResponseStorageValue {
         }
 
         override fun serialize(encoder: Encoder, value: ProfileSessionsResponseStorageValue) {
-            val raw: kotlin.String = when (value) {
-                Corrupt -> "corrupt"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -423,6 +434,20 @@ public data class ProfileSessionsSidebarResponse(
 public sealed interface ProfileSessionsSidebarResponseStorageValue {
     public data object Corrupt : ProfileSessionsSidebarResponseStorageValue
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Corrupt -> "corrupt"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ProfileSessionsSidebarResponseStorageValue? = when (raw) {
+            "corrupt" -> Corrupt
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ProfileSessionsSidebarResponseStorageValue> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ProfileSessionsSidebarResponseStorageValue", PrimitiveKind.STRING)
 
@@ -432,10 +457,7 @@ public sealed interface ProfileSessionsSidebarResponseStorageValue {
         }
 
         override fun serialize(encoder: Encoder, value: ProfileSessionsSidebarResponseStorageValue) {
-            val raw: kotlin.String = when (value) {
-                Corrupt -> "corrupt"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

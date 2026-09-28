@@ -2,7 +2,7 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum OAuthSessionPollResponseStatus: Codable, Sendable, Hashable {
+public enum OAuthSessionPollResponseStatus: Codable, Sendable, Hashable, RawRepresentable {
     case pending
     case approved
     case denied
@@ -10,6 +10,32 @@ public enum OAuthSessionPollResponseStatus: Codable, Sendable, Hashable {
     case error
     case cancelled
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "pending": self = .pending
+        case "approved": self = .approved
+        case "denied": self = .denied
+        case "expired": self = .expired
+        case "error": self = .error
+        case "cancelled": self = .cancelled
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .pending: "pending"
+        case .approved: "approved"
+        case .denied: "denied"
+        case .expired: "expired"
+        case .error: "error"
+        case .cancelled: "cancelled"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -30,15 +56,7 @@ public enum OAuthSessionPollResponseStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .pending: try container.encode("pending")
-        case .approved: try container.encode("approved")
-        case .denied: try container.encode("denied")
-        case .expired: try container.encode("expired")
-        case .error: try container.encode("error")
-        case .cancelled: try container.encode("cancelled")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -772,7 +790,7 @@ public struct PluginCatalogEntryRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum PluginCatalogEntryRowCategory: Codable, Sendable, Hashable {
+public enum PluginCatalogEntryRowCategory: Codable, Sendable, Hashable, RawRepresentable {
     case desktop
     case memory
     case platform
@@ -783,6 +801,38 @@ public enum PluginCatalogEntryRowCategory: Codable, Sendable, Hashable {
     case models
     case general
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "desktop": self = .desktop
+        case "memory": self = .memory
+        case "platform": self = .platform
+        case "web": self = .web
+        case "tools": self = .tools
+        case "voice": self = .voice
+        case "automation": self = .automation
+        case "models": self = .models
+        case "general": self = .general
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .desktop: "desktop"
+        case .memory: "memory"
+        case .platform: "platform"
+        case .web: "web"
+        case .tools: "tools"
+        case .voice: "voice"
+        case .automation: "automation"
+        case .models: "models"
+        case .general: "general"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -806,27 +856,36 @@ public enum PluginCatalogEntryRowCategory: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .desktop: try container.encode("desktop")
-        case .memory: try container.encode("memory")
-        case .platform: try container.encode("platform")
-        case .web: try container.encode("web")
-        case .tools: try container.encode("tools")
-        case .voice: try container.encode("voice")
-        case .automation: try container.encode("automation")
-        case .models: try container.encode("models")
-        case .general: try container.encode("general")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum PluginCatalogEntryRowRuntimeStatus: Codable, Sendable, Hashable {
+public enum PluginCatalogEntryRowRuntimeStatus: Codable, Sendable, Hashable, RawRepresentable {
     case enabled
     case disabled
     case inactive
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "enabled": self = .enabled
+        case "disabled": self = .disabled
+        case "inactive": self = .inactive
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .enabled: "enabled"
+        case .disabled: "disabled"
+        case .inactive: "inactive"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -844,20 +903,33 @@ public enum PluginCatalogEntryRowRuntimeStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .enabled: try container.encode("enabled")
-        case .disabled: try container.encode("disabled")
-        case .inactive: try container.encode("inactive")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum PluginCatalogEntryRowTier: Codable, Sendable, Hashable {
+public enum PluginCatalogEntryRowTier: Codable, Sendable, Hashable, RawRepresentable {
     case official
     case community
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "official": self = .official
+        case "community": self = .community
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .official: "official"
+        case .community: "community"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -874,11 +946,7 @@ public enum PluginCatalogEntryRowTier: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .official: try container.encode("official")
-        case .community: try container.encode("community")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1143,11 +1211,31 @@ public struct PluginsHubPluginRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum PluginsHubPluginRowRuntimeStatus: Codable, Sendable, Hashable {
+public enum PluginsHubPluginRowRuntimeStatus: Codable, Sendable, Hashable, RawRepresentable {
     case enabled
     case disabled
     case inactive
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "enabled": self = .enabled
+        case "disabled": self = .disabled
+        case "inactive": self = .inactive
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .enabled: "enabled"
+        case .disabled: "disabled"
+        case .inactive: "inactive"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1165,22 +1253,39 @@ public enum PluginsHubPluginRowRuntimeStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .enabled: try container.encode("enabled")
-        case .disabled: try container.encode("disabled")
-        case .inactive: try container.encode("inactive")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum PluginsHubPluginRowSource: Codable, Sendable, Hashable {
+public enum PluginsHubPluginRowSource: Codable, Sendable, Hashable, RawRepresentable {
     case bundled
     case user
     case git
     case entrypoint
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "bundled": self = .bundled
+        case "user": self = .user
+        case "git": self = .git
+        case "entrypoint": self = .entrypoint
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .bundled: "bundled"
+        case .user: "user"
+        case .git: "git"
+        case .entrypoint: "entrypoint"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1199,13 +1304,7 @@ public enum PluginsHubPluginRowSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .bundled: try container.encode("bundled")
-        case .user: try container.encode("user")
-        case .git: try container.encode("git")
-        case .entrypoint: try container.encode("entrypoint")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

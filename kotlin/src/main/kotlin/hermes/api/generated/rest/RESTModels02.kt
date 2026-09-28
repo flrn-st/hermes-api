@@ -449,6 +449,27 @@ public sealed interface CronBlueprintFieldType {
     public data object Weekdays : CronBlueprintFieldType
     public data class Unknown(public val raw: kotlin.String) : CronBlueprintFieldType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Time -> "time"
+            Enum -> "enum"
+            Text -> "text"
+            Weekdays -> "weekdays"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CronBlueprintFieldType = when (raw) {
+            "time" -> Time
+            "enum" -> Enum
+            "text" -> Text
+            "weekdays" -> Weekdays
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CronBlueprintFieldType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronBlueprintFieldType", PrimitiveKind.STRING)
 
@@ -461,14 +482,7 @@ public sealed interface CronBlueprintFieldType {
         }
 
         override fun serialize(encoder: Encoder, value: CronBlueprintFieldType) {
-            val raw: kotlin.String = when (value) {
-                Time -> "time"
-                Enum -> "enum"
-                Text -> "text"
-                Weekdays -> "weekdays"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -854,6 +868,29 @@ public sealed interface CronJobExecutionStatus {
     public data object KnownUnknown : CronJobExecutionStatus
     public data class Unknown(public val raw: kotlin.String) : CronJobExecutionStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Claimed -> "claimed"
+            Running -> "running"
+            Completed -> "completed"
+            Failed -> "failed"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CronJobExecutionStatus = when (raw) {
+            "claimed" -> Claimed
+            "running" -> Running
+            "completed" -> Completed
+            "failed" -> Failed
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CronJobExecutionStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronJobExecutionStatus", PrimitiveKind.STRING)
 
@@ -867,15 +904,7 @@ public sealed interface CronJobExecutionStatus {
         }
 
         override fun serialize(encoder: Encoder, value: CronJobExecutionStatus) {
-            val raw: kotlin.String = when (value) {
-                Claimed -> "claimed"
-                Running -> "running"
-                Completed -> "completed"
-                Failed -> "failed"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -1201,6 +1230,25 @@ public sealed interface CronJobScheduleKind {
     public data object Cron : CronJobScheduleKind
     public data class Unknown(public val raw: kotlin.String) : CronJobScheduleKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Once -> "once"
+            Interval -> "interval"
+            Cron -> "cron"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CronJobScheduleKind = when (raw) {
+            "once" -> Once
+            "interval" -> Interval
+            "cron" -> Cron
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CronJobScheduleKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronJobScheduleKind", PrimitiveKind.STRING)
 
@@ -1212,13 +1260,7 @@ public sealed interface CronJobScheduleKind {
         }
 
         override fun serialize(encoder: Encoder, value: CronJobScheduleKind) {
-            val raw: kotlin.String = when (value) {
-                Once -> "once"
-                Interval -> "interval"
-                Cron -> "cron"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

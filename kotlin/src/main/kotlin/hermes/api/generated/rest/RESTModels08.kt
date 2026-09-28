@@ -357,6 +357,25 @@ public sealed interface KanbanWarningsSummaryHighestSeverity {
     public data object Critical : KanbanWarningsSummaryHighestSeverity
     public data class Unknown(public val raw: kotlin.String) : KanbanWarningsSummaryHighestSeverity
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Warning -> "warning"
+            Error -> "error"
+            Critical -> "critical"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanWarningsSummaryHighestSeverity = when (raw) {
+            "warning" -> Warning
+            "error" -> Error
+            "critical" -> Critical
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanWarningsSummaryHighestSeverity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanWarningsSummaryHighestSeverity", PrimitiveKind.STRING)
 
@@ -368,13 +387,7 @@ public sealed interface KanbanWarningsSummaryHighestSeverity {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanWarningsSummaryHighestSeverity) {
-            val raw: kotlin.String = when (value) {
-                Warning -> "warning"
-                Error -> "error"
-                Critical -> "critical"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -417,6 +430,23 @@ public sealed interface LearningGraphMemoryCardSource {
     public data object Profile : LearningGraphMemoryCardSource
     public data class Unknown(public val raw: kotlin.String) : LearningGraphMemoryCardSource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Memory -> "memory"
+            Profile -> "profile"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LearningGraphMemoryCardSource = when (raw) {
+            "memory" -> Memory
+            "profile" -> Profile
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LearningGraphMemoryCardSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphMemoryCardSource", PrimitiveKind.STRING)
 
@@ -427,12 +457,7 @@ public sealed interface LearningGraphMemoryCardSource {
         }
 
         override fun serialize(encoder: Encoder, value: LearningGraphMemoryCardSource) {
-            val raw: kotlin.String = when (value) {
-                Memory -> "memory"
-                Profile -> "profile"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -469,6 +494,23 @@ public sealed interface LearningGraphNodeKind {
     public data object Memory : LearningGraphNodeKind
     public data class Unknown(public val raw: kotlin.String) : LearningGraphNodeKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Skill -> "skill"
+            Memory -> "memory"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LearningGraphNodeKind = when (raw) {
+            "skill" -> Skill
+            "memory" -> Memory
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LearningGraphNodeKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphNodeKind", PrimitiveKind.STRING)
 
@@ -479,12 +521,7 @@ public sealed interface LearningGraphNodeKind {
         }
 
         override fun serialize(encoder: Encoder, value: LearningGraphNodeKind) {
-            val raw: kotlin.String = when (value) {
-                Skill -> "skill"
-                Memory -> "memory"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -496,6 +533,23 @@ public sealed interface LearningGraphNodeMemorySource {
     public data object Profile : LearningGraphNodeMemorySource
     public data class Unknown(public val raw: kotlin.String) : LearningGraphNodeMemorySource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Memory -> "memory"
+            Profile -> "profile"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LearningGraphNodeMemorySource = when (raw) {
+            "memory" -> Memory
+            "profile" -> Profile
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LearningGraphNodeMemorySource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphNodeMemorySource", PrimitiveKind.STRING)
 
@@ -506,12 +560,7 @@ public sealed interface LearningGraphNodeMemorySource {
         }
 
         override fun serialize(encoder: Encoder, value: LearningGraphNodeMemorySource) {
-            val raw: kotlin.String = when (value) {
-                Memory -> "memory"
-                Profile -> "profile"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -617,6 +666,23 @@ public sealed interface LearningNodeDetailResponseKind {
     public data object Memory : LearningNodeDetailResponseKind
     public data class Unknown(public val raw: kotlin.String) : LearningNodeDetailResponseKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Skill -> "skill"
+            Memory -> "memory"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LearningNodeDetailResponseKind = when (raw) {
+            "skill" -> Skill
+            "memory" -> Memory
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LearningNodeDetailResponseKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningNodeDetailResponseKind", PrimitiveKind.STRING)
 
@@ -627,12 +693,7 @@ public sealed interface LearningNodeDetailResponseKind {
         }
 
         override fun serialize(encoder: Encoder, value: LearningNodeDetailResponseKind) {
-            val raw: kotlin.String = when (value) {
-                Skill -> "skill"
-                Memory -> "memory"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

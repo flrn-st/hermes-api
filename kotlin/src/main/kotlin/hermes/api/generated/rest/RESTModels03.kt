@@ -116,6 +116,27 @@ public sealed interface CustomEndpointRowApiMode {
     public data object AnthropicMessages : CustomEndpointRowApiMode
     public data class Unknown(public val raw: kotlin.String) : CustomEndpointRowApiMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Empty -> ""
+            ChatCompletions -> "chat_completions"
+            CodexResponses -> "codex_responses"
+            AnthropicMessages -> "anthropic_messages"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CustomEndpointRowApiMode = when (raw) {
+            "" -> Empty
+            "chat_completions" -> ChatCompletions
+            "codex_responses" -> CodexResponses
+            "anthropic_messages" -> AnthropicMessages
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CustomEndpointRowApiMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CustomEndpointRowApiMode", PrimitiveKind.STRING)
 
@@ -128,14 +149,7 @@ public sealed interface CustomEndpointRowApiMode {
         }
 
         override fun serialize(encoder: Encoder, value: CustomEndpointRowApiMode) {
-            val raw: kotlin.String = when (value) {
-                Empty -> ""
-                ChatCompletions -> "chat_completions"
-                CodexResponses -> "codex_responses"
-                AnthropicMessages -> "anthropic_messages"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -148,6 +162,25 @@ public sealed interface CustomEndpointRowSource {
     public data object DirectConfig : CustomEndpointRowSource
     public data class Unknown(public val raw: kotlin.String) : CustomEndpointRowSource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Providers -> "providers"
+            CustomProviders -> "custom_providers"
+            DirectConfig -> "direct-config"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CustomEndpointRowSource = when (raw) {
+            "providers" -> Providers
+            "custom_providers" -> CustomProviders
+            "direct-config" -> DirectConfig
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CustomEndpointRowSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CustomEndpointRowSource", PrimitiveKind.STRING)
 
@@ -159,13 +192,7 @@ public sealed interface CustomEndpointRowSource {
         }
 
         override fun serialize(encoder: Encoder, value: CustomEndpointRowSource) {
-            val raw: kotlin.String = when (value) {
-                Providers -> "providers"
-                CustomProviders -> "custom_providers"
-                DirectConfig -> "direct-config"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -264,6 +291,27 @@ public sealed interface CustomEndpointUpdateApiMode {
     public data object AnthropicMessages : CustomEndpointUpdateApiMode
     public data class Unknown(public val raw: kotlin.String) : CustomEndpointUpdateApiMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Empty -> ""
+            ChatCompletions -> "chat_completions"
+            CodexResponses -> "codex_responses"
+            AnthropicMessages -> "anthropic_messages"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CustomEndpointUpdateApiMode = when (raw) {
+            "" -> Empty
+            "chat_completions" -> ChatCompletions
+            "codex_responses" -> CodexResponses
+            "anthropic_messages" -> AnthropicMessages
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CustomEndpointUpdateApiMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CustomEndpointUpdateApiMode", PrimitiveKind.STRING)
 
@@ -276,14 +324,7 @@ public sealed interface CustomEndpointUpdateApiMode {
         }
 
         override fun serialize(encoder: Encoder, value: CustomEndpointUpdateApiMode) {
-            val raw: kotlin.String = when (value) {
-                Empty -> ""
-                ChatCompletions -> "chat_completions"
-                CodexResponses -> "codex_responses"
-                AnthropicMessages -> "anthropic_messages"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -342,6 +383,20 @@ public data class DashboardAuthBearerTokenResponse(
 public sealed interface DashboardAuthBearerTokenResponseTokenType {
     public data object Bearer : DashboardAuthBearerTokenResponseTokenType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Bearer -> "Bearer"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): DashboardAuthBearerTokenResponseTokenType? = when (raw) {
+            "Bearer" -> Bearer
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<DashboardAuthBearerTokenResponseTokenType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardAuthBearerTokenResponseTokenType", PrimitiveKind.STRING)
 
@@ -351,10 +406,7 @@ public sealed interface DashboardAuthBearerTokenResponseTokenType {
         }
 
         override fun serialize(encoder: Encoder, value: DashboardAuthBearerTokenResponseTokenType) {
-            val raw: kotlin.String = when (value) {
-                Bearer -> "Bearer"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -463,6 +515,25 @@ public sealed interface DashboardPluginManifestSource {
     public data object Project : DashboardPluginManifestSource
     public data class Unknown(public val raw: kotlin.String) : DashboardPluginManifestSource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            User -> "user"
+            Bundled -> "bundled"
+            Project -> "project"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): DashboardPluginManifestSource = when (raw) {
+            "user" -> User
+            "bundled" -> Bundled
+            "project" -> Project
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<DashboardPluginManifestSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardPluginManifestSource", PrimitiveKind.STRING)
 
@@ -474,13 +545,7 @@ public sealed interface DashboardPluginManifestSource {
         }
 
         override fun serialize(encoder: Encoder, value: DashboardPluginManifestSource) {
-            val raw: kotlin.String = when (value) {
-                User -> "user"
-                Bundled -> "bundled"
-                Project -> "project"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -561,6 +626,25 @@ public sealed interface DashboardThemeDefinitionLayoutVariant {
     public data object Tiled : DashboardThemeDefinitionLayoutVariant
     public data class Unknown(public val raw: kotlin.String) : DashboardThemeDefinitionLayoutVariant
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Standard -> "standard"
+            Cockpit -> "cockpit"
+            Tiled -> "tiled"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): DashboardThemeDefinitionLayoutVariant = when (raw) {
+            "standard" -> Standard
+            "cockpit" -> Cockpit
+            "tiled" -> Tiled
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<DashboardThemeDefinitionLayoutVariant> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeDefinitionLayoutVariant", PrimitiveKind.STRING)
 
@@ -572,13 +656,7 @@ public sealed interface DashboardThemeDefinitionLayoutVariant {
         }
 
         override fun serialize(encoder: Encoder, value: DashboardThemeDefinitionLayoutVariant) {
-            val raw: kotlin.String = when (value) {
-                Standard -> "standard"
-                Cockpit -> "cockpit"
-                Tiled -> "tiled"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -622,6 +700,25 @@ public sealed interface DashboardThemeLayoutDensity {
     public data object Spacious : DashboardThemeLayoutDensity
     public data class Unknown(public val raw: kotlin.String) : DashboardThemeLayoutDensity
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Compact -> "compact"
+            Comfortable -> "comfortable"
+            Spacious -> "spacious"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): DashboardThemeLayoutDensity = when (raw) {
+            "compact" -> Compact
+            "comfortable" -> Comfortable
+            "spacious" -> Spacious
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<DashboardThemeLayoutDensity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeLayoutDensity", PrimitiveKind.STRING)
 
@@ -633,13 +730,7 @@ public sealed interface DashboardThemeLayoutDensity {
         }
 
         override fun serialize(encoder: Encoder, value: DashboardThemeLayoutDensity) {
-            val raw: kotlin.String = when (value) {
-                Compact -> "compact"
-                Comfortable -> "comfortable"
-                Spacious -> "spacious"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

@@ -947,11 +947,31 @@ public struct BotRelayRosterSyncResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum BrowserAction: Codable, Sendable, Hashable {
+public enum BrowserAction: Codable, Sendable, Hashable, RawRepresentable {
     case status
     case connect
     case disconnect
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "status": self = .status
+        case "connect": self = .connect
+        case "disconnect": self = .disconnect
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .status: "status"
+        case .connect: "connect"
+        case .disconnect: "disconnect"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -965,12 +985,7 @@ public enum BrowserAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .status: try container.encode("status")
-        case .connect: try container.encode("connect")
-        case .disconnect: try container.encode("disconnect")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1451,12 +1466,34 @@ public struct CapabilityEntry: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum CatalogAppState: Codable, Sendable, Hashable {
+public enum CatalogAppState: Codable, Sendable, Hashable, RawRepresentable {
     case present
     case missingApp
     case appNotRunning
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "present": self = .present
+        case "missing_app": self = .missingApp
+        case "app_not_running": self = .appNotRunning
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .present: "present"
+        case .missingApp: "missing_app"
+        case .appNotRunning: "app_not_running"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1471,13 +1508,7 @@ public enum CatalogAppState: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .present: try container.encode("present")
-        case .missingApp: try container.encode("missing_app")
-        case .appNotRunning: try container.encode("app_not_running")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

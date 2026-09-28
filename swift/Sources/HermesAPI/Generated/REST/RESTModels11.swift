@@ -48,10 +48,28 @@ public struct MemoryOAuthStatusResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryOAuthStatusResponseAuth: Codable, Sendable, Hashable {
+public enum MemoryOAuthStatusResponseAuth: Codable, Sendable, Hashable, RawRepresentable {
     case oauth
     case apikey
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "oauth": self = .oauth
+        case "apikey": self = .apikey
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .oauth: "oauth"
+        case .apikey: "apikey"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -68,21 +86,39 @@ public enum MemoryOAuthStatusResponseAuth: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .oauth: try container.encode("oauth")
-        case .apikey: try container.encode("apikey")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryOAuthStatusResponseState: Codable, Sendable, Hashable {
+public enum MemoryOAuthStatusResponseState: Codable, Sendable, Hashable, RawRepresentable {
     case idle
     case pending
     case connected
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "idle": self = .idle
+        case "pending": self = .pending
+        case "connected": self = .connected
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .idle: "idle"
+        case .pending: "pending"
+        case .connected: "connected"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -101,13 +137,7 @@ public enum MemoryOAuthStatusResponseState: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .idle: try container.encode("idle")
-        case .pending: try container.encode("pending")
-        case .connected: try container.encode("connected")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -528,7 +558,7 @@ public struct MemoryProviderLegacyField: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryProviderLegacyFieldKind: Codable, Sendable, Hashable {
+public enum MemoryProviderLegacyFieldKind: Codable, Sendable, Hashable, RawRepresentable {
     case secret
     case select
     case boolean
@@ -536,6 +566,32 @@ public enum MemoryProviderLegacyFieldKind: Codable, Sendable, Hashable {
     case number
     case text
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "secret": self = .secret
+        case "select": self = .select
+        case "boolean": self = .boolean
+        case "integer": self = .integer
+        case "number": self = .number
+        case "text": self = .text
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .secret: "secret"
+        case .select: "select"
+        case .boolean: "boolean"
+        case .integer: "integer"
+        case .number: "number"
+        case .text: "text"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -556,15 +612,7 @@ public enum MemoryProviderLegacyFieldKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .secret: try container.encode("secret")
-        case .select: try container.encode("select")
-        case .boolean: try container.encode("boolean")
-        case .integer: try container.encode("integer")
-        case .number: try container.encode("number")
-        case .text: try container.encode("text")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -845,12 +893,34 @@ public struct MemoryProviderSetupStepResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryProviderSetupStepResultKind: Codable, Sendable, Hashable {
+public enum MemoryProviderSetupStepResultKind: Codable, Sendable, Hashable, RawRepresentable {
     case pip
     case setup
     case externalCheck
     case externalInstall
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "pip": self = .pip
+        case "setup": self = .setup
+        case "external_check": self = .externalCheck
+        case "external_install": self = .externalInstall
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .pip: "pip"
+        case .setup: "setup"
+        case .externalCheck: "external_check"
+        case .externalInstall: "external_install"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -869,13 +939,7 @@ public enum MemoryProviderSetupStepResultKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .pip: try container.encode("pip")
-        case .setup: try container.encode("setup")
-        case .externalCheck: try container.encode("external_check")
-        case .externalInstall: try container.encode("external_install")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -936,12 +1000,34 @@ public struct MemoryProviderStatusRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryProviderStatusRowStatus: Codable, Sendable, Hashable {
+public enum MemoryProviderStatusRowStatus: Codable, Sendable, Hashable, RawRepresentable {
     case missing
     case unavailable
     case needsConfig
     case ready
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "missing": self = .missing
+        case "unavailable": self = .unavailable
+        case "needs_config": self = .needsConfig
+        case "ready": self = .ready
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .missing: "missing"
+        case .unavailable: "unavailable"
+        case .needsConfig: "needs_config"
+        case .ready: "ready"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -960,13 +1046,7 @@ public enum MemoryProviderStatusRowStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .missing: try container.encode("missing")
-        case .unavailable: try container.encode("unavailable")
-        case .needsConfig: try container.encode("needs_config")
-        case .ready: try container.encode("ready")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1576,11 +1656,31 @@ public struct MessagingWhatsAppSetup: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MessagingWhatsAppSetupMode: Codable, Sendable, Hashable {
+public enum MessagingWhatsAppSetupMode: Codable, Sendable, Hashable, RawRepresentable {
     case empty
     case bot
     case selfChat
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "": self = .empty
+        case "bot": self = .bot
+        case "self-chat": self = .selfChat
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .empty: ""
+        case .bot: "bot"
+        case .selfChat: "self-chat"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1598,11 +1698,6 @@ public enum MessagingWhatsAppSetupMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .empty: try container.encode("")
-        case .bot: try container.encode("bot")
-        case .selfChat: try container.encode("self-chat")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }

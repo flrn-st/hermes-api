@@ -517,8 +517,22 @@ public struct OnboardingEnsureSetupProfileResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum OnboardingEnsureSetupProfileResultRole: Codable, Sendable, Hashable {
+public enum OnboardingEnsureSetupProfileResultRole: Codable, Sendable, Hashable, RawRepresentable {
     case setup
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "setup": self = .setup
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .setup: "setup"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -530,9 +544,7 @@ public enum OnboardingEnsureSetupProfileResultRole: Codable, Sendable, Hashable 
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .setup: try container.encode("setup")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -739,11 +751,31 @@ public struct PasteCollapseResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum PaymentMethodKind: Codable, Sendable, Hashable {
+public enum PaymentMethodKind: Codable, Sendable, Hashable, RawRepresentable {
     case card
     case link
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "card": self = .card
+        case "link": self = .link
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .card: "card"
+        case .link: "link"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -757,12 +789,7 @@ public enum PaymentMethodKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .card: try container.encode("card")
-        case .link: try container.encode("link")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

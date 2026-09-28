@@ -2,12 +2,34 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LocalModelJobKind: Codable, Sendable, Hashable {
+public enum LocalModelJobKind: Codable, Sendable, Hashable, RawRepresentable {
     case runtimeInstall
     case modelDownload
     case quickstart
     case modelActivate
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "runtime-install": self = .runtimeInstall
+        case "model-download": self = .modelDownload
+        case "quickstart": self = .quickstart
+        case "model-activate": self = .modelActivate
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .runtimeInstall: "runtime-install"
+        case .modelDownload: "model-download"
+        case .quickstart: "quickstart"
+        case .modelActivate: "model-activate"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -26,22 +48,36 @@ public enum LocalModelJobKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .runtimeInstall: try container.encode("runtime-install")
-        case .modelDownload: try container.encode("model-download")
-        case .quickstart: try container.encode("quickstart")
-        case .modelActivate: try container.encode("model-activate")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LocalModelJobStatus: Codable, Sendable, Hashable {
+public enum LocalModelJobStatus: Codable, Sendable, Hashable, RawRepresentable {
     case running
     case done
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "running": self = .running
+        case "done": self = .done
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .running: "running"
+        case .done: "done"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -59,12 +95,7 @@ public enum LocalModelJobStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .running: try container.encode("running")
-        case .done: try container.encode("done")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -210,12 +241,34 @@ public struct LocalModelRepoFile: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LocalModelRepoFileFit: Codable, Sendable, Hashable {
+public enum LocalModelRepoFileFit: Codable, Sendable, Hashable, RawRepresentable {
     case fitsGpu
     case needsRam
     case tooBig
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "fits-gpu": self = .fitsGpu
+        case "needs-ram": self = .needsRam
+        case "too-big": self = .tooBig
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .fitsGpu: "fits-gpu"
+        case .needsRam: "needs-ram"
+        case .tooBig: "too-big"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -234,13 +287,7 @@ public enum LocalModelRepoFileFit: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .fitsGpu: try container.encode("fits-gpu")
-        case .needsRam: try container.encode("needs-ram")
-        case .tooBig: try container.encode("too-big")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -739,10 +786,28 @@ public struct LocalModelsServerResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LocalModelsServerResponseAction: Codable, Sendable, Hashable {
+public enum LocalModelsServerResponseAction: Codable, Sendable, Hashable, RawRepresentable {
     case stop
     case start
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "stop": self = .stop
+        case "start": self = .start
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .stop: "stop"
+        case .start: "start"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -759,11 +824,7 @@ public enum LocalModelsServerResponseAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .stop: try container.encode("stop")
-        case .start: try container.encode("start")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -909,11 +970,31 @@ public struct LocalModelsStatusResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LocalModelsStatusResponseLoadedModelsValue: Codable, Sendable, Hashable {
+public enum LocalModelsStatusResponseLoadedModelsValue: Codable, Sendable, Hashable, RawRepresentable {
     case loaded
     case ready
     case loading
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "loaded": self = .loaded
+        case "ready": self = .ready
+        case "loading": self = .loading
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .loaded: "loaded"
+        case .ready: "ready"
+        case .loading: "loading"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -931,12 +1012,7 @@ public enum LocalModelsStatusResponseLoadedModelsValue: Codable, Sendable, Hasha
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .loaded: try container.encode("loaded")
-        case .ready: try container.encode("ready")
-        case .loading: try container.encode("loading")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

@@ -93,6 +93,23 @@ public sealed interface VoiceRecordAction {
     public data object Stop : VoiceRecordAction
     public data class Unknown(public val raw: kotlin.String) : VoiceRecordAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Start -> "start"
+            Stop -> "stop"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceRecordAction = when (raw) {
+            "start" -> Start
+            "stop" -> Stop
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceRecordAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceRecordAction", PrimitiveKind.STRING)
 
@@ -103,12 +120,7 @@ public sealed interface VoiceRecordAction {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceRecordAction) {
-            val raw: kotlin.String = when (value) {
-                Start -> "start"
-                Stop -> "stop"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -175,6 +187,25 @@ public sealed interface VoiceRecordStatus {
     public data object Busy : VoiceRecordStatus
     public data class Unknown(public val raw: kotlin.String) : VoiceRecordStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Recording -> "recording"
+            Stopped -> "stopped"
+            Busy -> "busy"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceRecordStatus = when (raw) {
+            "recording" -> Recording
+            "stopped" -> Stopped
+            "busy" -> Busy
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceRecordStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceRecordStatus", PrimitiveKind.STRING)
 
@@ -186,13 +217,7 @@ public sealed interface VoiceRecordStatus {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceRecordStatus) {
-            val raw: kotlin.String = when (value) {
-                Recording -> "recording"
-                Stopped -> "stopped"
-                Busy -> "busy"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -213,6 +238,27 @@ public sealed interface VoiceToggleAction {
     public data object Tts : VoiceToggleAction
     public data class Unknown(public val raw: kotlin.String) : VoiceToggleAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Status -> "status"
+            On -> "on"
+            Off -> "off"
+            Tts -> "tts"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceToggleAction = when (raw) {
+            "status" -> Status
+            "on" -> On
+            "off" -> Off
+            "tts" -> Tts
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceToggleAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceToggleAction", PrimitiveKind.STRING)
 
@@ -225,14 +271,7 @@ public sealed interface VoiceToggleAction {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceToggleAction) {
-            val raw: kotlin.String = when (value) {
-                Status -> "status"
-                On -> "on"
-                Off -> "off"
-                Tts -> "tts"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -412,6 +451,23 @@ public sealed interface WaitBarrierTargetType {
     public data object Pid : WaitBarrierTargetType
     public data class Unknown(public val raw: kotlin.String) : WaitBarrierTargetType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Session -> "session"
+            Pid -> "pid"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): WaitBarrierTargetType = when (raw) {
+            "session" -> Session
+            "pid" -> Pid
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<WaitBarrierTargetType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WaitBarrierTargetType", PrimitiveKind.STRING)
 
@@ -422,12 +478,7 @@ public sealed interface WaitBarrierTargetType {
         }
 
         override fun serialize(encoder: Encoder, value: WaitBarrierTargetType) {
-            val raw: kotlin.String = when (value) {
-                Session -> "session"
-                Pid -> "pid"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -448,6 +499,20 @@ public data class WaitBarrierUntil(
 public sealed interface WaitBarrierUntilType {
     public data object Until : WaitBarrierUntilType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Until -> "until"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): WaitBarrierUntilType? = when (raw) {
+            "until" -> Until
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<WaitBarrierUntilType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WaitBarrierUntilType", PrimitiveKind.STRING)
 
@@ -457,10 +522,7 @@ public sealed interface WaitBarrierUntilType {
         }
 
         override fun serialize(encoder: Encoder, value: WaitBarrierUntilType) {
-            val raw: kotlin.String = when (value) {
-                Until -> "until"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

@@ -104,6 +104,23 @@ public sealed interface MoaConfigPayloadDegradedReferencePolicy {
     public data object Silent : MoaConfigPayloadDegradedReferencePolicy
     public data class Unknown(public val raw: kotlin.String) : MoaConfigPayloadDegradedReferencePolicy
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Loud -> "loud"
+            Silent -> "silent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MoaConfigPayloadDegradedReferencePolicy = when (raw) {
+            "loud" -> Loud
+            "silent" -> Silent
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MoaConfigPayloadDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigPayloadDegradedReferencePolicy", PrimitiveKind.STRING)
 
@@ -114,12 +131,7 @@ public sealed interface MoaConfigPayloadDegradedReferencePolicy {
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigPayloadDegradedReferencePolicy) {
-            val raw: kotlin.String = when (value) {
-                Loud -> "loud"
-                Silent -> "silent"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -161,6 +173,23 @@ public sealed interface MoaConfigResponseDegradedReferencePolicy {
     public data object Silent : MoaConfigResponseDegradedReferencePolicy
     public data class Unknown(public val raw: kotlin.String) : MoaConfigResponseDegradedReferencePolicy
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Loud -> "loud"
+            Silent -> "silent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MoaConfigResponseDegradedReferencePolicy = when (raw) {
+            "loud" -> Loud
+            "silent" -> Silent
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MoaConfigResponseDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigResponseDegradedReferencePolicy", PrimitiveKind.STRING)
 
@@ -171,12 +200,7 @@ public sealed interface MoaConfigResponseDegradedReferencePolicy {
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigResponseDegradedReferencePolicy) {
-            val raw: kotlin.String = when (value) {
-                Loud -> "loud"
-                Silent -> "silent"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -189,6 +213,25 @@ public sealed interface MoaConfigResponsePrivacyFilter {
     public data object Full : MoaConfigResponsePrivacyFilter
     public data class Unknown(public val raw: kotlin.String) : MoaConfigResponsePrivacyFilter
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Empty -> ""
+            Display -> "display"
+            Full -> "full"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MoaConfigResponsePrivacyFilter = when (raw) {
+            "" -> Empty
+            "display" -> Display
+            "full" -> Full
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MoaConfigResponsePrivacyFilter> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigResponsePrivacyFilter", PrimitiveKind.STRING)
 
@@ -200,13 +243,7 @@ public sealed interface MoaConfigResponsePrivacyFilter {
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigResponsePrivacyFilter) {
-            val raw: kotlin.String = when (value) {
-                Empty -> ""
-                Display -> "display"
-                Full -> "full"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -250,6 +287,23 @@ public sealed interface MoaConfigSaveResponseDegradedReferencePolicy {
     public data object Silent : MoaConfigSaveResponseDegradedReferencePolicy
     public data class Unknown(public val raw: kotlin.String) : MoaConfigSaveResponseDegradedReferencePolicy
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Loud -> "loud"
+            Silent -> "silent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MoaConfigSaveResponseDegradedReferencePolicy = when (raw) {
+            "loud" -> Loud
+            "silent" -> Silent
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MoaConfigSaveResponseDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigSaveResponseDegradedReferencePolicy", PrimitiveKind.STRING)
 
@@ -260,12 +314,7 @@ public sealed interface MoaConfigSaveResponseDegradedReferencePolicy {
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigSaveResponseDegradedReferencePolicy) {
-            val raw: kotlin.String = when (value) {
-                Loud -> "loud"
-                Silent -> "silent"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -278,6 +327,25 @@ public sealed interface MoaConfigSaveResponsePrivacyFilter {
     public data object Full : MoaConfigSaveResponsePrivacyFilter
     public data class Unknown(public val raw: kotlin.String) : MoaConfigSaveResponsePrivacyFilter
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Empty -> ""
+            Display -> "display"
+            Full -> "full"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MoaConfigSaveResponsePrivacyFilter = when (raw) {
+            "" -> Empty
+            "display" -> Display
+            "full" -> Full
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MoaConfigSaveResponsePrivacyFilter> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaConfigSaveResponsePrivacyFilter", PrimitiveKind.STRING)
 
@@ -289,13 +357,7 @@ public sealed interface MoaConfigSaveResponsePrivacyFilter {
         }
 
         override fun serialize(encoder: Encoder, value: MoaConfigSaveResponsePrivacyFilter) {
-            val raw: kotlin.String = when (value) {
-                Empty -> ""
-                Display -> "display"
-                Full -> "full"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -377,6 +439,23 @@ public sealed interface MoaPresetDegradedReferencePolicy {
     public data object Silent : MoaPresetDegradedReferencePolicy
     public data class Unknown(public val raw: kotlin.String) : MoaPresetDegradedReferencePolicy
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Loud -> "loud"
+            Silent -> "silent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MoaPresetDegradedReferencePolicy = when (raw) {
+            "loud" -> Loud
+            "silent" -> Silent
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MoaPresetDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaPresetDegradedReferencePolicy", PrimitiveKind.STRING)
 
@@ -387,12 +466,7 @@ public sealed interface MoaPresetDegradedReferencePolicy {
         }
 
         override fun serialize(encoder: Encoder, value: MoaPresetDegradedReferencePolicy) {
-            val raw: kotlin.String = when (value) {
-                Loud -> "loud"
-                Silent -> "silent"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -476,6 +550,23 @@ public sealed interface MoaPresetPayloadDegradedReferencePolicy {
     public data object Silent : MoaPresetPayloadDegradedReferencePolicy
     public data class Unknown(public val raw: kotlin.String) : MoaPresetPayloadDegradedReferencePolicy
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Loud -> "loud"
+            Silent -> "silent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MoaPresetPayloadDegradedReferencePolicy = when (raw) {
+            "loud" -> Loud
+            "silent" -> Silent
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MoaPresetPayloadDegradedReferencePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MoaPresetPayloadDegradedReferencePolicy", PrimitiveKind.STRING)
 
@@ -486,12 +577,7 @@ public sealed interface MoaPresetPayloadDegradedReferencePolicy {
         }
 
         override fun serialize(encoder: Encoder, value: MoaPresetPayloadDegradedReferencePolicy) {
-            val raw: kotlin.String = when (value) {
-                Loud -> "loud"
-                Silent -> "silent"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -619,6 +705,23 @@ public sealed interface ModelAssignmentResponseScope {
     public data object Auxiliary : ModelAssignmentResponseScope
     public data class Unknown(public val raw: kotlin.String) : ModelAssignmentResponseScope
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Main -> "main"
+            Auxiliary -> "auxiliary"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ModelAssignmentResponseScope = when (raw) {
+            "main" -> Main
+            "auxiliary" -> Auxiliary
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ModelAssignmentResponseScope> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ModelAssignmentResponseScope", PrimitiveKind.STRING)
 
@@ -629,12 +732,7 @@ public sealed interface ModelAssignmentResponseScope {
         }
 
         override fun serialize(encoder: Encoder, value: ModelAssignmentResponseScope) {
-            val raw: kotlin.String = when (value) {
-                Main -> "main"
-                Auxiliary -> "auxiliary"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -848,6 +946,20 @@ public data class OAuthDeviceCodeStartResponse(
 public sealed interface OAuthDeviceCodeStartResponseFlow {
     public data object DeviceCode : OAuthDeviceCodeStartResponseFlow
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            DeviceCode -> "device_code"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): OAuthDeviceCodeStartResponseFlow? = when (raw) {
+            "device_code" -> DeviceCode
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<OAuthDeviceCodeStartResponseFlow> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OAuthDeviceCodeStartResponseFlow", PrimitiveKind.STRING)
 
@@ -857,10 +969,7 @@ public sealed interface OAuthDeviceCodeStartResponseFlow {
         }
 
         override fun serialize(encoder: Encoder, value: OAuthDeviceCodeStartResponseFlow) {
-            val raw: kotlin.String = when (value) {
-                DeviceCode -> "device_code"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

@@ -133,8 +133,22 @@ public struct WhatsAppOnboardingApplyResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum WhatsAppOnboardingApplyResponsePlatform: Codable, Sendable, Hashable {
+public enum WhatsAppOnboardingApplyResponsePlatform: Codable, Sendable, Hashable, RawRepresentable {
     case whatsapp
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "whatsapp": self = .whatsapp
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .whatsapp: "whatsapp"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -146,15 +160,27 @@ public enum WhatsAppOnboardingApplyResponsePlatform: Codable, Sendable, Hashable
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .whatsapp: try container.encode("whatsapp")
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum WhatsAppOnboardingApplyResponseRestartAction: Codable, Sendable, Hashable {
+public enum WhatsAppOnboardingApplyResponseRestartAction: Codable, Sendable, Hashable, RawRepresentable {
     case gatewayRestart
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "gateway-restart": self = .gatewayRestart
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .gatewayRestart: "gateway-restart"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -166,9 +192,7 @@ public enum WhatsAppOnboardingApplyResponseRestartAction: Codable, Sendable, Has
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .gatewayRestart: try container.encode("gateway-restart")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -249,10 +273,28 @@ public struct WhatsAppOnboardingResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum WhatsAppOnboardingResponseMode: Codable, Sendable, Hashable {
+public enum WhatsAppOnboardingResponseMode: Codable, Sendable, Hashable, RawRepresentable {
     case bot
     case selfChat
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "bot": self = .bot
+        case "self-chat": self = .selfChat
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .bot: "bot"
+        case .selfChat: "self-chat"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -269,16 +311,12 @@ public enum WhatsAppOnboardingResponseMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .bot: try container.encode("bot")
-        case .selfChat: try container.encode("self-chat")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum WhatsAppOnboardingResponseStatus: Codable, Sendable, Hashable {
+public enum WhatsAppOnboardingResponseStatus: Codable, Sendable, Hashable, RawRepresentable {
     case starting
     case installing
     case waiting
@@ -287,6 +325,34 @@ public enum WhatsAppOnboardingResponseStatus: Codable, Sendable, Hashable {
     case expired
     case cancelled
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "starting": self = .starting
+        case "installing": self = .installing
+        case "waiting": self = .waiting
+        case "connected": self = .connected
+        case "error": self = .error
+        case "expired": self = .expired
+        case "cancelled": self = .cancelled
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .starting: "starting"
+        case .installing: "installing"
+        case .waiting: "waiting"
+        case .connected: "connected"
+        case .error: "error"
+        case .expired: "expired"
+        case .cancelled: "cancelled"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -308,16 +374,7 @@ public enum WhatsAppOnboardingResponseStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .starting: try container.encode("starting")
-        case .installing: try container.encode("installing")
-        case .waiting: try container.encode("waiting")
-        case .connected: try container.encode("connected")
-        case .error: try container.encode("error")
-        case .expired: try container.encode("expired")
-        case .cancelled: try container.encode("cancelled")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

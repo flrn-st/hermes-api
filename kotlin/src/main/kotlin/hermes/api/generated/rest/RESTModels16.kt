@@ -258,6 +258,25 @@ public sealed interface SessionToolCallLabelKind {
     public data object Tool : SessionToolCallLabelKind
     public data class Unknown(public val raw: kotlin.String) : SessionToolCallLabelKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Connector -> "connector"
+            Mcp -> "mcp"
+            Tool -> "tool"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SessionToolCallLabelKind = when (raw) {
+            "connector" -> Connector
+            "mcp" -> Mcp
+            "tool" -> Tool
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SessionToolCallLabelKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionToolCallLabelKind", PrimitiveKind.STRING)
 
@@ -269,13 +288,7 @@ public sealed interface SessionToolCallLabelKind {
         }
 
         override fun serialize(encoder: Encoder, value: SessionToolCallLabelKind) {
-            val raw: kotlin.String = when (value) {
-                Connector -> "connector"
-                Mcp -> "mcp"
-                Tool -> "tool"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -570,6 +583,25 @@ public sealed interface SkillHubScanResponsePolicy {
     public data object Block : SkillHubScanResponsePolicy
     public data class Unknown(public val raw: kotlin.String) : SkillHubScanResponsePolicy
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Allow -> "allow"
+            Ask -> "ask"
+            Block -> "block"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SkillHubScanResponsePolicy = when (raw) {
+            "allow" -> Allow
+            "ask" -> Ask
+            "block" -> Block
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SkillHubScanResponsePolicy> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillHubScanResponsePolicy", PrimitiveKind.STRING)
 
@@ -581,13 +613,7 @@ public sealed interface SkillHubScanResponsePolicy {
         }
 
         override fun serialize(encoder: Encoder, value: SkillHubScanResponsePolicy) {
-            val raw: kotlin.String = when (value) {
-                Allow -> "allow"
-                Ask -> "ask"
-                Block -> "block"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -600,6 +626,25 @@ public sealed interface SkillHubScanResponseVerdict {
     public data object Dangerous : SkillHubScanResponseVerdict
     public data class Unknown(public val raw: kotlin.String) : SkillHubScanResponseVerdict
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Safe -> "safe"
+            Caution -> "caution"
+            Dangerous -> "dangerous"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SkillHubScanResponseVerdict = when (raw) {
+            "safe" -> Safe
+            "caution" -> Caution
+            "dangerous" -> Dangerous
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SkillHubScanResponseVerdict> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillHubScanResponseVerdict", PrimitiveKind.STRING)
 
@@ -611,13 +656,7 @@ public sealed interface SkillHubScanResponseVerdict {
         }
 
         override fun serialize(encoder: Encoder, value: SkillHubScanResponseVerdict) {
-            val raw: kotlin.String = when (value) {
-                Safe -> "safe"
-                Caution -> "caution"
-                Dangerous -> "dangerous"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

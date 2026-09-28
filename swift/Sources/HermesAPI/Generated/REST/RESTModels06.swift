@@ -1056,7 +1056,7 @@ public struct KanbanBoardColumn: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanBoardColumnName: Codable, Sendable, Hashable {
+public enum KanbanBoardColumnName: Codable, Sendable, Hashable, RawRepresentable {
     case triage
     case todo
     case scheduled
@@ -1067,6 +1067,38 @@ public enum KanbanBoardColumnName: Codable, Sendable, Hashable {
     case done
     case archived
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "triage": self = .triage
+        case "todo": self = .todo
+        case "scheduled": self = .scheduled
+        case "ready": self = .ready
+        case "running": self = .running
+        case "blocked": self = .blocked
+        case "review": self = .review
+        case "done": self = .done
+        case "archived": self = .archived
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .triage: "triage"
+        case .todo: "todo"
+        case .scheduled: "scheduled"
+        case .ready: "ready"
+        case .running: "running"
+        case .blocked: "blocked"
+        case .review: "review"
+        case .done: "done"
+        case .archived: "archived"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1090,18 +1122,7 @@ public enum KanbanBoardColumnName: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .triage: try container.encode("triage")
-        case .todo: try container.encode("todo")
-        case .scheduled: try container.encode("scheduled")
-        case .ready: try container.encode("ready")
-        case .running: try container.encode("running")
-        case .blocked: try container.encode("blocked")
-        case .review: try container.encode("review")
-        case .done: try container.encode("done")
-        case .archived: try container.encode("archived")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1142,11 +1163,31 @@ public struct KanbanBoardCreateResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanBoardDefaultWorkspaceKind: Codable, Sendable, Hashable {
+public enum KanbanBoardDefaultWorkspaceKind: Codable, Sendable, Hashable, RawRepresentable {
     case scratch
     case worktree
     case dir
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "scratch": self = .scratch
+        case "worktree": self = .worktree
+        case "dir": self = .dir
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .scratch: "scratch"
+        case .worktree: "worktree"
+        case .dir: "dir"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1164,12 +1205,7 @@ public enum KanbanBoardDefaultWorkspaceKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .scratch: try container.encode("scratch")
-        case .worktree: try container.encode("worktree")
-        case .dir: try container.encode("dir")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1535,11 +1571,31 @@ public struct KanbanBoardListRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanBoardListRowDefaultWorkspaceKind: Codable, Sendable, Hashable {
+public enum KanbanBoardListRowDefaultWorkspaceKind: Codable, Sendable, Hashable, RawRepresentable {
     case scratch
     case worktree
     case dir
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "scratch": self = .scratch
+        case "worktree": self = .worktree
+        case "dir": self = .dir
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .scratch: "scratch"
+        case .worktree: "worktree"
+        case .dir: "dir"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1557,12 +1613,7 @@ public enum KanbanBoardListRowDefaultWorkspaceKind: Codable, Sendable, Hashable 
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .scratch: try container.encode("scratch")
-        case .worktree: try container.encode("worktree")
-        case .dir: try container.encode("dir")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1608,10 +1659,28 @@ public struct KanbanBoardRemoval: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanBoardRemovalAction: Codable, Sendable, Hashable {
+public enum KanbanBoardRemovalAction: Codable, Sendable, Hashable, RawRepresentable {
     case archived
     case deleted
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "archived": self = .archived
+        case "deleted": self = .deleted
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .archived: "archived"
+        case .deleted: "deleted"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1628,11 +1697,7 @@ public enum KanbanBoardRemovalAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .archived: try container.encode("archived")
-        case .deleted: try container.encode("deleted")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

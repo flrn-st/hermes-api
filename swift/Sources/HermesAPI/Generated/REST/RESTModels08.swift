@@ -1065,11 +1065,31 @@ public struct KanbanWarningsSummary: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanWarningsSummaryHighestSeverity: Codable, Sendable, Hashable {
+public enum KanbanWarningsSummaryHighestSeverity: Codable, Sendable, Hashable, RawRepresentable {
     case warning
     case error
     case critical
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "warning": self = .warning
+        case "error": self = .error
+        case "critical": self = .critical
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .warning: "warning"
+        case .error: "error"
+        case .critical: "critical"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1087,12 +1107,7 @@ public enum KanbanWarningsSummaryHighestSeverity: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .warning: try container.encode("warning")
-        case .error: try container.encode("error")
-        case .critical: try container.encode("critical")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1213,10 +1228,28 @@ public struct LearningGraphMemoryCard: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LearningGraphMemoryCardSource: Codable, Sendable, Hashable {
+public enum LearningGraphMemoryCardSource: Codable, Sendable, Hashable, RawRepresentable {
     case memory
     case profile
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "memory": self = .memory
+        case "profile": self = .profile
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .memory: "memory"
+        case .profile: "profile"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1233,11 +1266,7 @@ public enum LearningGraphMemoryCardSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .memory: try container.encode("memory")
-        case .profile: try container.encode("profile")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1318,10 +1347,28 @@ public struct LearningGraphNode: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LearningGraphNodeKind: Codable, Sendable, Hashable {
+public enum LearningGraphNodeKind: Codable, Sendable, Hashable, RawRepresentable {
     case skill
     case memory
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "skill": self = .skill
+        case "memory": self = .memory
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .skill: "skill"
+        case .memory: "memory"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1338,19 +1385,33 @@ public enum LearningGraphNodeKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .skill: try container.encode("skill")
-        case .memory: try container.encode("memory")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LearningGraphNodeMemorySource: Codable, Sendable, Hashable {
+public enum LearningGraphNodeMemorySource: Codable, Sendable, Hashable, RawRepresentable {
     case memory
     case profile
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "memory": self = .memory
+        case "profile": self = .profile
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .memory: "memory"
+        case .profile: "profile"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1367,11 +1428,7 @@ public enum LearningGraphNodeMemorySource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .memory: try container.encode("memory")
-        case .profile: try container.encode("profile")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1591,10 +1648,28 @@ public struct LearningNodeDetailResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum LearningNodeDetailResponseKind: Codable, Sendable, Hashable {
+public enum LearningNodeDetailResponseKind: Codable, Sendable, Hashable, RawRepresentable {
     case skill
     case memory
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "skill": self = .skill
+        case "memory": self = .memory
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .skill: "skill"
+        case .memory: "memory"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1611,11 +1686,7 @@ public enum LearningNodeDetailResponseKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .skill: try container.encode("skill")
-        case .memory: try container.encode("memory")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

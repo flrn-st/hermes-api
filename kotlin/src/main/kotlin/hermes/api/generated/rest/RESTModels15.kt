@@ -1257,6 +1257,20 @@ public data class SessionListResponse(
 public sealed interface SessionListResponseStorageValue {
     public data object Corrupt : SessionListResponseStorageValue
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Corrupt -> "corrupt"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): SessionListResponseStorageValue? = when (raw) {
+            "corrupt" -> Corrupt
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<SessionListResponseStorageValue> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionListResponseStorageValue", PrimitiveKind.STRING)
 
@@ -1266,10 +1280,7 @@ public sealed interface SessionListResponseStorageValue {
         }
 
         override fun serialize(encoder: Encoder, value: SessionListResponseStorageValue) {
-            val raw: kotlin.String = when (value) {
-                Corrupt -> "corrupt"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -1412,6 +1423,20 @@ public data class SessionMessagesAroundPagination(
 public sealed interface SessionMessagesAroundPaginationOrder {
     public data object Oldest : SessionMessagesAroundPaginationOrder
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Oldest -> "oldest"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): SessionMessagesAroundPaginationOrder? = when (raw) {
+            "oldest" -> Oldest
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<SessionMessagesAroundPaginationOrder> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionMessagesAroundPaginationOrder", PrimitiveKind.STRING)
 
@@ -1421,10 +1446,7 @@ public sealed interface SessionMessagesAroundPaginationOrder {
         }
 
         override fun serialize(encoder: Encoder, value: SessionMessagesAroundPaginationOrder) {
-            val raw: kotlin.String = when (value) {
-                Oldest -> "oldest"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -1462,6 +1484,23 @@ public sealed interface SessionMessagesPaginationOrder {
     public data object Latest : SessionMessagesPaginationOrder
     public data class Unknown(public val raw: kotlin.String) : SessionMessagesPaginationOrder
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Oldest -> "oldest"
+            Latest -> "latest"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SessionMessagesPaginationOrder = when (raw) {
+            "oldest" -> Oldest
+            "latest" -> Latest
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SessionMessagesPaginationOrder> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionMessagesPaginationOrder", PrimitiveKind.STRING)
 
@@ -1472,12 +1511,7 @@ public sealed interface SessionMessagesPaginationOrder {
         }
 
         override fun serialize(encoder: Encoder, value: SessionMessagesPaginationOrder) {
-            val raw: kotlin.String = when (value) {
-                Oldest -> "oldest"
-                Latest -> "latest"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

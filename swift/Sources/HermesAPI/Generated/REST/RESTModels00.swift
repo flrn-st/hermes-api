@@ -174,11 +174,31 @@ public struct AchievementItem: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum AchievementItemKind: Codable, Sendable, Hashable {
+public enum AchievementItemKind: Codable, Sendable, Hashable, RawRepresentable {
     case lifetime
     case bestSession
     case multiCondition
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "lifetime": self = .lifetime
+        case "best_session": self = .bestSession
+        case "multi_condition": self = .multiCondition
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .lifetime: "lifetime"
+        case .bestSession: "best_session"
+        case .multiCondition: "multi_condition"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -196,21 +216,36 @@ public enum AchievementItemKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .lifetime: try container.encode("lifetime")
-        case .bestSession: try container.encode("best_session")
-        case .multiCondition: try container.encode("multi_condition")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum AchievementItemState: Codable, Sendable, Hashable {
+public enum AchievementItemState: Codable, Sendable, Hashable, RawRepresentable {
     case unlocked
     case discovered
     case secret
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "unlocked": self = .unlocked
+        case "discovered": self = .discovered
+        case "secret": self = .secret
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .unlocked: "unlocked"
+        case .discovered: "discovered"
+        case .secret: "secret"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -228,12 +263,7 @@ public enum AchievementItemState: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .unlocked: try container.encode("unlocked")
-        case .discovered: try container.encode("discovered")
-        case .secret: try container.encode("secret")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -441,13 +471,37 @@ public struct AchievementScanMeta: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum AchievementScanMetaMode: Codable, Sendable, Hashable {
+public enum AchievementScanMetaMode: Codable, Sendable, Hashable, RawRepresentable {
     case full
     case incremental
     case inProgress
     case pending
     case failed
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "full": self = .full
+        case "incremental": self = .incremental
+        case "in_progress": self = .inProgress
+        case "pending": self = .pending
+        case "failed": self = .failed
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .full: "full"
+        case .incremental: "incremental"
+        case .inProgress: "in_progress"
+        case .pending: "pending"
+        case .failed: "failed"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -467,14 +521,7 @@ public enum AchievementScanMetaMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .full: try container.encode("full")
-        case .incremental: try container.encode("incremental")
-        case .inProgress: try container.encode("in_progress")
-        case .pending: try container.encode("pending")
-        case .failed: try container.encode("failed")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -539,13 +586,37 @@ public struct AchievementScanMetaWithStatus: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum AchievementScanMetaWithStatusMode: Codable, Sendable, Hashable {
+public enum AchievementScanMetaWithStatusMode: Codable, Sendable, Hashable, RawRepresentable {
     case full
     case incremental
     case inProgress
     case pending
     case failed
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "full": self = .full
+        case "incremental": self = .incremental
+        case "in_progress": self = .inProgress
+        case "pending": self = .pending
+        case "failed": self = .failed
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .full: "full"
+        case .incremental: "incremental"
+        case .inProgress: "in_progress"
+        case .pending: "pending"
+        case .failed: "failed"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -565,14 +636,7 @@ public enum AchievementScanMetaWithStatusMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .full: try container.encode("full")
-        case .incremental: try container.encode("incremental")
-        case .inProgress: try container.encode("in_progress")
-        case .pending: try container.encode("pending")
-        case .failed: try container.encode("failed")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -653,11 +717,31 @@ public struct AchievementScanStatus: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum AchievementScanStatusState: Codable, Sendable, Hashable {
+public enum AchievementScanStatusState: Codable, Sendable, Hashable, RawRepresentable {
     case idle
     case running
     case failed
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "idle": self = .idle
+        case "running": self = .running
+        case "failed": self = .failed
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .idle: "idle"
+        case .running: "running"
+        case .failed: "failed"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -675,12 +759,7 @@ public enum AchievementScanStatusState: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .idle: try container.encode("idle")
-        case .running: try container.encode("running")
-        case .failed: try container.encode("failed")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

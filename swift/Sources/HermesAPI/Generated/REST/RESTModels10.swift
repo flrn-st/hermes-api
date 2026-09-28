@@ -99,10 +99,28 @@ public struct McpCatalogDiagnostic: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpCatalogDiagnosticKind: Codable, Sendable, Hashable {
+public enum McpCatalogDiagnosticKind: Codable, Sendable, Hashable, RawRepresentable {
     case futureManifest
     case invalid
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "future_manifest": self = .futureManifest
+        case "invalid": self = .invalid
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .futureManifest: "future_manifest"
+        case .invalid: "invalid"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -119,11 +137,7 @@ public enum McpCatalogDiagnosticKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .futureManifest: try container.encode("future_manifest")
-        case .invalid: try container.encode("invalid")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -169,8 +183,22 @@ public struct McpCatalogDiscovery: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpCatalogDiscoveryScope: Codable, Sendable, Hashable {
+public enum McpCatalogDiscoveryScope: Codable, Sendable, Hashable, RawRepresentable {
     case backend
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "backend": self = .backend
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .backend: "backend"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -182,17 +210,33 @@ public enum McpCatalogDiscoveryScope: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .backend: try container.encode("backend")
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpCatalogDiscoveryStatus: Codable, Sendable, Hashable {
+public enum McpCatalogDiscoveryStatus: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case unavailable
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "unavailable": self = .unavailable
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .unavailable: "unavailable"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -209,11 +253,7 @@ public enum McpCatalogDiscoveryStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .unavailable: try container.encode("unavailable")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -345,11 +385,31 @@ public struct McpCatalogEntryRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpCatalogEntryRowAuthType: Codable, Sendable, Hashable {
+public enum McpCatalogEntryRowAuthType: Codable, Sendable, Hashable, RawRepresentable {
     case apiKey
     case oauth
     case none
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "api_key": self = .apiKey
+        case "oauth": self = .oauth
+        case "none": self = .none
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .apiKey: "api_key"
+        case .oauth: "oauth"
+        case .none: "none"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -367,20 +427,33 @@ public enum McpCatalogEntryRowAuthType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .apiKey: try container.encode("api_key")
-        case .oauth: try container.encode("oauth")
-        case .none: try container.encode("none")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpCatalogEntryRowTransport: Codable, Sendable, Hashable {
+public enum McpCatalogEntryRowTransport: Codable, Sendable, Hashable, RawRepresentable {
     case stdio
     case http
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "stdio": self = .stdio
+        case "http": self = .http
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .stdio: "stdio"
+        case .http: "http"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -397,11 +470,7 @@ public enum McpCatalogEntryRowTransport: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .stdio: try container.encode("stdio")
-        case .http: try container.encode("http")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -622,11 +691,31 @@ public struct McpOAuthCancelResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpOAuthCancelResponseStatus: Codable, Sendable, Hashable {
+public enum McpOAuthCancelResponseStatus: Codable, Sendable, Hashable, RawRepresentable {
     case expired
     case approved
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "expired": self = .expired
+        case "approved": self = .approved
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .expired: "expired"
+        case .approved: "approved"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -644,12 +733,7 @@ public enum McpOAuthCancelResponseStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .expired: try container.encode("expired")
-        case .approved: try container.encode("approved")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -705,12 +789,34 @@ public struct McpOAuthFlowResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpOAuthFlowResponseStatus: Codable, Sendable, Hashable {
+public enum McpOAuthFlowResponseStatus: Codable, Sendable, Hashable, RawRepresentable {
     case starting
     case authorizationRequired
     case approved
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "starting": self = .starting
+        case "authorization_required": self = .authorizationRequired
+        case "approved": self = .approved
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .starting: "starting"
+        case .authorizationRequired: "authorization_required"
+        case .approved: "approved"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -729,13 +835,7 @@ public enum McpOAuthFlowResponseStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .starting: try container.encode("starting")
-        case .authorizationRequired: try container.encode("authorization_required")
-        case .approved: try container.encode("approved")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -796,12 +896,34 @@ public struct McpOAuthFlowStatusResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpOAuthFlowStatusResponseStatus: Codable, Sendable, Hashable {
+public enum McpOAuthFlowStatusResponseStatus: Codable, Sendable, Hashable, RawRepresentable {
     case starting
     case authorizationRequired
     case approved
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "starting": self = .starting
+        case "authorization_required": self = .authorizationRequired
+        case "approved": self = .approved
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .starting: "starting"
+        case .authorizationRequired: "authorization_required"
+        case .approved: "approved"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -820,13 +942,7 @@ public enum McpOAuthFlowStatusResponseStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .starting: try container.encode("starting")
-        case .authorizationRequired: try container.encode("authorization_required")
-        case .approved: try container.encode("approved")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -915,10 +1031,28 @@ public struct McpServerAddResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpServerAddResponseSource: Codable, Sendable, Hashable {
+public enum McpServerAddResponseSource: Codable, Sendable, Hashable, RawRepresentable {
     case config
     case plugin
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "config": self = .config
+        case "plugin": self = .plugin
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .config: "config"
+        case .plugin: "plugin"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -935,20 +1069,36 @@ public enum McpServerAddResponseSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .config: try container.encode("config")
-        case .plugin: try container.encode("plugin")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpServerAddResponseTransport: Codable, Sendable, Hashable {
+public enum McpServerAddResponseTransport: Codable, Sendable, Hashable, RawRepresentable {
     case http
     case stdio
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "http": self = .http
+        case "stdio": self = .stdio
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .http: "http"
+        case .stdio: "stdio"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -966,12 +1116,7 @@ public enum McpServerAddResponseTransport: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .http: try container.encode("http")
-        case .stdio: try container.encode("stdio")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1060,10 +1205,28 @@ public struct McpServerConfigSummary: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpServerConfigSummarySource: Codable, Sendable, Hashable {
+public enum McpServerConfigSummarySource: Codable, Sendable, Hashable, RawRepresentable {
     case config
     case plugin
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "config": self = .config
+        case "plugin": self = .plugin
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .config: "config"
+        case .plugin: "plugin"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1080,20 +1243,36 @@ public enum McpServerConfigSummarySource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .config: try container.encode("config")
-        case .plugin: try container.encode("plugin")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum McpServerConfigSummaryTransport: Codable, Sendable, Hashable {
+public enum McpServerConfigSummaryTransport: Codable, Sendable, Hashable, RawRepresentable {
     case http
     case stdio
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "http": self = .http
+        case "stdio": self = .stdio
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .http: "http"
+        case .stdio: "stdio"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1111,12 +1290,7 @@ public enum McpServerConfigSummaryTransport: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .http: try container.encode("http")
-        case .stdio: try container.encode("stdio")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1434,10 +1608,28 @@ public struct MemoryOAuthStartResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryOAuthStartResponseAuth: Codable, Sendable, Hashable {
+public enum MemoryOAuthStartResponseAuth: Codable, Sendable, Hashable, RawRepresentable {
     case oauth
     case apikey
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "oauth": self = .oauth
+        case "apikey": self = .apikey
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .oauth: "oauth"
+        case .apikey: "apikey"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1454,21 +1646,39 @@ public enum MemoryOAuthStartResponseAuth: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .oauth: try container.encode("oauth")
-        case .apikey: try container.encode("apikey")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryOAuthStartResponseState: Codable, Sendable, Hashable {
+public enum MemoryOAuthStartResponseState: Codable, Sendable, Hashable, RawRepresentable {
     case idle
     case pending
     case connected
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "idle": self = .idle
+        case "pending": self = .pending
+        case "connected": self = .connected
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .idle: "idle"
+        case .pending: "pending"
+        case .connected: "connected"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1487,12 +1697,6 @@ public enum MemoryOAuthStartResponseState: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .idle: try container.encode("idle")
-        case .pending: try container.encode("pending")
-        case .connected: try container.encode("connected")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }

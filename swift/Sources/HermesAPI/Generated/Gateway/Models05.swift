@@ -92,10 +92,28 @@ public struct ConnectorsConnectResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorsConnectResultStatus: Codable, Sendable, Hashable {
+public enum ConnectorsConnectResultStatus: Codable, Sendable, Hashable, RawRepresentable {
     case initiated
     case settled
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "initiated": self = .initiated
+        case "settled": self = .settled
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .initiated: "initiated"
+        case .settled: "settled"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -108,11 +126,7 @@ public enum ConnectorsConnectResultStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .initiated: try container.encode("initiated")
-        case .settled: try container.encode("settled")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -349,11 +363,31 @@ public struct ControllerScope: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum CorrectionStatus: Codable, Sendable, Hashable {
+public enum CorrectionStatus: Codable, Sendable, Hashable, RawRepresentable {
     case queued
     case redirected
     case rejected
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "queued": self = .queued
+        case "redirected": self = .redirected
+        case "rejected": self = .rejected
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .queued: "queued"
+        case .redirected: "redirected"
+        case .rejected: "rejected"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -367,23 +401,42 @@ public enum CorrectionStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .queued: try container.encode("queued")
-        case .redirected: try container.encode("redirected")
-        case .rejected: try container.encode("rejected")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum CronAction: Codable, Sendable, Hashable {
+public enum CronAction: Codable, Sendable, Hashable, RawRepresentable {
     case list
     case add
     case remove
     case pause
     case resume
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "list": self = .list
+        case "add": self = .add
+        case "remove": self = .remove
+        case "pause": self = .pause
+        case "resume": self = .resume
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .list: "list"
+        case .add: "add"
+        case .remove: "remove"
+        case .pause: "pause"
+        case .resume: "resume"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -399,14 +452,7 @@ public enum CronAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .list: try container.encode("list")
-        case .add: try container.encode("add")
-        case .remove: try container.encode("remove")
-        case .pause: try container.encode("pause")
-        case .resume: try container.encode("resume")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1368,7 +1414,7 @@ public struct DiscoveredRepo: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum DispatchType: Codable, Sendable, Hashable {
+public enum DispatchType: Codable, Sendable, Hashable, RawRepresentable {
     case exec
     case alias
     case plugin
@@ -1376,6 +1422,32 @@ public enum DispatchType: Codable, Sendable, Hashable {
     case skill
     case prefill
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "exec": self = .exec
+        case "alias": self = .alias
+        case "plugin": self = .plugin
+        case "send": self = .send
+        case "skill": self = .skill
+        case "prefill": self = .prefill
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .exec: "exec"
+        case .alias: "alias"
+        case .plugin: "plugin"
+        case .send: "send"
+        case .skill: "skill"
+        case .prefill: "prefill"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1392,15 +1464,7 @@ public enum DispatchType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .exec: try container.encode("exec")
-        case .alias: try container.encode("alias")
-        case .plugin: try container.encode("plugin")
-        case .send: try container.encode("send")
-        case .skill: try container.encode("skill")
-        case .prefill: try container.encode("prefill")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

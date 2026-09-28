@@ -438,6 +438,27 @@ public sealed interface ProcessKillStatus {
     public data object Error : ProcessKillStatus
     public data class Unknown(public val raw: kotlin.String) : ProcessKillStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Killed -> "killed"
+            AlreadyExited -> "already_exited"
+            NotFound -> "not_found"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ProcessKillStatus = when (raw) {
+            "killed" -> Killed
+            "already_exited" -> AlreadyExited
+            "not_found" -> NotFound
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ProcessKillStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ProcessKillStatus", PrimitiveKind.STRING)
 
@@ -450,14 +471,7 @@ public sealed interface ProcessKillStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ProcessKillStatus) {
-            val raw: kotlin.String = when (value) {
-                Killed -> "killed"
-                AlreadyExited -> "already_exited"
-                NotFound -> "not_found"
-                Error -> "error"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -715,6 +729,20 @@ public sealed interface ProfileMirroredAuth {
 public sealed interface ProfileMirroredAuthOption2 {
     public data object Shared : ProfileMirroredAuthOption2
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Shared -> "shared"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ProfileMirroredAuthOption2? = when (raw) {
+            "shared" -> Shared
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ProfileMirroredAuthOption2> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ProfileMirroredAuthOption2", PrimitiveKind.STRING)
 
@@ -724,10 +752,7 @@ public sealed interface ProfileMirroredAuthOption2 {
         }
 
         override fun serialize(encoder: Encoder, value: ProfileMirroredAuthOption2) {
-            val raw: kotlin.String = when (value) {
-                Shared -> "shared"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -860,6 +885,20 @@ public data class ProfileRow(
 public sealed interface ProfileRowRole {
     public data object Setup : ProfileRowRole
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Setup -> "setup"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ProfileRowRole? = when (raw) {
+            "setup" -> Setup
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ProfileRowRole> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ProfileRowRole", PrimitiveKind.STRING)
 
@@ -869,10 +908,7 @@ public sealed interface ProfileRowRole {
         }
 
         override fun serialize(encoder: Encoder, value: ProfileRowRole) {
-            val raw: kotlin.String = when (value) {
-                Setup -> "setup"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

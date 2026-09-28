@@ -866,12 +866,34 @@ public struct PromptSubmitResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum PromptSubmitStatus: Codable, Sendable, Hashable {
+public enum PromptSubmitStatus: Codable, Sendable, Hashable, RawRepresentable {
     case streaming
     case queued
     case steered
     case redirected
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "streaming": self = .streaming
+        case "queued": self = .queued
+        case "steered": self = .steered
+        case "redirected": self = .redirected
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .streaming: "streaming"
+        case .queued: "queued"
+        case .steered: "steered"
+        case .redirected: "redirected"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -886,13 +908,7 @@ public enum PromptSubmitStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .streaming: try container.encode("streaming")
-        case .queued: try container.encode("queued")
-        case .steered: try container.encode("steered")
-        case .redirected: try container.encode("redirected")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -920,10 +936,28 @@ public struct QueuedPrompt: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ReactionAuthor: Codable, Sendable, Hashable {
+public enum ReactionAuthor: Codable, Sendable, Hashable, RawRepresentable {
     case user
     case agent
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "user": self = .user
+        case "agent": self = .agent
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .user: "user"
+        case .agent: "agent"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -936,11 +970,7 @@ public enum ReactionAuthor: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .user: try container.encode("user")
-        case .agent: try container.encode("agent")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1437,10 +1467,28 @@ public struct ReloadMcpResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ReloadMcpStatus: Codable, Sendable, Hashable {
+public enum ReloadMcpStatus: Codable, Sendable, Hashable, RawRepresentable {
     case confirmRequired
     case reloaded
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "confirm_required": self = .confirmRequired
+        case "reloaded": self = .reloaded
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .confirmRequired: "confirm_required"
+        case .reloaded: "reloaded"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1453,11 +1501,7 @@ public enum ReloadMcpStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .confirmRequired: try container.encode("confirm_required")
-        case .reloaded: try container.encode("reloaded")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1702,11 +1746,31 @@ public struct RequestCancelPayload: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ResumePhaseStatus: Codable, Sendable, Hashable {
+public enum ResumePhaseStatus: Codable, Sendable, Hashable, RawRepresentable {
     case loading
     case complete
     case failed
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "loading": self = .loading
+        case "complete": self = .complete
+        case "failed": self = .failed
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .loading: "loading"
+        case .complete: "complete"
+        case .failed: "failed"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1720,11 +1784,6 @@ public enum ResumePhaseStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .loading: try container.encode("loading")
-        case .complete: try container.encode("complete")
-        case .failed: try container.encode("failed")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }

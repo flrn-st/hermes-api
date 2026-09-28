@@ -73,12 +73,34 @@ public struct SubagentTailResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum SubscriptionChangeEffect: Codable, Sendable, Hashable {
+public enum SubscriptionChangeEffect: Codable, Sendable, Hashable, RawRepresentable {
     case chargeNow
     case scheduled
     case noOp
     case blocked
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "charge_now": self = .chargeNow
+        case "scheduled": self = .scheduled
+        case "no_op": self = .noOp
+        case "blocked": self = .blocked
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .chargeNow: "charge_now"
+        case .scheduled: "scheduled"
+        case .noOp: "no_op"
+        case .blocked: "blocked"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -93,13 +115,7 @@ public enum SubscriptionChangeEffect: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .chargeNow: try container.encode("charge_now")
-        case .scheduled: try container.encode("scheduled")
-        case .noOp: try container.encode("no_op")
-        case .blocked: try container.encode("blocked")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -157,10 +173,28 @@ public struct SubscriptionChangeParams: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum SubscriptionContext: Codable, Sendable, Hashable {
+public enum SubscriptionContext: Codable, Sendable, Hashable, RawRepresentable {
     case personal
     case team
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "personal": self = .personal
+        case "team": self = .team
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .personal: "personal"
+        case .team: "team"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -173,11 +207,7 @@ public enum SubscriptionContext: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .personal: try container.encode("personal")
-        case .team: try container.encode("team")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1171,11 +1201,31 @@ public struct ToolLabel: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ToolLabelKind: Codable, Sendable, Hashable {
+public enum ToolLabelKind: Codable, Sendable, Hashable, RawRepresentable {
     case connector
     case mcp
     case tool
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "connector": self = .connector
+        case "mcp": self = .mcp
+        case "tool": self = .tool
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .connector: "connector"
+        case .mcp: "mcp"
+        case .tool: "tool"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1189,12 +1239,7 @@ public enum ToolLabelKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .connector: try container.encode("connector")
-        case .mcp: try container.encode("mcp")
-        case .tool: try container.encode("tool")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1351,10 +1396,28 @@ public struct ToolStartPayload: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ToolsAction: Codable, Sendable, Hashable {
+public enum ToolsAction: Codable, Sendable, Hashable, RawRepresentable {
     case enable
     case disable
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "enable": self = .enable
+        case "disable": self = .disable
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .enable: "enable"
+        case .disable: "disable"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1367,11 +1430,7 @@ public enum ToolsAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .enable: try container.encode("enable")
-        case .disable: try container.encode("disable")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1410,8 +1469,22 @@ public struct ToolsChange: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ToolsChangeType: Codable, Sendable, Hashable {
+public enum ToolsChangeType: Codable, Sendable, Hashable, RawRepresentable {
     case tools
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "tools": self = .tools
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .tools: "tools"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1423,8 +1496,6 @@ public enum ToolsChangeType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .tools: try container.encode("tools")
-        }
+        try container.encode(rawValue)
     }
 }

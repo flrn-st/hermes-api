@@ -2,11 +2,31 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SkillListRowProvenance: Codable, Sendable, Hashable {
+public enum SkillListRowProvenance: Codable, Sendable, Hashable, RawRepresentable {
     case hub
     case bundled
     case agent
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "hub": self = .hub
+        case "bundled": self = .bundled
+        case "agent": self = .agent
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .hub: "hub"
+        case .bundled: "bundled"
+        case .agent: "agent"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -24,12 +44,7 @@ public enum SkillListRowProvenance: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .hub: try container.encode("hub")
-        case .bundled: try container.encode("bundled")
-        case .agent: try container.encode("agent")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -461,11 +476,31 @@ public struct StatusDashboardComponent: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusDashboardComponentSelftest: Codable, Sendable, Hashable {
+public enum StatusDashboardComponentSelftest: Codable, Sendable, Hashable, RawRepresentable {
     case knownUnknown
     case ok
     case failing
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "unknown": self = .knownUnknown
+        case "ok": self = .ok
+        case "failing": self = .failing
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .knownUnknown: "unknown"
+        case .ok: "ok"
+        case .failing: "failing"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -483,20 +518,33 @@ public enum StatusDashboardComponentSelftest: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .knownUnknown: try container.encode("unknown")
-        case .ok: try container.encode("ok")
-        case .failing: try container.encode("failing")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusDashboardComponentStatus: Codable, Sendable, Hashable {
+public enum StatusDashboardComponentStatus: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case degraded
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "degraded": self = .degraded
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .degraded: "degraded"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -513,11 +561,7 @@ public enum StatusDashboardComponentStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .degraded: try container.encode("degraded")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -568,12 +612,34 @@ public struct StatusDiskPressure: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusDiskPressurePressure: Codable, Sendable, Hashable {
+public enum StatusDiskPressurePressure: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case elevated
     case critical
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "elevated": self = .elevated
+        case "critical": self = .critical
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .elevated: "elevated"
+        case .critical: "critical"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -592,13 +658,7 @@ public enum StatusDiskPressurePressure: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .elevated: try container.encode("elevated")
-        case .critical: try container.encode("critical")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -684,10 +744,28 @@ public struct StatusGatewayComponent: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusGatewayComponentStatus: Codable, Sendable, Hashable {
+public enum StatusGatewayComponentStatus: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case degraded
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "degraded": self = .degraded
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .degraded: "degraded"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -704,11 +782,7 @@ public enum StatusGatewayComponentStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .degraded: try container.encode("degraded")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -906,12 +980,34 @@ public struct StatusMemoryPressure: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusMemoryPressurePressure: Codable, Sendable, Hashable {
+public enum StatusMemoryPressurePressure: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case elevated
     case critical
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "elevated": self = .elevated
+        case "critical": self = .critical
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .elevated: "elevated"
+        case .critical: "critical"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -930,13 +1026,7 @@ public enum StatusMemoryPressurePressure: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .elevated: try container.encode("elevated")
-        case .critical: try container.encode("critical")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -981,10 +1071,28 @@ public struct StatusPlatformsComponent: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusPlatformsComponentStatus: Codable, Sendable, Hashable {
+public enum StatusPlatformsComponentStatus: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case degraded
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "degraded": self = .degraded
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .degraded: "degraded"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1001,11 +1109,7 @@ public enum StatusPlatformsComponentStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .degraded: try container.encode("degraded")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1222,10 +1326,28 @@ public struct StatusResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusResponseAuthFlowsItem: Codable, Sendable, Hashable {
+public enum StatusResponseAuthFlowsItem: Codable, Sendable, Hashable, RawRepresentable {
     case cookie
     case nativePkce
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "cookie": self = .cookie
+        case "native_pkce": self = .nativePkce
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .cookie: "cookie"
+        case .nativePkce: "native_pkce"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1242,22 +1364,42 @@ public enum StatusResponseAuthFlowsItem: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .cookie: try container.encode("cookie")
-        case .nativePkce: try container.encode("native_pkce")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusResponseGatewayMode: Codable, Sendable, Hashable {
+public enum StatusResponseGatewayMode: Codable, Sendable, Hashable, RawRepresentable {
     case multiplex
     case single
     case multiple
     case none
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "multiplex": self = .multiplex
+        case "single": self = .single
+        case "multiple": self = .multiple
+        case "none": self = .none
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .multiplex: "multiplex"
+        case .single: "single"
+        case .multiple: "multiple"
+        case .none: "none"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1277,23 +1419,36 @@ public enum StatusResponseGatewayMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .multiplex: try container.encode("multiplex")
-        case .single: try container.encode("single")
-        case .multiple: try container.encode("multiple")
-        case .none: try container.encode("none")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusResponseNousSessionValid: Codable, Sendable, Hashable {
+public enum StatusResponseNousSessionValid: Codable, Sendable, Hashable, RawRepresentable {
     case valid
     case terminal
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "valid": self = .valid
+        case "terminal": self = .terminal
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .valid: "valid"
+        case .terminal: "terminal"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1311,20 +1466,33 @@ public enum StatusResponseNousSessionValid: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .valid: try container.encode("valid")
-        case .terminal: try container.encode("terminal")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusResponseOverall: Codable, Sendable, Hashable {
+public enum StatusResponseOverall: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case degraded
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "degraded": self = .degraded
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .degraded: "degraded"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1341,11 +1509,7 @@ public enum StatusResponseOverall: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .degraded: try container.encode("degraded")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1386,8 +1550,22 @@ public struct StatusStorageComponent: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusStorageComponentReason: Codable, Sendable, Hashable {
+public enum StatusStorageComponentReason: Codable, Sendable, Hashable, RawRepresentable {
     case corrupt
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "corrupt": self = .corrupt
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .corrupt: "corrupt"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1399,17 +1577,33 @@ public enum StatusStorageComponentReason: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .corrupt: try container.encode("corrupt")
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusStorageComponentStatus: Codable, Sendable, Hashable {
+public enum StatusStorageComponentStatus: Codable, Sendable, Hashable, RawRepresentable {
     case ok
     case degraded
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ok": self = .ok
+        case "degraded": self = .degraded
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ok: "ok"
+        case .degraded: "degraded"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1426,11 +1620,7 @@ public enum StatusStorageComponentStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ok: try container.encode("ok")
-        case .degraded: try container.encode("degraded")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

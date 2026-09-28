@@ -130,7 +130,7 @@ public struct TtsLeaseResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum TtsLeaseResponseAction: Codable, Sendable, Hashable {
+public enum TtsLeaseResponseAction: Codable, Sendable, Hashable, RawRepresentable {
     case noop
     case loaded
     case cached
@@ -138,6 +138,32 @@ public enum TtsLeaseResponseAction: Codable, Sendable, Hashable {
     case installed
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "noop": self = .noop
+        case "loaded": self = .loaded
+        case "cached": self = .cached
+        case "warmed": self = .warmed
+        case "installed": self = .installed
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .noop: "noop"
+        case .loaded: "loaded"
+        case .cached: "cached"
+        case .warmed: "warmed"
+        case .installed: "installed"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -158,15 +184,7 @@ public enum TtsLeaseResponseAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .noop: try container.encode("noop")
-        case .loaded: try container.encode("loaded")
-        case .cached: try container.encode("cached")
-        case .warmed: try container.encode("warmed")
-        case .installed: try container.encode("installed")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1074,10 +1092,28 @@ public struct VoiceClientSttConfig: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum VoiceClientSttConfigMode: Codable, Sendable, Hashable {
+public enum VoiceClientSttConfigMode: Codable, Sendable, Hashable, RawRepresentable {
     case relay
     case direct
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "relay": self = .relay
+        case "direct": self = .direct
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .relay: "relay"
+        case .direct: "direct"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1094,20 +1130,36 @@ public enum VoiceClientSttConfigMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .relay: try container.encode("relay")
-        case .direct: try container.encode("direct")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum VoiceClientSttConfigWire: Codable, Sendable, Hashable {
+public enum VoiceClientSttConfigWire: Codable, Sendable, Hashable, RawRepresentable {
     case openaiMultipart
     case xaiStt
     case elevenlabsStt
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "openai-multipart": self = .openaiMultipart
+        case "xai-stt": self = .xaiStt
+        case "elevenlabs-stt": self = .elevenlabsStt
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .openaiMultipart: "openai-multipart"
+        case .xaiStt: "xai-stt"
+        case .elevenlabsStt: "elevenlabs-stt"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1125,12 +1177,7 @@ public enum VoiceClientSttConfigWire: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .openaiMultipart: try container.encode("openai-multipart")
-        case .xaiStt: try container.encode("xai-stt")
-        case .elevenlabsStt: try container.encode("elevenlabs-stt")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1217,10 +1264,28 @@ public struct VoiceClientTtsConfig: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum VoiceClientTtsConfigMode: Codable, Sendable, Hashable {
+public enum VoiceClientTtsConfigMode: Codable, Sendable, Hashable, RawRepresentable {
     case relay
     case direct
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "relay": self = .relay
+        case "direct": self = .direct
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .relay: "relay"
+        case .direct: "direct"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1237,19 +1302,33 @@ public enum VoiceClientTtsConfigMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .relay: try container.encode("relay")
-        case .direct: try container.encode("direct")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum VoiceClientTtsConfigWire: Codable, Sendable, Hashable {
+public enum VoiceClientTtsConfigWire: Codable, Sendable, Hashable, RawRepresentable {
     case openaiSpeech
     case elevenlabsTts
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "openai-speech": self = .openaiSpeech
+        case "elevenlabs-tts": self = .elevenlabsTts
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .openaiSpeech: "openai-speech"
+        case .elevenlabsTts: "elevenlabs-tts"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1266,11 +1345,7 @@ public enum VoiceClientTtsConfigWire: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .openaiSpeech: try container.encode("openai-speech")
-        case .elevenlabsTts: try container.encode("elevenlabs-tts")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1468,10 +1543,28 @@ public struct VoiceLiveStatusResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum VoiceLiveStatusResponseMode: Codable, Sendable, Hashable {
+public enum VoiceLiveStatusResponseMode: Codable, Sendable, Hashable, RawRepresentable {
     case chained
     case gptLive
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "chained": self = .chained
+        case "gpt-live": self = .gptLive
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .chained: "chained"
+        case .gptLive: "gpt-live"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1488,11 +1581,7 @@ public enum VoiceLiveStatusResponseMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .chained: try container.encode("chained")
-        case .gptLive: try container.encode("gpt-live")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

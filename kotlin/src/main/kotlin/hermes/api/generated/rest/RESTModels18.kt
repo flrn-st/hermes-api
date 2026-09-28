@@ -132,6 +132,20 @@ public data class TelegramOnboardingApplyResponse(
 public sealed interface TelegramOnboardingApplyResponsePlatform {
     public data object Telegram : TelegramOnboardingApplyResponsePlatform
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Telegram -> "telegram"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): TelegramOnboardingApplyResponsePlatform? = when (raw) {
+            "telegram" -> Telegram
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<TelegramOnboardingApplyResponsePlatform> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TelegramOnboardingApplyResponsePlatform", PrimitiveKind.STRING)
 
@@ -141,10 +155,7 @@ public sealed interface TelegramOnboardingApplyResponsePlatform {
         }
 
         override fun serialize(encoder: Encoder, value: TelegramOnboardingApplyResponsePlatform) {
-            val raw: kotlin.String = when (value) {
-                Telegram -> "telegram"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -153,6 +164,20 @@ public sealed interface TelegramOnboardingApplyResponsePlatform {
 @Serializable(with = TelegramOnboardingApplyResponseRestartAction.Serializer::class)
 public sealed interface TelegramOnboardingApplyResponseRestartAction {
     public data object GatewayRestart : TelegramOnboardingApplyResponseRestartAction
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            GatewayRestart -> "gateway-restart"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): TelegramOnboardingApplyResponseRestartAction? = when (raw) {
+            "gateway-restart" -> GatewayRestart
+            else -> null
+        }
+    }
 
     public object Serializer : KSerializer<TelegramOnboardingApplyResponseRestartAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TelegramOnboardingApplyResponseRestartAction", PrimitiveKind.STRING)
@@ -163,10 +188,7 @@ public sealed interface TelegramOnboardingApplyResponseRestartAction {
         }
 
         override fun serialize(encoder: Encoder, value: TelegramOnboardingApplyResponseRestartAction) {
-            val raw: kotlin.String = when (value) {
-                GatewayRestart -> "gateway-restart"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -245,6 +267,23 @@ public sealed interface TelegramOnboardingStatusResponseStatus {
     public data object Ready : TelegramOnboardingStatusResponseStatus
     public data class Unknown(public val raw: kotlin.String) : TelegramOnboardingStatusResponseStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Waiting -> "waiting"
+            Ready -> "ready"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): TelegramOnboardingStatusResponseStatus = when (raw) {
+            "waiting" -> Waiting
+            "ready" -> Ready
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<TelegramOnboardingStatusResponseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TelegramOnboardingStatusResponseStatus", PrimitiveKind.STRING)
 
@@ -255,12 +294,7 @@ public sealed interface TelegramOnboardingStatusResponseStatus {
         }
 
         override fun serialize(encoder: Encoder, value: TelegramOnboardingStatusResponseStatus) {
-            val raw: kotlin.String = when (value) {
-                Waiting -> "waiting"
-                Ready -> "ready"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -442,6 +476,23 @@ public sealed interface ToolsetConfigProviderCapabilitiesItem {
     public data object Extract : ToolsetConfigProviderCapabilitiesItem
     public data class Unknown(public val raw: kotlin.String) : ToolsetConfigProviderCapabilitiesItem
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Search -> "search"
+            Extract -> "extract"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ToolsetConfigProviderCapabilitiesItem = when (raw) {
+            "search" -> Search
+            "extract" -> Extract
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ToolsetConfigProviderCapabilitiesItem> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetConfigProviderCapabilitiesItem", PrimitiveKind.STRING)
 
@@ -452,12 +503,7 @@ public sealed interface ToolsetConfigProviderCapabilitiesItem {
         }
 
         override fun serialize(encoder: Encoder, value: ToolsetConfigProviderCapabilitiesItem) {
-            val raw: kotlin.String = when (value) {
-                Search -> "search"
-                Extract -> "extract"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -471,6 +517,27 @@ public sealed interface ToolsetConfigProviderStatus {
     public data object NeedsSetup : ToolsetConfigProviderStatus
     public data class Unknown(public val raw: kotlin.String) : ToolsetConfigProviderStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ready -> "ready"
+            NeedsKeys -> "needs_keys"
+            NeedsAuth -> "needs_auth"
+            NeedsSetup -> "needs_setup"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ToolsetConfigProviderStatus = when (raw) {
+            "ready" -> Ready
+            "needs_keys" -> NeedsKeys
+            "needs_auth" -> NeedsAuth
+            "needs_setup" -> NeedsSetup
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ToolsetConfigProviderStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetConfigProviderStatus", PrimitiveKind.STRING)
 
@@ -483,14 +550,7 @@ public sealed interface ToolsetConfigProviderStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ToolsetConfigProviderStatus) {
-            val raw: kotlin.String = when (value) {
-                Ready -> "ready"
-                NeedsKeys -> "needs_keys"
-                NeedsAuth -> "needs_auth"
-                NeedsSetup -> "needs_setup"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -819,6 +879,23 @@ public sealed interface ToolsetProviderSelectResponseCapability {
     public data object Extract : ToolsetProviderSelectResponseCapability
     public data class Unknown(public val raw: kotlin.String) : ToolsetProviderSelectResponseCapability
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Search -> "search"
+            Extract -> "extract"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ToolsetProviderSelectResponseCapability = when (raw) {
+            "search" -> Search
+            "extract" -> Extract
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ToolsetProviderSelectResponseCapability> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetProviderSelectResponseCapability", PrimitiveKind.STRING)
 
@@ -829,12 +906,7 @@ public sealed interface ToolsetProviderSelectResponseCapability {
         }
 
         override fun serialize(encoder: Encoder, value: ToolsetProviderSelectResponseCapability) {
-            val raw: kotlin.String = when (value) {
-                Search -> "search"
-                Extract -> "extract"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

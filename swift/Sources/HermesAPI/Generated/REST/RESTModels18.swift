@@ -290,8 +290,22 @@ public struct TelegramOnboardingApplyResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum TelegramOnboardingApplyResponsePlatform: Codable, Sendable, Hashable {
+public enum TelegramOnboardingApplyResponsePlatform: Codable, Sendable, Hashable, RawRepresentable {
     case telegram
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "telegram": self = .telegram
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .telegram: "telegram"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -303,15 +317,27 @@ public enum TelegramOnboardingApplyResponsePlatform: Codable, Sendable, Hashable
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .telegram: try container.encode("telegram")
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum TelegramOnboardingApplyResponseRestartAction: Codable, Sendable, Hashable {
+public enum TelegramOnboardingApplyResponseRestartAction: Codable, Sendable, Hashable, RawRepresentable {
     case gatewayRestart
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "gateway-restart": self = .gatewayRestart
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .gatewayRestart: "gateway-restart"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -323,9 +349,7 @@ public enum TelegramOnboardingApplyResponseRestartAction: Codable, Sendable, Has
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .gatewayRestart: try container.encode("gateway-restart")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -467,10 +491,28 @@ public struct TelegramOnboardingStatusResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum TelegramOnboardingStatusResponseStatus: Codable, Sendable, Hashable {
+public enum TelegramOnboardingStatusResponseStatus: Codable, Sendable, Hashable, RawRepresentable {
     case waiting
     case ready
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "waiting": self = .waiting
+        case "ready": self = .ready
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .waiting: "waiting"
+        case .ready: "ready"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -487,11 +529,7 @@ public enum TelegramOnboardingStatusResponseStatus: Codable, Sendable, Hashable 
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .waiting: try container.encode("waiting")
-        case .ready: try container.encode("ready")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -876,10 +914,28 @@ public struct ToolsetConfigProvider: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ToolsetConfigProviderCapabilitiesItem: Codable, Sendable, Hashable {
+public enum ToolsetConfigProviderCapabilitiesItem: Codable, Sendable, Hashable, RawRepresentable {
     case search
     case extract
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "search": self = .search
+        case "extract": self = .extract
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .search: "search"
+        case .extract: "extract"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -896,21 +952,39 @@ public enum ToolsetConfigProviderCapabilitiesItem: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .search: try container.encode("search")
-        case .extract: try container.encode("extract")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ToolsetConfigProviderStatus: Codable, Sendable, Hashable {
+public enum ToolsetConfigProviderStatus: Codable, Sendable, Hashable, RawRepresentable {
     case ready
     case needsKeys
     case needsAuth
     case needsSetup
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "ready": self = .ready
+        case "needs_keys": self = .needsKeys
+        case "needs_auth": self = .needsAuth
+        case "needs_setup": self = .needsSetup
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .ready: "ready"
+        case .needsKeys: "needs_keys"
+        case .needsAuth: "needs_auth"
+        case .needsSetup: "needs_setup"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -929,13 +1003,7 @@ public enum ToolsetConfigProviderStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .ready: try container.encode("ready")
-        case .needsKeys: try container.encode("needs_keys")
-        case .needsAuth: try container.encode("needs_auth")
-        case .needsSetup: try container.encode("needs_setup")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1591,10 +1659,28 @@ public struct ToolsetProviderSelectResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ToolsetProviderSelectResponseCapability: Codable, Sendable, Hashable {
+public enum ToolsetProviderSelectResponseCapability: Codable, Sendable, Hashable, RawRepresentable {
     case search
     case extract
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "search": self = .search
+        case "extract": self = .extract
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .search: "search"
+        case .extract: "extract"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1611,11 +1697,7 @@ public enum ToolsetProviderSelectResponseCapability: Codable, Sendable, Hashable
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .search: try container.encode("search")
-        case .extract: try container.encode("extract")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

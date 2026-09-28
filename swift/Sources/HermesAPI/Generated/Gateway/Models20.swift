@@ -573,11 +573,31 @@ public struct TranscriptMessage: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum TurnStatus: Codable, Sendable, Hashable {
+public enum TurnStatus: Codable, Sendable, Hashable, RawRepresentable {
     case complete
     case error
     case interrupted
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "complete": self = .complete
+        case "error": self = .error
+        case "interrupted": self = .interrupted
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .complete: "complete"
+        case .error: "error"
+        case .interrupted: "interrupted"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -591,12 +611,7 @@ public enum TurnStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .complete: try container.encode("complete")
-        case .error: try container.encode("error")
-        case .interrupted: try container.encode("interrupted")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -827,10 +842,28 @@ public struct UsageBar: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum UsageBarKind: Codable, Sendable, Hashable {
+public enum UsageBarKind: Codable, Sendable, Hashable, RawRepresentable {
     case plan
     case topup
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "plan": self = .plan
+        case "topup": self = .topup
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .plan: "plan"
+        case .topup: "topup"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -843,11 +876,7 @@ public enum UsageBarKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .plan: try container.encode("plan")
-        case .topup: try container.encode("topup")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1185,11 +1214,31 @@ public struct VaultItem: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum VaultKind: Codable, Sendable, Hashable {
+public enum VaultKind: Codable, Sendable, Hashable, RawRepresentable {
     case login
     case payment
     case address
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "login": self = .login
+        case "payment": self = .payment
+        case "address": self = .address
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .login: "login"
+        case .payment: "payment"
+        case .address: "address"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1203,12 +1252,7 @@ public enum VaultKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .login: try container.encode("login")
-        case .payment: try container.encode("payment")
-        case .address: try container.encode("address")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

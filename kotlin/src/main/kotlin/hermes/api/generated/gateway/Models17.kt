@@ -314,6 +314,20 @@ public data class SessionOwner(
 public sealed interface SessionOwnerType {
     public data object Session : SessionOwnerType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Session -> "session"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): SessionOwnerType? = when (raw) {
+            "session" -> Session
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<SessionOwnerType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionOwnerType", PrimitiveKind.STRING)
 
@@ -323,10 +337,7 @@ public sealed interface SessionOwnerType {
         }
 
         override fun serialize(encoder: Encoder, value: SessionOwnerType) {
-            val raw: kotlin.String = when (value) {
-                Session -> "session"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

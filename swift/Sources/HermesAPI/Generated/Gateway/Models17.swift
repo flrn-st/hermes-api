@@ -458,8 +458,22 @@ public struct SessionOwner: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum SessionOwnerType: Codable, Sendable, Hashable {
+public enum SessionOwnerType: Codable, Sendable, Hashable, RawRepresentable {
     case session
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "session": self = .session
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .session: "session"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -471,9 +485,7 @@ public enum SessionOwnerType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .session: try container.encode("session")
-        }
+        try container.encode(rawValue)
     }
 }
 

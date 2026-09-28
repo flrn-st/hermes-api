@@ -137,10 +137,28 @@ public struct MoaConfigPayload: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MoaConfigPayloadDegradedReferencePolicy: Codable, Sendable, Hashable {
+public enum MoaConfigPayloadDegradedReferencePolicy: Codable, Sendable, Hashable, RawRepresentable {
     case loud
     case silent
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "loud": self = .loud
+        case "silent": self = .silent
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .loud: "loud"
+        case .silent: "silent"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -157,11 +175,7 @@ public enum MoaConfigPayloadDegradedReferencePolicy: Codable, Sendable, Hashable
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .loud: try container.encode("loud")
-        case .silent: try container.encode("silent")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -253,10 +267,28 @@ public struct MoaConfigResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MoaConfigResponseDegradedReferencePolicy: Codable, Sendable, Hashable {
+public enum MoaConfigResponseDegradedReferencePolicy: Codable, Sendable, Hashable, RawRepresentable {
     case loud
     case silent
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "loud": self = .loud
+        case "silent": self = .silent
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .loud: "loud"
+        case .silent: "silent"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -273,20 +305,36 @@ public enum MoaConfigResponseDegradedReferencePolicy: Codable, Sendable, Hashabl
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .loud: try container.encode("loud")
-        case .silent: try container.encode("silent")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MoaConfigResponsePrivacyFilter: Codable, Sendable, Hashable {
+public enum MoaConfigResponsePrivacyFilter: Codable, Sendable, Hashable, RawRepresentable {
     case empty
     case display
     case full
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "": self = .empty
+        case "display": self = .display
+        case "full": self = .full
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .empty: ""
+        case .display: "display"
+        case .full: "full"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -304,12 +352,7 @@ public enum MoaConfigResponsePrivacyFilter: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .empty: try container.encode("")
-        case .display: try container.encode("display")
-        case .full: try container.encode("full")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -406,10 +449,28 @@ public struct MoaConfigSaveResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MoaConfigSaveResponseDegradedReferencePolicy: Codable, Sendable, Hashable {
+public enum MoaConfigSaveResponseDegradedReferencePolicy: Codable, Sendable, Hashable, RawRepresentable {
     case loud
     case silent
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "loud": self = .loud
+        case "silent": self = .silent
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .loud: "loud"
+        case .silent: "silent"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -426,20 +487,36 @@ public enum MoaConfigSaveResponseDegradedReferencePolicy: Codable, Sendable, Has
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .loud: try container.encode("loud")
-        case .silent: try container.encode("silent")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MoaConfigSaveResponsePrivacyFilter: Codable, Sendable, Hashable {
+public enum MoaConfigSaveResponsePrivacyFilter: Codable, Sendable, Hashable, RawRepresentable {
     case empty
     case display
     case full
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "": self = .empty
+        case "display": self = .display
+        case "full": self = .full
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .empty: ""
+        case .display: "display"
+        case .full: "full"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -457,12 +534,7 @@ public enum MoaConfigSaveResponsePrivacyFilter: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .empty: try container.encode("")
-        case .display: try container.encode("display")
-        case .full: try container.encode("full")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -589,10 +661,28 @@ public struct MoaPreset: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MoaPresetDegradedReferencePolicy: Codable, Sendable, Hashable {
+public enum MoaPresetDegradedReferencePolicy: Codable, Sendable, Hashable, RawRepresentable {
     case loud
     case silent
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "loud": self = .loud
+        case "silent": self = .silent
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .loud: "loud"
+        case .silent: "silent"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -609,11 +699,7 @@ public enum MoaPresetDegradedReferencePolicy: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .loud: try container.encode("loud")
-        case .silent: try container.encode("silent")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -723,10 +809,28 @@ public struct MoaPresetPayload: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MoaPresetPayloadDegradedReferencePolicy: Codable, Sendable, Hashable {
+public enum MoaPresetPayloadDegradedReferencePolicy: Codable, Sendable, Hashable, RawRepresentable {
     case loud
     case silent
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "loud": self = .loud
+        case "silent": self = .silent
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .loud: "loud"
+        case .silent: "silent"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -743,11 +847,7 @@ public enum MoaPresetPayloadDegradedReferencePolicy: Codable, Sendable, Hashable
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .loud: try container.encode("loud")
-        case .silent: try container.encode("silent")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1005,10 +1105,28 @@ public struct ModelAssignmentResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ModelAssignmentResponseScope: Codable, Sendable, Hashable {
+public enum ModelAssignmentResponseScope: Codable, Sendable, Hashable, RawRepresentable {
     case main
     case auxiliary
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "main": self = .main
+        case "auxiliary": self = .auxiliary
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .main: "main"
+        case .auxiliary: "auxiliary"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1025,11 +1143,7 @@ public enum ModelAssignmentResponseScope: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .main: try container.encode("main")
-        case .auxiliary: try container.encode("auxiliary")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1546,8 +1660,22 @@ public struct OAuthDeviceCodeStartResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum OAuthDeviceCodeStartResponseFlow: Codable, Sendable, Hashable {
+public enum OAuthDeviceCodeStartResponseFlow: Codable, Sendable, Hashable, RawRepresentable {
     case deviceCode
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "device_code": self = .deviceCode
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .deviceCode: "device_code"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1559,9 +1687,7 @@ public enum OAuthDeviceCodeStartResponseFlow: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .deviceCode: try container.encode("device_code")
-        }
+        try container.encode(rawValue)
     }
 }
 

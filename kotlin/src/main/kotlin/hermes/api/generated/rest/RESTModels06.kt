@@ -456,6 +456,37 @@ public sealed interface KanbanBoardColumnName {
     public data object Archived : KanbanBoardColumnName
     public data class Unknown(public val raw: kotlin.String) : KanbanBoardColumnName
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Triage -> "triage"
+            Todo -> "todo"
+            Scheduled -> "scheduled"
+            Ready -> "ready"
+            Running -> "running"
+            Blocked -> "blocked"
+            Review -> "review"
+            Done -> "done"
+            Archived -> "archived"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanBoardColumnName = when (raw) {
+            "triage" -> Triage
+            "todo" -> Todo
+            "scheduled" -> Scheduled
+            "ready" -> Ready
+            "running" -> Running
+            "blocked" -> Blocked
+            "review" -> Review
+            "done" -> Done
+            "archived" -> Archived
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanBoardColumnName> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardColumnName", PrimitiveKind.STRING)
 
@@ -473,19 +504,7 @@ public sealed interface KanbanBoardColumnName {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardColumnName) {
-            val raw: kotlin.String = when (value) {
-                Triage -> "triage"
-                Todo -> "todo"
-                Scheduled -> "scheduled"
-                Ready -> "ready"
-                Running -> "running"
-                Blocked -> "blocked"
-                Review -> "review"
-                Done -> "done"
-                Archived -> "archived"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -507,6 +526,25 @@ public sealed interface KanbanBoardDefaultWorkspaceKind {
     public data object Dir : KanbanBoardDefaultWorkspaceKind
     public data class Unknown(public val raw: kotlin.String) : KanbanBoardDefaultWorkspaceKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Scratch -> "scratch"
+            Worktree -> "worktree"
+            Dir -> "dir"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanBoardDefaultWorkspaceKind = when (raw) {
+            "scratch" -> Scratch
+            "worktree" -> Worktree
+            "dir" -> Dir
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanBoardDefaultWorkspaceKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardDefaultWorkspaceKind", PrimitiveKind.STRING)
 
@@ -518,13 +556,7 @@ public sealed interface KanbanBoardDefaultWorkspaceKind {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardDefaultWorkspaceKind) {
-            val raw: kotlin.String = when (value) {
-                Scratch -> "scratch"
-                Worktree -> "worktree"
-                Dir -> "dir"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -690,6 +722,25 @@ public sealed interface KanbanBoardListRowDefaultWorkspaceKind {
     public data object Dir : KanbanBoardListRowDefaultWorkspaceKind
     public data class Unknown(public val raw: kotlin.String) : KanbanBoardListRowDefaultWorkspaceKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Scratch -> "scratch"
+            Worktree -> "worktree"
+            Dir -> "dir"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanBoardListRowDefaultWorkspaceKind = when (raw) {
+            "scratch" -> Scratch
+            "worktree" -> Worktree
+            "dir" -> Dir
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanBoardListRowDefaultWorkspaceKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardListRowDefaultWorkspaceKind", PrimitiveKind.STRING)
 
@@ -701,13 +752,7 @@ public sealed interface KanbanBoardListRowDefaultWorkspaceKind {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardListRowDefaultWorkspaceKind) {
-            val raw: kotlin.String = when (value) {
-                Scratch -> "scratch"
-                Worktree -> "worktree"
-                Dir -> "dir"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -730,6 +775,23 @@ public sealed interface KanbanBoardRemovalAction {
     public data object Deleted : KanbanBoardRemovalAction
     public data class Unknown(public val raw: kotlin.String) : KanbanBoardRemovalAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Archived -> "archived"
+            Deleted -> "deleted"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanBoardRemovalAction = when (raw) {
+            "archived" -> Archived
+            "deleted" -> Deleted
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanBoardRemovalAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardRemovalAction", PrimitiveKind.STRING)
 
@@ -740,12 +802,7 @@ public sealed interface KanbanBoardRemovalAction {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanBoardRemovalAction) {
-            val raw: kotlin.String = when (value) {
-                Archived -> "archived"
-                Deleted -> "deleted"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

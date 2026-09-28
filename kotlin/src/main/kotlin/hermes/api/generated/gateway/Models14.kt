@@ -557,6 +557,27 @@ public sealed interface PromptSubmitStatus {
     public data object Redirected : PromptSubmitStatus
     public data class Unknown(public val raw: kotlin.String) : PromptSubmitStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Streaming -> "streaming"
+            Queued -> "queued"
+            Steered -> "steered"
+            Redirected -> "redirected"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PromptSubmitStatus = when (raw) {
+            "streaming" -> Streaming
+            "queued" -> Queued
+            "steered" -> Steered
+            "redirected" -> Redirected
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PromptSubmitStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PromptSubmitStatus", PrimitiveKind.STRING)
 
@@ -569,14 +590,7 @@ public sealed interface PromptSubmitStatus {
         }
 
         override fun serialize(encoder: Encoder, value: PromptSubmitStatus) {
-            val raw: kotlin.String = when (value) {
-                Streaming -> "streaming"
-                Queued -> "queued"
-                Steered -> "steered"
-                Redirected -> "redirected"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -595,6 +609,23 @@ public sealed interface ReactionAuthor {
     public data object Agent : ReactionAuthor
     public data class Unknown(public val raw: kotlin.String) : ReactionAuthor
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            User -> "user"
+            Agent -> "agent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ReactionAuthor = when (raw) {
+            "user" -> User
+            "agent" -> Agent
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ReactionAuthor> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ReactionAuthor", PrimitiveKind.STRING)
 
@@ -605,12 +636,7 @@ public sealed interface ReactionAuthor {
         }
 
         override fun serialize(encoder: Encoder, value: ReactionAuthor) {
-            val raw: kotlin.String = when (value) {
-                User -> "user"
-                Agent -> "agent"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -971,6 +997,23 @@ public sealed interface ReloadMcpStatus {
     public data object Reloaded : ReloadMcpStatus
     public data class Unknown(public val raw: kotlin.String) : ReloadMcpStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            ConfirmRequired -> "confirm_required"
+            Reloaded -> "reloaded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ReloadMcpStatus = when (raw) {
+            "confirm_required" -> ConfirmRequired
+            "reloaded" -> Reloaded
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ReloadMcpStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ReloadMcpStatus", PrimitiveKind.STRING)
 
@@ -981,12 +1024,7 @@ public sealed interface ReloadMcpStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ReloadMcpStatus) {
-            val raw: kotlin.String = when (value) {
-                ConfirmRequired -> "confirm_required"
-                Reloaded -> "reloaded"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -1139,6 +1177,25 @@ public sealed interface ResumePhaseStatus {
     public data object Failed : ResumePhaseStatus
     public data class Unknown(public val raw: kotlin.String) : ResumePhaseStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Loading -> "loading"
+            Complete -> "complete"
+            Failed -> "failed"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ResumePhaseStatus = when (raw) {
+            "loading" -> Loading
+            "complete" -> Complete
+            "failed" -> Failed
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ResumePhaseStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ResumePhaseStatus", PrimitiveKind.STRING)
 
@@ -1150,13 +1207,7 @@ public sealed interface ResumePhaseStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ResumePhaseStatus) {
-            val raw: kotlin.String = when (value) {
-                Loading -> "loading"
-                Complete -> "complete"
-                Failed -> "failed"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

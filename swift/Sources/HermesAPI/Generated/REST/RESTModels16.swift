@@ -654,11 +654,31 @@ public struct SessionToolCallLabel: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SessionToolCallLabelKind: Codable, Sendable, Hashable {
+public enum SessionToolCallLabelKind: Codable, Sendable, Hashable, RawRepresentable {
     case connector
     case mcp
     case tool
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "connector": self = .connector
+        case "mcp": self = .mcp
+        case "tool": self = .tool
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .connector: "connector"
+        case .mcp: "mcp"
+        case .tool: "tool"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -676,12 +696,7 @@ public enum SessionToolCallLabelKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .connector: try container.encode("connector")
-        case .mcp: try container.encode("mcp")
-        case .tool: try container.encode("tool")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1411,11 +1426,31 @@ public struct SkillHubScanResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SkillHubScanResponsePolicy: Codable, Sendable, Hashable {
+public enum SkillHubScanResponsePolicy: Codable, Sendable, Hashable, RawRepresentable {
     case allow
     case ask
     case block
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "allow": self = .allow
+        case "ask": self = .ask
+        case "block": self = .block
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .allow: "allow"
+        case .ask: "ask"
+        case .block: "block"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1433,21 +1468,36 @@ public enum SkillHubScanResponsePolicy: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .allow: try container.encode("allow")
-        case .ask: try container.encode("ask")
-        case .block: try container.encode("block")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SkillHubScanResponseVerdict: Codable, Sendable, Hashable {
+public enum SkillHubScanResponseVerdict: Codable, Sendable, Hashable, RawRepresentable {
     case safe
     case caution
     case dangerous
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "safe": self = .safe
+        case "caution": self = .caution
+        case "dangerous": self = .dangerous
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .safe: "safe"
+        case .caution: "caution"
+        case .dangerous: "dangerous"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1465,12 +1515,7 @@ public enum SkillHubScanResponseVerdict: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .safe: try container.encode("safe")
-        case .caution: try container.encode("caution")
-        case .dangerous: try container.encode("dangerous")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

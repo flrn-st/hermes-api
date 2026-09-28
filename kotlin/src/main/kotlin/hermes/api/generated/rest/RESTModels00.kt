@@ -75,6 +75,25 @@ public sealed interface AchievementItemKind {
     public data object MultiCondition : AchievementItemKind
     public data class Unknown(public val raw: kotlin.String) : AchievementItemKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Lifetime -> "lifetime"
+            BestSession -> "best_session"
+            MultiCondition -> "multi_condition"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AchievementItemKind = when (raw) {
+            "lifetime" -> Lifetime
+            "best_session" -> BestSession
+            "multi_condition" -> MultiCondition
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<AchievementItemKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementItemKind", PrimitiveKind.STRING)
 
@@ -86,13 +105,7 @@ public sealed interface AchievementItemKind {
         }
 
         override fun serialize(encoder: Encoder, value: AchievementItemKind) {
-            val raw: kotlin.String = when (value) {
-                Lifetime -> "lifetime"
-                BestSession -> "best_session"
-                MultiCondition -> "multi_condition"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -105,6 +118,25 @@ public sealed interface AchievementItemState {
     public data object Secret : AchievementItemState
     public data class Unknown(public val raw: kotlin.String) : AchievementItemState
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Unlocked -> "unlocked"
+            Discovered -> "discovered"
+            Secret -> "secret"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AchievementItemState = when (raw) {
+            "unlocked" -> Unlocked
+            "discovered" -> Discovered
+            "secret" -> Secret
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<AchievementItemState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementItemState", PrimitiveKind.STRING)
 
@@ -116,13 +148,7 @@ public sealed interface AchievementItemState {
         }
 
         override fun serialize(encoder: Encoder, value: AchievementItemState) {
-            val raw: kotlin.String = when (value) {
-                Unlocked -> "unlocked"
-                Discovered -> "discovered"
-                Secret -> "secret"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -197,6 +223,29 @@ public sealed interface AchievementScanMetaMode {
     public data object Failed : AchievementScanMetaMode
     public data class Unknown(public val raw: kotlin.String) : AchievementScanMetaMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Full -> "full"
+            Incremental -> "incremental"
+            InProgress -> "in_progress"
+            Pending -> "pending"
+            Failed -> "failed"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AchievementScanMetaMode = when (raw) {
+            "full" -> Full
+            "incremental" -> Incremental
+            "in_progress" -> InProgress
+            "pending" -> Pending
+            "failed" -> Failed
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<AchievementScanMetaMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementScanMetaMode", PrimitiveKind.STRING)
 
@@ -210,15 +259,7 @@ public sealed interface AchievementScanMetaMode {
         }
 
         override fun serialize(encoder: Encoder, value: AchievementScanMetaMode) {
-            val raw: kotlin.String = when (value) {
-                Full -> "full"
-                Incremental -> "incremental"
-                InProgress -> "in_progress"
-                Pending -> "pending"
-                Failed -> "failed"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -252,6 +293,29 @@ public sealed interface AchievementScanMetaWithStatusMode {
     public data object Failed : AchievementScanMetaWithStatusMode
     public data class Unknown(public val raw: kotlin.String) : AchievementScanMetaWithStatusMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Full -> "full"
+            Incremental -> "incremental"
+            InProgress -> "in_progress"
+            Pending -> "pending"
+            Failed -> "failed"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AchievementScanMetaWithStatusMode = when (raw) {
+            "full" -> Full
+            "incremental" -> Incremental
+            "in_progress" -> InProgress
+            "pending" -> Pending
+            "failed" -> Failed
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<AchievementScanMetaWithStatusMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementScanMetaWithStatusMode", PrimitiveKind.STRING)
 
@@ -265,15 +329,7 @@ public sealed interface AchievementScanMetaWithStatusMode {
         }
 
         override fun serialize(encoder: Encoder, value: AchievementScanMetaWithStatusMode) {
-            val raw: kotlin.String = when (value) {
-                Full -> "full"
-                Incremental -> "incremental"
-                InProgress -> "in_progress"
-                Pending -> "pending"
-                Failed -> "failed"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -311,6 +367,25 @@ public sealed interface AchievementScanStatusState {
     public data object Failed : AchievementScanStatusState
     public data class Unknown(public val raw: kotlin.String) : AchievementScanStatusState
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Idle -> "idle"
+            Running -> "running"
+            Failed -> "failed"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AchievementScanStatusState = when (raw) {
+            "idle" -> Idle
+            "running" -> Running
+            "failed" -> Failed
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<AchievementScanStatusState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AchievementScanStatusState", PrimitiveKind.STRING)
 
@@ -322,13 +397,7 @@ public sealed interface AchievementScanStatusState {
         }
 
         override fun serialize(encoder: Encoder, value: AchievementScanStatusState) {
-            val raw: kotlin.String = when (value) {
-                Idle -> "idle"
-                Running -> "running"
-                Failed -> "failed"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

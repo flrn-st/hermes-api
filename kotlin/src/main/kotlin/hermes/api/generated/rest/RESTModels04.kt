@@ -144,6 +144,20 @@ public data class ElevenLabsVoicesResponse(
 public sealed interface ElevenLabsVoicesResponseError {
     public data object Unauthorized : ElevenLabsVoicesResponseError
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Unauthorized -> "unauthorized"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ElevenLabsVoicesResponseError? = when (raw) {
+            "unauthorized" -> Unauthorized
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ElevenLabsVoicesResponseError> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ElevenLabsVoicesResponseError", PrimitiveKind.STRING)
 
@@ -153,10 +167,7 @@ public sealed interface ElevenLabsVoicesResponseError {
         }
 
         override fun serialize(encoder: Encoder, value: ElevenLabsVoicesResponseError) {
-            val raw: kotlin.String = when (value) {
-                Unauthorized -> "unauthorized"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -519,6 +530,23 @@ public sealed interface GatewayDrainRequestAction {
     public data object Cancel : GatewayDrainRequestAction
     public data class Unknown(public val raw: kotlin.String) : GatewayDrainRequestAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Drain -> "drain"
+            Cancel -> "cancel"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): GatewayDrainRequestAction = when (raw) {
+            "drain" -> Drain
+            "cancel" -> Cancel
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<GatewayDrainRequestAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainRequestAction", PrimitiveKind.STRING)
 
@@ -529,12 +557,7 @@ public sealed interface GatewayDrainRequestAction {
         }
 
         override fun serialize(encoder: Encoder, value: GatewayDrainRequestAction) {
-            val raw: kotlin.String = when (value) {
-                Drain -> "drain"
-                Cancel -> "cancel"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -563,6 +586,23 @@ public sealed interface GatewayDrainResponseAction {
     public data object Cancel : GatewayDrainResponseAction
     public data class Unknown(public val raw: kotlin.String) : GatewayDrainResponseAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Drain -> "drain"
+            Cancel -> "cancel"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): GatewayDrainResponseAction = when (raw) {
+            "drain" -> Drain
+            "cancel" -> Cancel
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<GatewayDrainResponseAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainResponseAction", PrimitiveKind.STRING)
 
@@ -573,12 +613,7 @@ public sealed interface GatewayDrainResponseAction {
         }
 
         override fun serialize(encoder: Encoder, value: GatewayDrainResponseAction) {
-            val raw: kotlin.String = when (value) {
-                Drain -> "drain"
-                Cancel -> "cancel"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

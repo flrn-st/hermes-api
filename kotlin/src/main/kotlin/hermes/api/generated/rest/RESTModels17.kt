@@ -17,6 +17,25 @@ public sealed interface SkillListRowProvenance {
     public data object Agent : SkillListRowProvenance
     public data class Unknown(public val raw: kotlin.String) : SkillListRowProvenance
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Hub -> "hub"
+            Bundled -> "bundled"
+            Agent -> "agent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SkillListRowProvenance = when (raw) {
+            "hub" -> Hub
+            "bundled" -> Bundled
+            "agent" -> Agent
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SkillListRowProvenance> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillListRowProvenance", PrimitiveKind.STRING)
 
@@ -28,13 +47,7 @@ public sealed interface SkillListRowProvenance {
         }
 
         override fun serialize(encoder: Encoder, value: SkillListRowProvenance) {
-            val raw: kotlin.String = when (value) {
-                Hub -> "hub"
-                Bundled -> "bundled"
-                Agent -> "agent"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -280,6 +293,25 @@ public sealed interface StatusDashboardComponentSelftest {
     public data object Failing : StatusDashboardComponentSelftest
     public data class Unknown(public val raw: kotlin.String) : StatusDashboardComponentSelftest
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            KnownUnknown -> "unknown"
+            Ok -> "ok"
+            Failing -> "failing"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusDashboardComponentSelftest = when (raw) {
+            "unknown" -> KnownUnknown
+            "ok" -> Ok
+            "failing" -> Failing
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusDashboardComponentSelftest> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDashboardComponentSelftest", PrimitiveKind.STRING)
 
@@ -291,13 +323,7 @@ public sealed interface StatusDashboardComponentSelftest {
         }
 
         override fun serialize(encoder: Encoder, value: StatusDashboardComponentSelftest) {
-            val raw: kotlin.String = when (value) {
-                KnownUnknown -> "unknown"
-                Ok -> "ok"
-                Failing -> "failing"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -309,6 +335,23 @@ public sealed interface StatusDashboardComponentStatus {
     public data object Degraded : StatusDashboardComponentStatus
     public data class Unknown(public val raw: kotlin.String) : StatusDashboardComponentStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusDashboardComponentStatus = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusDashboardComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDashboardComponentStatus", PrimitiveKind.STRING)
 
@@ -319,12 +362,7 @@ public sealed interface StatusDashboardComponentStatus {
         }
 
         override fun serialize(encoder: Encoder, value: StatusDashboardComponentStatus) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Degraded -> "degraded"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -351,6 +389,27 @@ public sealed interface StatusDiskPressurePressure {
     public data object KnownUnknown : StatusDiskPressurePressure
     public data class Unknown(public val raw: kotlin.String) : StatusDiskPressurePressure
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Elevated -> "elevated"
+            Critical -> "critical"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusDiskPressurePressure = when (raw) {
+            "ok" -> Ok
+            "elevated" -> Elevated
+            "critical" -> Critical
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusDiskPressurePressure> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDiskPressurePressure", PrimitiveKind.STRING)
 
@@ -363,14 +422,7 @@ public sealed interface StatusDiskPressurePressure {
         }
 
         override fun serialize(encoder: Encoder, value: StatusDiskPressurePressure) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Elevated -> "elevated"
-                Critical -> "critical"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -404,6 +456,23 @@ public sealed interface StatusGatewayComponentStatus {
     public data object Degraded : StatusGatewayComponentStatus
     public data class Unknown(public val raw: kotlin.String) : StatusGatewayComponentStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusGatewayComponentStatus = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusGatewayComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusGatewayComponentStatus", PrimitiveKind.STRING)
 
@@ -414,12 +483,7 @@ public sealed interface StatusGatewayComponentStatus {
         }
 
         override fun serialize(encoder: Encoder, value: StatusGatewayComponentStatus) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Degraded -> "degraded"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -529,6 +593,27 @@ public sealed interface StatusMemoryPressurePressure {
     public data object KnownUnknown : StatusMemoryPressurePressure
     public data class Unknown(public val raw: kotlin.String) : StatusMemoryPressurePressure
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Elevated -> "elevated"
+            Critical -> "critical"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusMemoryPressurePressure = when (raw) {
+            "ok" -> Ok
+            "elevated" -> Elevated
+            "critical" -> Critical
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusMemoryPressurePressure> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusMemoryPressurePressure", PrimitiveKind.STRING)
 
@@ -541,14 +626,7 @@ public sealed interface StatusMemoryPressurePressure {
         }
 
         override fun serialize(encoder: Encoder, value: StatusMemoryPressurePressure) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Elevated -> "elevated"
-                Critical -> "critical"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -571,6 +649,23 @@ public sealed interface StatusPlatformsComponentStatus {
     public data object Degraded : StatusPlatformsComponentStatus
     public data class Unknown(public val raw: kotlin.String) : StatusPlatformsComponentStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusPlatformsComponentStatus = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusPlatformsComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusPlatformsComponentStatus", PrimitiveKind.STRING)
 
@@ -581,12 +676,7 @@ public sealed interface StatusPlatformsComponentStatus {
         }
 
         override fun serialize(encoder: Encoder, value: StatusPlatformsComponentStatus) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Degraded -> "degraded"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -678,6 +768,23 @@ public sealed interface StatusResponseAuthFlowsItem {
     public data object NativePkce : StatusResponseAuthFlowsItem
     public data class Unknown(public val raw: kotlin.String) : StatusResponseAuthFlowsItem
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Cookie -> "cookie"
+            NativePkce -> "native_pkce"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusResponseAuthFlowsItem = when (raw) {
+            "cookie" -> Cookie
+            "native_pkce" -> NativePkce
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusResponseAuthFlowsItem> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseAuthFlowsItem", PrimitiveKind.STRING)
 
@@ -688,12 +795,7 @@ public sealed interface StatusResponseAuthFlowsItem {
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseAuthFlowsItem) {
-            val raw: kotlin.String = when (value) {
-                Cookie -> "cookie"
-                NativePkce -> "native_pkce"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -708,6 +810,29 @@ public sealed interface StatusResponseGatewayMode {
     public data object KnownUnknown : StatusResponseGatewayMode
     public data class Unknown(public val raw: kotlin.String) : StatusResponseGatewayMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Multiplex -> "multiplex"
+            Single -> "single"
+            Multiple -> "multiple"
+            None -> "none"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusResponseGatewayMode = when (raw) {
+            "multiplex" -> Multiplex
+            "single" -> Single
+            "multiple" -> Multiple
+            "none" -> None
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusResponseGatewayMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseGatewayMode", PrimitiveKind.STRING)
 
@@ -721,15 +846,7 @@ public sealed interface StatusResponseGatewayMode {
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseGatewayMode) {
-            val raw: kotlin.String = when (value) {
-                Multiplex -> "multiplex"
-                Single -> "single"
-                Multiple -> "multiple"
-                None -> "none"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -742,6 +859,25 @@ public sealed interface StatusResponseNousSessionValid {
     public data object KnownUnknown : StatusResponseNousSessionValid
     public data class Unknown(public val raw: kotlin.String) : StatusResponseNousSessionValid
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Valid -> "valid"
+            Terminal -> "terminal"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusResponseNousSessionValid = when (raw) {
+            "valid" -> Valid
+            "terminal" -> Terminal
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusResponseNousSessionValid> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseNousSessionValid", PrimitiveKind.STRING)
 
@@ -753,13 +889,7 @@ public sealed interface StatusResponseNousSessionValid {
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseNousSessionValid) {
-            val raw: kotlin.String = when (value) {
-                Valid -> "valid"
-                Terminal -> "terminal"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -771,6 +901,23 @@ public sealed interface StatusResponseOverall {
     public data object Degraded : StatusResponseOverall
     public data class Unknown(public val raw: kotlin.String) : StatusResponseOverall
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusResponseOverall = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusResponseOverall> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseOverall", PrimitiveKind.STRING)
 
@@ -781,12 +928,7 @@ public sealed interface StatusResponseOverall {
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseOverall) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Degraded -> "degraded"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -805,6 +947,20 @@ public data class StatusStorageComponent(
 public sealed interface StatusStorageComponentReason {
     public data object Corrupt : StatusStorageComponentReason
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Corrupt -> "corrupt"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): StatusStorageComponentReason? = when (raw) {
+            "corrupt" -> Corrupt
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<StatusStorageComponentReason> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusStorageComponentReason", PrimitiveKind.STRING)
 
@@ -814,10 +970,7 @@ public sealed interface StatusStorageComponentReason {
         }
 
         override fun serialize(encoder: Encoder, value: StatusStorageComponentReason) {
-            val raw: kotlin.String = when (value) {
-                Corrupt -> "corrupt"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -829,6 +982,23 @@ public sealed interface StatusStorageComponentStatus {
     public data object Degraded : StatusStorageComponentStatus
     public data class Unknown(public val raw: kotlin.String) : StatusStorageComponentStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusStorageComponentStatus = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<StatusStorageComponentStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusStorageComponentStatus", PrimitiveKind.STRING)
 
@@ -839,12 +1009,7 @@ public sealed interface StatusStorageComponentStatus {
         }
 
         override fun serialize(encoder: Encoder, value: StatusStorageComponentStatus) {
-            val raw: kotlin.String = when (value) {
-                Ok -> "ok"
-                Degraded -> "degraded"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

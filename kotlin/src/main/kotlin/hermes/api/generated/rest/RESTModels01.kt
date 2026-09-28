@@ -164,6 +164,27 @@ public sealed interface AudioSpeakResponseMimeType {
     public data object AudioFlac : AudioSpeakResponseMimeType
     public data class Unknown(public val raw: kotlin.String) : AudioSpeakResponseMimeType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            AudioMpeg -> "audio/mpeg"
+            AudioOgg -> "audio/ogg"
+            AudioWav -> "audio/wav"
+            AudioFlac -> "audio/flac"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AudioSpeakResponseMimeType = when (raw) {
+            "audio/mpeg" -> AudioMpeg
+            "audio/ogg" -> AudioOgg
+            "audio/wav" -> AudioWav
+            "audio/flac" -> AudioFlac
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<AudioSpeakResponseMimeType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AudioSpeakResponseMimeType", PrimitiveKind.STRING)
 
@@ -176,14 +197,7 @@ public sealed interface AudioSpeakResponseMimeType {
         }
 
         override fun serialize(encoder: Encoder, value: AudioSpeakResponseMimeType) {
-            val raw: kotlin.String = when (value) {
-                AudioMpeg -> "audio/mpeg"
-                AudioOgg -> "audio/ogg"
-                AudioWav -> "audio/wav"
-                AudioFlac -> "audio/flac"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -844,6 +858,29 @@ public sealed interface ConfigSchemaFieldType {
     public data object Select : ConfigSchemaFieldType
     public data class Unknown(public val raw: kotlin.String) : ConfigSchemaFieldType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Boolean -> "boolean"
+            Number -> "number"
+            List -> "list"
+            String -> "string"
+            Select -> "select"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConfigSchemaFieldType = when (raw) {
+            "boolean" -> Boolean
+            "number" -> Number
+            "list" -> List
+            "string" -> String
+            "select" -> Select
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConfigSchemaFieldType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConfigSchemaFieldType", PrimitiveKind.STRING)
 
@@ -857,15 +894,7 @@ public sealed interface ConfigSchemaFieldType {
         }
 
         override fun serialize(encoder: Encoder, value: ConfigSchemaFieldType) {
-            val raw: kotlin.String = when (value) {
-                Boolean -> "boolean"
-                Number -> "number"
-                List -> "list"
-                String -> "string"
-                Select -> "select"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

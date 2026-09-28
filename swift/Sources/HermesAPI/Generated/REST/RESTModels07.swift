@@ -327,11 +327,31 @@ public struct KanbanDiagnosticAction: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanDiagnosticSeverity: Codable, Sendable, Hashable {
+public enum KanbanDiagnosticSeverity: Codable, Sendable, Hashable, RawRepresentable {
     case warning
     case error
     case critical
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "warning": self = .warning
+        case "error": self = .error
+        case "critical": self = .critical
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .warning: "warning"
+        case .error: "error"
+        case .critical: "critical"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -349,12 +369,7 @@ public enum KanbanDiagnosticSeverity: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .warning: try container.encode("warning")
-        case .error: try container.encode("error")
-        case .critical: try container.encode("critical")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -506,10 +521,28 @@ public struct KanbanDispatchResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanDispatchResponseMemoryPressure: Codable, Sendable, Hashable {
+public enum KanbanDispatchResponseMemoryPressure: Codable, Sendable, Hashable, RawRepresentable {
     case critical
     case elevated
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "critical": self = .critical
+        case "elevated": self = .elevated
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .critical: "critical"
+        case .elevated: "elevated"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -526,11 +559,7 @@ public enum KanbanDispatchResponseMemoryPressure: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .critical: try container.encode("critical")
-        case .elevated: try container.encode("elevated")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -677,11 +706,31 @@ public struct KanbanEstimateResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum KanbanEstimateResponseComplexity: Codable, Sendable, Hashable {
+public enum KanbanEstimateResponseComplexity: Codable, Sendable, Hashable, RawRepresentable {
     case s
     case m
     case l
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "S": self = .s
+        case "M": self = .m
+        case "L": self = .l
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .s: "S"
+        case .m: "M"
+        case .l: "L"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -699,12 +748,7 @@ public enum KanbanEstimateResponseComplexity: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .s: try container.encode("S")
-        case .m: try container.encode("M")
-        case .l: try container.encode("L")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

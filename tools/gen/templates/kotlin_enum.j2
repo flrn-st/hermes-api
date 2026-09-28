@@ -8,6 +8,37 @@ public sealed interface {{ enum.name }} {
     public data class Unknown(public val raw: kotlin.String) : {{ enum.name }}
 {% endif %}
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+{% for case in enum.cases %}
+            {{ case.kotlin_name }} -> {{ case.wire_literal }}
+{% endfor %}
+{% if not enum.closed %}
+            is Unknown -> raw
+{% endif %}
+        }
+
+    public companion object {
+{% if enum.closed %}
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): {{ enum.name }}? = when (raw) {
+{% for case in enum.cases %}
+            {{ case.wire_literal }} -> {{ case.kotlin_name }}
+{% endfor %}
+            else -> null
+        }
+{% else %}
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): {{ enum.name }} = when (raw) {
+{% for case in enum.cases %}
+            {{ case.wire_literal }} -> {{ case.kotlin_name }}
+{% endfor %}
+            else -> Unknown(raw)
+        }
+{% endif %}
+    }
+
     public object Serializer : KSerializer<{{ enum.name }}> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("{{ enum.name }}", PrimitiveKind.STRING)
 
@@ -27,15 +58,7 @@ public sealed interface {{ enum.name }} {
         }
 
         override fun serialize(encoder: Encoder, value: {{ enum.name }}) {
-            val raw: kotlin.String = when (value) {
-{% for case in enum.cases %}
-                {{ case.kotlin_name }} -> {{ case.wire_literal }}
-{% endfor %}
-{% if not enum.closed %}
-                is Unknown -> value.raw
-{% endif %}
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

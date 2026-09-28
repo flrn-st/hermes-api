@@ -61,6 +61,31 @@ public sealed interface TtsLeaseResponseAction {
     public data object Error : TtsLeaseResponseAction
     public data class Unknown(public val raw: kotlin.String) : TtsLeaseResponseAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Noop -> "noop"
+            Loaded -> "loaded"
+            Cached -> "cached"
+            Warmed -> "warmed"
+            Installed -> "installed"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): TtsLeaseResponseAction = when (raw) {
+            "noop" -> Noop
+            "loaded" -> Loaded
+            "cached" -> Cached
+            "warmed" -> Warmed
+            "installed" -> Installed
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<TtsLeaseResponseAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TtsLeaseResponseAction", PrimitiveKind.STRING)
 
@@ -75,16 +100,7 @@ public sealed interface TtsLeaseResponseAction {
         }
 
         override fun serialize(encoder: Encoder, value: TtsLeaseResponseAction) {
-            val raw: kotlin.String = when (value) {
-                Noop -> "noop"
-                Loaded -> "loaded"
-                Cached -> "cached"
-                Warmed -> "warmed"
-                Installed -> "installed"
-                Error -> "error"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -555,6 +571,23 @@ public sealed interface VoiceClientSttConfigMode {
     public data object Direct : VoiceClientSttConfigMode
     public data class Unknown(public val raw: kotlin.String) : VoiceClientSttConfigMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Relay -> "relay"
+            Direct -> "direct"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientSttConfigMode = when (raw) {
+            "relay" -> Relay
+            "direct" -> Direct
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceClientSttConfigMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientSttConfigMode", PrimitiveKind.STRING)
 
@@ -565,12 +598,7 @@ public sealed interface VoiceClientSttConfigMode {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientSttConfigMode) {
-            val raw: kotlin.String = when (value) {
-                Relay -> "relay"
-                Direct -> "direct"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -583,6 +611,25 @@ public sealed interface VoiceClientSttConfigWire {
     public data object ElevenlabsStt : VoiceClientSttConfigWire
     public data class Unknown(public val raw: kotlin.String) : VoiceClientSttConfigWire
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            OpenaiMultipart -> "openai-multipart"
+            XaiStt -> "xai-stt"
+            ElevenlabsStt -> "elevenlabs-stt"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientSttConfigWire = when (raw) {
+            "openai-multipart" -> OpenaiMultipart
+            "xai-stt" -> XaiStt
+            "elevenlabs-stt" -> ElevenlabsStt
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceClientSttConfigWire> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientSttConfigWire", PrimitiveKind.STRING)
 
@@ -594,13 +641,7 @@ public sealed interface VoiceClientSttConfigWire {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientSttConfigWire) {
-            val raw: kotlin.String = when (value) {
-                OpenaiMultipart -> "openai-multipart"
-                XaiStt -> "xai-stt"
-                ElevenlabsStt -> "elevenlabs-stt"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -640,6 +681,23 @@ public sealed interface VoiceClientTtsConfigMode {
     public data object Direct : VoiceClientTtsConfigMode
     public data class Unknown(public val raw: kotlin.String) : VoiceClientTtsConfigMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Relay -> "relay"
+            Direct -> "direct"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientTtsConfigMode = when (raw) {
+            "relay" -> Relay
+            "direct" -> Direct
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceClientTtsConfigMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientTtsConfigMode", PrimitiveKind.STRING)
 
@@ -650,12 +708,7 @@ public sealed interface VoiceClientTtsConfigMode {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientTtsConfigMode) {
-            val raw: kotlin.String = when (value) {
-                Relay -> "relay"
-                Direct -> "direct"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -667,6 +720,23 @@ public sealed interface VoiceClientTtsConfigWire {
     public data object ElevenlabsTts : VoiceClientTtsConfigWire
     public data class Unknown(public val raw: kotlin.String) : VoiceClientTtsConfigWire
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            OpenaiSpeech -> "openai-speech"
+            ElevenlabsTts -> "elevenlabs-tts"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientTtsConfigWire = when (raw) {
+            "openai-speech" -> OpenaiSpeech
+            "elevenlabs-tts" -> ElevenlabsTts
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceClientTtsConfigWire> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientTtsConfigWire", PrimitiveKind.STRING)
 
@@ -677,12 +747,7 @@ public sealed interface VoiceClientTtsConfigWire {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceClientTtsConfigWire) {
-            val raw: kotlin.String = when (value) {
-                OpenaiSpeech -> "openai-speech"
-                ElevenlabsTts -> "elevenlabs-tts"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -835,6 +900,23 @@ public sealed interface VoiceLiveStatusResponseMode {
     public data object GptLive : VoiceLiveStatusResponseMode
     public data class Unknown(public val raw: kotlin.String) : VoiceLiveStatusResponseMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Chained -> "chained"
+            GptLive -> "gpt-live"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceLiveStatusResponseMode = when (raw) {
+            "chained" -> Chained
+            "gpt-live" -> GptLive
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<VoiceLiveStatusResponseMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceLiveStatusResponseMode", PrimitiveKind.STRING)
 
@@ -845,12 +927,7 @@ public sealed interface VoiceLiveStatusResponseMode {
         }
 
         override fun serialize(encoder: Encoder, value: VoiceLiveStatusResponseMode) {
-            val raw: kotlin.String = when (value) {
-                Chained -> "chained"
-                GptLive -> "gpt-live"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

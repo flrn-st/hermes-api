@@ -41,6 +41,27 @@ public sealed interface SubscriptionChangeEffect {
     public data object Blocked : SubscriptionChangeEffect
     public data class Unknown(public val raw: kotlin.String) : SubscriptionChangeEffect
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            ChargeNow -> "charge_now"
+            Scheduled -> "scheduled"
+            NoOp -> "no_op"
+            Blocked -> "blocked"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SubscriptionChangeEffect = when (raw) {
+            "charge_now" -> ChargeNow
+            "scheduled" -> Scheduled
+            "no_op" -> NoOp
+            "blocked" -> Blocked
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SubscriptionChangeEffect> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SubscriptionChangeEffect", PrimitiveKind.STRING)
 
@@ -53,14 +74,7 @@ public sealed interface SubscriptionChangeEffect {
         }
 
         override fun serialize(encoder: Encoder, value: SubscriptionChangeEffect) {
-            val raw: kotlin.String = when (value) {
-                ChargeNow -> "charge_now"
-                Scheduled -> "scheduled"
-                NoOp -> "no_op"
-                Blocked -> "blocked"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -117,6 +131,23 @@ public sealed interface SubscriptionContext {
     public data object Team : SubscriptionContext
     public data class Unknown(public val raw: kotlin.String) : SubscriptionContext
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Personal -> "personal"
+            Team -> "team"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SubscriptionContext = when (raw) {
+            "personal" -> Personal
+            "team" -> Team
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<SubscriptionContext> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SubscriptionContext", PrimitiveKind.STRING)
 
@@ -127,12 +158,7 @@ public sealed interface SubscriptionContext {
         }
 
         override fun serialize(encoder: Encoder, value: SubscriptionContext) {
-            val raw: kotlin.String = when (value) {
-                Personal -> "personal"
-                Team -> "team"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -656,6 +682,25 @@ public sealed interface ToolLabelKind {
     public data object Tool : ToolLabelKind
     public data class Unknown(public val raw: kotlin.String) : ToolLabelKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Connector -> "connector"
+            Mcp -> "mcp"
+            Tool -> "tool"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ToolLabelKind = when (raw) {
+            "connector" -> Connector
+            "mcp" -> Mcp
+            "tool" -> Tool
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ToolLabelKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolLabelKind", PrimitiveKind.STRING)
 
@@ -667,13 +712,7 @@ public sealed interface ToolLabelKind {
         }
 
         override fun serialize(encoder: Encoder, value: ToolLabelKind) {
-            val raw: kotlin.String = when (value) {
-                Connector -> "connector"
-                Mcp -> "mcp"
-                Tool -> "tool"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -737,6 +776,23 @@ public sealed interface ToolsAction {
     public data object Disable : ToolsAction
     public data class Unknown(public val raw: kotlin.String) : ToolsAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Enable -> "enable"
+            Disable -> "disable"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ToolsAction = when (raw) {
+            "enable" -> Enable
+            "disable" -> Disable
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ToolsAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsAction", PrimitiveKind.STRING)
 
@@ -747,12 +803,7 @@ public sealed interface ToolsAction {
         }
 
         override fun serialize(encoder: Encoder, value: ToolsAction) {
-            val raw: kotlin.String = when (value) {
-                Enable -> "enable"
-                Disable -> "disable"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -774,6 +825,20 @@ public data class ToolsChange(
 public sealed interface ToolsChangeType {
     public data object Tools : ToolsChangeType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Tools -> "tools"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ToolsChangeType? = when (raw) {
+            "tools" -> Tools
+            else -> null
+        }
+    }
+
     public object Serializer : KSerializer<ToolsChangeType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsChangeType", PrimitiveKind.STRING)
 
@@ -783,10 +848,7 @@ public sealed interface ToolsChangeType {
         }
 
         override fun serialize(encoder: Encoder, value: ToolsChangeType) {
-            val raw: kotlin.String = when (value) {
-                Tools -> "tools"
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

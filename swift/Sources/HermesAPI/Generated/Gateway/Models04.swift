@@ -40,8 +40,22 @@ public struct ConnectorPolicyAllowBody: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyAllowBodyMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyAllowBodyMode: Codable, Sendable, Hashable, RawRepresentable {
     case allow
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "allow": self = .allow
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .allow: "allow"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -53,9 +67,7 @@ public enum ConnectorPolicyAllowBodyMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .allow: try container.encode("allow")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -83,8 +95,22 @@ public struct ConnectorPolicyDenyAllBody: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyDenyAllBodyMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyDenyAllBodyMode: Codable, Sendable, Hashable, RawRepresentable {
     case denyAll
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "deny-all": self = .denyAll
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .denyAll: "deny-all"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -96,9 +122,7 @@ public enum ConnectorPolicyDenyAllBodyMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .denyAll: try container.encode("deny-all")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -141,8 +165,22 @@ public struct ConnectorPolicyDenyBody: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyDenyBodyMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyDenyBodyMode: Codable, Sendable, Hashable, RawRepresentable {
     case deny
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "deny": self = .deny
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .deny: "deny"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -154,9 +192,7 @@ public enum ConnectorPolicyDenyBodyMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .deny: try container.encode("deny")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -219,8 +255,22 @@ public struct ConnectorPolicyEffectiveAllow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyEffectiveAllowMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyEffectiveAllowMode: Codable, Sendable, Hashable, RawRepresentable {
     case allow
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "allow": self = .allow
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .allow: "allow"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -232,9 +282,7 @@ public enum ConnectorPolicyEffectiveAllowMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .allow: try container.encode("allow")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -340,8 +388,22 @@ public struct ConnectorPolicyEffectiveDenyAll: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyEffectiveDenyAllMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyEffectiveDenyAllMode: Codable, Sendable, Hashable, RawRepresentable {
     case denyAll
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "deny-all": self = .denyAll
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .denyAll: "deny-all"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -353,15 +415,27 @@ public enum ConnectorPolicyEffectiveDenyAllMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .denyAll: try container.encode("deny-all")
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyEffectiveDenyMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyEffectiveDenyMode: Codable, Sendable, Hashable, RawRepresentable {
     case deny
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "deny": self = .deny
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .deny: "deny"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -373,9 +447,7 @@ public enum ConnectorPolicyEffectiveDenyMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .deny: try container.encode("deny")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -423,8 +495,22 @@ public struct ConnectorPolicyEffectiveUnrestricted: Codable, Sendable, Hashable 
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyEffectiveUnrestrictedMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyEffectiveUnrestrictedMode: Codable, Sendable, Hashable, RawRepresentable {
     case unrestricted
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "unrestricted": self = .unrestricted
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .unrestricted: "unrestricted"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -436,9 +522,7 @@ public enum ConnectorPolicyEffectiveUnrestrictedMode: Codable, Sendable, Hashabl
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .unrestricted: try container.encode("unrestricted")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -570,11 +654,31 @@ public enum ConnectorPolicyLayerBody: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyLayerKind: Codable, Sendable, Hashable {
+public enum ConnectorPolicyLayerKind: Codable, Sendable, Hashable, RawRepresentable {
     case org
     case role
     case member
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "org": self = .org
+        case "role": self = .role
+        case "member": self = .member
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .org: "org"
+        case .role: "role"
+        case .member: "member"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -588,12 +692,7 @@ public enum ConnectorPolicyLayerKind: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .org: try container.encode("org")
-        case .role: try container.encode("role")
-        case .member: try container.encode("member")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -781,8 +880,22 @@ public struct ConnectorPolicyUnrestrictedBody: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorPolicyUnrestrictedBodyMode: Codable, Sendable, Hashable {
+public enum ConnectorPolicyUnrestrictedBodyMode: Codable, Sendable, Hashable, RawRepresentable {
     case unrestricted
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "unrestricted": self = .unrestricted
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .unrestricted: "unrestricted"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -794,9 +907,7 @@ public enum ConnectorPolicyUnrestrictedBodyMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .unrestricted: try container.encode("unrestricted")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -849,7 +960,7 @@ public struct ConnectorRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorRowConnectionStatus: Codable, Sendable, Hashable {
+public enum ConnectorRowConnectionStatus: Codable, Sendable, Hashable, RawRepresentable {
     case pending
     case active
     case failed
@@ -857,6 +968,32 @@ public enum ConnectorRowConnectionStatus: Codable, Sendable, Hashable {
     case revoked
     case inactive
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "pending": self = .pending
+        case "active": self = .active
+        case "failed": self = .failed
+        case "expired": self = .expired
+        case "revoked": self = .revoked
+        case "inactive": self = .inactive
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .pending: "pending"
+        case .active: "active"
+        case .failed: "failed"
+        case .expired: "expired"
+        case .revoked: "revoked"
+        case .inactive: "inactive"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -873,25 +1010,39 @@ public enum ConnectorRowConnectionStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .pending: try container.encode("pending")
-        case .active: try container.encode("active")
-        case .failed: try container.encode("failed")
-        case .expired: try container.encode("expired")
-        case .revoked: try container.encode("revoked")
-        case .inactive: try container.encode("inactive")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorToolFacet: Codable, Sendable, Hashable {
+public enum ConnectorToolFacet: Codable, Sendable, Hashable, RawRepresentable {
     case read
     case write
     case destructive
     case unclassified
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "read": self = .read
+        case "write": self = .write
+        case "destructive": self = .destructive
+        case "unclassified": self = .unclassified
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .read: "read"
+        case .write: "write"
+        case .destructive: "destructive"
+        case .unclassified: "unclassified"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -906,13 +1057,7 @@ public enum ConnectorToolFacet: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .read: try container.encode("read")
-        case .write: try container.encode("write")
-        case .destructive: try container.encode("destructive")
-        case .unclassified: try container.encode("unclassified")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1071,11 +1216,31 @@ public struct ConnectorToolsResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectorToolsSource: Codable, Sendable, Hashable {
+public enum ConnectorToolsSource: Codable, Sendable, Hashable, RawRepresentable {
     case cache
     case network
     case revalidated
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "cache": self = .cache
+        case "network": self = .network
+        case "revalidated": self = .revalidated
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .cache: "cache"
+        case .network: "network"
+        case .revalidated: "revalidated"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1089,12 +1254,7 @@ public enum ConnectorToolsSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .cache: try container.encode("cache")
-        case .network: try container.encode("network")
-        case .revalidated: try container.encode("revalidated")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

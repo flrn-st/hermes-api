@@ -2081,8 +2081,22 @@ public struct SessionListResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SessionListResponseStorageValue: Codable, Sendable, Hashable {
+public enum SessionListResponseStorageValue: Codable, Sendable, Hashable, RawRepresentable {
     case corrupt
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "corrupt": self = .corrupt
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .corrupt: "corrupt"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -2094,9 +2108,7 @@ public enum SessionListResponseStorageValue: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .corrupt: try container.encode("corrupt")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -2333,8 +2345,22 @@ public struct SessionMessagesAroundPagination: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SessionMessagesAroundPaginationOrder: Codable, Sendable, Hashable {
+public enum SessionMessagesAroundPaginationOrder: Codable, Sendable, Hashable, RawRepresentable {
     case oldest
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "oldest": self = .oldest
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .oldest: "oldest"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -2346,9 +2372,7 @@ public enum SessionMessagesAroundPaginationOrder: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .oldest: try container.encode("oldest")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -2444,10 +2468,28 @@ public struct SessionMessagesPagination: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SessionMessagesPaginationOrder: Codable, Sendable, Hashable {
+public enum SessionMessagesPaginationOrder: Codable, Sendable, Hashable, RawRepresentable {
     case oldest
     case latest
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "oldest": self = .oldest
+        case "latest": self = .latest
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .oldest: "oldest"
+        case .latest: "latest"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -2464,11 +2506,7 @@ public enum SessionMessagesPaginationOrder: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .oldest: try container.encode("oldest")
-        case .latest: try container.encode("latest")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

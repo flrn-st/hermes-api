@@ -485,12 +485,34 @@ public struct AudioSpeakResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum AudioSpeakResponseMimeType: Codable, Sendable, Hashable {
+public enum AudioSpeakResponseMimeType: Codable, Sendable, Hashable, RawRepresentable {
     case audioMpeg
     case audioOgg
     case audioWav
     case audioFlac
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "audio/mpeg": self = .audioMpeg
+        case "audio/ogg": self = .audioOgg
+        case "audio/wav": self = .audioWav
+        case "audio/flac": self = .audioFlac
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .audioMpeg: "audio/mpeg"
+        case .audioOgg: "audio/ogg"
+        case .audioWav: "audio/wav"
+        case .audioFlac: "audio/flac"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -509,13 +531,7 @@ public enum AudioSpeakResponseMimeType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .audioMpeg: try container.encode("audio/mpeg")
-        case .audioOgg: try container.encode("audio/ogg")
-        case .audioWav: try container.encode("audio/wav")
-        case .audioFlac: try container.encode("audio/flac")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1785,13 +1801,37 @@ public struct ConfigSchemaField: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ConfigSchemaFieldType: Codable, Sendable, Hashable {
+public enum ConfigSchemaFieldType: Codable, Sendable, Hashable, RawRepresentable {
     case boolean
     case number
     case list
     case string
     case select
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "boolean": self = .boolean
+        case "number": self = .number
+        case "list": self = .list
+        case "string": self = .string
+        case "select": self = .select
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .boolean: "boolean"
+        case .number: "number"
+        case .list: "list"
+        case .string: "string"
+        case .select: "select"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1811,13 +1851,6 @@ public enum ConfigSchemaFieldType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .boolean: try container.encode("boolean")
-        case .number: try container.encode("number")
-        case .list: try container.encode("list")
-        case .string: try container.encode("string")
-        case .select: try container.encode("select")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }

@@ -76,6 +76,23 @@ public sealed interface ConnectorsConnectResultStatus {
     public data object Settled : ConnectorsConnectResultStatus
     public data class Unknown(public val raw: kotlin.String) : ConnectorsConnectResultStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Initiated -> "initiated"
+            Settled -> "settled"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectorsConnectResultStatus = when (raw) {
+            "initiated" -> Initiated
+            "settled" -> Settled
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<ConnectorsConnectResultStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorsConnectResultStatus", PrimitiveKind.STRING)
 
@@ -86,12 +103,7 @@ public sealed interface ConnectorsConnectResultStatus {
         }
 
         override fun serialize(encoder: Encoder, value: ConnectorsConnectResultStatus) {
-            val raw: kotlin.String = when (value) {
-                Initiated -> "initiated"
-                Settled -> "settled"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -238,6 +250,25 @@ public sealed interface CorrectionStatus {
     public data object Rejected : CorrectionStatus
     public data class Unknown(public val raw: kotlin.String) : CorrectionStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Queued -> "queued"
+            Redirected -> "redirected"
+            Rejected -> "rejected"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CorrectionStatus = when (raw) {
+            "queued" -> Queued
+            "redirected" -> Redirected
+            "rejected" -> Rejected
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CorrectionStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CorrectionStatus", PrimitiveKind.STRING)
 
@@ -249,13 +280,7 @@ public sealed interface CorrectionStatus {
         }
 
         override fun serialize(encoder: Encoder, value: CorrectionStatus) {
-            val raw: kotlin.String = when (value) {
-                Queued -> "queued"
-                Redirected -> "redirected"
-                Rejected -> "rejected"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -270,6 +295,29 @@ public sealed interface CronAction {
     public data object Resume : CronAction
     public data class Unknown(public val raw: kotlin.String) : CronAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            List -> "list"
+            Add -> "add"
+            Remove -> "remove"
+            Pause -> "pause"
+            Resume -> "resume"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CronAction = when (raw) {
+            "list" -> List
+            "add" -> Add
+            "remove" -> Remove
+            "pause" -> Pause
+            "resume" -> Resume
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<CronAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronAction", PrimitiveKind.STRING)
 
@@ -283,15 +331,7 @@ public sealed interface CronAction {
         }
 
         override fun serialize(encoder: Encoder, value: CronAction) {
-            val raw: kotlin.String = when (value) {
-                List -> "list"
-                Add -> "add"
-                Remove -> "remove"
-                Pause -> "pause"
-                Resume -> "resume"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -993,6 +1033,31 @@ public sealed interface DispatchType {
     public data object Prefill : DispatchType
     public data class Unknown(public val raw: kotlin.String) : DispatchType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Exec -> "exec"
+            Alias -> "alias"
+            Plugin -> "plugin"
+            Send -> "send"
+            Skill -> "skill"
+            Prefill -> "prefill"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): DispatchType = when (raw) {
+            "exec" -> Exec
+            "alias" -> Alias
+            "plugin" -> Plugin
+            "send" -> Send
+            "skill" -> Skill
+            "prefill" -> Prefill
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<DispatchType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DispatchType", PrimitiveKind.STRING)
 
@@ -1007,16 +1072,7 @@ public sealed interface DispatchType {
         }
 
         override fun serialize(encoder: Encoder, value: DispatchType) {
-            val raw: kotlin.String = when (value) {
-                Exec -> "exec"
-                Alias -> "alias"
-                Plugin -> "plugin"
-                Send -> "send"
-                Skill -> "skill"
-                Prefill -> "prefill"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

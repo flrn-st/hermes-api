@@ -146,10 +146,28 @@ public struct VerificationStatusResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum VoiceRecordAction: Codable, Sendable, Hashable {
+public enum VoiceRecordAction: Codable, Sendable, Hashable, RawRepresentable {
     case start
     case stop
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "start": self = .start
+        case "stop": self = .stop
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .start: "start"
+        case .stop: "stop"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -162,11 +180,7 @@ public enum VoiceRecordAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .start: try container.encode("start")
-        case .stop: try container.encode("stop")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -252,11 +266,31 @@ public struct VoiceRecordResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum VoiceRecordStatus: Codable, Sendable, Hashable {
+public enum VoiceRecordStatus: Codable, Sendable, Hashable, RawRepresentable {
     case recording
     case stopped
     case busy
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "recording": self = .recording
+        case "stopped": self = .stopped
+        case "busy": self = .busy
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .recording: "recording"
+        case .stopped: "stopped"
+        case .busy: "busy"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -270,12 +304,7 @@ public enum VoiceRecordStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .recording: try container.encode("recording")
-        case .stopped: try container.encode("stopped")
-        case .busy: try container.encode("busy")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -303,12 +332,34 @@ public struct VoiceStatusPayload: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum VoiceToggleAction: Codable, Sendable, Hashable {
+public enum VoiceToggleAction: Codable, Sendable, Hashable, RawRepresentable {
     case status
     case on
     case off
     case tts
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "status": self = .status
+        case "on": self = .on
+        case "off": self = .off
+        case "tts": self = .tts
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .status: "status"
+        case .on: "on"
+        case .off: "off"
+        case .tts: "tts"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -323,13 +374,7 @@ public enum VoiceToggleAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .status: try container.encode("status")
-        case .on: try container.encode("on")
-        case .off: try container.encode("off")
-        case .tts: try container.encode("tts")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -589,10 +634,28 @@ public enum WaitBarrierTargetTarget: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum WaitBarrierTargetType: Codable, Sendable, Hashable {
+public enum WaitBarrierTargetType: Codable, Sendable, Hashable, RawRepresentable {
     case session
     case pid
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "session": self = .session
+        case "pid": self = .pid
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .session: "session"
+        case .pid: "pid"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -605,11 +668,7 @@ public enum WaitBarrierTargetType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .session: try container.encode("session")
-        case .pid: try container.encode("pid")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -647,8 +706,22 @@ public struct WaitBarrierUntil: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum WaitBarrierUntilType: Codable, Sendable, Hashable {
+public enum WaitBarrierUntilType: Codable, Sendable, Hashable, RawRepresentable {
     case until
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "until": self = .until
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .until: "until"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -660,9 +733,7 @@ public enum WaitBarrierUntilType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .until: try container.encode("until")
-        }
+        try container.encode(rawValue)
     }
 }
 

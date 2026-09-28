@@ -226,12 +226,34 @@ public struct CustomEndpointRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum CustomEndpointRowApiMode: Codable, Sendable, Hashable {
+public enum CustomEndpointRowApiMode: Codable, Sendable, Hashable, RawRepresentable {
     case empty
     case chatCompletions
     case codexResponses
     case anthropicMessages
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "": self = .empty
+        case "chat_completions": self = .chatCompletions
+        case "codex_responses": self = .codexResponses
+        case "anthropic_messages": self = .anthropicMessages
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .empty: ""
+        case .chatCompletions: "chat_completions"
+        case .codexResponses: "codex_responses"
+        case .anthropicMessages: "anthropic_messages"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -250,22 +272,36 @@ public enum CustomEndpointRowApiMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .empty: try container.encode("")
-        case .chatCompletions: try container.encode("chat_completions")
-        case .codexResponses: try container.encode("codex_responses")
-        case .anthropicMessages: try container.encode("anthropic_messages")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum CustomEndpointRowSource: Codable, Sendable, Hashable {
+public enum CustomEndpointRowSource: Codable, Sendable, Hashable, RawRepresentable {
     case providers
     case customProviders
     case directConfig
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "providers": self = .providers
+        case "custom_providers": self = .customProviders
+        case "direct-config": self = .directConfig
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .providers: "providers"
+        case .customProviders: "custom_providers"
+        case .directConfig: "direct-config"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -283,12 +319,7 @@ public enum CustomEndpointRowSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .providers: try container.encode("providers")
-        case .customProviders: try container.encode("custom_providers")
-        case .directConfig: try container.encode("direct-config")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -423,12 +454,34 @@ public struct CustomEndpointUpdate: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum CustomEndpointUpdateApiMode: Codable, Sendable, Hashable {
+public enum CustomEndpointUpdateApiMode: Codable, Sendable, Hashable, RawRepresentable {
     case empty
     case chatCompletions
     case codexResponses
     case anthropicMessages
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "": self = .empty
+        case "chat_completions": self = .chatCompletions
+        case "codex_responses": self = .codexResponses
+        case "anthropic_messages": self = .anthropicMessages
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .empty: ""
+        case .chatCompletions: "chat_completions"
+        case .codexResponses: "codex_responses"
+        case .anthropicMessages: "anthropic_messages"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -447,13 +500,7 @@ public enum CustomEndpointUpdateApiMode: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .empty: try container.encode("")
-        case .chatCompletions: try container.encode("chat_completions")
-        case .codexResponses: try container.encode("codex_responses")
-        case .anthropicMessages: try container.encode("anthropic_messages")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -621,8 +668,22 @@ public struct DashboardAuthBearerTokenResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum DashboardAuthBearerTokenResponseTokenType: Codable, Sendable, Hashable {
+public enum DashboardAuthBearerTokenResponseTokenType: Codable, Sendable, Hashable, RawRepresentable {
     case bearer
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "Bearer": self = .bearer
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .bearer: "Bearer"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -634,9 +695,7 @@ public enum DashboardAuthBearerTokenResponseTokenType: Codable, Sendable, Hashab
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .bearer: try container.encode("Bearer")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -988,11 +1047,31 @@ public struct DashboardPluginManifest: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum DashboardPluginManifestSource: Codable, Sendable, Hashable {
+public enum DashboardPluginManifestSource: Codable, Sendable, Hashable, RawRepresentable {
     case user
     case bundled
     case project
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "user": self = .user
+        case "bundled": self = .bundled
+        case "project": self = .project
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .user: "user"
+        case .bundled: "bundled"
+        case .project: "project"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1010,12 +1089,7 @@ public enum DashboardPluginManifestSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .user: try container.encode("user")
-        case .bundled: try container.encode("bundled")
-        case .project: try container.encode("project")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1244,11 +1318,31 @@ public struct DashboardThemeDefinition: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum DashboardThemeDefinitionLayoutVariant: Codable, Sendable, Hashable {
+public enum DashboardThemeDefinitionLayoutVariant: Codable, Sendable, Hashable, RawRepresentable {
     case standard
     case cockpit
     case tiled
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "standard": self = .standard
+        case "cockpit": self = .cockpit
+        case "tiled": self = .tiled
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .standard: "standard"
+        case .cockpit: "cockpit"
+        case .tiled: "tiled"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1266,12 +1360,7 @@ public enum DashboardThemeDefinitionLayoutVariant: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .standard: try container.encode("standard")
-        case .cockpit: try container.encode("cockpit")
-        case .tiled: try container.encode("tiled")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1393,11 +1482,31 @@ public struct DashboardThemeLayout: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum DashboardThemeLayoutDensity: Codable, Sendable, Hashable {
+public enum DashboardThemeLayoutDensity: Codable, Sendable, Hashable, RawRepresentable {
     case compact
     case comfortable
     case spacious
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "compact": self = .compact
+        case "comfortable": self = .comfortable
+        case "spacious": self = .spacious
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .compact: "compact"
+        case .comfortable: "comfortable"
+        case .spacious: "spacious"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1415,12 +1524,7 @@ public enum DashboardThemeLayoutDensity: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .compact: try container.encode("compact")
-        case .comfortable: try container.encode("comfortable")
-        case .spacious: try container.encode("spacious")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

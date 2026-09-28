@@ -29,6 +29,23 @@ public sealed interface MemoryOAuthStatusResponseAuth {
     public data object Apikey : MemoryOAuthStatusResponseAuth
     public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStatusResponseAuth
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Oauth -> "oauth"
+            Apikey -> "apikey"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryOAuthStatusResponseAuth = when (raw) {
+            "oauth" -> Oauth
+            "apikey" -> Apikey
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MemoryOAuthStatusResponseAuth> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStatusResponseAuth", PrimitiveKind.STRING)
 
@@ -39,12 +56,7 @@ public sealed interface MemoryOAuthStatusResponseAuth {
         }
 
         override fun serialize(encoder: Encoder, value: MemoryOAuthStatusResponseAuth) {
-            val raw: kotlin.String = when (value) {
-                Oauth -> "oauth"
-                Apikey -> "apikey"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -58,6 +70,27 @@ public sealed interface MemoryOAuthStatusResponseState {
     public data object Error : MemoryOAuthStatusResponseState
     public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStatusResponseState
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Idle -> "idle"
+            Pending -> "pending"
+            Connected -> "connected"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryOAuthStatusResponseState = when (raw) {
+            "idle" -> Idle
+            "pending" -> Pending
+            "connected" -> Connected
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MemoryOAuthStatusResponseState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStatusResponseState", PrimitiveKind.STRING)
 
@@ -70,14 +103,7 @@ public sealed interface MemoryOAuthStatusResponseState {
         }
 
         override fun serialize(encoder: Encoder, value: MemoryOAuthStatusResponseState) {
-            val raw: kotlin.String = when (value) {
-                Idle -> "idle"
-                Pending -> "pending"
-                Connected -> "connected"
-                Error -> "error"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -217,6 +243,31 @@ public sealed interface MemoryProviderLegacyFieldKind {
     public data object Text : MemoryProviderLegacyFieldKind
     public data class Unknown(public val raw: kotlin.String) : MemoryProviderLegacyFieldKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Secret -> "secret"
+            Select -> "select"
+            Boolean -> "boolean"
+            Integer -> "integer"
+            Number -> "number"
+            Text -> "text"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryProviderLegacyFieldKind = when (raw) {
+            "secret" -> Secret
+            "select" -> Select
+            "boolean" -> Boolean
+            "integer" -> Integer
+            "number" -> Number
+            "text" -> Text
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MemoryProviderLegacyFieldKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderLegacyFieldKind", PrimitiveKind.STRING)
 
@@ -231,16 +282,7 @@ public sealed interface MemoryProviderLegacyFieldKind {
         }
 
         override fun serialize(encoder: Encoder, value: MemoryProviderLegacyFieldKind) {
-            val raw: kotlin.String = when (value) {
-                Secret -> "secret"
-                Select -> "select"
-                Boolean -> "boolean"
-                Integer -> "integer"
-                Number -> "number"
-                Text -> "text"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -362,6 +404,27 @@ public sealed interface MemoryProviderSetupStepResultKind {
     public data object ExternalInstall : MemoryProviderSetupStepResultKind
     public data class Unknown(public val raw: kotlin.String) : MemoryProviderSetupStepResultKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Pip -> "pip"
+            Setup -> "setup"
+            ExternalCheck -> "external_check"
+            ExternalInstall -> "external_install"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryProviderSetupStepResultKind = when (raw) {
+            "pip" -> Pip
+            "setup" -> Setup
+            "external_check" -> ExternalCheck
+            "external_install" -> ExternalInstall
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MemoryProviderSetupStepResultKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderSetupStepResultKind", PrimitiveKind.STRING)
 
@@ -374,14 +437,7 @@ public sealed interface MemoryProviderSetupStepResultKind {
         }
 
         override fun serialize(encoder: Encoder, value: MemoryProviderSetupStepResultKind) {
-            val raw: kotlin.String = when (value) {
-                Pip -> "pip"
-                Setup -> "setup"
-                ExternalCheck -> "external_check"
-                ExternalInstall -> "external_install"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -412,6 +468,27 @@ public sealed interface MemoryProviderStatusRowStatus {
     public data object Ready : MemoryProviderStatusRowStatus
     public data class Unknown(public val raw: kotlin.String) : MemoryProviderStatusRowStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Missing -> "missing"
+            Unavailable -> "unavailable"
+            NeedsConfig -> "needs_config"
+            Ready -> "ready"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryProviderStatusRowStatus = when (raw) {
+            "missing" -> Missing
+            "unavailable" -> Unavailable
+            "needs_config" -> NeedsConfig
+            "ready" -> Ready
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MemoryProviderStatusRowStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderStatusRowStatus", PrimitiveKind.STRING)
 
@@ -424,14 +501,7 @@ public sealed interface MemoryProviderStatusRowStatus {
         }
 
         override fun serialize(encoder: Encoder, value: MemoryProviderStatusRowStatus) {
-            val raw: kotlin.String = when (value) {
-                Missing -> "missing"
-                Unavailable -> "unavailable"
-                NeedsConfig -> "needs_config"
-                Ready -> "ready"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -720,6 +790,25 @@ public sealed interface MessagingWhatsAppSetupMode {
     public data object SelfChat : MessagingWhatsAppSetupMode
     public data class Unknown(public val raw: kotlin.String) : MessagingWhatsAppSetupMode
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Empty -> ""
+            Bot -> "bot"
+            SelfChat -> "self-chat"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MessagingWhatsAppSetupMode = when (raw) {
+            "" -> Empty
+            "bot" -> Bot
+            "self-chat" -> SelfChat
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<MessagingWhatsAppSetupMode> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MessagingWhatsAppSetupMode", PrimitiveKind.STRING)
 
@@ -731,13 +820,7 @@ public sealed interface MessagingWhatsAppSetupMode {
         }
 
         override fun serialize(encoder: Encoder, value: MessagingWhatsAppSetupMode) {
-            val raw: kotlin.String = when (value) {
-                Empty -> ""
-                Bot -> "bot"
-                SelfChat -> "self-chat"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

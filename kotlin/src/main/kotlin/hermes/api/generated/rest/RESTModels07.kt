@@ -115,6 +115,25 @@ public sealed interface KanbanDiagnosticSeverity {
     public data object Critical : KanbanDiagnosticSeverity
     public data class Unknown(public val raw: kotlin.String) : KanbanDiagnosticSeverity
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Warning -> "warning"
+            Error -> "error"
+            Critical -> "critical"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanDiagnosticSeverity = when (raw) {
+            "warning" -> Warning
+            "error" -> Error
+            "critical" -> Critical
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanDiagnosticSeverity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanDiagnosticSeverity", PrimitiveKind.STRING)
 
@@ -126,13 +145,7 @@ public sealed interface KanbanDiagnosticSeverity {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanDiagnosticSeverity) {
-            val raw: kotlin.String = when (value) {
-                Warning -> "warning"
-                Error -> "error"
-                Critical -> "critical"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -192,6 +205,23 @@ public sealed interface KanbanDispatchResponseMemoryPressure {
     public data object Elevated : KanbanDispatchResponseMemoryPressure
     public data class Unknown(public val raw: kotlin.String) : KanbanDispatchResponseMemoryPressure
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Critical -> "critical"
+            Elevated -> "elevated"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanDispatchResponseMemoryPressure = when (raw) {
+            "critical" -> Critical
+            "elevated" -> Elevated
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanDispatchResponseMemoryPressure> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanDispatchResponseMemoryPressure", PrimitiveKind.STRING)
 
@@ -202,12 +232,7 @@ public sealed interface KanbanDispatchResponseMemoryPressure {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanDispatchResponseMemoryPressure) {
-            val raw: kotlin.String = when (value) {
-                Critical -> "critical"
-                Elevated -> "elevated"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -345,6 +370,25 @@ public sealed interface KanbanEstimateResponseComplexity {
     public data object L : KanbanEstimateResponseComplexity
     public data class Unknown(public val raw: kotlin.String) : KanbanEstimateResponseComplexity
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            S -> "S"
+            M -> "M"
+            L -> "L"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanEstimateResponseComplexity = when (raw) {
+            "S" -> S
+            "M" -> M
+            "L" -> L
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<KanbanEstimateResponseComplexity> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanEstimateResponseComplexity", PrimitiveKind.STRING)
 
@@ -356,13 +400,7 @@ public sealed interface KanbanEstimateResponseComplexity {
         }
 
         override fun serialize(encoder: Encoder, value: KanbanEstimateResponseComplexity) {
-            val raw: kotlin.String = when (value) {
-                S -> "S"
-                M -> "M"
-                L -> "L"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

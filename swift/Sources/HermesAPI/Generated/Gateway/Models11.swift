@@ -1316,7 +1316,7 @@ public struct PluginServerRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum PluginServerState: Codable, Sendable, Hashable {
+public enum PluginServerState: Codable, Sendable, Hashable, RawRepresentable {
     case connected
     case appNotRunning
     case endpointUnavailable
@@ -1325,6 +1325,34 @@ public enum PluginServerState: Codable, Sendable, Hashable {
     case missingApp
     case knownUnknown
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "connected": self = .connected
+        case "app_not_running": self = .appNotRunning
+        case "endpoint_unavailable": self = .endpointUnavailable
+        case "no_interactive_session": self = .noInteractiveSession
+        case "version_too_old": self = .versionTooOld
+        case "missing_app": self = .missingApp
+        case "unknown": self = .knownUnknown
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .connected: "connected"
+        case .appNotRunning: "app_not_running"
+        case .endpointUnavailable: "endpoint_unavailable"
+        case .noInteractiveSession: "no_interactive_session"
+        case .versionTooOld: "version_too_old"
+        case .missingApp: "missing_app"
+        case .knownUnknown: "unknown"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1342,16 +1370,7 @@ public enum PluginServerState: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .connected: try container.encode("connected")
-        case .appNotRunning: try container.encode("app_not_running")
-        case .endpointUnavailable: try container.encode("endpoint_unavailable")
-        case .noInteractiveSession: try container.encode("no_interactive_session")
-        case .versionTooOld: try container.encode("version_too_old")
-        case .missingApp: try container.encode("missing_app")
-        case .knownUnknown: try container.encode("unknown")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1424,7 +1443,7 @@ public struct PluginSettingField: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum PluginSettingFieldType: Codable, Sendable, Hashable {
+public enum PluginSettingFieldType: Codable, Sendable, Hashable, RawRepresentable {
     case string
     case number
     case boolean
@@ -1432,6 +1451,32 @@ public enum PluginSettingFieldType: Codable, Sendable, Hashable {
     case secret
     case json
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "string": self = .string
+        case "number": self = .number
+        case "boolean": self = .boolean
+        case "enum": self = .`enum`
+        case "secret": self = .secret
+        case "json": self = .json
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .string: "string"
+        case .number: "number"
+        case .boolean: "boolean"
+        case .`enum`: "enum"
+        case .secret: "secret"
+        case .json: "json"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1448,20 +1493,12 @@ public enum PluginSettingFieldType: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .string: try container.encode("string")
-        case .number: try container.encode("number")
-        case .boolean: try container.encode("boolean")
-        case .`enum`: try container.encode("enum")
-        case .secret: try container.encode("secret")
-        case .json: try container.encode("json")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum PluginsAction: Codable, Sendable, Hashable {
+public enum PluginsAction: Codable, Sendable, Hashable, RawRepresentable {
     case list
     case toggle
     case install
@@ -1470,6 +1507,34 @@ public enum PluginsAction: Codable, Sendable, Hashable {
     case settings
     case onboarding
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "list": self = .list
+        case "toggle": self = .toggle
+        case "install": self = .install
+        case "update": self = .update
+        case "remove": self = .remove
+        case "settings": self = .settings
+        case "onboarding": self = .onboarding
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .list: "list"
+        case .toggle: "toggle"
+        case .install: "install"
+        case .update: "update"
+        case .remove: "remove"
+        case .settings: "settings"
+        case .onboarding: "onboarding"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1487,16 +1552,7 @@ public enum PluginsAction: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .list: try container.encode("list")
-        case .toggle: try container.encode("toggle")
-        case .install: try container.encode("install")
-        case .update: try container.encode("update")
-        case .remove: try container.encode("remove")
-        case .settings: try container.encode("settings")
-        case .onboarding: try container.encode("onboarding")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

@@ -284,6 +284,23 @@ public sealed interface InterruptStatus {
     public data object NotInterrupted : InterruptStatus
     public data class Unknown(public val raw: kotlin.String) : InterruptStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Interrupted -> "interrupted"
+            NotInterrupted -> "not_interrupted"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): InterruptStatus = when (raw) {
+            "interrupted" -> Interrupted
+            "not_interrupted" -> NotInterrupted
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<InterruptStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("InterruptStatus", PrimitiveKind.STRING)
 
@@ -294,12 +311,7 @@ public sealed interface InterruptStatus {
         }
 
         override fun serialize(encoder: Encoder, value: InterruptStatus) {
-            val raw: kotlin.String = when (value) {
-                Interrupted -> "interrupted"
-                NotInterrupted -> "not_interrupted"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -603,6 +615,23 @@ public sealed interface LeaseHolder {
     public data object Human : LeaseHolder
     public data class Unknown(public val raw: kotlin.String) : LeaseHolder
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Agent -> "agent"
+            Human -> "human"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LeaseHolder = when (raw) {
+            "agent" -> Agent
+            "human" -> Human
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LeaseHolder> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LeaseHolder", PrimitiveKind.STRING)
 
@@ -613,12 +642,7 @@ public sealed interface LeaseHolder {
         }
 
         override fun serialize(encoder: Encoder, value: LeaseHolder) {
-            val raw: kotlin.String = when (value) {
-                Agent -> "agent"
-                Human -> "human"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -645,6 +669,31 @@ public sealed interface LiveSessionStatus {
     public data object Resuming : LiveSessionStatus
     public data class Unknown(public val raw: kotlin.String) : LiveSessionStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Idle -> "idle"
+            Starting -> "starting"
+            Waiting -> "waiting"
+            Working -> "working"
+            Streaming -> "streaming"
+            Resuming -> "resuming"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LiveSessionStatus = when (raw) {
+            "idle" -> Idle
+            "starting" -> Starting
+            "waiting" -> Waiting
+            "working" -> Working
+            "streaming" -> Streaming
+            "resuming" -> Resuming
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LiveSessionStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LiveSessionStatus", PrimitiveKind.STRING)
 
@@ -659,16 +708,7 @@ public sealed interface LiveSessionStatus {
         }
 
         override fun serialize(encoder: Encoder, value: LiveSessionStatus) {
-            val raw: kotlin.String = when (value) {
-                Idle -> "idle"
-                Starting -> "starting"
-                Waiting -> "waiting"
-                Working -> "working"
-                Streaming -> "streaming"
-                Resuming -> "resuming"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

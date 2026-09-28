@@ -2,11 +2,31 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum McpOauthPollStatus: Codable, Sendable, Hashable {
+public enum McpOauthPollStatus: Codable, Sendable, Hashable, RawRepresentable {
     case pending
     case approved
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "pending": self = .pending
+        case "approved": self = .approved
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .pending: "pending"
+        case .approved: "approved"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -20,12 +40,7 @@ public enum McpOauthPollStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .pending: try container.encode("pending")
-        case .approved: try container.encode("approved")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -149,7 +164,7 @@ public struct McpProbeTool: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum McpRuntimeStatus: Codable, Sendable, Hashable {
+public enum McpRuntimeStatus: Codable, Sendable, Hashable, RawRepresentable {
     case connected
     case disabled
     case connecting
@@ -157,6 +172,32 @@ public enum McpRuntimeStatus: Codable, Sendable, Hashable {
     case lazy
     case configured
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "connected": self = .connected
+        case "disabled": self = .disabled
+        case "connecting": self = .connecting
+        case "failed": self = .failed
+        case "lazy": self = .lazy
+        case "configured": self = .configured
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .connected: "connected"
+        case .disabled: "disabled"
+        case .connecting: "connecting"
+        case .failed: "failed"
+        case .lazy: "lazy"
+        case .configured: "configured"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -173,15 +214,7 @@ public enum McpRuntimeStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .connected: try container.encode("connected")
-        case .disabled: try container.encode("disabled")
-        case .connecting: try container.encode("connecting")
-        case .failed: try container.encode("failed")
-        case .lazy: try container.encode("lazy")
-        case .configured: try container.encode("configured")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -315,10 +348,28 @@ public struct McpServerRuntimeRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum McpServerSource: Codable, Sendable, Hashable {
+public enum McpServerSource: Codable, Sendable, Hashable, RawRepresentable {
     case config
     case plugin
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "config": self = .config
+        case "plugin": self = .plugin
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .config: "config"
+        case .plugin: "plugin"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -331,11 +382,7 @@ public enum McpServerSource: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .config: try container.encode("config")
-        case .plugin: try container.encode("plugin")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 

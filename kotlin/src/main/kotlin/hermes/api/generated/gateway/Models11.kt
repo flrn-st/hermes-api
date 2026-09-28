@@ -794,6 +794,33 @@ public sealed interface PluginServerState {
     public data object KnownUnknown : PluginServerState
     public data class Unknown(public val raw: kotlin.String) : PluginServerState
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Connected -> "connected"
+            AppNotRunning -> "app_not_running"
+            EndpointUnavailable -> "endpoint_unavailable"
+            NoInteractiveSession -> "no_interactive_session"
+            VersionTooOld -> "version_too_old"
+            MissingApp -> "missing_app"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginServerState = when (raw) {
+            "connected" -> Connected
+            "app_not_running" -> AppNotRunning
+            "endpoint_unavailable" -> EndpointUnavailable
+            "no_interactive_session" -> NoInteractiveSession
+            "version_too_old" -> VersionTooOld
+            "missing_app" -> MissingApp
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginServerState> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginServerState", PrimitiveKind.STRING)
 
@@ -809,17 +836,7 @@ public sealed interface PluginServerState {
         }
 
         override fun serialize(encoder: Encoder, value: PluginServerState) {
-            val raw: kotlin.String = when (value) {
-                Connected -> "connected"
-                AppNotRunning -> "app_not_running"
-                EndpointUnavailable -> "endpoint_unavailable"
-                NoInteractiveSession -> "no_interactive_session"
-                VersionTooOld -> "version_too_old"
-                MissingApp -> "missing_app"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -860,6 +877,31 @@ public sealed interface PluginSettingFieldType {
     public data object Json : PluginSettingFieldType
     public data class Unknown(public val raw: kotlin.String) : PluginSettingFieldType
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            String -> "string"
+            Number -> "number"
+            Boolean -> "boolean"
+            Enum -> "enum"
+            Secret -> "secret"
+            Json -> "json"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginSettingFieldType = when (raw) {
+            "string" -> String
+            "number" -> Number
+            "boolean" -> Boolean
+            "enum" -> Enum
+            "secret" -> Secret
+            "json" -> Json
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginSettingFieldType> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginSettingFieldType", PrimitiveKind.STRING)
 
@@ -874,16 +916,7 @@ public sealed interface PluginSettingFieldType {
         }
 
         override fun serialize(encoder: Encoder, value: PluginSettingFieldType) {
-            val raw: kotlin.String = when (value) {
-                String -> "string"
-                Number -> "number"
-                Boolean -> "boolean"
-                Enum -> "enum"
-                Secret -> "secret"
-                Json -> "json"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -900,6 +933,33 @@ public sealed interface PluginsAction {
     public data object Onboarding : PluginsAction
     public data class Unknown(public val raw: kotlin.String) : PluginsAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            List -> "list"
+            Toggle -> "toggle"
+            Install -> "install"
+            Update -> "update"
+            Remove -> "remove"
+            Settings -> "settings"
+            Onboarding -> "onboarding"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): PluginsAction = when (raw) {
+            "list" -> List
+            "toggle" -> Toggle
+            "install" -> Install
+            "update" -> Update
+            "remove" -> Remove
+            "settings" -> Settings
+            "onboarding" -> Onboarding
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<PluginsAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("PluginsAction", PrimitiveKind.STRING)
 
@@ -915,17 +975,7 @@ public sealed interface PluginsAction {
         }
 
         override fun serialize(encoder: Encoder, value: PluginsAction) {
-            val raw: kotlin.String = when (value) {
-                List -> "list"
-                Toggle -> "toggle"
-                Install -> "install"
-                Update -> "update"
-                Remove -> "remove"
-                Settings -> "settings"
-                Onboarding -> "onboarding"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

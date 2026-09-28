@@ -1090,8 +1090,22 @@ public struct ProfileSessionsResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ProfileSessionsResponseStorageValue: Codable, Sendable, Hashable {
+public enum ProfileSessionsResponseStorageValue: Codable, Sendable, Hashable, RawRepresentable {
     case corrupt
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "corrupt": self = .corrupt
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .corrupt: "corrupt"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1103,9 +1117,7 @@ public enum ProfileSessionsResponseStorageValue: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .corrupt: try container.encode("corrupt")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1161,8 +1173,22 @@ public struct ProfileSessionsSidebarResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ProfileSessionsSidebarResponseStorageValue: Codable, Sendable, Hashable {
+public enum ProfileSessionsSidebarResponseStorageValue: Codable, Sendable, Hashable, RawRepresentable {
     case corrupt
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "corrupt": self = .corrupt
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .corrupt: "corrupt"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1174,9 +1200,7 @@ public enum ProfileSessionsSidebarResponseStorageValue: Codable, Sendable, Hasha
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .corrupt: try container.encode("corrupt")
-        }
+        try container.encode(rawValue)
     }
 }
 

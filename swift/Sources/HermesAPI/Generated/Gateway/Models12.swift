@@ -703,12 +703,34 @@ public struct ProcessKillResult: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ProcessKillStatus: Codable, Sendable, Hashable {
+public enum ProcessKillStatus: Codable, Sendable, Hashable, RawRepresentable {
     case killed
     case alreadyExited
     case notFound
     case error
     case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "killed": self = .killed
+        case "already_exited": self = .alreadyExited
+        case "not_found": self = .notFound
+        case "error": self = .error
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .killed: "killed"
+        case .alreadyExited: "already_exited"
+        case .notFound: "not_found"
+        case .error: "error"
+        case .unknown(let raw): raw
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -723,13 +745,7 @@ public enum ProcessKillStatus: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .killed: try container.encode("killed")
-        case .alreadyExited: try container.encode("already_exited")
-        case .notFound: try container.encode("not_found")
-        case .error: try container.encode("error")
-        case .unknown(let raw): try container.encode(raw)
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1043,8 +1059,22 @@ public enum ProfileMirroredAuth: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ProfileMirroredAuthOption2: Codable, Sendable, Hashable {
+public enum ProfileMirroredAuthOption2: Codable, Sendable, Hashable, RawRepresentable {
     case shared
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "shared": self = .shared
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .shared: "shared"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1056,9 +1086,7 @@ public enum ProfileMirroredAuthOption2: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .shared: try container.encode("shared")
-        }
+        try container.encode(rawValue)
     }
 }
 
@@ -1270,8 +1298,22 @@ public struct ProfileRow: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
-public enum ProfileRowRole: Codable, Sendable, Hashable {
+public enum ProfileRowRole: Codable, Sendable, Hashable, RawRepresentable {
     case setup
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "setup": self = .setup
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .setup: "setup"
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
@@ -1283,9 +1325,7 @@ public enum ProfileRowRole: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
-        case .setup: try container.encode("setup")
-        }
+        try container.encode(rawValue)
     }
 }
 

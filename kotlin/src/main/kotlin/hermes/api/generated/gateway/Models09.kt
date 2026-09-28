@@ -16,6 +16,25 @@ public sealed interface McpOauthPollStatus {
     public data object Error : McpOauthPollStatus
     public data class Unknown(public val raw: kotlin.String) : McpOauthPollStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Pending -> "pending"
+            Approved -> "approved"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpOauthPollStatus = when (raw) {
+            "pending" -> Pending
+            "approved" -> Approved
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<McpOauthPollStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpOauthPollStatus", PrimitiveKind.STRING)
 
@@ -27,13 +46,7 @@ public sealed interface McpOauthPollStatus {
         }
 
         override fun serialize(encoder: Encoder, value: McpOauthPollStatus) {
-            val raw: kotlin.String = when (value) {
-                Pending -> "pending"
-                Approved -> "approved"
-                Error -> "error"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -116,6 +129,31 @@ public sealed interface McpRuntimeStatus {
     public data object Configured : McpRuntimeStatus
     public data class Unknown(public val raw: kotlin.String) : McpRuntimeStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Connected -> "connected"
+            Disabled -> "disabled"
+            Connecting -> "connecting"
+            Failed -> "failed"
+            Lazy -> "lazy"
+            Configured -> "configured"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpRuntimeStatus = when (raw) {
+            "connected" -> Connected
+            "disabled" -> Disabled
+            "connecting" -> Connecting
+            "failed" -> Failed
+            "lazy" -> Lazy
+            "configured" -> Configured
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<McpRuntimeStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpRuntimeStatus", PrimitiveKind.STRING)
 
@@ -130,16 +168,7 @@ public sealed interface McpRuntimeStatus {
         }
 
         override fun serialize(encoder: Encoder, value: McpRuntimeStatus) {
-            val raw: kotlin.String = when (value) {
-                Connected -> "connected"
-                Disabled -> "disabled"
-                Connecting -> "connecting"
-                Failed -> "failed"
-                Lazy -> "lazy"
-                Configured -> "configured"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -221,6 +250,23 @@ public sealed interface McpServerSource {
     public data object Plugin : McpServerSource
     public data class Unknown(public val raw: kotlin.String) : McpServerSource
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Config -> "config"
+            Plugin -> "plugin"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpServerSource = when (raw) {
+            "config" -> Config
+            "plugin" -> Plugin
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<McpServerSource> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerSource", PrimitiveKind.STRING)
 
@@ -231,12 +277,7 @@ public sealed interface McpServerSource {
         }
 
         override fun serialize(encoder: Encoder, value: McpServerSource) {
-            val raw: kotlin.String = when (value) {
-                Config -> "config"
-                Plugin -> "plugin"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

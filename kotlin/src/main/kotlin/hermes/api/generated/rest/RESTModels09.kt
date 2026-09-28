@@ -18,6 +18,27 @@ public sealed interface LocalModelJobKind {
     public data object ModelActivate : LocalModelJobKind
     public data class Unknown(public val raw: kotlin.String) : LocalModelJobKind
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            RuntimeInstall -> "runtime-install"
+            ModelDownload -> "model-download"
+            Quickstart -> "quickstart"
+            ModelActivate -> "model-activate"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LocalModelJobKind = when (raw) {
+            "runtime-install" -> RuntimeInstall
+            "model-download" -> ModelDownload
+            "quickstart" -> Quickstart
+            "model-activate" -> ModelActivate
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LocalModelJobKind> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelJobKind", PrimitiveKind.STRING)
 
@@ -30,14 +51,7 @@ public sealed interface LocalModelJobKind {
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelJobKind) {
-            val raw: kotlin.String = when (value) {
-                RuntimeInstall -> "runtime-install"
-                ModelDownload -> "model-download"
-                Quickstart -> "quickstart"
-                ModelActivate -> "model-activate"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -50,6 +64,25 @@ public sealed interface LocalModelJobStatus {
     public data object Error : LocalModelJobStatus
     public data class Unknown(public val raw: kotlin.String) : LocalModelJobStatus
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Running -> "running"
+            Done -> "done"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LocalModelJobStatus = when (raw) {
+            "running" -> Running
+            "done" -> Done
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LocalModelJobStatus> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelJobStatus", PrimitiveKind.STRING)
 
@@ -61,13 +94,7 @@ public sealed interface LocalModelJobStatus {
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelJobStatus) {
-            val raw: kotlin.String = when (value) {
-                Running -> "running"
-                Done -> "done"
-                Error -> "error"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -123,6 +150,27 @@ public sealed interface LocalModelRepoFileFit {
     public data object KnownUnknown : LocalModelRepoFileFit
     public data class Unknown(public val raw: kotlin.String) : LocalModelRepoFileFit
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            FitsGpu -> "fits-gpu"
+            NeedsRam -> "needs-ram"
+            TooBig -> "too-big"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LocalModelRepoFileFit = when (raw) {
+            "fits-gpu" -> FitsGpu
+            "needs-ram" -> NeedsRam
+            "too-big" -> TooBig
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LocalModelRepoFileFit> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelRepoFileFit", PrimitiveKind.STRING)
 
@@ -135,14 +183,7 @@ public sealed interface LocalModelRepoFileFit {
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelRepoFileFit) {
-            val raw: kotlin.String = when (value) {
-                FitsGpu -> "fits-gpu"
-                NeedsRam -> "needs-ram"
-                TooBig -> "too-big"
-                KnownUnknown -> "unknown"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -288,6 +329,23 @@ public sealed interface LocalModelsServerResponseAction {
     public data object Start : LocalModelsServerResponseAction
     public data class Unknown(public val raw: kotlin.String) : LocalModelsServerResponseAction
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Stop -> "stop"
+            Start -> "start"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LocalModelsServerResponseAction = when (raw) {
+            "stop" -> Stop
+            "start" -> Start
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LocalModelsServerResponseAction> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelsServerResponseAction", PrimitiveKind.STRING)
 
@@ -298,12 +356,7 @@ public sealed interface LocalModelsServerResponseAction {
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelsServerResponseAction) {
-            val raw: kotlin.String = when (value) {
-                Stop -> "stop"
-                Start -> "start"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }
@@ -364,6 +417,25 @@ public sealed interface LocalModelsStatusResponseLoadedModelsValue {
     public data object Loading : LocalModelsStatusResponseLoadedModelsValue
     public data class Unknown(public val raw: kotlin.String) : LocalModelsStatusResponseLoadedModelsValue
 
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Loaded -> "loaded"
+            Ready -> "ready"
+            Loading -> "loading"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): LocalModelsStatusResponseLoadedModelsValue = when (raw) {
+            "loaded" -> Loaded
+            "ready" -> Ready
+            "loading" -> Loading
+            else -> Unknown(raw)
+        }
+    }
+
     public object Serializer : KSerializer<LocalModelsStatusResponseLoadedModelsValue> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalModelsStatusResponseLoadedModelsValue", PrimitiveKind.STRING)
 
@@ -375,13 +447,7 @@ public sealed interface LocalModelsStatusResponseLoadedModelsValue {
         }
 
         override fun serialize(encoder: Encoder, value: LocalModelsStatusResponseLoadedModelsValue) {
-            val raw: kotlin.String = when (value) {
-                Loaded -> "loaded"
-                Ready -> "ready"
-                Loading -> "loading"
-                is Unknown -> value.raw
-            }
-            encoder.encodeString(raw)
+            encoder.encodeString(value.rawValue)
         }
     }
 }

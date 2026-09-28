@@ -346,3 +346,50 @@ private final class RecordingLogger: GatewayLogger {
     #expect(logger.logged.count == 1)
     #expect(logger.logged.allSatisfy { $0.contains("HTTP 503") && !$0.contains("secret-body") })
 }
+
+@Test func aPasswordSessionSignsInAgainAfterARejection() async throws {
+    let transport = ScriptedHTTPTransport([
+        .respond(401, #"{"detail":"Not authenticated"}"#),
+        .respond(200, #"{"next":"/","ok":true}"#),
+        .respond(200, #"{"count":3}"#),
+    ])
+    let auth = PasswordSessionAuth(address: HermesDashboardAddress(base), transport: transport) {
+        .init(username: "hermes", password: "secret")
+    }
+    let rest = client(transport, auth: auth)
+    #expect(try await rest.sessions.emptyCount().count == 3)
+    let requests = await transport.requests
+    #expect(requests.map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
+            == ["GET /api/sessions/empty/count", "POST /auth/password-login", "GET /api/sessions/empty/count"])
+    let login = try JSONValue(jsonData: try #require(requests[1].httpBody))
+    #expect(login == .object(["username": .string("hermes"), "password": .string("secret"),
+                              "provider": .string("basic")]))
+}
+
+@Test func aRejectedPasswordEndsTheRequest() async throws {
+    let transport = ScriptedHTTPTransport([
+        .respond(401, #"{"detail":"Not authenticated"}"#),
+        .respond(401, #"{"detail":"Invalid credentials"}"#),
+    ])
+    let auth = PasswordSessionAuth(address: HermesDashboardAddress(base), transport: transport) {
+        .init(username: "hermes", password: "wrong")
+    }
+    await #expect(throws: HermesRESTError.self) { _ = try await client(transport, auth: auth).sessions.emptyCount() }
+    #expect(await transport.requests.count == 2)
+}
+
+@Test func aPasswordSessionRequestsGatewayTicketsWithItsCookies() async throws {
+    let cookies = ScriptedHTTPTransport([.respond(200, #"{"ticket":"cookie-ticket","ttl_seconds":30}"#)])
+    let auth = PasswordSessionAuth(address: HermesDashboardAddress(base), transport: cookies) {
+        .init(username: "hermes", password: "secret")
+    }
+    let other = ScriptedHTTPTransport([])
+    let credential = try await auth.credential(baseURL: base, http: other)
+    guard case .ticket(let ticket, _) = credential else {
+        Issue.record("Expected a ticket")
+        return
+    }
+    #expect(ticket == "cookie-ticket")
+    #expect(await cookies.requests.map { $0.url?.path } == ["/api/auth/ws-ticket"])
+    #expect(await other.requests.isEmpty)
+}

@@ -184,3 +184,7 @@ proxy (`harness/faults.py`). The scenarios:
 On Android, airplane mode must pause and resume the gateway through
 `AndroidNetworkMonitor`. Each client reports what it exercised on the wire, and
 that report is the coverage evidence (`coverage/evidence/`).
+
+### Kotlin recovery identity after compression
+
+`GatewaySessionRecovery.Resumed.storedSessionId` reports the resolved stored ID from the resume response: `stored_session_id`, then legacy `session_key`, then the requested ID if both are omitted. The tracked runtime uses the same precedence, so later reconnects resume the resolved conversation. Apps can associate the previously owned stored ID with this resolved ID when restoring per-conversation preferences. Tests exercise consecutive compression aliases, legacy responses, and repeated recovery when the server omits stored identity.

@@ -41,7 +41,9 @@ public sealed interface GatewayConnectionState {
 /** How the gateway recovered a session after a reconnect, or why it could not. */
 public sealed interface GatewaySessionRecovery {
     /** Hermes had reclaimed the session while this client was away. The gateway resumed it from storage;
-     *  it continues under a new runtime [sessionId], and its history is intact. */
+     *  it continues under a new runtime [sessionId], and its history is intact. [storedSessionId] is
+     *  the resolved stored ID returned by Hermes (which can change after compression), or the requested
+     *  stored ID when the response omits one. */
     public data class Resumed(val previousSessionId: String, val sessionId: String, val storedSessionId: String) :
         GatewaySessionRecovery
     /** Hermes no longer buffers every event since the last one delivered. Reload the transcript. */

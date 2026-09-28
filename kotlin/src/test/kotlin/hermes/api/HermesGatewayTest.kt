@@ -800,6 +800,57 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun reconnectReportsAndTracksResolvedStoredSessionAcrossCompression() = runTest {
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val third = ScriptedGatewaySocket()
+        val gateway = client(sockets(first, second, third))
+        val recoveries = backgroundScope.async { gateway.sessionRecoveries.take(2).toList() }
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "root")
+        first.sever()
+        second.inject(error(second.next(), 4001, "session not found"))
+        val resume = second.next()
+        assertEquals("root", resume.fields["session_id"]?.jsonPrimitive?.content)
+        second.inject(result(resume, """{"session_id":"runtime-2","stored_session_id":"tip","session_key":"older-alias","message_count":0,"messages":[],"info":{}}"""))
+        gateway.awaitState { it == GatewayConnectionState.Connected }
+        second.sever()
+        val activate = third.next()
+        assertEquals("runtime-2", activate.fields["session_id"]?.jsonPrimitive?.content)
+        third.inject(error(activate, 4001, "session not found"))
+        val nextResume = third.next()
+        assertEquals("tip", nextResume.fields["session_id"]?.jsonPrimitive?.content)
+        third.inject(result(nextResume, """{"session_id":"runtime-3","session_key":"final-tip","message_count":0,"messages":[],"info":{}}"""))
+        assertEquals(listOf(
+            GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "tip"),
+            GatewaySessionRecovery.Resumed("runtime-2", "runtime-3", "final-tip")
+        ), withTimeout(3_000) { recoveries.await() })
+        gateway.disconnect()
+    }
+
+    @Test
+    fun resumeWithoutStoredIdentityKeepsRequestedIdForNextRecovery() = runTest {
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val third = ScriptedGatewaySocket()
+        val gateway = client(sockets(first, second, third))
+        val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "root")
+        first.sever()
+        second.inject(error(second.next(), 4001, "session not found"))
+        second.inject(result(second.next(), """{"session_id":"runtime-2","message_count":0,"messages":[],"info":{}}"""))
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "root"), withTimeout(3_000) { recovery.await() })
+        gateway.awaitState { it == GatewayConnectionState.Connected }
+        second.sever()
+        third.inject(error(third.next(), 4001, "session not found"))
+        val resume = third.next()
+        assertEquals("session.resume", resume.method())
+        assertEquals("root", resume.fields["session_id"]?.jsonPrimitive?.content)
+        gateway.disconnect()
+    }
+
+    @Test
     fun turnOfADroppedSessionKeepsStreamingFromTheReplayBuffer() = runTest {
         val first = ScriptedGatewaySocket()
         val second = ScriptedGatewaySocket()

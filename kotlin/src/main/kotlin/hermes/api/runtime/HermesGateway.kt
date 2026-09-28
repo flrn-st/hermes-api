@@ -742,7 +742,8 @@ public class HermesGateway(
                 val sessionId = fields.string("session_id") ?: return
                 val previous = sessions[sessionId] ?: TrackedSession()
                 sessions[sessionId] = previous.copy(
-                    storedId = fields.string("stored_session_id") ?: fields.string("session_key") ?: previous.storedId,
+                    storedId = fields.string("stored_session_id") ?: fields.string("session_key") ?: previous.storedId
+                        ?: if (method == "session.resume") arguments.string("session_id") else null,
                     profile = arguments.string("profile") ?: previous.profile,
                     source = arguments.string("source") ?: previous.source,
                     closeOnDisconnect = (arguments["close_on_disconnect"] as? JsonPrimitive)?.booleanOrNull
@@ -844,7 +845,7 @@ public class HermesGateway(
                 configuration.requestTimeoutMillis, waitsForConnection = false)
             retire(sessionId)
             logger.log(GatewayLogLevel.INFO, "Resumed a reclaimed session under a new runtime id")
-            recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, storedId))
+            recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, result.storedSessionId ?: result.sessionKey ?: storedId))
         } catch (error: HermesGatewayException.RPC) {
             retire(sessionId)
             recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))

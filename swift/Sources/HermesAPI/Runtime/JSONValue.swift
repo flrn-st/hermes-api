@@ -36,6 +36,10 @@ public indirect enum JSONValue: Codable, Sendable, Hashable {
 }
 
 public extension JSONValue {
+    var stringValue: String? { if case .string(let value) = self { value } else { nil } }
+    var integerValue: Int? { if case .integer(let value) = self { value } else { nil } }
+    var objectValue: [String: JSONValue]? { if case .object(let value) = self { value } else { nil } }
+
     /// Parses a JSON document. Several times faster than decoding `JSONValue` with `JSONDecoder`, which
     /// probes every value's type by attempting decodes; the gateway parses every frame this way.
     init(jsonData data: Data) throws {

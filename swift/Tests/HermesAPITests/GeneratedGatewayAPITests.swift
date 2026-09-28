@@ -1,20 +1,13 @@
 import Foundation
 import HermesAPI
+import HermesAPITesting
 import Testing
 
-private struct PingCaller: GatewayCalling {
-    func call<Params: Encodable & Sendable, Result: Decodable & Sendable>(
-        _ method: String, params: Params, as resultType: Result.Type
-    ) async throws -> Result {
-        #expect(method == "ping")
-        #expect(try JSONSerialization.jsonObject(with: JSONEncoder().encode(params)) is [String: Any])
-        return try JSONDecoder().decode(Result.self, from: Data(#"{"pong":true}"#.utf8))
-    }
-}
-
 @Test func generatedMethodCallsItsWireName() async throws {
-    let result = try await GatewayMethodCatalog(caller: PingCaller()).ping(.init())
+    let caller = ScriptedGatewayCaller(results: ["ping": .object(["pong": .boolean(true)])])
+    let result = try await caller.methods.ping(.init())
     #expect(result.pong)
+    #expect(await caller.calls == [RecordedCall(method: "ping", params: .object([:]))])
 }
 
 @Test func generatedEventRetainsUnknownPayload() throws {

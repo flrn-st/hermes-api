@@ -1,5 +1,6 @@
 import Foundation
 import HermesAPI
+import HermesAPITesting
 import Testing
 
 // MARK: - Fakes
@@ -26,124 +27,12 @@ private struct TicketHTTPTransport: HTTPTransport {
     }
 }
 
-/// One fake Hermes socket. It answers `client.capabilities`, optionally answers heartbeats, and hands
-/// every other frame the client sends to `sent`.
-private actor TestSocket: GatewayConnection {
-    nonisolated let sent: AsyncStream<Data>
-    nonisolated let heartbeats: AsyncStream<String>
-    private let sentContinuation: AsyncStream<Data>.Continuation
-    private let heartbeatContinuation: AsyncStream<String>.Continuation
-    private var incoming: [Data] = []
-    private var waiters: [CheckedContinuation<Data, Error>] = []
-    private var failure: HermesGatewayError?
-    private let answersHeartbeats: Bool
-    private(set) var isClosed = false
-    private var sendsFail = false
-
-    /// The socket died, but its reader has not noticed: sends fail, reads still wait.
-    func failSends() { sendsFail = true }
-
-    init(answersHeartbeats: Bool = false) {
-        (sent, sentContinuation) = AsyncStream.makeStream(of: Data.self)
-        (heartbeats, heartbeatContinuation) = AsyncStream.makeStream(of: String.self)
-        self.answersHeartbeats = answersHeartbeats
-    }
-
-    func send(_ frame: Data) throws {
-        guard !isClosed, !sendsFail else { throw HermesGatewayError.transport("closed") }
-        guard let object = try JSONSerialization.jsonObject(with: frame) as? [String: Any] else {
-            throw HermesGatewayError.decoding("Invalid test frame")
-        }
-        switch object["method"] as? String {
-        case "client.capabilities":
-            let id = object["id"] as? Int ?? 0
-            inject(#"{"jsonrpc":"2.0","id":\#(id),"result":{"server_requests":["approval"]}}"#)
-        case "gateway.ping":
-            let id = object["id"] as? String ?? ""
-            heartbeatContinuation.yield(id)
-            if answersHeartbeats { inject(#"{"jsonrpc":"2.0","id":"\#(id)","result":{"ok":true}}"#) }
-        default:
-            sentContinuation.yield(frame)
-        }
-    }
-
-    func receive() async throws -> Data {
-        if let failure { throw failure }
-        if !incoming.isEmpty { return incoming.removeFirst() }
-        return try await withCheckedThrowingContinuation { waiters.append($0) }
-    }
-
-    func inject(_ json: String) {
-        let frame = Data(json.utf8)
-        if !waiters.isEmpty { waiters.removeFirst().resume(returning: frame) } else { incoming.append(frame) }
-    }
-
-    /// Hermes (or the network) ends the socket.
-    func sever(_ error: HermesGatewayError = .transport("closed")) {
-        failure = error
-        for waiter in waiters { waiter.resume(throwing: error) }
-        waiters.removeAll()
-    }
-
-    func close() {
-        isClosed = true
-        sever()
-        sentContinuation.finish()
-        heartbeatContinuation.finish()
-    }
-}
-
-/// Hands out scripted sockets or failures in order; once exhausted, attempts wait until cancelled.
-private actor SequenceTransport: GatewayTransport {
-    enum Step {
-        case socket(TestSocket)
-        case failure(HermesGatewayError)
-    }
-
-    private var steps: [Step]
-    private(set) var attempts = 0
-    private(set) var urls: [URL] = []
-    private(set) var subprotocols: [[String]] = []
-
-    init(_ steps: [Step]) { self.steps = steps }
-
-    init(_ sockets: [TestSocket]) { self.steps = sockets.map(Step.socket) }
-
-    func connect(url: URL, headers: [String: String], subprotocols: [String]) async throws -> any GatewayConnection {
-        urls.append(url)
-        self.subprotocols.append(subprotocols)
-        attempts += 1
-        guard !steps.isEmpty else {
-            try await Task.sleep(for: .seconds(3600))
-            throw HermesGatewayError.cancelled
-        }
-        switch steps.removeFirst() {
-        case .socket(let socket): return socket
-        case .failure(let error): throw error
-        }
-    }
-}
-
-private final class TestNetworkMonitor: GatewayNetworkMonitor {
-    private let stream: AsyncStream<GatewayNetworkPath>
-    private let continuation: AsyncStream<GatewayNetworkPath>.Continuation
-
-    init(_ initial: GatewayNetworkPath) {
-        (stream, continuation) = AsyncStream.makeStream(of: GatewayNetworkPath.self)
-        continuation.yield(initial)
-    }
-
-    func paths() -> AsyncStream<GatewayNetworkPath> { stream }
-
-    func change(_ path: GatewayNetworkPath) { continuation.yield(path) }
-}
-
-private let wifi = GatewayNetworkPath(isAvailable: true, interface: "wifi:en0")
-private let cellular = GatewayNetworkPath(isAvailable: true, interface: "cellular:pdp_ip0")
-private let offline = GatewayNetworkPath(isAvailable: false, interface: nil)
+private let wifi = ScriptedNetworkMonitor.wifi
+private let cellular = ScriptedNetworkMonitor.cellular
+private let offline = ScriptedNetworkMonitor.offline
 
 private func client(
-    _ transport: SequenceTransport, timeout: Duration = .seconds(1), monitor: TestNetworkMonitor? = nil,
+    _ transport: ScriptedGatewayTransport, timeout: Duration = .seconds(1), monitor: ScriptedNetworkMonitor? = nil,
     reconnectDelay: Duration = .zero, heartbeat: Duration = .seconds(60), deadline: Duration = .seconds(120),
     minimumContract: Int = HermesGatewayContract.desktopContract,
     baseURL: URL = URL(string: "https://example.test")!, auth: any HermesAuth = TestAuth(),
@@ -157,9 +46,9 @@ private func client(
 }
 
 private func client(
-    socket: TestSocket, timeout: Duration = .seconds(1), minimumContract: Int = HermesGatewayContract.desktopContract
+    socket: ScriptedGatewaySocket, timeout: Duration = .seconds(1), minimumContract: Int = HermesGatewayContract.desktopContract
 ) -> HermesGateway {
-    client(SequenceTransport([socket]), timeout: timeout, minimumContract: minimumContract)
+    client(ScriptedGatewayTransport([socket]), timeout: timeout, minimumContract: minimumContract)
 }
 
 private func sentCall(_ frame: Data) throws -> (String, Int) {
@@ -173,14 +62,12 @@ private func sentParams(_ frame: Data) throws -> [String: Any] {
 }
 
 private func event(_ type: String, session: String, seq: Int, payload: String = "{}") -> String {
-    #"{"jsonrpc":"2.0","method":"event","params":{"type":"\#(type)","session_id":"\#(session)","seq":\#(seq),"payload":\#(payload)}}"#
+    GatewayFrames.event(type, session: session, seq: seq, payload: payload)
 }
 
-private func result(_ id: Int, _ json: String) -> String { #"{"jsonrpc":"2.0","id":\#(id),"result":\#(json)}"# }
+private func result(_ id: Int, _ json: String) -> String { GatewayFrames.result(id, json) }
 
-private func error(_ id: Int, code: Int, _ message: String) -> String {
-    #"{"jsonrpc":"2.0","id":\#(id),"error":{"code":\#(code),"message":"\#(message)"}}"#
-}
+private func error(_ id: Int, code: Int, _ message: String) -> String { GatewayFrames.error(id, code: code, message) }
 
 /// Waits (bounded) for the gateway to report a matching state.
 private func state(
@@ -205,7 +92,7 @@ private func isReconnecting(_ state: GatewayConnectionState) -> Bool {
 
 /// Creates a session through the client and answers it with a stored id.
 private func createSession(
-    _ gateway: HermesGateway, on socket: TestSocket, id: String, stored: String, closeOnDisconnect: Bool? = nil
+    _ gateway: HermesGateway, on socket: ScriptedGatewaySocket, id: String, stored: String, closeOnDisconnect: Bool? = nil
 ) async throws {
     var sent = socket.sent.makeAsyncIterator()
     let created = Task {
@@ -220,7 +107,7 @@ private func createSession(
 // MARK: - Calls
 
 @Test func correlatesOutOfOrderResponses() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     var sent = socket.sent.makeAsyncIterator()
@@ -237,7 +124,7 @@ private func createSession(
 }
 
 /// Answers one call with a session result that reports `contract`.
-private func callReporting(contract: Int, through gateway: HermesGateway, on socket: TestSocket) async throws -> PingResult {
+private func callReporting(contract: Int, through gateway: HermesGateway, on socket: ScriptedGatewaySocket) async throws -> PingResult {
     var sent = socket.sent.makeAsyncIterator()
     let request = Task { try await gateway.call("contract", params: PingParams(), as: PingResult.self) }
     let (_, id) = try sentCall(try #require(await sent.next()))
@@ -246,7 +133,7 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func rejectsABackendBelowTheMinimumContract() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     let older = HermesGatewayContract.desktopContract - 1
@@ -258,7 +145,7 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func acceptsNewerContractsAndOlderOnesTheAppAllows() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let older = HermesGatewayContract.desktopContract - 1
     let gateway = client(socket: socket, minimumContract: older)
     try await gateway.connect()
@@ -271,7 +158,7 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func timesOutAndCancelsCalls() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket, timeout: .milliseconds(80))
     try await gateway.connect()
     var sent = socket.sent.makeAsyncIterator()
@@ -286,9 +173,9 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func callsDuringAReconnectWaitForTheNewSocket() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]), reconnectDelay: .milliseconds(150))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]), reconnectDelay: .milliseconds(150))
     try await gateway.connect()
     await first.sever()
     try await state(of: gateway, isReconnecting)
@@ -302,9 +189,9 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func readOnlyCallsAreRepeatedAfterALostConnection() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]), timeout: .seconds(5))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]), timeout: .seconds(5))
     try await gateway.connect()
     var sentFirst = first.sent.makeAsyncIterator()
     let call = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }
@@ -319,9 +206,9 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func callsThatMayHaveRunAreNotRepeated() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]), timeout: .seconds(5))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]), timeout: .seconds(5))
     try await gateway.connect()
     var sentFirst = first.sent.makeAsyncIterator()
     let call = Task { try await gateway.call("probe", params: PingParams(), as: PingResult.self) }
@@ -340,9 +227,9 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func undeliveredCallsAreSentOnTheNextConnection() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]), timeout: .seconds(5))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]), timeout: .seconds(5))
     try await gateway.connect()
     await first.failSends()
     let call = Task { try await gateway.call("probe", params: PingParams(), as: PingResult.self) }
@@ -356,9 +243,9 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func retiringBackendTriggersAReconnect() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let transport = SequenceTransport([first, second])
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([first, second])
     let gateway = client(transport)
     try await gateway.connect()
     var sent = first.sent.makeAsyncIterator()
@@ -373,8 +260,8 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func genericFailureWithTheRetiringCodeKeepsTheConnection() async throws {
-    let socket = TestSocket()
-    let transport = SequenceTransport([socket])
+    let socket = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([socket])
     let gateway = client(transport)
     try await gateway.connect()
     var sent = socket.sent.makeAsyncIterator()
@@ -406,8 +293,8 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
 }
 
 @Test func connectionsKeepTheBaseURLPath() async throws {
-    let socket = TestSocket()
-    let transport = SequenceTransport([socket])
+    let socket = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([socket])
     let gateway = client(
         transport, baseURL: try #require(URL(string: "https://relay.example/agents/box/")),
         auth: DashboardTicketAuth { ["Authorization": "Bearer test"] },
@@ -433,9 +320,9 @@ private actor AddressBook {
 }
 
 @Test func everyConnectionAttemptResolvesTheAddressAfterThePreviousFailure() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let transport = SequenceTransport([.failure(.transport("primary unreachable")), .socket(first), .socket(second)])
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([.failure(.transport("primary unreachable")), .socket(first), .socket(second)])
     let book = AddressBook(["https://primary.example", "https://fallback.example", "https://primary.example"])
     let gateway = HermesGateway(configuration: .init(
         address: HermesDashboardAddress { await book.next(after: $0) }, auth: TestAuth(), transport: transport,
@@ -465,7 +352,7 @@ private actor AddressBook {
 
 @Test func initialAuthenticationFailureIsTerminal() async throws {
     let rejected = HermesGatewayError.authenticationFailed("WebSocket upgrade returned HTTP 403")
-    let transport = SequenceTransport([.failure(rejected)])
+    let transport = ScriptedGatewayTransport([.failure(rejected)])
     let gateway = client(transport)
     await #expect(throws: rejected) { try await gateway.connect() }
     #expect(gateway.connectionState == .failed(rejected))
@@ -489,7 +376,7 @@ private actor RenewingAuth: HermesAuth {
 
 @Test func aRenewedCredentialRetriesTheRejectedAttempt() async throws {
     let rejected = HermesGatewayError.authenticationFailed("WebSocket upgrade returned HTTP 401")
-    let transport = SequenceTransport([.failure(rejected), .socket(TestSocket())])
+    let transport = ScriptedGatewayTransport([.failure(rejected), .socket(ScriptedGatewaySocket())])
     let auth = RenewingAuth()
     let gateway = client(transport, reconnectDelay: .seconds(60), auth: auth)
     try await gateway.connect()
@@ -500,7 +387,7 @@ private actor RenewingAuth: HermesAuth {
 
 @Test func aCredentialRenewsOncePerAttempt() async throws {
     let rejected = HermesGatewayError.authenticationFailed("WebSocket upgrade returned HTTP 403")
-    let transport = SequenceTransport([.failure(rejected), .failure(rejected)])
+    let transport = ScriptedGatewayTransport([.failure(rejected), .failure(rejected)])
     let auth = RenewingAuth()
     let gateway = client(transport, auth: auth)
     await #expect(throws: rejected) { try await gateway.connect() }
@@ -509,9 +396,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func authenticationFailureDuringReconnectStopsRetrying() async throws {
-    let first = TestSocket()
+    let first = ScriptedGatewaySocket()
     let rejected = HermesGatewayError.authenticationFailed("WebSocket upgrade returned HTTP 403")
-    let transport = SequenceTransport([.socket(first), .failure(rejected)])
+    let transport = ScriptedGatewayTransport([.socket(first), .failure(rejected)])
     let gateway = client(transport)
     try await gateway.connect()
     await first.sever()
@@ -523,7 +410,7 @@ private actor RenewingAuth: HermesAuth {
 // MARK: - Events
 
 @Test func deduplicatesSequencedEvents() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     var events = gateway.events().makeAsyncIterator()
@@ -536,7 +423,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func everySubscriberReceivesEveryEvent() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     var first = gateway.events().makeAsyncIterator()
@@ -551,7 +438,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func undecodableEventPayloadKeepsTheConnection() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     var events = gateway.events().makeAsyncIterator()
@@ -572,7 +459,7 @@ private actor RenewingAuth: HermesAuth {
 // MARK: - Server requests
 
 @Test func answersTypedServerRequest() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     await gateway.setServerRequestHandler { request in
         guard case .approval(let params) = request else { throw HermesGatewayError.decoding("Unexpected request") }
@@ -590,7 +477,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func rejectsServerRequestWithInvalidParams() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     await gateway.setServerRequestHandler { _ in .approval(ApprovalResult(choice: .deny)) }
     try await gateway.connect()
@@ -604,7 +491,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func handlerThatGivesUpIsAnsweredWithAnError() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     await gateway.setServerRequestHandler { _ in throw CancellationError() }
     try await gateway.connect()
@@ -618,7 +505,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func withdrawnRequestIsNotAnswered() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     await gateway.setServerRequestHandler { _ in
         try await Task.sleep(for: .seconds(3600))
@@ -641,9 +528,9 @@ private actor RenewingAuth: HermesAuth {
 // MARK: - Reconnect and session recovery
 
 @Test func reconnectReplaysGapBeforeLiveEvents() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
     try await gateway.connect()
     var events = gateway.events().makeAsyncIterator()
     await first.inject(event("message.start", session: "s", seq: 1))
@@ -666,10 +553,10 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func failedReplayRetriesTheGapInsteadOfSkippingIt() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let third = TestSocket()
-    let gateway = client(SequenceTransport([first, second, third]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let third = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second, third]))
     try await gateway.connect()
     var events = gateway.events().makeAsyncIterator()
     await first.inject(event("message.start", session: "s", seq: 1))
@@ -697,9 +584,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func reconnectRebindsCreatedSessionsWithoutEvents() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
     try await gateway.connect()
     try await createSession(gateway, on: first, id: "quiet", stored: "stored-quiet")
     var sent = second.sent.makeAsyncIterator()
@@ -713,9 +600,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func reconnectResumesReclaimedSessions() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
     try await gateway.connect()
     try await createSession(gateway, on: first, id: "runtime-1", stored: "stored-1")
     var recoveries = gateway.sessionRecoveries().makeAsyncIterator()
@@ -734,9 +621,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func turnOfADroppedSessionKeepsStreamingFromTheReplayBuffer() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
     try await gateway.connect()
     try await createSession(gateway, on: first, id: "runtime-1", stored: "stored-1")
     var events = gateway.events().makeAsyncIterator()
@@ -775,9 +662,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func reconnectReportsSessionsItCannotRecover() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
     try await gateway.connect()
     var events = gateway.events().makeAsyncIterator()
     await first.inject(event("message.start", session: "gone", seq: 4))
@@ -803,9 +690,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func truncatedReplayIsReported() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
     try await gateway.connect()
     try await createSession(gateway, on: first, id: "long", stored: "stored-long")
     var recoveries = gateway.sessionRecoveries().makeAsyncIterator()
@@ -820,9 +707,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func closedAndCloseOnDisconnectSessionsAreNotRebound() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let gateway = client(SequenceTransport([first, second]))
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
     try await gateway.connect()
     try await createSession(gateway, on: first, id: "done", stored: "stored-done")
     try await createSession(gateway, on: first, id: "ephemeral", stored: "stored-e", closeOnDisconnect: true)
@@ -847,7 +734,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func reclaimedSessionIsReportedAndForgotten() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     try await createSession(gateway, on: socket, id: "idle", stored: "stored-idle")
@@ -860,9 +747,9 @@ private actor RenewingAuth: HermesAuth {
 // MARK: - Liveness
 
 @Test func silentSocketIsReplacedAfterTheHeartbeatDeadline() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let transport = SequenceTransport([first, second])
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([first, second])
     let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .milliseconds(500))
     try await gateway.connect()
     var heartbeats = first.heartbeats.makeAsyncIterator()
@@ -878,9 +765,9 @@ private actor RenewingAuth: HermesAuth {
 @Test func silenceAloneNeverDropsASocketWithoutAPing() async throws {
     // A deadline shorter than the interval makes the first check see the silence of a long pause
     // (a suspended app, a stalled runner). The gateway must still ping before it gives up.
-    let first = TestSocket()
-    let second = TestSocket()
-    let transport = SequenceTransport([first, second])
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([first, second])
     let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .milliseconds(50))
     try await gateway.connect()
     var heartbeats = first.heartbeats.makeAsyncIterator()
@@ -892,8 +779,8 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func answeredHeartbeatsKeepTheConnection() async throws {
-    let socket = TestSocket(answersHeartbeats: true)
-    let transport = SequenceTransport([socket])
+    let socket = ScriptedGatewaySocket(answersHeartbeats: true)
+    let transport = ScriptedGatewayTransport([socket])
     let gateway = client(transport, heartbeat: .milliseconds(100), deadline: .seconds(1))
     try await gateway.connect()
     var heartbeats = socket.heartbeats.makeAsyncIterator()
@@ -904,10 +791,10 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func streamingTrafficNeedsNoHeartbeat() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     // Events arrive forty times faster than the heartbeat interval and keep arriving for twice as long, so a
     // loaded simulator that stalls the test for a second still sees no silent interval.
-    let gateway = client(SequenceTransport([socket]), heartbeat: .seconds(2), deadline: .seconds(6))
+    let gateway = client(ScriptedGatewayTransport([socket]), heartbeat: .seconds(2), deadline: .seconds(6))
     try await gateway.connect()
     let stream = Task {
         for seq in 1...80 {
@@ -925,10 +812,10 @@ private actor RenewingAuth: HermesAuth {
 // MARK: - Network and app lifecycle
 
 @Test func losingTheNetworkWaitsWithoutRetrying() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let transport = SequenceTransport([first, second])
-    let monitor = TestNetworkMonitor(wifi)
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([first, second])
+    let monitor = ScriptedNetworkMonitor(wifi)
     let gateway = client(transport, monitor: monitor)
     try await gateway.connect()
     monitor.change(offline)
@@ -943,10 +830,10 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func switchingNetworksReconnectsAtOnce() async throws {
-    let first = TestSocket(answersHeartbeats: true)
-    let second = TestSocket()
-    let transport = SequenceTransport([first, second])
-    let monitor = TestNetworkMonitor(wifi)
+    let first = ScriptedGatewaySocket(answersHeartbeats: true)
+    let second = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([first, second])
+    let monitor = ScriptedNetworkMonitor(wifi)
     let gateway = client(transport, monitor: monitor, reconnectDelay: .seconds(30))
     try await gateway.connect()
     monitor.change(cellular)
@@ -959,9 +846,9 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func backgroundClosesTheSocketAndForegroundReconnects() async throws {
-    let first = TestSocket()
-    let second = TestSocket()
-    let transport = SequenceTransport([first, second])
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([first, second])
     let gateway = client(transport)
     try await gateway.connect()
     await gateway.enterBackground()
@@ -976,7 +863,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func backgroundLetsARunningTurnFinish() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     var events = gateway.events().makeAsyncIterator()
@@ -993,7 +880,7 @@ private actor RenewingAuth: HermesAuth {
 }
 
 @Test func backgroundGraceBoundsAStuckTurn() async throws {
-    let socket = TestSocket()
+    let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)
     try await gateway.connect()
     var events = gateway.events().makeAsyncIterator()

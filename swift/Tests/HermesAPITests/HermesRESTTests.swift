@@ -1,47 +1,13 @@
 import Foundation
 import HermesAPI
+import HermesAPITesting
 @testable import HermesAPILiveScenarios
 import Testing
-
-/// Answers each request from a script and records what was sent.
-private actor ScriptedTransport: HTTPTransport {
-    enum Step {
-        case respond(Int, String, [String: String] = [:])
-        case fail(URLError.Code)
-        case hang
-    }
-
-    private var steps: [Step]
-    private(set) var requests: [URLRequest] = []
-
-    init(_ steps: [Step]) { self.steps = steps }
-
-    nonisolated func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        try await next(request)
-    }
-
-    private func next(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        requests.append(request)
-        guard !steps.isEmpty else { throw HermesRESTError.transport("No scripted response left") }
-        switch steps.removeFirst() {
-        case .respond(let status, let body, let headers):
-            guard let url = request.url,
-                  let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: nil, headerFields: headers)
-            else { throw HermesRESTError.transport("Invalid test response") }
-            return (Data(body.utf8), response)
-        case .fail(let code):
-            throw URLError(code)
-        case .hang:
-            try await Task.sleep(for: .seconds(30))
-            throw HermesRESTError.transport("Hung request was not cancelled")
-        }
-    }
-}
 
 private let base = URL(string: "https://dashboard.example")!
 private let fastRetry = RESTRetryPolicy(maxAttempts: 3, initialDelay: .milliseconds(1), maximumDelay: .milliseconds(5))
 
-private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? = nil,
+private func client(_ transport: ScriptedHTTPTransport, auth: (any HermesRESTAuth)? = nil,
                     retry: RESTRetryPolicy = fastRetry, timeout: Duration = .seconds(5),
                     baseURL: URL = base, decoding: RESTDecoding = .strict) -> HermesREST {
     HermesREST(configuration: .init(address: HermesDashboardAddress(baseURL), auth: auth, transport: transport,
@@ -49,7 +15,7 @@ private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? 
 }
 
 @Test func queryValuesAndPathSegmentsArePercentEncoded() async throws {
-    let transport = ScriptedTransport([
+    let transport = ScriptedHTTPTransport([
         .respond(200, #"{"count":2}"#),
         .respond(404, #"{"detail":"Session not found"}"#),
     ])
@@ -63,7 +29,7 @@ private func client(_ transport: ScriptedTransport, auth: (any HermesRESTAuth)? 
 }
 
 @Test func routesKeepTheBaseURLPath() async throws {
-    let transport = ScriptedTransport([.respond(200, #"{"count":2}"#), .respond(200, #"{"count":3}"#)])
+    let transport = ScriptedHTTPTransport([.respond(200, #"{"count":2}"#), .respond(200, #"{"count":3}"#)])
     let behindRelay = client(transport, baseURL: URL(string: "https://relay.example/agents/box%201/?ignored=1")!)
     #expect(try await behindRelay.sessions.emptyCount(profile: "default").count == 2)
     let behindProxy = client(transport, baseURL: URL(string: "https://proxy.example/hermes")!)
@@ -84,7 +50,7 @@ private actor FailoverAddress {
 }
 
 @Test func everyAttemptResolvesTheAddressAfterThePreviousFailure() async throws {
-    let transport = ScriptedTransport([.fail(.cannotConnectToHost), .respond(200, #"{"count":2}"#)])
+    let transport = ScriptedHTTPTransport([.fail(.cannotConnectToHost), .respond(200, #"{"count":2}"#)])
     let address = FailoverAddress()
     let rest = HermesREST(configuration: .init(
         address: HermesDashboardAddress { await address.resolve(after: $0) }, transport: transport, retry: fastRetry
@@ -100,7 +66,7 @@ private actor FailoverAddress {
 }
 
 @Test func localTokenAuthenticatesAndJSONBodiesAreSent() async throws {
-    let transport = ScriptedTransport([.respond(200, #"{"ok":true,"active":"default"}"#)])
+    let transport = ScriptedHTTPTransport([.respond(200, #"{"ok":true,"active":"default"}"#)])
     let rest = client(transport, auth: LocalTokenAuth(token: "secret"))
     let result = try await rest.profiles.setActive(body: .init(name: "default"))
     #expect(result.ok && result.active == "default")
@@ -112,7 +78,7 @@ private actor FailoverAddress {
 }
 
 @Test func strictDecodingRejectsUnknownFieldsAndEnumValues() async throws {
-    let transport = ScriptedTransport([
+    let transport = ScriptedHTTPTransport([
         .respond(200, #"{"ticket":"fresh","ttl_seconds":30,"surprise":1}"#),
         .respond(200, #"{"ok":true,"mode":"telepathy","available":false,"reason":null,"model":"m","voice":"v"}"#),
     ])
@@ -127,7 +93,7 @@ private actor FailoverAddress {
 }
 
 @Test func tolerantDecodingSkipsUnknownFieldsAndKeepsEnumValues() async throws {
-    let transport = ScriptedTransport([
+    let transport = ScriptedHTTPTransport([
         .respond(200, #"{"ticket":"fresh","ttl_seconds":30,"surprise":1}"#),
         .respond(200, #"{"ok":true,"mode":"telepathy","available":false,"reason":null,"model":"m","voice":"v"}"#),
         .respond(200, #"{"ttl_seconds":30}"#),
@@ -162,7 +128,7 @@ private actor FailoverAddress {
 }
 
 @Test func httpErrorsCarryFastAPIDetail() async throws {
-    let transport = ScriptedTransport([.respond(401, #"{"detail":"Unauthorized"}"#)])
+    let transport = ScriptedHTTPTransport([.respond(401, #"{"detail":"Unauthorized"}"#)])
     do {
         _ = try await client(transport).auth.wsTicket()
         Issue.record("Expected an HTTP error")
@@ -173,7 +139,7 @@ private actor FailoverAddress {
 }
 
 @Test func safeRequestsRetryTransientFailures() async throws {
-    let transport = ScriptedTransport([
+    let transport = ScriptedHTTPTransport([
         .fail(.networkConnectionLost),
         .respond(503, #"{"detail":"starting"}"#, ["Retry-After": "0"]),
         .respond(200, #"{"count":0}"#),
@@ -183,23 +149,23 @@ private actor FailoverAddress {
 }
 
 @Test func unsafeRequestsRetryOnlyWhenHermesNeverSawThem() async throws {
-    let unreachable = ScriptedTransport([.fail(.cannotConnectToHost), .respond(200, #"{"ok":true,"active":"x"}"#)])
+    let unreachable = ScriptedHTTPTransport([.fail(.cannotConnectToHost), .respond(200, #"{"ok":true,"active":"x"}"#)])
     #expect(try await client(unreachable).profiles.setActive(body: .init(name: "x")).active == "x")
     #expect(await unreachable.requests.count == 2)
 
-    let unavailable = ScriptedTransport([.respond(503, "{}"), .respond(200, #"{"ok":true,"active":"x"}"#)])
+    let unavailable = ScriptedHTTPTransport([.respond(503, "{}"), .respond(200, #"{"ok":true,"active":"x"}"#)])
     await #expect(throws: HermesRESTError.http(status: 503, body: "{}")) {
         _ = try await client(unavailable).profiles.setActive(body: .init(name: "x"))
     }
     #expect(await unavailable.requests.count == 1)
 
-    let lost = ScriptedTransport([.fail(.networkConnectionLost), .respond(200, #"{"ok":true,"active":"x"}"#)])
+    let lost = ScriptedHTTPTransport([.fail(.networkConnectionLost), .respond(200, #"{"ok":true,"active":"x"}"#)])
     await #expect(throws: HermesRESTError.self) { _ = try await client(lost).profiles.setActive(body: .init(name: "x")) }
     #expect(await lost.requests.count == 1)
 }
 
 @Test func attemptsTimeOut() async throws {
-    let transport = ScriptedTransport([.hang])
+    let transport = ScriptedHTTPTransport([.hang])
     let started = ContinuousClock.now
     await #expect(throws: HermesRESTError.timeout) {
         _ = try await client(transport, retry: .none, timeout: .milliseconds(100)).sessions.emptyCount()
@@ -208,7 +174,7 @@ private actor FailoverAddress {
 }
 
 @Test func cancellationStopsARequest() async throws {
-    let transport = ScriptedTransport([.hang])
+    let transport = ScriptedHTTPTransport([.hang])
     let task = Task { try await client(transport).sessions.emptyCount() }
     try await Task.sleep(for: .milliseconds(50))
     task.cancel()
@@ -229,14 +195,14 @@ private actor RenewingAuth: HermesRESTAuth {
 }
 
 @Test func unauthorizedRequestsRenewTheCredentialOnce() async throws {
-    let transport = ScriptedTransport([.respond(401, "{}"), .respond(200, #"{"ticket":"t","ttl_seconds":30}"#)])
+    let transport = ScriptedHTTPTransport([.respond(401, "{}"), .respond(200, #"{"ticket":"t","ttl_seconds":30}"#)])
     let auth = RenewingAuth()
     #expect(try await client(transport, auth: auth).auth.wsTicket().ticket == "t")
     let headers = await transport.requests.map { $0.value(forHTTPHeaderField: "Authorization") }
     #expect(headers == ["Bearer stale", "Bearer fresh"])
     #expect(await auth.renewals == 1)
 
-    let rejected = ScriptedTransport([.respond(401, "{}"), .respond(401, "{}")])
+    let rejected = ScriptedHTTPTransport([.respond(401, "{}"), .respond(401, "{}")])
     await #expect(throws: HermesRESTError.http(status: 401, body: "{}")) {
         _ = try await client(rejected, auth: RenewingAuth()).auth.wsTicket()
     }
@@ -246,7 +212,7 @@ private actor RenewingAuth: HermesRESTAuth {
 private let issued = #"{"access_token":"a2","refresh_token":"r2","token_type":"Bearer","expires_at":4102444800,"provider":"oidc","user_id":"u"}"#
 
 @Test func nativeSessionRefreshesOnceForConcurrentRejections() async throws {
-    let refresh = ScriptedTransport([.respond(200, issued)])
+    let refresh = ScriptedHTTPTransport([.respond(200, issued)])
     let rotated = RotationLog()
     let auth = NativeSessionAuth(address: HermesDashboardAddress(base), tokens: .init(accessToken: "a1", refreshToken: "r1", provider: "oidc"),
                                  transport: refresh, onRotate: { await rotated.record($0) })
@@ -267,7 +233,7 @@ private let issued = #"{"access_token":"a2","refresh_token":"r2","token_type":"B
 }
 
 @Test func nativeSessionRefreshesBeforeExpiry() async throws {
-    let refresh = ScriptedTransport([.respond(200, issued)])
+    let refresh = ScriptedHTTPTransport([.respond(200, issued)])
     let auth = NativeSessionAuth(address: HermesDashboardAddress(base), tokens: .init(accessToken: "a1", refreshToken: "r1", expiresAt: 0),
                                  transport: refresh)
     #expect(try await auth.authorizationHeaders() == ["Authorization": "Bearer a2"])
@@ -281,13 +247,13 @@ private actor RotationLog {
 }
 
 @Test func redirectsAreResultsNotFollowed() async throws {
-    let transport = ScriptedTransport([.respond(302, "", ["Location": "https://idp.example/authorize?x=1"])])
+    let transport = ScriptedHTTPTransport([.respond(302, "", ["Location": "https://idp.example/authorize?x=1"])])
     let redirect = try await client(transport).web.authLogin(provider: "oidc")
     #expect(redirect == RESTRedirect(status: 302, location: "https://idp.example/authorize?x=1"))
 }
 
 @Test func binaryAndTextBodiesKeepTheirBytes() async throws {
-    let transport = ScriptedTransport([
+    let transport = ScriptedHTTPTransport([
         .respond(200, "PK\u{3}\u{4}", ["Content-Type": "application/zip"]),
         .respond(200, "body{}", ["Content-Type": "text/css"]),
     ])
@@ -298,7 +264,7 @@ private actor RotationLog {
 }
 
 @Test func multipartUploadsCarryFilesAndFields() async throws {
-    let transport = ScriptedTransport([.respond(200, #"{"ok":true,"path":"notes/a.txt","size":5,"root":"workspace"}"#)])
+    let transport = ScriptedHTTPTransport([.respond(200, #"{"ok":true,"path":"notes/a.txt","size":5,"root":"workspace"}"#)])
     _ = try? await client(transport).files.uploadStream(
         file: RESTFile(filename: "a.txt", contentType: "text/plain", data: Data("hello".utf8)), path: "notes/a.txt")
     let request = try #require(await transport.requests.first)
@@ -313,7 +279,7 @@ private actor RotationLog {
 }
 
 @Test func severalSuccessStatusesDecodeToTheirCase() async throws {
-    let transport = ScriptedTransport([
+    let transport = ScriptedHTTPTransport([
         .respond(202, #"{"status":"accepted","job_id":"j"}"#),
         .respond(200, #"{"status":"duplicate","job_id":"j"}"#),
     ])

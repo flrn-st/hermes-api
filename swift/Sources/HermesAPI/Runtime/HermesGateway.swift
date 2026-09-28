@@ -50,7 +50,7 @@ private struct TrackedSession {
 /// sessions it created, replays the events it missed, re-delivers open server requests, and resumes
 /// sessions Hermes reclaimed meanwhile. Apps call `enterBackground()` and `enterForeground()` from their
 /// lifecycle so no socket, heartbeat or retry runs while the app is suspended.
-public actor HermesGateway: GatewayCalling {
+public actor HermesGateway: HermesGatewayClient {
     private let configuration: HermesGatewayConfiguration
     private let eventBroadcast = Broadcast<GatewayEvent>()
     private let stateBroadcast = Broadcast<GatewayConnectionState>(replaysLatest: true, initial: .idle)
@@ -1014,10 +1014,4 @@ public actor HermesGateway: GatewayCalling {
     /// How often a detached turn's replay buffer is fetched, and for how long at most.
     static let drainInterval: Duration = .seconds(1)
     private static let drainLimit: Duration = .seconds(900)
-}
-
-private extension JSONValue {
-    var stringValue: String? { if case .string(let value) = self { value } else { nil } }
-    var integerValue: Int? { if case .integer(let value) = self { value } else { nil } }
-    var objectValue: [String: JSONValue]? { if case .object(let value) = self { value } else { nil } }
 }

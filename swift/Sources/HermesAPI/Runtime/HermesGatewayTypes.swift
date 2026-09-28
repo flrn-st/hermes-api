@@ -60,6 +60,14 @@ public struct GatewayEvent: Sendable, Hashable {
     public let seq: Int?
     public let payload: GatewayEventPayload
     public let replayed: Bool
+
+    public init(type: String, sessionID: String?, seq: Int?, payload: GatewayEventPayload, replayed: Bool = false) {
+        self.type = type
+        self.sessionID = sessionID
+        self.seq = seq
+        self.payload = payload
+        self.replayed = replayed
+    }
 }
 
 public struct HermesGatewayConfiguration: Sendable {

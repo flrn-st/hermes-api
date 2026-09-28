@@ -164,20 +164,49 @@ public sealed interface GatewayEventPayload {
 
 /** Contracted gateway requests from the server to the client. */
 public sealed interface ServerRequest {
-    public data class Approval(public val params: ApprovalRequestParams) : ServerRequest
-    public data class Clarify(public val params: ClarifyRequestParams) : ServerRequest
-    public data class DisplayInstallSudo(public val params: DisplayInstallSudoParams) : ServerRequest
-    public data class PreviewAct(public val params: PreviewActRequestParams) : ServerRequest
-    public data class PreviewRead(public val params: ReadRangeRequestParams) : ServerRequest
-    public data class Secret(public val params: SecretRequestParams) : ServerRequest
-    public data class Sudo(public val params: SudoRequestParams) : ServerRequest
-    public data class TerminalRead(public val params: ReadRangeRequestParams) : ServerRequest
-    public data class Tour(public val params: TourRequestParams) : ServerRequest
-    public data class VaultCode(public val params: VaultCodeRequestParams) : ServerRequest
-    public data class VaultSaveLogin(public val params: VaultSaveLoginRequestParams) : ServerRequest
-    public data class VaultUnlockPrompt(public val params: VaultUnlockRequestParams) : ServerRequest
-    public data class WindowRead(public val params: EmptyRequestParams) : ServerRequest
-    public data class Unknown(public val method: String, public val raw: JsonElement) : ServerRequest
+    /** The wire method, such as `clarify`. */
+    public val method: String
+
+    public data class Approval(public val params: ApprovalRequestParams) : ServerRequest {
+        override val method: String get() = "approval"
+    }
+    public data class Clarify(public val params: ClarifyRequestParams) : ServerRequest {
+        override val method: String get() = "clarify"
+    }
+    public data class DisplayInstallSudo(public val params: DisplayInstallSudoParams) : ServerRequest {
+        override val method: String get() = "display.install.sudo"
+    }
+    public data class PreviewAct(public val params: PreviewActRequestParams) : ServerRequest {
+        override val method: String get() = "preview.act"
+    }
+    public data class PreviewRead(public val params: ReadRangeRequestParams) : ServerRequest {
+        override val method: String get() = "preview.read"
+    }
+    public data class Secret(public val params: SecretRequestParams) : ServerRequest {
+        override val method: String get() = "secret"
+    }
+    public data class Sudo(public val params: SudoRequestParams) : ServerRequest {
+        override val method: String get() = "sudo"
+    }
+    public data class TerminalRead(public val params: ReadRangeRequestParams) : ServerRequest {
+        override val method: String get() = "terminal.read"
+    }
+    public data class Tour(public val params: TourRequestParams) : ServerRequest {
+        override val method: String get() = "tour"
+    }
+    public data class VaultCode(public val params: VaultCodeRequestParams) : ServerRequest {
+        override val method: String get() = "vault.code"
+    }
+    public data class VaultSaveLogin(public val params: VaultSaveLoginRequestParams) : ServerRequest {
+        override val method: String get() = "vault.save_login"
+    }
+    public data class VaultUnlockPrompt(public val params: VaultUnlockRequestParams) : ServerRequest {
+        override val method: String get() = "vault.unlock_prompt"
+    }
+    public data class WindowRead(public val params: EmptyRequestParams) : ServerRequest {
+        override val method: String get() = "window.read"
+    }
+    public data class Unknown(override val method: String, public val raw: JsonElement) : ServerRequest
 
     public companion object {
         public fun decode(method: String, params: JsonElement, json: Json): ServerRequest = when (method) {

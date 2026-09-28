@@ -283,6 +283,26 @@ public enum ServerRequest: Sendable, Hashable {
         default: return .unknown(method: method, raw: params)
         }
     }
+
+    /// The wire method, such as `clarify`.
+    public var method: String {
+        switch self {
+        case .approval: "approval"
+        case .clarify: "clarify"
+        case .displayInstallSudo: "display.install.sudo"
+        case .previewAct: "preview.act"
+        case .previewRead: "preview.read"
+        case .secret: "secret"
+        case .sudo: "sudo"
+        case .terminalRead: "terminal.read"
+        case .tour: "tour"
+        case .vaultCode: "vault.code"
+        case .vaultSaveLogin: "vault.save_login"
+        case .vaultUnlockPrompt: "vault.unlock_prompt"
+        case .windowRead: "window.read"
+        case .unknown(let method, _): method
+        }
+    }
 }
 
 /// The typed response to a server request.

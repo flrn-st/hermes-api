@@ -106,11 +106,13 @@ public actor FakeGateway: HermesGatewayClient {
     public func recover(_ recovery: GatewaySessionRecovery) { recoveryFanout.yield(recovery) }
 
     /// Puts a server request to the app's handler and returns its answer, checked as the gateway checks it.
-    public func request(_ request: ServerRequest) async throws -> ServerRequestResult {
+    /// The handler sees `id` as `ServerRequestContext.current`.
+    public func request(_ request: ServerRequest, id: String = "srq-fake") async throws -> ServerRequestResult {
         guard let handler else {
             throw HermesGatewayError.rpc(code: -32601, message: "No server request handler", data: nil)
         }
-        let result = try await handler(request)
+        let context = ServerRequestContext(id: id, method: request.method)
+        let result = try await ServerRequestContext.$current.withValue(context) { try await handler(request) }
         guard result.matches(request) else {
             throw HermesGatewayError.decoding("Server request result kind does not match the request")
         }
@@ -118,8 +120,8 @@ public actor FakeGateway: HermesGatewayClient {
     }
 
     /// Decodes a server request from its wire method and params, as the gateway does, and puts it to the handler.
-    public func request(method: String, params: JSONValue) async throws -> ServerRequestResult {
-        try await request(ServerRequest.decode(method: method, params: params))
+    public func request(method: String, params: JSONValue, id: String = "srq-fake") async throws -> ServerRequestResult {
+        try await request(ServerRequest.decode(method: method, params: params), id: id)
     }
 }
 

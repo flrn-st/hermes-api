@@ -25,12 +25,15 @@ import hermes.api.runtime.HermesGatewayClient
 import hermes.api.runtime.HermesGatewayConfiguration
 import hermes.api.runtime.HermesGatewayException
 import hermes.api.runtime.HermesRESTException
+import hermes.api.runtime.RESTCaller
+import hermes.api.runtime.currentServerRequest
 import hermes.api.testing.FakeGateway
 import hermes.api.testing.GatewayFrames
 import hermes.api.testing.ScriptedGatewaySocket
 import hermes.api.testing.ScriptedGatewayTransport
 import hermes.api.testing.ScriptedNetworkMonitor
 import hermes.api.testing.ScriptedRESTCaller
+import hermes.api.testing.SentAnswer
 import hermes.api.testing.SentCall
 import hermes.api.testing.StaticTicketAuth
 import kotlin.test.Test
@@ -102,5 +105,30 @@ class TestingSupportTest {
         assertTrue(pong.await().pong)
         assertEquals(listOf(listOf("hermes-gateway-v1", "hermes-gateway-ticket.test-ticket")), transport.protocols)
         gateway.disconnect()
+    }
+
+    @Test
+    fun handlersSeeWhichRequestTheyAnswer() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress(URI("https://hermes.test")), StaticTicketAuth(), ScriptedGatewayTransport(socket),
+        ), scope = backgroundScope)
+        gateway.setServerRequestHandler {
+            val context = currentServerRequest() ?: error("No server request context")
+            ServerRequestResult.Clarify(ClarifyResult(answer = "${context.method} ${context.id}"))
+        }
+        gateway.connect()
+        socket.inject(GatewayFrames.serverRequest("srq-1", "clarify", """{"session_id":"s1"}"""))
+        val answer = SentAnswer(withTimeout(3_000) { socket.sent.receive() })
+        assertEquals("srq-1", answer.id)
+        assertEquals(JsonObject(mapOf("answer" to JsonPrimitive("clarify srq-1"))), answer.result)
+        gateway.disconnect()
+
+        val fake = FakeGateway()
+        fake.setServerRequestHandler { ServerRequestResult.Clarify(ClarifyResult(answer = currentServerRequest()?.id)) }
+        val faked = fake.request(ServerRequest.Clarify(ClarifyRequestParams(sessionId = "s1")), id = "srq-2")
+        assertEquals(ServerRequestResult.Clarify(ClarifyResult(answer = "srq-2")), faked)
+        val caller: RESTCaller = ScriptedRESTCaller(routes = emptyMap())
+        caller.methods.sessions
     }
 }

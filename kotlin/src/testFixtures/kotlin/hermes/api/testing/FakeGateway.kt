@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -17,6 +18,7 @@ import hermes.api.runtime.GatewayEvent
 import hermes.api.runtime.GatewaySessionRecovery
 import hermes.api.runtime.HermesGatewayClient
 import hermes.api.runtime.HermesGatewayException
+import hermes.api.runtime.ServerRequestContext
 
 /**
  * A stand-in for `HermesGateway` behind [HermesGatewayClient], with no socket. Calls are answered by a
@@ -113,10 +115,11 @@ public class FakeGateway(
         recoveryFanout.emit(recovery)
     }
 
-    /** Puts a server request to the app's handler and returns its answer, checked as the gateway checks it. */
-    public suspend fun request(request: ServerRequest): ServerRequestResult {
+    /** Puts a server request to the app's handler and returns its answer, checked as the gateway checks it.
+     *  The handler sees [id] through [currentServerRequest]. */
+    public suspend fun request(request: ServerRequest, id: String = "srq-fake"): ServerRequestResult {
         val current = handler ?: throw HermesGatewayException.RPC(-32601, "No server request handler", null)
-        val result = current(request)
+        val result = withContext(ServerRequestContext(id, request.method)) { current(request) }
         if (!result.matches(request)) {
             throw HermesGatewayException.Protocol("Server request result kind does not match the request")
         }
@@ -126,11 +129,11 @@ public class FakeGateway(
     /** Decodes a server request from its wire method and params, as the gateway does, and puts it to the
      *  handler. Params the generated model rejects fail with -32602, an unknown method with -32601, as the
      *  gateway answers Hermes. */
-    public suspend fun request(method: String, params: JsonElement): ServerRequestResult {
+    public suspend fun request(method: String, params: JsonElement, id: String = "srq-fake"): ServerRequestResult {
         val decoded = try { ServerRequest.decode(method, params, gatewayJson) }
         catch (_: IllegalArgumentException) { throw HermesGatewayException.RPC(-32602, "Invalid $method params", null) }
         if (decoded is ServerRequest.Unknown) throw HermesGatewayException.RPC(-32601, "Unknown server request", null)
-        return request(decoded)
+        return request(decoded, id)
     }
 
     private fun record(step: String) {

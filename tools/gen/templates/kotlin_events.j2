@@ -32,10 +32,15 @@ public sealed interface GatewayEventPayload {
 
 /** Contracted gateway requests from the server to the client. */
 public sealed interface ServerRequest {
+    /** The wire method, such as `clarify`. */
+    public val method: String
+
 {% for request in requests %}
-    public data class {{ request.kotlin_name }}(public val params: {{ request.params }}) : ServerRequest
+    public data class {{ request.kotlin_name }}(public val params: {{ request.params }}) : ServerRequest {
+        override val method: String get() = {{ request.wire_literal }}
+    }
 {% endfor %}
-    public data class Unknown(public val method: String, public val raw: JsonElement) : ServerRequest
+    public data class Unknown(override val method: String, public val raw: JsonElement) : ServerRequest
 
     public companion object {
         public fun decode(method: String, params: JsonElement, json: Json): ServerRequest = when (method) {

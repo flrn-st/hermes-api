@@ -158,6 +158,9 @@ internal val Decoder.decodesTolerantly: Boolean
 public interface RESTCaller {
     public val json: Json get() = RESTJson
 
+    /** Generated typed REST namespaces over this caller. */
+    public val methods: RESTMethodCatalog get() = RESTMethodCatalog(this)
+
     public suspend fun send(request: RESTRequest): RESTResponse
 }
 
@@ -276,7 +279,7 @@ public class HermesREST(
     private val configuration: HermesRESTConfiguration,
     override val json: Json = configuration.decoding.json,
 ) : RESTCaller {
-    public val methods: RESTMethodCatalog = RESTMethodCatalog(this)
+    override val methods: RESTMethodCatalog = RESTMethodCatalog(this)
 
     /** How one attempt failed, before the retry policy decides. */
     private sealed class Attempt(message: String) : Exception(message) {

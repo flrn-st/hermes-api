@@ -69,3 +69,36 @@ private func connectAndAnswer(_ gateway: any HermesGatewayClient) async throws -
     #expect(await transport.subprotocols == [["hermes-gateway-v1", "hermes-gateway-ticket.test-ticket"]])
     await gateway.disconnect()
 }
+
+@Test func handlersSeeWhichRequestTheyAnswer() async throws {
+    let socket = ScriptedGatewaySocket()
+    let gateway = HermesGateway(configuration: .init(
+        address: HermesDashboardAddress(URL(string: "https://hermes.test")!), auth: StaticTicketAuth(),
+        transport: ScriptedGatewayTransport([socket]), networkMonitor: nil
+    ))
+    await gateway.setServerRequestHandler { _ in
+        let context = try #require(ServerRequestContext.current)
+        return .clarify(ClarifyResult(answer: "\(context.method) \(context.id)"))
+    }
+    try await gateway.connect()
+    await socket.inject(GatewayFrames.serverRequest(id: "srq-1", method: "clarify", params: #"{"session_id":"s1"}"#))
+    var sent = socket.sent.makeAsyncIterator()
+    let answer = try SentAnswer(try #require(await sent.next()))
+    #expect(answer.id == "srq-1")
+    #expect(answer.result == .object(["answer": .string("clarify srq-1")]))
+    await gateway.disconnect()
+
+    let fake = FakeGateway()
+    await fake.setServerRequestHandler { _ in .clarify(ClarifyResult(answer: ServerRequestContext.current?.id)) }
+    let faked = try await fake.request(.clarify(ClarifyRequestParams(sessionId: "s1")), id: "srq-2")
+    #expect(faked == .clarify(ClarifyResult(answer: "srq-2")))
+}
+
+@Test func errorsDescribeThemselves() {
+    #expect(HermesRESTError.http(status: 404, body: #"{"detail":"Session not found"}"#).localizedDescription
+            == "Session not found")
+    #expect(HermesRESTError.http(status: 502, body: "").localizedDescription == "Hermes answered with HTTP 502.")
+    #expect(HermesGatewayError.rpc(code: 4009, message: "session busy", data: nil).localizedDescription == "session busy")
+    let caller: any RESTCalling = ScriptedRESTCaller(routes: [:])
+    _ = caller.methods.sessions
+}

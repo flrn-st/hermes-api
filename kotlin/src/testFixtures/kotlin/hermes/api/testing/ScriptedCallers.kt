@@ -104,7 +104,7 @@ public class ScriptedRESTCaller(
 
     public val requests: List<RESTRequest> get() = synchronized(recorded) { recorded.toList() }
 
-    public val methods: RESTMethodCatalog = RESTMethodCatalog(this)
+    override val methods: RESTMethodCatalog = RESTMethodCatalog(this)
 
     override suspend fun send(request: RESTRequest): RESTResponse {
         synchronized(recorded) { recorded += request }

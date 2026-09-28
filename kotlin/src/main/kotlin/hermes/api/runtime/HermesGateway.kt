@@ -657,7 +657,7 @@ public class HermesGateway(
         val currentHandler = handler
         if (currentHandler == null) { answerWithError(id, -32601, "No server request handler", connection, current); return }
         // The app's handler runs off the confined dispatcher; it may wait for the user for minutes.
-        serverJobs[id] = scope.launch {
+        serverJobs[id] = scope.launch(ServerRequestContext(id, method)) {
             try {
                 val result = currentHandler(request)
                 if (!result.matches(request)) throw HermesGatewayException.Protocol("Server request result kind does not match $method")

@@ -726,7 +726,9 @@ public actor HermesGateway: HermesGatewayClient {
         }
         serverTasks[id] = Task {
             do {
-                let response = try await handler(request)
+                let response = try await ServerRequestContext.$current.withValue(
+                    ServerRequestContext(id: id, method: method)
+                ) { try await handler(request) }
                 guard !Task.isCancelled, current == self.generation else { return }
                 guard response.matches(request) else {
                     throw HermesGatewayError.decoding("Server request result kind does not match \(method)")

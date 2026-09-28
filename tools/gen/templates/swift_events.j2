@@ -47,6 +47,16 @@ public enum ServerRequest: Sendable, Hashable {
         default: return .unknown(method: method, raw: params)
         }
     }
+
+    /// The wire method, such as `clarify`.
+    public var method: String {
+        switch self {
+{% for request in requests %}
+        case .{{ request.swift_name }}: {{ request.wire_literal }}
+{% endfor %}
+        case .unknown(let method, _): method
+        }
+    }
 }
 
 /// The typed response to a server request.

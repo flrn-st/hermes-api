@@ -30,6 +30,7 @@ and [the gateway guide](gateway.md#moving-between-addresses)).
 |---|---|
 | Loopback dashboard (the default) | `LocalTokenAuth(token:)` sends `X-Hermes-Session-Token`. |
 | Gated dashboard, native app | `NativeSessionAuth` holds the Bearer tokens from `POST /auth/native/token`. |
+| Gated dashboard, password sign-in | `PasswordSessionAuth` signs in through `POST /auth/password-login` and signs in again after a 401; the transport's cookie storage carries the session, so share the transport with the gateway. |
 | Gated dashboard, browser session | No credential: the transport's cookie storage carries the session. |
 | Reverse proxy credential | `StaticHeadersAuth` (or `headers:` on the configuration for extra headers). |
 
@@ -49,7 +50,9 @@ the response. `RESTRetryPolicy` (6 attempts by default) sends a request again:
 - `GET` and `HEAD` after a timeout, a lost connection, 429 or 502/503/504;
 - any method when the connection could not be established, because Hermes never saw the request.
 
-Waits grow exponentially from 250 ms to 8 s with full jitter; a shorter `Retry-After` wins. A 401 lets
+`withHermesRequestTimeout(_:operation:)` (Kotlin: `withHermesRequestTimeout(millis) { }`) replaces the
+deadline for the attempts made inside it. Waits grow exponentially from 250 ms to 8 s with full jitter; a
+shorter `Retry-After` wins. A 401 lets
 the credential renew once and then retries. `RESTRetryPolicy.none` disables retries. Cancelling the
 calling task or coroutine cancels the request; it is never reported as a transport error.
 
@@ -83,6 +86,13 @@ keep their undeclared keys in `additionalProperties`.
 
 Uploads (`multipart/form-data`) take `RESTFile` values. Optional nullable request fields are
 `Patch<T>`, so `.absent` and an explicit `.null` stay distinct.
+
+## Testing code that uses it
+
+Generated methods take any `RESTCalling` (Kotlin: `RESTCaller`) through `RESTMethodCatalog(caller:)`.
+`ScriptedRESTCaller` from `HermesAPITesting` (Kotlin: the test fixtures) answers routes with scripted JSON
+and records the requests, and `ScriptedHTTPTransport` (Kotlin: `ScriptedRESTTransport`) drives a real
+`HermesREST` with its retries and authentication. See [the integration guide](integration.md#testing-the-app).
 
 ## Coverage and evidence
 

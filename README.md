@@ -4,6 +4,33 @@ Generated Swift and Kotlin clients for published [Hermes Agent](https://github.c
 
 The repository is pinned to one Hermes release (`spec/current-release.txt`, v0.21.5 today); the package is generated from and tested against it, and reports it at run time as `HermesGatewayContract.release`. HermesAPI has its own semantic version (`kotlin/build.gradle.kts`, which the Android build reads too), so library fixes ship without waiting for Hermes: adopting a new Hermes release raises the minor version, and a release that removes or changes generated symbols needs a major one. A push to `main` that changes the version publishes it once, as a SwiftPM tag, Maven packages for the JVM and Android on GitHub Packages, and a GitHub release whose notes are the coverage report. Hermes tags its releases by date, so `spec/refs.yaml` maps each version to its release tag (`v0.21.4: v2026.9.21`), and fetching refuses a tag whose `pyproject.toml` states a different version. Release candidates and canaries are never tracked. Pinned data lives under the version (`spec/out/v0.21.4/`, `fixtures/v0.21.4/`).
 
+## Installing
+
+Swift Package Manager (iOS/iPadOS 17+, macOS 14+). Link `HermesAPITesting` from test targets only:
+
+```swift
+.package(url: "https://github.com/flrn-st/hermes-api.git", from: "0.21.5"),
+// app target
+.product(name: "HermesAPI", package: "hermes-api"),
+// test target
+.product(name: "HermesAPITesting", package: "hermes-api"),
+```
+
+Gradle (GitHub Packages, `https://maven.pkg.github.com/flrn-st/hermes-api`, which needs a GitHub token with
+`read:packages`). Android apps (API 26+) use the Android artifact, JVM apps the plain one; both publish their
+fakes as test fixtures:
+
+```kotlin
+dependencies {
+    implementation("hermes:hermes-api-android:0.21.5")                        // JVM: hermes:hermes-api
+    testImplementation(testFixtures("hermes:hermes-api-android:0.21.5"))      // JVM: hermes:hermes-api
+}
+```
+
+Until a version is published, depend on a checkout: `.package(path: "../hermes-api")` in SwiftPM, and
+`./gradlew publishToMavenLocal` in `kotlin/` and `android/` with `mavenLocal()` in Gradle.
+[The integration guide](docs/integration.md) walks through adopting both clients in an app.
+
 The source contract for the gateway is Hermes' committed OpenRPC document. The dashboard REST contract uses FastAPI's `app.openapi()` document from the tagged server, supplemented with reviewed overlays because the tagged routes document no response schemas. The overlays are drafted from the response contracts on the `feat/dashboard-rest-response-models` branch of the Hermes fork (`tools/import_contracts.py`) for every handler whose body is unchanged at the tag, and hand-reviewed against the tagged handlers otherwise (`spec/overlay/rest/`); every entry keeps the tag handler's source and hash, and `tools/contract_gate.py` checks them against the tag's own test suite. Generated code is committed and verified against the exact upstream tag. Development branches are outside the current tracking policy.
 
 `tools/fetch_spec.py` pins the OpenRPC artifact and source metadata to the
@@ -58,7 +85,7 @@ them would leave. After reading them, `uv run python -m tools.sign_reviews --rev
 (`--match <regex>` signs a subset); then raising the version in `kotlin/build.gradle.kts` on `main`
 publishes the release.
 
-See [the gateway client guide](docs/gateway.md) for iOS and Android integration and connection behaviour, [the implementation plan](HermesAPI-Implementation-Plan.md), and [release findings](docs/findings.md).
+See [the integration guide](docs/integration.md) for adopting the clients in an app, [the gateway client guide](docs/gateway.md) for connection behaviour, [the implementation plan](HermesAPI-Implementation-Plan.md), and [release findings](docs/findings.md).
 
 ```sh
 swift build && swift test --no-parallel

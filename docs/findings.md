@@ -116,8 +116,13 @@ call `clarify`; the recorder and both mobile clients answer the real server
 request with a typed result and verify the completed turn. A third prompt
 requests terminal approval for a nonexistent fixture target. Both clients deny
 it, and the recorder verifies the resulting turn. The fixture redacts
-`session.info.system_prompt` after validating the original frame. It does not
-yet cover approval acceptance, cancellation, or subagent flows.
+`session.info.system_prompt` after validating the original frame. Further prompts
+approve a command that matches a dangerous pattern (`once`), load a fixture skill
+whose required environment variable makes Hermes send a `secret` request (answered
+empty, so nothing is stored), and leave a `clarify` open until `session.interrupt`
+makes Hermes withdraw it with `request.cancel`. The fixture skill lives in a
+`skills.external_dirs` directory: in the Hermes home's `skills/` it would become the
+first learning-graph node, which the REST scenario edits as a memory.
 It also calls the reviewed `GET /api/audio/voice-live/status`, `GET /api/profiles/active`,
 `POST /api/profiles/active`, and `GET /api/sessions/empty/count` routes and
 validates each JSON response against its overlay. Both mobile clients decode
@@ -183,4 +188,6 @@ The gateway contract declares no errors. Read from the tagged handlers, the 237 
 - Verify the exact `hermes web` flags and health endpoint in a running
   tag-pinned container.
 - Check whether bundled plugin APIs are present in the isolated app import.
-- Extend the stub inference scenarios to approval acceptance and other tool-call flows.
+- The desktop-only server requests (`terminal.read`, `preview.*`, `window.read`, `tour`) need a
+  session on the desktop platform (`HERMES_DESKTOP=1`); the password-manager (`vault.*`) and
+  `display.install.sudo` requests need host software, and `sudo` runs the host's real `sudo`.

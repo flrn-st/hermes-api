@@ -53,12 +53,12 @@ test:
 android:
 	cd android && ./gradlew assembleDebug assembleDebugAndroidTest lintDebug
 
-# Build the Swift library for iOS and iPadOS devices and simulators; `swift build` covers macOS.
+# Build the Swift library and its test support for iOS and iPadOS devices and simulators; `swift build` covers macOS.
 apple:
-	for platform in iOS 'iOS Simulator'; do \
-		xcodebuild build -quiet -scheme HermesAPI -destination "generic/platform=$$platform" \
+	for scheme in HermesAPI HermesAPITesting; do for platform in iOS 'iOS Simulator'; do \
+		xcodebuild build -quiet -scheme $$scheme -destination "generic/platform=$$platform" \
 			-derivedDataPath .build/xcode || exit 1; \
-	done
+	done; done
 
 coverage:
 	uv run --locked python -m tools.coverage --ref $(REF)

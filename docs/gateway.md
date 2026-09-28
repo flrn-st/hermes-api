@@ -63,6 +63,7 @@ gateway.bindToProcessLifecycle()  // once, e.g. in Application.onCreate
 gateway.setServerRequestHandler { request -> answer(request) }
 
 scope.launch { gateway.events.collect(::render) }          // collect before connecting
+scope.launch { gateway.connectionStates.collect(::showStatus) }  // a StateFlow
 scope.launch { gateway.sessionRecoveries.collect(::handle) }
 gateway.connect()
 ```
@@ -97,13 +98,14 @@ let address = HermesDashboardAddress { previousFailure in
 | App returns | `enterForeground()` reconnects and replays what was missed. |
 | Hermes reclaimed a session (it does so 20 s after its socket closes, and on restart) | Resumes it from storage with `session.resume`. The session continues under a new runtime id, reported as `.resumed(previousSessionID:sessionID:storedSessionID:)`. A turn that was still streaming keeps writing to Hermes' replay buffer under the previous id, so the client keeps delivering its events (under the previous id) until the turn completes: a reply that finished during a long outage still arrives. |
 | Replay window exceeded (512 events or 4 MiB per session) | Reports `.replayTruncated`; reload the transcript with `session.history`. |
-| Credential rejected (HTTP 401/403 from the ticket request or the upgrade) | Asks the credential to renew once (`HermesAuth.renew`, for example signing in again) and retries at once with the new one. When it cannot renew, stops retrying and reports `.failed(error)`; call `connect()` again once fixed. `NativeSessionAuth` renews by refreshing its tokens. |
+| Credential rejected (HTTP 401/403 from the ticket request or the upgrade) | Asks the credential to renew once (`HermesAuth.renew`, for example signing in again) and retries at once with the new one. When it cannot renew, stops retrying and reports `.failed(error)`; call `connect()` again once fixed. `NativeSessionAuth` renews by refreshing its tokens, `PasswordSessionAuth` by signing in again. |
 | Incompatible server | Stops retrying and reports `.failed(error)`; see [Backend versions](#backend-versions). |
 | Hermes is retiring the backend (`GatewayKnownError.backendRetiring`) | Reconnects. Other failures that reuse code 5035 do not. |
 | Calls made while reconnecting | Wait for the connection, up to their timeout. |
 | Calls in flight when a socket dies | Sent again on the next connection when the frame never left, or when the method only reads state (`HermesGatewayContract.readOnlyMethods`, reviewed in `spec/gateway-read-only.yaml`), all within the call's timeout. Any other call whose response was lost fails with a transport error, because Hermes may already have run it: after `prompt.submit` fails that way, watch the session's events (reconnect replays them) and submit again only if the turn never starts. |
-| Slow event consumer | Events are buffered per subscriber; a slow consumer never stalls the socket or its heartbeat. |
-| Large replies | Messages up to 64 MiB (URLSession's default of 1 MiB is raised). |
+| Slow event consumer | Events and recoveries are buffered per subscriber (Kotlin: per collector); a slow consumer never stalls the socket, its heartbeat or another consumer. Consume or cancel every stream. |
+| Large replies | Swift: messages up to 64 MiB (URLSession's default of 1 MiB is raised). Kotlin: the Ktor WebSockets plugin sets no frame limit by default. |
+| A call needs a different deadline | `withHermesRequestTimeout(_:operation:)` (Kotlin: `withHermesRequestTimeout(millis) { }`) replaces `requestTimeout` for the calls inside it. |
 
 Sessions created with `close_on_disconnect: true` are torn down by Hermes as soon
 as the socket closes; the client reports them as `.unavailable` instead of
@@ -163,7 +165,9 @@ and profile) and both clients must classify them as the catalog says.
 Unit tests drive both runtimes through a fake Hermes: a scripted transport,
 network monitor and socket. They cover each row above deterministically
 (`swift/Tests/HermesAPITests/HermesGatewayTests.swift`,
-`kotlin/src/test/kotlin/hermes/api/HermesGatewayTest.kt`).
+`kotlin/src/test/kotlin/hermes/api/HermesGatewayTest.kt`). The same fakes ship to apps in
+`HermesAPITesting` and the Kotlin test fixtures, with `FakeGateway` for code written against
+`HermesGatewayClient` (see [the integration guide](integration.md#testing-the-app)).
 
 `make live CLIENTS=swift,kotlin,ios,android` runs the same live scenarios
 against the pinned Hermes release in four places: macOS, the JVM, an iPhone
@@ -171,7 +175,11 @@ simulator and an Android emulator. The clients reach Hermes through a fault
 proxy (`harness/faults.py`). The scenarios:
 - drop the socket mid-stream and with a clarification open;
 - stall it silently;
-- restart the server, then prove the resumed session answers a new turn.
+- restart the server, then prove the resumed session answers a new turn;
+- deny and accept approvals, answer a `secret` request, and leave a question open until Hermes
+  withdraws it with `request.cancel` (the handler's task must be cancelled);
+- connect over HTTPS/WSS with a pinned self-signed certificate, and through a password session's cookie
+  on a gated dashboard.
 
 On Android, airplane mode must pause and resume the gateway through
 `AndroidNetworkMonitor`. Each client reports what it exercised on the wire, and

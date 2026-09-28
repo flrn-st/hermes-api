@@ -345,7 +345,7 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 - Implement `tools/coverage.py` and the CI gate.
 - Expand scenarios/seed data until every method, server request and event is live-covered or
   explicitly exempted by a human.
-- **Exit:** gateway coverage 100% for `v0.21.4`.
+- **Exit:** gateway coverage 100% for the pinned release (`v0.21.5` today).
 
 ### Phase 5 — REST
 
@@ -361,7 +361,7 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
   `HTTPTransport`. Streaming/binary endpoints (upload-stream, download) may be hand-written in
   `Runtime/` but still count toward coverage and need tests.
 - Harness scenarios + fixtures for REST; same coverage gate.
-- **Exit:** REST coverage 100% (or human exemptions) for `v0.21.4`.
+- **Exit:** REST coverage 100% (or human exemptions) for the pinned release.
 
 ### Phase 6 — Version matrix and release automation
 
@@ -381,10 +381,14 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 
 ### Phase 8 — iOS app integration (follow-up; separate PRs in hermes-ios)
 
-1. Add `HermesAPI` as a local path package during development.
+1. Add `HermesAPI` as a local path package during development, and `HermesAPITesting` to the test
+   target (`docs/integration.md`).
 2. Fix the approval/clarify/mcp.setup drift using generated `ServerRequest` types.
-3. Replace `Cadu/Gateway/*` wire types with `HermesAPI`, keeping `ChatSession` logic; inject a
-   transport that preserves `HermesTransport` behaviour (trust policy, cookies, headers, SSH).
+3. Replace `Cadu/Gateway/*` wire types with `HermesAPI` behind `HermesGatewayClient`; the gateway's own
+   reconnect, replay and rebind replace `ChatSession`'s. Inject a transport that preserves
+   `HermesTransport` behaviour: its `URLSession` (trust policy, cookies) in `URLSessionHTTPTransport` and
+   `URLSessionGatewayTransport`, `PasswordSessionAuth` or `LocalTokenAuth` for its credentials, and an
+   address resolver for SSH tunnels and failover.
 4. Migrate REST area by area behind `HermesHTTPClient`.
 5. Switch to the tagged release.
 
@@ -432,4 +436,5 @@ Work in small, reviewable checkpoints (one PR each). Each phase lists its exit c
 3. Offline plugin router mounting for `app.openapi()`.
 4. Whether upstream ships a Dockerfile usable at arbitrary refs.
 5. Final Kotlin package/group ID if the project moves under NousResearch.
-6. Which events/methods are unreachable in a harness (candidates for human exemptions).
+6. Which events/methods are unreachable in a harness (candidates for human exemptions). Partly answered in
+   `docs/findings.md` ("Remaining validation"): desktop-platform, password-manager and host-sudo requests.

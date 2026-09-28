@@ -7,6 +7,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import hermes.api.generated.gateway.ApprovalChoice
@@ -130,5 +133,31 @@ class TestingSupportTest {
         assertEquals(ServerRequestResult.Clarify(ClarifyResult(answer = "srq-2")), faked)
         val caller: RESTCaller = ScriptedRESTCaller(routes = emptyMap())
         caller.methods.sessions
+    }
+
+    @Test
+    fun openRequestsOfAResumedSessionReachTheHandler() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress(URI("https://hermes.test")), StaticTicketAuth(), ScriptedGatewayTransport(socket),
+        ), scope = backgroundScope)
+        gateway.setServerRequestHandler { request ->
+            assertIs<ServerRequest.Approval>(request)
+            ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Once))
+        }
+        gateway.connect()
+        val resume = async {
+            gateway.call("session.resume", mapOf("session_id" to "stored-1"),
+                MapSerializer(String.serializer(), String.serializer()), JsonElement.serializer())
+        }
+        val call = SentCall(withTimeout(3_000) { socket.sent.receive() })
+        assertEquals("session.resume", call.method)
+        socket.inject(GatewayFrames.result(call.id, """{"session_id":"s1","open_requests":[{"id":"srq-open",""" +
+            """"method":"approval","params":{"session_id":"s1","request_id":"r1","command":"rm -rf /tmp/x"}}]}"""))
+        resume.await()
+        val answer = SentAnswer(withTimeout(3_000) { socket.sent.receive() })
+        assertEquals("srq-open", answer.id)
+        assertEquals(JsonObject(mapOf("choice" to JsonPrimitive("once"))), answer.result)
+        gateway.disconnect()
     }
 }

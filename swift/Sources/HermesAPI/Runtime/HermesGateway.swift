@@ -529,6 +529,9 @@ public actor HermesGateway: HermesGatewayClient {
                 throw HermesGatewayError.decoding(error.localizedDescription)
             }
             trackSession(method: method, params: params, result: result)
+            if method == "session.resume" || method == "session.activate" {
+                await deliverOpenRequests(in: result, socket: socket, generation: current)
+            }
             return decoded
         } catch let error as HermesGatewayError where error.known == .backendRetiring {
             await connectionLost(.transport("Hermes backend is retiring"), generation: current)
@@ -799,6 +802,18 @@ public actor HermesGateway: HermesGatewayClient {
             if let sessionID = arguments["session_id"]?.stringValue { forgetSession(sessionID) }
         default:
             break
+        }
+    }
+
+    /// A resumed or activated session carries the requests still waiting for an answer, for example after
+    /// the app relaunched with an approval open. They reach the handler like live ones: Hermes settles an
+    /// answer by its request id, whichever socket carries it.
+    private func deliverOpenRequests(in result: JSONValue, socket: any GatewayConnection, generation current: Int) async {
+        guard case .array(let entries)? = result.objectValue?["open_requests"] else { return }
+        for case .object(let entry) in entries {
+            guard let id = entry["id"]?.stringValue, let method = entry["method"]?.stringValue else { continue }
+            await handleServerRequest(id: id, method: method, params: entry["params"] ?? .object([:]),
+                                      socket: socket, generation: current)
         }
     }
 

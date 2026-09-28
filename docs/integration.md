@@ -101,6 +101,7 @@ await gateway.setServerRequestHandler { request in
 ```
 
 - **Which request:** `ServerRequestContext.current` (Kotlin: `currentServerRequest()`) gives the handler Hermes' request id and method, for methods that take it (`clarify.lock`'s `request_id`) and for matching prompts to requests.
+- **Relaunching with a question open:** requests that `session.resume` or `session.activate` report as open reach the same handler, so one handler covers live, replayed and resumed requests.
 - **After a reconnect**, a request that is still open is delivered again with the same id to a new handler call, and the call before is cancelled. Re-bind the visible prompt to the new call by id.
 - **Hermes withdraws a question** (interrupt, timeout, session closed): the gateway cancels the handler's task. Dismiss the prompt when the task is cancelled; `request.cancel` also arrives as an event.
 - **The handler throws:** Hermes gets an error at once and stops waiting.

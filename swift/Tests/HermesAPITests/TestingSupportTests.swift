@@ -102,3 +102,31 @@ private func connectAndAnswer(_ gateway: any HermesGatewayClient) async throws -
     let caller: any RESTCalling = ScriptedRESTCaller(routes: [:])
     _ = caller.methods.sessions
 }
+
+@Test func openRequestsOfAResumedSessionReachTheHandler() async throws {
+    let socket = ScriptedGatewaySocket()
+    let gateway = HermesGateway(configuration: .init(
+        address: HermesDashboardAddress(URL(string: "https://hermes.test")!), auth: StaticTicketAuth(),
+        transport: ScriptedGatewayTransport([socket]), networkMonitor: nil
+    ))
+    await gateway.setServerRequestHandler { request in
+        guard case .approval = request else { throw HermesGatewayError.transport("Unexpected request") }
+        return .approval(ApprovalResult(choice: .once))
+    }
+    try await gateway.connect()
+    let resume = Task {
+        try await gateway.call("session.resume", params: ["session_id": "stored-1"], as: JSONValue.self)
+    }
+    var sent = socket.sent.makeAsyncIterator()
+    let call = try SentCall(try #require(await sent.next()))
+    #expect(call.method == "session.resume")
+    await socket.inject(GatewayFrames.result(call.id, #"""
+        {"session_id":"s1","open_requests":[{"id":"srq-open","method":"approval",
+         "params":{"session_id":"s1","request_id":"r1","command":"rm -rf /tmp/x"}}]}
+        """#))
+    _ = try await resume.value
+    let answer = try SentAnswer(try #require(await sent.next()))
+    #expect(answer.id == "srq-open")
+    #expect(answer.result == .object(["choice": .string("once")]))
+    await gateway.disconnect()
+}

@@ -25,6 +25,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -500,7 +501,10 @@ public class HermesGateway(
                 // The first line only: serialization messages go on to quote the payload, which logs must not carry.
                 throw HermesGatewayException.Protocol("Cannot decode $method result: ${error.message?.lineSequence()?.first()}")
             }
-            withContext(confined) { trackSession(method, encodedParams, result) }
+            withContext(confined) {
+                trackSession(method, encodedParams, result)
+                if (method == "session.resume" || method == "session.activate") deliverOpenRequests(result, connection, current)
+            }
             return decoded
         } catch (error: HermesGatewayException.RPC) {
             if (error.known == GatewayKnownError.BACKEND_RETIRING) {
@@ -707,6 +711,19 @@ public class HermesGateway(
 
     /** Sessions this client must rebind after a reconnect, whether or not they have emitted events yet. */
     private fun trackedSessionIds(): Set<String> = sessions.keys + lastSequence.keys - draining.keys
+
+    /** A resumed or activated session carries the requests still waiting for an answer, for example after the
+     *  app relaunched with an approval open. They reach the handler like live ones: Hermes settles an answer by
+     *  its request id, whichever socket carries it. */
+    private suspend fun deliverOpenRequests(result: JsonElement, connection: GatewayConnection, current: Int) {
+        val entries = (result as? JsonObject)?.get("open_requests") as? JsonArray ?: return
+        for (entry in entries) {
+            val fields = entry as? JsonObject ?: continue
+            val id = (fields["id"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: continue
+            val method = (fields["method"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: continue
+            handleServerRequest(id, method, fields["params"] ?: JsonObject(emptyMap()), connection, current)
+        }
+    }
 
     private fun trackSession(method: String, params: JsonElement, result: JsonElement) {
         val arguments = params as? JsonObject ?: JsonObject(emptyMap())

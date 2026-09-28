@@ -20,6 +20,8 @@ import hermes.api.generated.rest.LearningGraphStatsTopCategoriesItem
 import hermes.api.generated.rest.ProfileActiveUpdate
 import hermes.api.generated.rest.VoiceLiveStatusResponse
 import hermes.api.generated.rest.VoiceLiveStatusResponseMode
+import hermes.api.runtime.GatewayCredential
+import hermes.api.runtime.GatewayHTTPTransport
 import hermes.api.runtime.GatewayLogger
 import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesREST
@@ -28,6 +30,7 @@ import hermes.api.runtime.HermesRESTConfiguration
 import hermes.api.runtime.HermesRESTException
 import hermes.api.runtime.LocalTokenAuth
 import hermes.api.runtime.NativeSessionAuth
+import hermes.api.runtime.PasswordSessionAuth
 import hermes.api.runtime.RESTDecoding
 import hermes.api.runtime.RESTFile
 import hermes.api.runtime.RESTRedirect
@@ -370,5 +373,56 @@ class HermesRESTTest {
         assertIs<JsonObject>(hermes.api.live.RESTScenario.resolve(Json.parseToJsonElement("""{"x":"${'$'}{id}"}"""), captured))
         assertEquals(JsonPrimitive("a b"), hermes.api.live.RESTScenario.lookup(
             Json.parseToJsonElement("""{"next":"http://127.0.0.1:1/cb?code=a%20b&state=s"}"""), "next#code"))
+    }
+
+    @Test
+    fun aPasswordSessionSignsInAgainAfterARejection() = runTest {
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(401, """{"detail":"Not authenticated"}"""),
+            ScriptedRESTTransport.Step.Respond(200, """{"next":"/","ok":true}"""),
+            ScriptedRESTTransport.Step.Respond(200, """{"count":3}"""),
+        )
+        val auth = PasswordSessionAuth(HermesDashboardAddress(base), transport) {
+            PasswordSessionAuth.Credentials("hermes", "secret")
+        }
+        assertEquals(3, client(transport, auth).methods.sessions.emptyCount().count)
+        assertEquals(listOf("GET /api/sessions/empty/count", "POST /auth/password-login", "GET /api/sessions/empty/count"),
+            transport.requests.map { "${it.method} ${it.uri.path}" })
+        assertEquals(Json.parseToJsonElement("""{"username":"hermes","password":"secret","provider":"basic"}"""),
+            Json.parseToJsonElement(transport.requests[1].body?.decodeToString().orEmpty()))
+    }
+
+    @Test
+    fun aRejectedPasswordEndsTheRequest() = runTest {
+        val transport = ScriptedRESTTransport(
+            ScriptedRESTTransport.Step.Respond(401, """{"detail":"Not authenticated"}"""),
+            ScriptedRESTTransport.Step.Respond(401, """{"detail":"Invalid credentials"}"""),
+        )
+        val auth = PasswordSessionAuth(HermesDashboardAddress(base), transport) {
+            PasswordSessionAuth.Credentials("hermes", "wrong")
+        }
+        assertEquals(401, assertFailsWith<HermesRESTException.HTTP> {
+            client(transport, auth).methods.sessions.emptyCount()
+        }.status)
+        assertEquals(2, transport.requests.size)
+    }
+
+    @Test
+    fun aPasswordSessionRequestsGatewayTicketsWithItsCookies() = runTest {
+        val cookies = ScriptedRESTTransport(ScriptedRESTTransport.Step.Respond(200, """{"ticket":"cookie-ticket","ttl_seconds":30}"""))
+        val auth = PasswordSessionAuth(HermesDashboardAddress(base), cookies) {
+            PasswordSessionAuth.Credentials("hermes", "secret")
+        }
+        val other = mutableListOf<URI>()
+        val otherTransport = object : GatewayHTTPTransport {
+            override suspend fun post(uri: URI, headers: Map<String, String>): Pair<Int, String> {
+                other += uri
+                return 500 to "{}"
+            }
+        }
+        val credential = assertIs<GatewayCredential.Ticket>(auth.credential(base, otherTransport))
+        assertEquals("cookie-ticket", credential.value)
+        assertEquals(listOf("POST /api/auth/ws-ticket"), cookies.requests.map { "${it.method} ${it.uri.path}" })
+        assertTrue(other.isEmpty())
     }
 }

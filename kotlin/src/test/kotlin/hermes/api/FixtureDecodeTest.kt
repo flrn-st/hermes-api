@@ -20,6 +20,8 @@ import hermes.api.generated.gateway.GatewayEventPayload
 import hermes.api.generated.gateway.GatewayReadyPayload
 import hermes.api.generated.gateway.PingResult
 import hermes.api.generated.gateway.PromptSubmitResult
+import hermes.api.generated.gateway.SecretRequestParams
+import hermes.api.generated.gateway.ValueResult
 import hermes.api.generated.gateway.SessionCreateResult
 import hermes.api.generated.gateway.SessionListResult
 import hermes.api.generated.gateway.SessionCloseResult
@@ -54,8 +56,9 @@ class FixtureDecodeTest {
     private companion object {
         /** Every reply and tool the stub model answers the recorded scenarios with (`harness/stub_llm.py`). */
         val FIXTURE_REPLIES = setOf("HermesAPI fixture reply.", "HermesAPI stable release selected.",
-            "HermesAPI approval denied as expected.", "HermesAPI reasoning complete.", "HermesAPI subagent finished.")
-        val FIXTURE_TOOLS = setOf("clarify", "terminal", "delegate_task")
+            "HermesAPI approval denied as expected.", "HermesAPI reasoning complete.", "HermesAPI subagent finished.",
+            "HermesAPI approval accepted.", "HermesAPI secret request answered.")
+        val FIXTURE_TOOLS = setOf("clarify", "terminal", "delegate_task", "skill_view")
     }
 
     @Test
@@ -75,12 +78,17 @@ class FixtureDecodeTest {
             seen += name
             val frame = record.getValue("frame").jsonObject
             if (record.getValue("kind").jsonPrimitive.content == "server_request") {
-                val answerBody = record.getValue("answer")
+                val answerBody = record["answer"] ?: JsonNull
                 when (name) {
                     "clarify" -> {
                         val request = json.decodeFromJsonElement(ClarifyRequestParams.serializer(), frame.getValue("params"))
                         val questions = (request.questions as? Patch.Value)?.value
                             ?: error("Missing recorded clarification")
+                        if (answerBody == JsonNull) {
+                            // Left open for Hermes to withdraw.
+                            assertEquals("Which HermesAPI question will be withdrawn?", questions.single().question)
+                            continue
+                        }
                         assertEquals("Which release channel?", questions.single().question)
                         val answer = json.decodeFromJsonElement(ClarifyResult.serializer(), answerBody)
                         assertEquals("Stable", answer.answers?.get("q0"))
@@ -88,11 +96,21 @@ class FixtureDecodeTest {
                     }
                     "approval" -> {
                         val request = json.decodeFromJsonElement(ApprovalRequestParams.serializer(), frame.getValue("params"))
-                        assertEquals("rm -rf /tmp/hermes-api-fixture-approval-target", request.command)
                         assertTrue(request.choices?.contains(ApprovalChoice.Deny) == true)
                         val answer = json.decodeFromJsonElement(ApprovalResult.serializer(), answerBody)
-                        assertEquals(ApprovalChoice.Deny, answer.choice)
+                        when (request.command) {
+                            "rm -rf /tmp/hermes-api-fixture-approval-target" -> assertEquals(ApprovalChoice.Deny, answer.choice)
+                            "rm -rf /tmp/hermes-api-fixture-accepted-target" -> assertEquals(ApprovalChoice.Once, answer.choice)
+                            else -> error("Unexpected recorded approval: ${request.command}")
+                        }
                         assertEquals(answerBody, json.encodeToJsonElement(ApprovalResult.serializer(), answer))
+                    }
+                    "secret" -> {
+                        val request = json.decodeFromJsonElement(SecretRequestParams.serializer(), frame.getValue("params"))
+                        assertEquals("HERMES_API_FIXTURE_SECRET", request.envVar)
+                        val answer = json.decodeFromJsonElement(ValueResult.serializer(), answerBody)
+                        assertTrue(answer.value.isEmpty())
+                        assertEquals(answerBody, json.encodeToJsonElement(ValueResult.serializer(), answer))
                     }
                     else -> error("Unexpected server request: $name")
                 }

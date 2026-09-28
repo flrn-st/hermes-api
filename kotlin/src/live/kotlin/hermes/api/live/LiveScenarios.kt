@@ -4,6 +4,7 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -20,6 +21,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
@@ -36,8 +38,12 @@ import hermes.api.generated.gateway.ServerRequestResult
 import hermes.api.generated.gateway.SessionActivateParams
 import hermes.api.generated.gateway.SessionCloseParams
 import hermes.api.generated.gateway.SessionCreateParams
+import hermes.api.generated.gateway.SessionCwdSetParams
+import hermes.api.generated.gateway.SessionInterruptParams
 import hermes.api.generated.gateway.SessionListParams
 import hermes.api.generated.gateway.SessionResumeParams
+import hermes.api.generated.gateway.SpawnTreeLoadParams
+import hermes.api.generated.gateway.ValueResult
 import hermes.api.generated.rest.ProfileActiveUpdate
 import hermes.api.generated.rest.VoiceLiveStatusResponseMode
 import hermes.api.runtime.GatewayConnection
@@ -102,6 +108,14 @@ internal object Fixture {
     const val APPROVAL_REPLY = "HermesAPI approval denied as expected."
     const val RECONNECT_PROMPT = "Stream the HermesAPI reconnect fixture slowly."
     val RECONNECT_REPLY = (1..16).joinToString(" ") { "part" + it.toString().padStart(2, '0') }
+    const val ACCEPT_PROMPT = "Run the fixture command that needs approval and report the result."
+    const val ACCEPT_COMMAND = "rm -rf /tmp/hermes-api-fixture-accepted-target"
+    const val ACCEPT_REPLY = "HermesAPI approval accepted."
+    const val SECRET_PROMPT = "Load the HermesAPI fixture skill that needs a secret."
+    const val SECRET_ENV_VAR = "HERMES_API_FIXTURE_SECRET"
+    const val SECRET_REPLY = "HermesAPI secret request answered."
+    const val WITHDRAWN_PROMPT = "Ask a HermesAPI question that will be withdrawn."
+    const val WITHDRAWN_QUESTION = "Which HermesAPI question will be withdrawn?"
     const val GREETING_PROMPT = "Reply with a short greeting."
     const val LONG_PROMPT = "Stream the HermesAPI long fixture."
     const val PACED_PROMPT = "Stream the HermesAPI paced fixture."
@@ -127,6 +141,15 @@ public object LiveScenarios {
                     RESTScenario.run(gated.getValue("calls").jsonArray, URI(gated.getValue("url").jsonPrimitive.content),
                         null, transport, observations)
                 }
+                val username = gated["username"]?.jsonPrimitive?.contentOrNull
+                val password = gated["password"]?.jsonPrimitive?.contentOrNull
+                if (username != null && password != null) {
+                    ConnectionScenarios.passwordSession(URI(gated.getValue("url").jsonPrimitive.content), username, password)
+                }
+            }
+            (scenario["tls"] as? JsonObject)?.let { tls ->
+                ConnectionScenarios.pinnedServer(URI(tls.getValue("url").jsonPrimitive.content),
+                    tls.getValue("certificate").jsonPrimitive.content, token)
             }
         }
         if (environment.lifecycle) {
@@ -143,19 +166,37 @@ public object LiveScenarios {
             HermesDashboardAddress(environment.url), environment.auth, ObservingTransport(ktor, observations), httpTransport = ktor,
             networkMonitor = environment.networkMonitor, logger = environment.logger,
         ))
+        val requests = RequestLog()
         gateway.setServerRequestHandler { request ->
             when (request) {
                 is ServerRequest.Clarify -> {
                     val questions = (request.params.questions as? Patch.Value)?.value
                         ?: throw LiveScenarioFailure("Missing clarification questions")
-                    check(questions.size == 1 && questions[0].question == "Which release channel?") {
-                        "Unexpected clarification question"
+                    check(questions.size == 1) { "Unexpected clarification request" }
+                    if (questions[0].question == Fixture.WITHDRAWN_QUESTION) {
+                        // Left open until Hermes withdraws it; the gateway then cancels this handler.
+                        requests.isOpen = true
+                        try {
+                            delay(300_000)
+                        } catch (error: CancellationException) {
+                            requests.isWithdrawn = true
+                            throw error
+                        }
+                        throw LiveScenarioFailure("The open question was never withdrawn")
                     }
+                    check(questions[0].question == "Which release channel?") { "Unexpected clarification question" }
                     ServerRequestResult.Clarify(ClarifyResult(answers = mapOf(questions[0].qid to "Stable")))
                 }
-                is ServerRequest.Approval -> {
-                    check(request.params.command == Fixture.APPROVAL_COMMAND) { "Unexpected approval command" }
-                    ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Deny))
+                is ServerRequest.Approval -> when (request.params.command) {
+                    Fixture.APPROVAL_COMMAND -> ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Deny))
+                    Fixture.ACCEPT_COMMAND -> ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Once))
+                    else -> throw LiveScenarioFailure("Unexpected approval command")
+                }
+                is ServerRequest.Secret -> {
+                    check(request.params.envVar == Fixture.SECRET_ENV_VAR) { "Unexpected secret request" }
+                    requests.secrets.incrementAndGet()
+                    // An empty value skips the variable, so Hermes stores nothing and asks again next run.
+                    ServerRequestResult.Secret(ValueResult(value = ""))
                 }
                 else -> throw LiveScenarioFailure("Unexpected server request")
             }
@@ -167,7 +208,7 @@ public object LiveScenarios {
             if (environment.lifecycle) {
                 // Only against the tagged server: the ticket probe answers every method as unknown.
                 refusals(gateway)
-                lifecycle(gateway, environment)
+                lifecycle(gateway, environment, requests)
             }
         } finally {
             gateway.disconnect()
@@ -197,6 +238,9 @@ public object LiveScenarios {
         refused(GatewayKnownError.PROFILE_NOT_FOUND, GatewayErrorKind.NOT_FOUND) {
             gateway.methods.profiles.describe(ProfileNameParams(name = Patch.Value("hermes-api-missing-profile")))
         }
+        refused(GatewayKnownError.PARAMS_REJECTED, GatewayErrorKind.INVALID_REQUEST) {
+            gateway.methods.spawnTree.load(SpawnTreeLoadParams(path = ""))
+        }
     }
 
     private suspend fun refused(known: GatewayKnownError, kind: GatewayErrorKind, call: suspend () -> Unit) {
@@ -211,7 +255,9 @@ public object LiveScenarios {
         throw LiveScenarioFailure("Expected Hermes to refuse with $known, but the call succeeded")
     }
 
-    private suspend fun lifecycle(gateway: HermesGateway, environment: LiveScenarioEnvironment): Unit = coroutineScope {
+    private suspend fun lifecycle(
+        gateway: HermesGateway, environment: LiveScenarioEnvironment, requests: RequestLog,
+    ): Unit = coroutineScope {
         // Hermes broadcasts sessions.changed (at most every 2 s) once a turn writes the session store.
         val listChanged = async(start = CoroutineStart.UNDISPATCHED) {
             gateway.events.first { it.payload is GatewayEventPayload.SessionsChanged }
@@ -227,6 +273,15 @@ public object LiveScenarios {
         val result = denied.toolResult as? JsonObject
         check(result?.get("status")?.jsonPrimitive?.content == "blocked" &&
             result["exit_code"]?.jsonPrimitive?.content == "-1") { "Denied terminal command was not blocked" }
+        val accepted = runTurn(gateway, session.sessionId, Fixture.ACCEPT_PROMPT, "terminal")
+        accepted.expectReply(Fixture.ACCEPT_REPLY)
+        check((accepted.toolResult as? JsonObject)?.get("exit_code")?.jsonPrimitive?.content == "0") {
+            "Approved terminal command did not run: ${accepted.toolResult}"
+        }
+        runTurn(gateway, session.sessionId, Fixture.SECRET_PROMPT, "skill_view").expectReply(Fixture.SECRET_REPLY)
+        check(requests.secrets.get() == 1) { "Hermes did not ask for the skill's secret" }
+        withdrawnQuestion(gateway, session.sessionId, requests)
+        busySession(gateway, session.sessionId)
         gateway.methods.session.list(SessionListParams())
         check(gateway.methods.session.close(SessionCloseParams(session.sessionId)).closed) {
             "Gateway session did not close"
@@ -248,6 +303,51 @@ public object LiveScenarios {
         } finally {
             restTransport.close()
         }
+    }
+
+    /** Leaves a question open and interrupts the turn: Hermes withdraws it with `request.cancel`, and the
+     *  gateway cancels the handler still waiting on the user. */
+    private suspend fun withdrawnQuestion(gateway: HermesGateway, sessionId: String, requests: RequestLog): Unit = coroutineScope {
+        val ended = async(start = CoroutineStart.UNDISPATCHED) {
+            var withdrawn = false
+            gateway.events.first { event ->
+                if (event.sessionId != sessionId) return@first false
+                when (val payload = event.payload) {
+                    is GatewayEventPayload.RequestCancel -> {
+                        if (payload.payload.method != "clarify") throw LiveScenarioFailure("Unexpected withdrawn request")
+                        withdrawn = true
+                        false
+                    }
+                    is GatewayEventPayload.MessageComplete -> {
+                        if (!withdrawn) throw LiveScenarioFailure("The turn ended without withdrawing the question")
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+        gateway.methods.prompt.submit(PromptSubmitParams(sessionId = sessionId, text = JsonPrimitive(Fixture.WITHDRAWN_PROMPT)))
+        deadline(60_000, "the question to reach the handler") { while (!requests.isOpen) delay(100) }
+        gateway.methods.session.interrupt(SessionInterruptParams(sessionId))
+        deadline(30_000, "Hermes to withdraw the question and end the turn") { ended.await() }
+        deadline(10_000, "the gateway to cancel the waiting handler") { while (!requests.isWithdrawn) delay(100) }
+    }
+
+    /** A call Hermes refuses while a turn runs, and the interrupt that ends the turn. */
+    private suspend fun busySession(gateway: HermesGateway, sessionId: String): Unit = coroutineScope {
+        val streaming = async(start = CoroutineStart.UNDISPATCHED) {
+            gateway.events.first { it.sessionId == sessionId && it.payload is GatewayEventPayload.MessageDelta }
+        }
+        val ended = async(start = CoroutineStart.UNDISPATCHED) {
+            gateway.events.first { it.sessionId == sessionId && it.payload is GatewayEventPayload.MessageComplete }
+        }
+        gateway.methods.prompt.submit(PromptSubmitParams(sessionId = sessionId, text = JsonPrimitive(Fixture.PACED_PROMPT)))
+        deadline(60_000, "the paced turn to start streaming") { streaming.await() }
+        refused(GatewayKnownError.SESSION_BUSY, GatewayErrorKind.BUSY) {
+            gateway.methods.session.cwdSet(SessionCwdSetParams(sessionId = sessionId, cwd = "/tmp"))
+        }
+        gateway.methods.session.interrupt(SessionInterruptParams(sessionId))
+        deadline(30_000, "the interrupted turn to end") { ended.await() }
     }
 
     /** Loses the socket mid-stream, silently, and with a question open, then resumes the session after a
@@ -503,4 +603,11 @@ internal suspend fun <T> deadline(millis: Long, waitingFor: String, block: suspe
     withTimeout(millis) { block() }
 } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
     throw LiveScenarioFailure("Timed out waiting for $waitingFor")
+}
+
+/** What the live handler saw of the requests the lifecycle provokes. */
+internal class RequestLog {
+    @Volatile var isOpen = false
+    @Volatile var isWithdrawn = false
+    val secrets = AtomicInteger()
 }

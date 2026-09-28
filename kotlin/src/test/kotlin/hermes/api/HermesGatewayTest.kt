@@ -576,6 +576,48 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun withdrawnDeliveryCleanupCannotUnregisterItsReplacement() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val started = kotlinx.coroutines.channels.Channel<Int>(2)
+        val oldCancelling = CompletableDeferred<Unit>()
+        val releaseOld = CompletableDeferred<Unit>()
+        val oldFinished = CompletableDeferred<Unit>()
+        val replacementCancelled = CompletableDeferred<Unit>()
+        var deliveries = 0
+        gateway.setServerRequestHandler {
+            val delivery = ++deliveries
+            try {
+                started.send(delivery)
+                awaitCancellation()
+            } finally {
+                if (delivery == 1) kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                    oldCancelling.complete(Unit)
+                    releaseOld.await()
+                    oldFinished.complete(Unit)
+                } else replacementCancelled.complete(Unit)
+            }
+        }
+        gateway.connect()
+        try {
+            fun deliver() = socket.inject(GatewayFrames.serverRequest("same-id", "approval", """{"session_id":"s","request_id":"req"}"""))
+            fun withdraw() = socket.inject(GatewayFrames.event("request.cancel", "s", payload = """{"id":"same-id","method":"approval","reason":"withdrawn"}"""))
+            deliver()
+            assertEquals(1, started.receive())
+            withdraw()
+            oldCancelling.await()
+            deliver()
+            assertEquals(2, started.receive())
+            releaseOld.complete(Unit)
+            oldFinished.await()
+            delay(100)
+            withdraw()
+            withTimeout(3_000) { replacementCancelled.await() }
+            assertTrue(socket.sent.tryReceive().isFailure)
+        } finally { releaseOld.complete(Unit); gateway.disconnect() }
+    }
+
+    @Test
     fun answersTypedServerRequest() = runTest {
         val socket = ScriptedGatewaySocket()
         val gateway = client(sockets(socket))

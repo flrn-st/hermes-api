@@ -8,10 +8,11 @@
 ///     try await gateway.methods.session.compress(.init(sessionId: id))
 /// }
 /// ```
-public func withHermesRequestTimeout<T: Sendable>(
-    _ timeout: Duration, operation: () async throws -> T
+public func withHermesRequestTimeout<T>(
+    _ timeout: Duration, isolation: isolated (any Actor)? = #isolation, operation: () async throws -> T
 ) async rethrows -> T {
-    try await RequestTimeout.$current.withValue(timeout, operation: operation)
+    // Runs `operation` on the caller's actor, so it may capture the caller's non-Sendable state.
+    try await RequestTimeout.$current.withValue(timeout, operation: operation, isolation: isolation)
 }
 
 enum RequestTimeout {

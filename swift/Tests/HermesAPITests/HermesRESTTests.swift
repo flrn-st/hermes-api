@@ -407,3 +407,17 @@ private final class RecordingLogger: GatewayLogger {
     #expect(sent.value(forHTTPHeaderField: "X-Device") == "d1")
     #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer app")
 }
+
+@MainActor private final class TimeoutCallingModel {
+    var calls = 0
+}
+
+@MainActor @Test func aScopedTimeoutKeepsTheCallersIsolation() async throws {
+    let model = TimeoutCallingModel()
+    let rest = client(ScriptedHTTPTransport([.respond(200, #"{"count":1}"#)]))
+    let count = try await withHermesRequestTimeout(.seconds(5)) {
+        model.calls += 1
+        return try await rest.sessions.emptyCount().count
+    }
+    #expect(count == 1 && model.calls == 1)
+}

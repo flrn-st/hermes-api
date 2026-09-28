@@ -8,7 +8,13 @@ import Testing
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     let current = try String(contentsOf: root.appending(path: "spec/current-release.txt"), encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
-    #expect(HermesAPI.hermesRelease == current)
+    #expect(HermesGatewayContract.release == current)
     #expect(HermesGatewayContract.upstreamVersion == String(current.dropFirst()))
     #expect(HermesGatewayContract.upstreamTag.hasPrefix("v20"))
+}
+
+/// Apps with types of the same names qualify generated ones by module, so nothing may be named `HermesAPI`.
+@Test func generatedTypesCanBeQualifiedByModule() {
+    let value: HermesAPI.JSONValue = .null
+    #expect(value == HermesAPI.JSONValue.null)
 }

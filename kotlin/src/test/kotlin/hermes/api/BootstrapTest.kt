@@ -12,7 +12,7 @@ class BootstrapTest {
     @Test
     fun releaseIdentity() {
         val current = Files.readString(Path.of("../spec/current-release.txt")).trim()
-        assertEquals(current, HermesAPI.hermesRelease)
+        assertEquals(current, HermesGatewayContract.release)
         assertEquals(current.removePrefix("v"), HermesGatewayContract.upstreamVersion)
         assertTrue(HermesGatewayContract.upstreamTag.startsWith("v20"))
     }

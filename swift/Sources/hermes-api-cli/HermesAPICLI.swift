@@ -21,7 +21,7 @@ struct HermesAPICLI {
             FileHandle.standardError.write(Data("Live scenario failed: \(error)\n".utf8))
             exit(1)
         }
-        FileHandle.standardOutput.write(Data("Hermes \(HermesAPI.hermesRelease) gateway live scenarios passed\n".utf8))
+        FileHandle.standardOutput.write(Data("Hermes \(HermesGatewayContract.release) gateway live scenarios passed\n".utf8))
     }
 }
 

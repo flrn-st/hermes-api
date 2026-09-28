@@ -246,7 +246,7 @@ key present in the input but not modelled).
 - **Errors** — one error type: `transport`, `rpc(code, message, data)`, `decoding(path, underlying)`,
   `timeout`, `cancelled`, `incompatibleServer(contract)`. Known domain codes (e.g. `4000`, `4006`,
   `4015`) exposed as constants.
-- **Compatibility** — generated constant `HermesAPI.contractVersion` (from the ref) and
+- **Compatibility** — generated constant `HermesGatewayContract.desktopContract` (from the ref) and
   `supportedContractRange`; the client reads `desktop_contract` from session info and surfaces
   `incompatibleServer`.
 - **Logging** — injectable logger protocol; no `print`.

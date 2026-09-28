@@ -6,7 +6,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import hermes.api.runtime.HermesGateway
+import hermes.api.runtime.HermesGatewayClient
 
 /**
  * Suspends the gateway while no activity is visible and resumes it when one is. In the background
@@ -16,7 +16,7 @@ import hermes.api.runtime.HermesGateway
  * Bind once, for example in `Application.onCreate`: `gateway.bindToProcessLifecycle()`.
  */
 public class GatewayLifecycleObserver(
-    private val gateway: HermesGateway,
+    private val gateway: HermesGatewayClient,
     private val lifecycle: Lifecycle,
     /** How long a streaming turn may keep the socket open after the app leaves the foreground. */
     private val backgroundGraceMillis: Long = 25_000,
@@ -35,7 +35,7 @@ public class GatewayLifecycleObserver(
 }
 
 /** Follows the whole app's foreground state through [ProcessLifecycleOwner]. Call on the main thread. */
-public fun HermesGateway.bindToProcessLifecycle(backgroundGraceMillis: Long = 25_000): GatewayLifecycleObserver {
+public fun HermesGatewayClient.bindToProcessLifecycle(backgroundGraceMillis: Long = 25_000): GatewayLifecycleObserver {
     val lifecycle = ProcessLifecycleOwner.get().lifecycle
     return GatewayLifecycleObserver(this, lifecycle, backgroundGraceMillis).also(lifecycle::addObserver)
 }

@@ -94,6 +94,7 @@ class DisplayTransportTest {
                     val sent = byteArrayOf(5, 6, 7, 8)
                     connection.send(sent)
                     val failure = assertFailsWith<DisplayStreamException> { connection.receive() }
+                    assertEquals(4401, failure.closeCode)
                     assertFalse(failure.message.orEmpty().contains("PRIVATE_CLOSE_REASON"))
                     assertNull(failure.cause)
                     val (headers, received) = served.get(5, TimeUnit.SECONDS)

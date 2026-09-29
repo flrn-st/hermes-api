@@ -103,10 +103,17 @@ private class KtorDisplayConnection(
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (failure: DisplayStreamException) { throw failure }
         catch (_: Exception) {
-            val code = if (session.closeReason.isCompleted) session.closeReason.await()?.code?.toInt() else null
+            val code = try {
+                if (session.closeReason.isCompleted) session.closeReason.await()?.code?.toInt() else null
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { null }
             throw DisplayStreamException("Bot Screen connection closed.", code)
         }
     }
 
-    override suspend fun close(): Unit = session.close()
+    override suspend fun close() {
+        try { session.close() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { throw DisplayStreamException("Bot Screen connection closed.") }
+    }
 }

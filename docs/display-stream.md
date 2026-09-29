@@ -32,3 +32,14 @@ one-use requests, redacted diagnostics, and actual local WebSocket binary exchan
 with proxy headers. The local server checks the client masking and exact upgrade
 path; its private close reason never appears in the exception. These tests do
 not establish live Hermes desktop rendering or production proxy/TLS behavior.
+
+
+Choose the close intent explicitly when replacing or recovering a stream:
+`close(DisplayCloseReason.Reconnecting)` sends WebSocket code 1012. Hermes
+preserves the human lease for non-1000/1001 disconnects, preventing the agent from
+resuming while a human may be entering credentials. The default `ViewerClosed`
+sends 1000 and signals explicit hand-back. A reconnect close does not acquire or
+restore a lease that has already been released or transferred to another viewer.
+The owning gateway must still release its viewer when the user leaves, and use
+fresh observation tickets for reconnects. A loopback WebSocket test verifies both
+wire close codes; live lifecycle policy remains the caller's responsibility.

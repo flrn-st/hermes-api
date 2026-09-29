@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.http.takeFrom
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readReason
@@ -37,11 +38,14 @@ public class DisplayStreamRequest private constructor(internal val uri: URI, pub
     }
 }
 
+/** ViewerClosed returns control; Reconnecting preserves the current human exclusion on Hermes. */
+public enum class DisplayCloseReason { ViewerClosed, Reconnecting }
+
 /** Raw RFB bytes. Control/lease enforcement belongs to Hermes and the viewer's current ownership state. */
 public interface DisplayConnection {
     public suspend fun send(bytes: ByteArray)
     public suspend fun receive(): ByteArray
-    public suspend fun close()
+    public suspend fun close(reason: DisplayCloseReason = DisplayCloseReason.ViewerClosed)
 }
 
 public interface DisplayTransport {
@@ -111,8 +115,10 @@ private class KtorDisplayConnection(
         }
     }
 
-    override suspend fun close() {
-        try { session.close() }
+    override suspend fun close(reason: DisplayCloseReason) {
+        // Hermes treats 1000/1001 as explicit hand-back, but preserves the lease on dropped links.
+        val code: Short = if (reason == DisplayCloseReason.ViewerClosed) 1000 else 1012
+        try { session.close(CloseReason(code, "")) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { throw DisplayStreamException("Bot Screen connection closed.") }
     }

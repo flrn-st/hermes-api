@@ -1,5 +1,6 @@
 package hermes.api
 
+import hermes.api.runtime.DisplayCloseReason
 import hermes.api.runtime.DisplayStreamRequest
 import hermes.api.runtime.KtorDisplayTransport
 import hermes.api.runtime.DisplayStreamException
@@ -107,4 +108,43 @@ class DisplayTransportTest {
             }
         } finally { client.close(); server.close(); executor.shutdownNow() }
     }
+    @Test fun reconnectCloseDoesNotSignalUserHandBack(): Unit = runBlocking {
+        for ((reason, expected) in listOf(DisplayCloseReason.ViewerClosed to 1000, DisplayCloseReason.Reconnecting to 1012)) {
+            val server = ServerSocket(0, 1, java.net.InetAddress.getLoopbackAddress())
+            val executor = Executors.newSingleThreadExecutor()
+            val served = executor.submit<Int> {
+                server.accept().use { socket ->
+                    socket.soTimeout = 5_000
+                    val input = socket.getInputStream()
+                    val output = socket.getOutputStream()
+                    val header = StringBuilder()
+                    while (!header.endsWith("\r\n\r\n")) {
+                        val byte = input.read(); check(byte >= 0 && header.length < 16_384)
+                        header.append(byte.toChar())
+                    }
+                    val key = header.lines().first { it.startsWith("Sec-WebSocket-Key:", true) }.substringAfter(':').trim()
+                    val accept = Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-1")
+                        .digest((key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").toByteArray()))
+                    output.write(("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n" +
+                        "Sec-WebSocket-Accept: $accept\r\n\r\n").toByteArray()); output.flush()
+                    check(input.read() == 0x88)
+                    val size = input.read(); check(size and 0x80 != 0 && size and 0x7f == 2)
+                    val mask = input.readNBytes(4)
+                    val payload = input.readNBytes(2)
+                    for (index in payload.indices) payload[index] = (payload[index].toInt() xor mask[index].toInt()).toByte()
+                    output.write(byteArrayOf(0x88.toByte(), 2) + payload); output.flush()
+                    ((payload[0].toInt() and 255) shl 8) or (payload[1].toInt() and 255)
+                }
+            }
+            val client = HttpClient(OkHttp) { install(WebSockets) }
+            try {
+                withTimeout(8_000) {
+                    val request = DisplayStreamRequest.fromGatewayURI(URI("ws://localhost:${server.localPort}/api/ws"), "fixture")
+                    KtorDisplayTransport(client).connect(request).close(reason)
+                    assertEquals(expected, served.get(5, TimeUnit.SECONDS))
+                }
+            } finally { client.close(); server.close(); executor.shutdownNow() }
+        }
+    }
+
 }

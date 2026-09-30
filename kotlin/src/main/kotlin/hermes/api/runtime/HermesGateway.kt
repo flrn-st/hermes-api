@@ -520,7 +520,7 @@ public class HermesGateway(
             }
             withContext(confined) {
                 trackSession(method, encodedParams, result)
-                if (method == "session.resume" || method == "session.activate") deliverOpenRequests(result, connection, current)
+                if (configuration.automaticallyRestoreServerRequests && (method == "session.resume" || method == "session.activate")) deliverOpenRequests(result, connection, current)
             }
             return decoded
         } catch (error: HermesGatewayException.RPC) {
@@ -746,7 +746,7 @@ public class HermesGateway(
             val fields = entry as? JsonObject ?: continue
             val id = (fields["id"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: continue
             val method = (fields["method"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: continue
-            handleServerRequest(id, method, fields["params"] ?: JsonObject(emptyMap()), connection, current)
+            handleServerRequest(id, method, fields["params"] ?: JsonObject(emptyMap()), connection, current, snapshot = true)
         }
     }
 

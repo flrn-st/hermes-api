@@ -547,7 +547,7 @@ class HermesGatewayTest {
 
     @Test
     fun concurrentHandlersKeepTheirWireIdentityAcrossSuspension() = runTest {
-        val socket = ScriptedGatewaySocket()
+        val socket = ScriptedGatewaySocket(answersHeartbeats = true)
         val gateway = client(sockets(socket))
         val arrived = kotlinx.coroutines.channels.Channel<String>(2)
         val release = CompletableDeferred<Unit>()

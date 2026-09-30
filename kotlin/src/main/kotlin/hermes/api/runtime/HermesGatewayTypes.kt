@@ -119,4 +119,7 @@ public data class HermesGatewayConfiguration(
      *  it to keep working with older backends, and branch on [HermesGateway.backendContract] for what they lack. */
     val minimumContract: Int = HermesGatewayContract.desktopContract,
     val logger: GatewayLogger = GatewayLogger.None,
+    /** Deliver resumed snapshot requests immediately. Disable when an app must register session ownership
+     *  before calling [HermesGatewayClient.restoreServerRequests] with the returned open requests. */
+    val automaticallyRestoreServerRequests: Boolean = true,
 )

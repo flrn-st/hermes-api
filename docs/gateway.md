@@ -190,4 +190,10 @@ that report is the coverage evidence (`coverage/evidence/`).
 
 `GatewaySessionRecovery.Resumed.storedSessionId` reports the resolved stored ID from the resume response: `stored_session_id`, then legacy `session_key`, then the requested ID if both are omitted. The tracked runtime uses the same precedence, so later reconnects resume the resolved conversation. Apps can associate the previously owned stored ID with this resolved ID when restoring per-conversation preferences. Tests exercise consecutive compression aliases, legacy responses, and repeated recovery when the server omits stored identity.
 
+Kotlin apps that register conversation ownership before presenting prompts must set
+`HermesGatewayConfiguration.automaticallyRestoreServerRequests = false`. They then
+call `restoreServerRequests` after registering the returned runtime owner. The
+default remains automatic delivery for clients that do not need this ordering.
+Both paths deduplicate settled or withdrawn snapshot requests.
+
 Kotlin `Resumed.snapshot` carries the typed `SessionResumeResult`, including effective model/settings, running state, and pending server requests. Register the replacement runtime owner before presenting requests from that snapshot through `restoreServerRequests`. Apps can compare the recovered settings with a saved conversation choice instead of blindly switching an already matching runtime.

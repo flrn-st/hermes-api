@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonObject
 import hermes.api.generated.gateway.GatewayEventPayload
 import hermes.api.generated.gateway.HermesGatewayContract
 import hermes.api.generated.gateway.ServerRequest
+import hermes.api.generated.gateway.OpenRequestEntry
 import hermes.api.generated.gateway.ServerRequestResult
 import hermes.api.runtime.GatewayConnectionState
 import hermes.api.runtime.GatewayEvent
@@ -37,6 +38,11 @@ public class FakeGateway(
     private val recoveryFanout = Fanout<GatewaySessionRecovery>()
     private val states = MutableStateFlow<GatewayConnectionState>(GatewayConnectionState.Idle)
     private val recordedLifecycle = mutableListOf<String>()
+    private val snapshots = mutableListOf<OpenRequestEntry>()
+
+    /** Snapshot requests the app asked to restore. Drive the handler explicitly with [request], as with
+     *  live requests, so tests decide when a pending request is presented and answered. */
+    public val restoredRequests: List<OpenRequestEntry> get() = synchronized(snapshots) { snapshots.toList() }
     @Volatile private var handler: (suspend (ServerRequest) -> ServerRequestResult)? = null
 
     /** Calls in the order they were made, with their encoded params. */
@@ -58,6 +64,10 @@ public class FakeGateway(
 
     override fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult) {
         handler = value
+    }
+
+    override suspend fun restoreServerRequests(requests: List<OpenRequestEntry>) {
+        synchronized(snapshots) { snapshots.addAll(requests) }
     }
 
     override suspend fun connect() {

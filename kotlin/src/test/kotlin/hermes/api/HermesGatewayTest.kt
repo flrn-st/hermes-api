@@ -383,6 +383,66 @@ class HermesGatewayTest {
     }
 
     @Test
+    fun ticketTransportFailuresRecoverDuringInitialConnectAndBackgroundReconnect() = runTest {
+        val first = ScriptedGatewaySocket()
+        val transport = ScriptedGatewayTransport(first, ScriptedGatewaySocket())
+        var credentials = 0
+        val failures = mutableListOf<Throwable?>()
+        val auth = object : HermesAuth {
+            override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential {
+                credentials++
+                if (credentials == 1 || credentials == 3) throw java.io.IOException("Ticket endpoint ended its response")
+                return GatewayCredential.LocalToken("fixture", emptyMap())
+            }
+        }
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress { failure -> failures += failure; URI("http://localhost:3000") }, auth, transport,
+            reconnectDelayMillis = { 100 }, requestTimeoutMillis = 3_000,
+        ), scope = backgroundScope)
+        withTimeout(3_000) { gateway.connect() }
+        assertEquals(2, credentials)
+        first.sever()
+        gateway.awaitState { it == GatewayConnectionState.Connected && credentials == 4 }
+        assertEquals(2, transport.attempts)
+        assertEquals(2, failures.count { it is HermesGatewayException.Transport && it.message == "Ticket endpoint ended its response" })
+        gateway.disconnect()
+    }
+
+    @Test
+    fun renewedAuthenticationResolvesTheAddressAgainBeforeRequestingItsTicketAndSocket() = runTest {
+        val primary = URI("https://primary.test/main")
+        val fallback = URI("https://fallback.test/backup")
+        var selected = primary
+        val credentialAddresses = mutableListOf<URI>()
+        val resolutionFailures = mutableListOf<Throwable?>()
+        val transport = ScriptedGatewayTransport(ScriptedGatewaySocket())
+        var renewals = 0
+        val auth = object : HermesAuth {
+            override suspend fun credential(baseURI: URI, http: GatewayHTTPTransport): GatewayCredential {
+                credentialAddresses += baseURI
+                if (baseURI == primary) throw HermesGatewayException.AuthenticationFailed("Primary session expired")
+                return GatewayCredential.Ticket("fallback-ticket", emptyMap())
+            }
+            override suspend fun renew(failure: HermesGatewayException.AuthenticationFailed): Boolean {
+                renewals++
+                selected = fallback
+                return true
+            }
+        }
+        val gateway = HermesGateway(HermesGatewayConfiguration(
+            HermesDashboardAddress { failure -> resolutionFailures += failure; selected }, auth, transport,
+            requestTimeoutMillis = 3_000,
+        ), scope = backgroundScope)
+        gateway.connect()
+        assertEquals(listOf(primary, fallback), credentialAddresses)
+        assertEquals(1, renewals)
+        assertIs<HermesGatewayException.AuthenticationFailed>(resolutionFailures.last())
+        assertEquals("fallback.test", transport.uris.single().host)
+        assertTrue(transport.uris.single().path.startsWith("/backup/"))
+        gateway.disconnect()
+    }
+
+    @Test
     fun aRenewedCredentialRetriesTheRejectedAttempt() = runTest {
         val rejected = HermesGatewayException.AuthenticationFailed("WebSocket upgrade returned HTTP 401")
         val transport = ScriptedGatewayTransport(listOf(ScriptedGatewayTransport.Step.Failure(rejected), ScriptedGatewayTransport.Step.Socket(ScriptedGatewaySocket())))
@@ -484,6 +544,113 @@ class HermesGatewayTest {
     }
 
     // Server requests
+
+    @Test
+    fun concurrentHandlersKeepTheirWireIdentityAcrossSuspension() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val arrived = kotlinx.coroutines.channels.Channel<String>(2)
+        val release = CompletableDeferred<Unit>()
+        gateway.setServerRequestHandler {
+            val context = checkNotNull(kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext])
+            arrived.send(context.id)
+            release.await()
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                assertEquals(context, kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext])
+                assertEquals("approval", context.method)
+            }
+            ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Once))
+        }
+        gateway.connect()
+        try {
+            for (id in listOf("first", "second")) socket.inject(GatewayFrames.serverRequest(id, "approval", """{"session_id":"s","request_id":"different-param-id"}"""))
+            assertEquals(setOf("first", "second"), setOf(arrived.receive(), arrived.receive()))
+            assertEquals(null, kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext])
+            release.complete(Unit)
+            val replies = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                List(2) { SentAnswer(withTimeout(3_000) { socket.sent.receive() }) }
+            }
+            assertEquals(setOf("first", "second"), replies.map { it.id }.toSet())
+            assertTrue(replies.all { it.error == null })
+        } finally { gateway.disconnect() }
+    }
+
+    @Test
+    fun withdrawnDeliveryCleanupCannotUnregisterItsReplacement() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val started = kotlinx.coroutines.channels.Channel<Int>(2)
+        val oldCancelling = CompletableDeferred<Unit>()
+        val releaseOld = CompletableDeferred<Unit>()
+        val oldFinished = CompletableDeferred<Unit>()
+        val replacementCancelled = CompletableDeferred<Unit>()
+        var deliveries = 0
+        gateway.setServerRequestHandler {
+            val delivery = ++deliveries
+            try {
+                started.send(delivery)
+                awaitCancellation()
+            } finally {
+                if (delivery == 1) kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                    oldCancelling.complete(Unit)
+                    releaseOld.await()
+                    oldFinished.complete(Unit)
+                } else replacementCancelled.complete(Unit)
+            }
+        }
+        gateway.connect()
+        try {
+            fun deliver() = socket.inject(GatewayFrames.serverRequest("same-id", "approval", """{"session_id":"s","request_id":"req"}"""))
+            fun withdraw() = socket.inject(GatewayFrames.event("request.cancel", "s", payload = """{"id":"same-id","method":"approval","reason":"withdrawn"}"""))
+            deliver()
+            assertEquals(1, started.receive())
+            withdraw()
+            oldCancelling.await()
+            deliver()
+            assertEquals(2, started.receive())
+            releaseOld.complete(Unit)
+            oldFinished.await()
+            delay(100)
+            withdraw()
+            withTimeout(3_000) { replacementCancelled.await() }
+            assertTrue(socket.sent.tryReceive().isFailure)
+        } finally { releaseOld.complete(Unit); gateway.disconnect() }
+    }
+
+    @Test
+    fun snapshotRestorationDeduplicatesLiveRequestsAndSkipsWithdrawnOnes() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        val seen = kotlinx.coroutines.channels.Channel<String>(4)
+        val answer = CompletableDeferred<Unit>()
+        gateway.setServerRequestHandler {
+            seen.send(checkNotNull(kotlinx.coroutines.currentCoroutineContext()[hermes.api.runtime.ServerRequestContext]).id)
+            answer.await()
+            ServerRequestResult.Approval(ApprovalResult(ApprovalChoice.Once))
+        }
+        gateway.connect()
+        try {
+            val params = """{"session_id":"s","request_id":"req"}"""
+            fun entry(id: String) = hermes.api.generated.gateway.OpenRequestEntry(id, "approval", kotlinx.serialization.json.Json.parseToJsonElement(params).jsonObject)
+            socket.inject(GatewayFrames.event("request.cancel", "s", payload = """{"id":"withdrawn","method":"approval","reason":"expired"}"""))
+            socket.inject(GatewayFrames.serverRequest("live", "approval", params))
+            assertEquals("live", seen.receive())
+            gateway.restoreServerRequests(listOf(entry("withdrawn"), entry("live"), entry("snapshot")))
+            assertEquals("snapshot", seen.receive())
+            gateway.restoreServerRequests(listOf(entry("snapshot")))
+            delay(100)
+            assertTrue(seen.tryReceive().isFailure)
+            answer.complete(Unit)
+            val replies = List(2) { SentAnswer(withTimeout(3_000) { socket.sent.receive() }) }
+            assertEquals(setOf("live", "snapshot"), replies.map { it.id }.toSet())
+            assertTrue(replies.all { it.error == null })
+            delay(100)
+            gateway.restoreServerRequests(listOf(entry("live"), entry("snapshot")))
+            delay(100)
+            assertTrue(seen.tryReceive().isFailure)
+            assertTrue(socket.sent.tryReceive().isFailure)
+        } finally { gateway.disconnect() }
+    }
 
     @Test
     fun answersTypedServerRequest() = runTest {
@@ -627,8 +794,87 @@ class HermesGatewayTest {
         assertEquals("session.resume", resume.method())
         assertEquals("stored-1", resume.fields["session_id"]?.jsonPrimitive?.content)
         second.inject(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":3,"messages":[],"info":{}}"""))
-        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.awaitState { it == GatewayConnectionState.Connected }
+        gateway.disconnect()
+    }
+
+    private fun GatewaySessionRecovery.withoutSnapshot(): GatewaySessionRecovery =
+        if (this is GatewaySessionRecovery.Resumed) copy(snapshot = null) else this
+
+    @Test
+    fun reconnectIncludesTheServersEffectiveRuntimeSnapshot() = runTest {
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val gateway = client(sockets(first, second))
+        val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "root")
+        first.sever()
+        second.inject(error(second.next(), 4001, "session not found"))
+        val resume = second.next()
+        second.inject(result(resume, """{"session_id":"runtime-2","stored_session_id":"tip","message_count":0,"messages":[],"running":false,"info":{"model":"effective-model","provider":"provider","reasoning_effort":"low","fast":false},"open_requests":[]}"""))
+        val resumed = withTimeout(3_000) { recovery.await() } as GatewaySessionRecovery.Resumed
+        val snapshot = checkNotNull(resumed.snapshot)
+        assertEquals("runtime-2", snapshot.sessionId)
+        assertEquals("tip", snapshot.storedSessionId)
+        assertEquals("effective-model", snapshot.info.model)
+        assertEquals("provider", snapshot.info.provider)
+        assertEquals("low", snapshot.info.reasoningEffort)
+        assertEquals(false, snapshot.info.fast)
+        assertEquals(false, snapshot.running)
+        assertEquals(emptyList(), snapshot.openRequests)
+        gateway.disconnect()
+    }
+
+    @Test
+    fun reconnectReportsAndTracksResolvedStoredSessionAcrossCompression() = runTest {
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val third = ScriptedGatewaySocket()
+        val gateway = client(sockets(first, second, third))
+        val recoveries = backgroundScope.async { gateway.sessionRecoveries.take(2).toList() }
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "root")
+        first.sever()
+        second.inject(error(second.next(), 4001, "session not found"))
+        val resume = second.next()
+        assertEquals("root", resume.fields["session_id"]?.jsonPrimitive?.content)
+        second.inject(result(resume, """{"session_id":"runtime-2","stored_session_id":"tip","session_key":"older-alias","message_count":0,"messages":[],"info":{}}"""))
+        gateway.awaitState { it == GatewayConnectionState.Connected }
+        second.sever()
+        val activate = third.next()
+        assertEquals("runtime-2", activate.fields["session_id"]?.jsonPrimitive?.content)
+        third.inject(error(activate, 4001, "session not found"))
+        val nextResume = third.next()
+        assertEquals("tip", nextResume.fields["session_id"]?.jsonPrimitive?.content)
+        third.inject(result(nextResume, """{"session_id":"runtime-3","session_key":"final-tip","message_count":0,"messages":[],"info":{}}"""))
+        assertEquals(listOf(
+            GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "tip"),
+            GatewaySessionRecovery.Resumed("runtime-2", "runtime-3", "final-tip")
+        ), withTimeout(3_000) { recoveries.await().map { it.withoutSnapshot() } })
+        gateway.disconnect()
+    }
+
+    @Test
+    fun resumeWithoutStoredIdentityKeepsRequestedIdForNextRecovery() = runTest {
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val third = ScriptedGatewaySocket()
+        val gateway = client(sockets(first, second, third))
+        val recovery = backgroundScope.async { gateway.sessionRecoveries.first() }
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "root")
+        first.sever()
+        second.inject(error(second.next(), 4001, "session not found"))
+        second.inject(result(second.next(), """{"session_id":"runtime-2","message_count":0,"messages":[],"info":{}}"""))
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "root"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
+        gateway.awaitState { it == GatewayConnectionState.Connected }
+        second.sever()
+        third.inject(error(third.next(), 4001, "session not found"))
+        val resume = third.next()
+        assertEquals("session.resume", resume.method())
+        assertEquals("root", resume.fields["session_id"]?.jsonPrimitive?.content)
         gateway.disconnect()
     }
 
@@ -653,7 +899,7 @@ class HermesGatewayTest {
         val resume = second.next()
         assertEquals("session.resume", resume.method())
         second.inject(result(resume, """{"session_id":"runtime-2","session_key":"stored-1","message_count":1,"messages":[],"info":{}}"""))
-        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Resumed("runtime-1", "runtime-2", "stored-1"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         // Connected again, the client keeps fetching the old id's buffer until the turn completes.
         val drain = second.next()
         assertEquals("session.events.since", drain.method())
@@ -689,7 +935,7 @@ class HermesGatewayTest {
         assertEquals("session.events.since", replay.method())
         second.inject(result(replay, """{"events":[],"latest_seq":4,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"""))
         // No stored id is known for a session only seen through events, so it cannot be resumed.
-        assertEquals(GatewaySessionRecovery.Unavailable("gone", "session not found"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Unavailable("gone", "session not found"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         val ping = async { gateway.methods.ping(PingParams()) }
         val next = second.next()
         assertEquals("ping", next.method())
@@ -709,7 +955,7 @@ class HermesGatewayTest {
         first.sever()
         second.inject(result(second.next(), """{"session_id":"long"}"""))
         second.inject(result(second.next(), """{"events":[],"latest_seq":900,"truncated":true,"count":0,"epoch":"same","open_requests":[]}"""))
-        assertEquals(GatewaySessionRecovery.ReplayTruncated("long"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.ReplayTruncated("long"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.disconnect()
     }
 
@@ -726,7 +972,7 @@ class HermesGatewayTest {
         first.inject(result(first.next(), """{"closed":true}"""))
         assertTrue(closed.await().closed)
         first.sever()
-        assertEquals(GatewaySessionRecovery.Unavailable("ephemeral", "Closed on disconnect"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Unavailable("ephemeral", "Closed on disconnect"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.awaitState { it == GatewayConnectionState.Connected }
         val ping = async { gateway.methods.ping(PingParams()) }
         val next = second.next()
@@ -744,7 +990,7 @@ class HermesGatewayTest {
         gateway.connect()
         createSession(gateway, socket, "idle", "stored-idle")
         socket.inject(GatewayFrames.event("session.reclaimed", "", payload = """{"session_id":"idle","stored_session_id":"stored-idle","reason":"idle_timeout"}"""))
-        assertEquals(GatewaySessionRecovery.Reclaimed("idle", "stored-idle", "idle_timeout"), withTimeout(3_000) { recovery.await() })
+        assertEquals(GatewaySessionRecovery.Reclaimed("idle", "stored-idle", "idle_timeout"), withTimeout(3_000) { recovery.await().withoutSnapshot() })
         gateway.disconnect()
     }
 

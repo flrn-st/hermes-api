@@ -41,6 +41,7 @@ import hermes.api.generated.gateway.GatewayKnownError
 import hermes.api.generated.gateway.GatewayMethodCatalog
 import hermes.api.generated.gateway.HermesGatewayContract
 import hermes.api.generated.gateway.ServerRequest
+import hermes.api.generated.gateway.OpenRequestEntry
 import hermes.api.generated.gateway.ServerRequestResult
 import hermes.api.generated.gateway.SessionActivateParams
 import hermes.api.generated.gateway.SessionEventsSinceParams
@@ -107,6 +108,7 @@ public class HermesGateway(
 
     private val pending = mutableMapOf<Int, CompletableDeferred<JsonElement>>()
     private val serverJobs = mutableMapOf<String, Job>()
+    private val settledSnapshotRequests = mutableSetOf<String>()
     @Volatile private var handler: (suspend (ServerRequest) -> ServerRequestResult)? = null
     private var nextID = 1
 
@@ -140,6 +142,12 @@ public class HermesGateway(
 
     override fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult) {
         handler = value
+    }
+
+    override suspend fun restoreServerRequests(requests: List<OpenRequestEntry>): Unit = withContext(confined) {
+        if (requests.isEmpty()) return@withContext
+        val connection = socket?.takeIf { ready } ?: throw HermesGatewayException.Transport("Gateway is not connected")
+        requests.forEach { handleServerRequest(it.id, it.method, JsonObject(it.params), connection, generation, snapshot = true) }
     }
 
     // Connection lifecycle
@@ -283,7 +291,11 @@ public class HermesGateway(
                 generation++
                 withContext(NonCancellable) { closeConnection(gatewayError(error)) }
             }
-            throw error
+            // Credential providers may use their own HTTP client. Normalize
+            // ordinary failures too, so a ticket endpoint dropping its response
+            // cannot escape the background maintainer and crash its application.
+            // Cancellation and fatal VM errors keep their original semantics.
+            throw if (error is Exception && error !is CancellationException) gatewayError(error) else error
         } finally {
             opening = false
         }
@@ -293,10 +305,11 @@ public class HermesGateway(
      *  once and the socket is opened again with the new one. */
     private suspend fun openSocket(baseURI: URI): GatewayConnection {
         var renewed = false
+        var currentBase = baseURI
         while (true) {
             try {
-                val credential = configuration.auth.credential(baseURI, configuration.httpTransport)
-                val (uri, headers, protocols) = socketRequest(baseURI, credential)
+                val credential = configuration.auth.credential(currentBase, configuration.httpTransport)
+                val (uri, headers, protocols) = socketRequest(currentBase, credential)
                 return try { configuration.transport.connect(uri, headers, protocols) }
                 catch (error: CancellationException) { throw error }
                 catch (error: HermesGatewayException) { throw error }
@@ -304,6 +317,9 @@ public class HermesGateway(
             } catch (error: HermesGatewayException.AuthenticationFailed) {
                 if (renewed || !configuration.auth.renew(error)) throw error
                 renewed = true
+                // Renewal may select a different endpoint with its own saved
+                // session. Both its ticket and socket must use the new address.
+                currentBase = configuration.address.resolve(error)
                 logger.log(GatewayLogLevel.INFO, "Hermes rejected the credential; retrying with the renewed one")
             }
         }
@@ -340,6 +356,7 @@ public class HermesGateway(
         heartbeat = null
         serverJobs.values.forEach { it.cancel() }
         serverJobs.clear()
+        settledSnapshotRequests.clear()
         pending.values.forEach { it.completeExceptionally(error) }
         pending.clear()
         replayHold.clear()
@@ -630,7 +647,10 @@ public class HermesGateway(
                 // Older backends answer gateway.ping with an error, which still proves the socket alive.
                 heartbeatMethod = if (payload.payload.heartbeat == true) "gateway.ping" else "ping"
             }
-            is GatewayEventPayload.RequestCancel -> serverJobs.remove(payload.payload.id)?.cancel()
+            is GatewayEventPayload.RequestCancel -> {
+                settledSnapshotRequests.add(payload.payload.id)
+                serverJobs.remove(payload.payload.id)?.cancel()
+            }
             GatewayEventPayload.MessageStart -> sessionId?.let { setTurn(it, true) }
             is GatewayEventPayload.MessageComplete, is GatewayEventPayload.Error -> sessionId?.let { setTurn(it, false) }
             is GatewayEventPayload.SessionReclaimed -> {
@@ -652,7 +672,9 @@ public class HermesGateway(
         if (changed) turnActivity.value = activeTurns.size
     }
 
-    private suspend fun handleServerRequest(id: String, method: String, params: JsonElement, connection: GatewayConnection, current: Int) {
+    private suspend fun handleServerRequest(id: String, method: String, params: JsonElement, connection: GatewayConnection, current: Int, snapshot: Boolean = false) {
+        if (snapshot && id in settledSnapshotRequests) return
+        if (!snapshot) settledSnapshotRequests.remove(id)
         // A reconnect can deliver one request both live and through open_requests.
         if (id in serverJobs) return
         val request = try { ServerRequest.decode(method, params, json) }
@@ -662,6 +684,7 @@ public class HermesGateway(
         if (currentHandler == null) { answerWithError(id, -32601, "No server request handler", connection, current); return }
         // The app's handler runs off the confined dispatcher; it may wait for the user for minutes.
         serverJobs[id] = scope.launch(ServerRequestContext(id, method)) {
+            val delivery = checkNotNull(coroutineContext[Job])
             try {
                 val result = currentHandler(request)
                 if (!result.matches(request)) throw HermesGatewayException.Protocol("Server request result kind does not match $method")
@@ -682,7 +705,9 @@ public class HermesGateway(
                 if (!coroutineContext.isActive) throw error
                 withContext(confined) { answerWithError(id, -32603, error.message ?: "Handler failed", connection, current) }
             } finally {
-                withContext(confined + NonCancellable) { serverJobs.remove(id) }
+                withContext(confined + NonCancellable) {
+                    if (serverJobs.remove(id, delivery)) settledSnapshotRequests.add(id)
+                }
             }
         }
     }
@@ -734,7 +759,8 @@ public class HermesGateway(
                 val sessionId = fields.string("session_id") ?: return
                 val previous = sessions[sessionId] ?: TrackedSession()
                 sessions[sessionId] = previous.copy(
-                    storedId = fields.string("stored_session_id") ?: fields.string("session_key") ?: previous.storedId,
+                    storedId = fields.string("stored_session_id") ?: fields.string("session_key") ?: previous.storedId
+                        ?: if (method == "session.resume") arguments.string("session_id") else null,
                     profile = arguments.string("profile") ?: previous.profile,
                     source = arguments.string("source") ?: previous.source,
                     closeOnDisconnect = (arguments["close_on_disconnect"] as? JsonPrimitive)?.booleanOrNull
@@ -836,7 +862,7 @@ public class HermesGateway(
                 configuration.requestTimeoutMillis, waitsForConnection = false)
             retire(sessionId)
             logger.log(GatewayLogLevel.INFO, "Resumed a reclaimed session under a new runtime id")
-            recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, storedId))
+            recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, result.storedSessionId ?: result.sessionKey ?: storedId, result))
         } catch (error: HermesGatewayException.RPC) {
             retire(sessionId)
             recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))
@@ -910,7 +936,7 @@ public class HermesGateway(
         }
         apply(result, sessionId)
         result.openRequests.forEach {
-            handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current)
+            handleServerRequest(it.id, it.method, JsonObject(it.params), connection, current, snapshot = true)
         }
     }
 

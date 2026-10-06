@@ -10,6 +10,101 @@ import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = KanbanBoardRemovalAction.Serializer::class)
+public sealed interface KanbanBoardRemovalAction {
+    public data object Archived : KanbanBoardRemovalAction
+    public data object Deleted : KanbanBoardRemovalAction
+    public data class Unknown(public val raw: kotlin.String) : KanbanBoardRemovalAction
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Archived -> "archived"
+            Deleted -> "deleted"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): KanbanBoardRemovalAction = when (raw) {
+            "archived" -> Archived
+            "deleted" -> Deleted
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<KanbanBoardRemovalAction> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardRemovalAction", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): KanbanBoardRemovalAction = when (val raw = decoder.decodeString()) {
+            "archived" -> Archived
+            "deleted" -> Deleted
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanBoardRemovalAction value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: KanbanBoardRemovalAction) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.get_board`` — ``archived`` column only with ``include_archived``. */
+@Serializable
+public data class KanbanBoardResponse(
+    @SerialName("assignees")
+    public val assignees: List<String>,
+    @SerialName("columns")
+    public val columns: List<KanbanBoardColumn>,
+    @SerialName("latest_event_id")
+    public val latestEventId: Long,
+    @SerialName("now")
+    public val now: Long,
+    @SerialName("tenants")
+    public val tenants: List<String>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.switch_board``. */
+@Serializable
+public data class KanbanBoardSwitchResponse(
+    @SerialName("current")
+    public val current: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.rename_board``. */
+@Serializable
+public data class KanbanBoardUpdateResponse(
+    @SerialName("board")
+    public val board: KanbanBoard,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class KanbanBulkResult(
+    @SerialName("error")
+    public val error: String? = null,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.bulk_update`` — one outcome per id. */
+@Serializable
+public data class KanbanBulkUpdateResponse(
+    @SerialName("results")
+    public val results: List<KanbanBulkResult>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class KanbanChildProgress(
+    @SerialName("done")
+    public val done: Long,
+    @SerialName("total")
+    public val total: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable
 public data class KanbanChildResult(
     @SerialName("id")
@@ -564,125 +659,4 @@ public data class KanbanProfileAutoDescribeResponse(
     public val profile: String,
     @SerialName("reason")
     public val reason: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.update_profile_description``; ``profile`` is the canonical name. */
-@Serializable
-public data class KanbanProfileDescriptionResponse(
-    @SerialName("description")
-    public val description: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("profile")
-    public val profile: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_profile_roster``. */
-@Serializable
-public data class KanbanProfilesResponse(
-    @SerialName("profiles")
-    public val profiles: List<KanbanProfile>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_kanban_projects`` row; empty strings for unset fields. */
-@Serializable
-public data class KanbanProject(
-    @SerialName("color")
-    public val color: String,
-    @SerialName("icon")
-    public val icon: String,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("primary_path")
-    public val primaryPath: String,
-    @SerialName("slug")
-    public val slug: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_kanban_projects``. */
-@Serializable
-public data class KanbanProjectsResponse(
-    @SerialName("projects")
-    public val projects: List<KanbanProject>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.reassign_task_endpoint``; ``assignee`` is ``None`` when unassigned. */
-@Serializable
-public data class KanbanReassignResponse(
-    @SerialName("assignee")
-    public val assignee: String?,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("task_id")
-    public val taskId: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``asdict(kanban_db.Run)`` — one attempt at a task (``task_runs`` row). */
-@Serializable
-public data class KanbanRun(
-    @SerialName("claim_expires")
-    public val claimExpires: Long?,
-    @SerialName("claim_lock")
-    public val claimLock: String?,
-    @SerialName("ended_at")
-    public val endedAt: Long?,
-    @SerialName("error")
-    public val error: String?,
-    @SerialName("id")
-    public val id: Long,
-    @SerialName("last_heartbeat_at")
-    public val lastHeartbeatAt: Long?,
-    @SerialName("max_runtime_seconds")
-    public val maxRuntimeSeconds: Long?,
-    @SerialName("metadata")
-    public val metadata: Map<String, JsonElement>?,
-    @SerialName("outcome")
-    public val outcome: String?,
-    @SerialName("profile")
-    public val profile: String?,
-    @SerialName("started_at")
-    public val startedAt: Long,
-    @SerialName("status")
-    public val status: String,
-    @SerialName("step_key")
-    public val stepKey: String?,
-    @SerialName("summary")
-    public val summary: String?,
-    @SerialName("task_id")
-    public val taskId: String,
-    @SerialName("worker_pid")
-    public val workerPid: Long?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.inspect_run_endpoint`` — the union of the dead (``reason``), live (psutil stats) and access-denied (``error``) shapes. */
-@Serializable
-public data class KanbanRunInspectResponse(
-    @SerialName("alive")
-    public val alive: Boolean,
-    @SerialName("cmdline")
-    public val cmdline: List<String>? = null,
-    @SerialName("cpu_percent")
-    public val cpuPercent: Double? = null,
-    @SerialName("create_time")
-    public val createTime: Double? = null,
-    @SerialName("error")
-    public val error: String? = null,
-    @SerialName("memory_rss_bytes")
-    public val memoryRssBytes: Long? = null,
-    @SerialName("memory_vms_bytes")
-    public val memoryVmsBytes: Long? = null,
-    @SerialName("num_fds")
-    public val numFds: Long? = null,
-    @SerialName("num_threads")
-    public val numThreads: Long? = null,
-    @SerialName("pid")
-    public val pid: Long? = null,
-    @SerialName("reason")
-    public val reason: String? = null,
-    @SerialName("run_id")
-    public val runId: Long,
-    @SerialName("status")
-    public val status: String? = null,
 )

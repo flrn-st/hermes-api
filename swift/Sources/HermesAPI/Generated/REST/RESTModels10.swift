@@ -2,6 +2,340 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ManagedDirectoryCreate: Codable, Sendable, Hashable {
+    public var path: String
+
+    public init(path: String) {
+        self.path = path
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case path = "path"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["path"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        path = try container.decode(String.self, forKey: .path)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(path, forKey: .path)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ManagedFileDelete: Codable, Sendable, Hashable {
+    public var path: String
+    public var recursive: Bool?
+
+    public init(path: String, recursive: Bool? = nil) {
+        self.path = path
+        self.recursive = recursive
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case path = "path"
+        case recursive = "recursive"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["path", "recursive"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        path = try container.decode(String.self, forKey: .path)
+        recursive = try container.decodeIfPresent(Bool.self, forKey: .recursive)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(path, forKey: .path)
+        try container.encodeIfPresent(recursive, forKey: .recursive)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``delete_managed_file``.
+public struct ManagedFileDeleteResponse: Codable, Sendable, Hashable {
+    public var canChangePath: Bool
+    public var lockedRoot: String?
+    public var ok: Bool
+    public var path: String
+    public var root: String?
+
+    public init(canChangePath: Bool, lockedRoot: String?, ok: Bool, path: String, root: String?) {
+        self.canChangePath = canChangePath
+        self.lockedRoot = lockedRoot
+        self.ok = ok
+        self.path = path
+        self.root = root
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case canChangePath = "can_change_path"
+        case lockedRoot = "locked_root"
+        case ok = "ok"
+        case path = "path"
+        case root = "root"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["can_change_path", "locked_root", "ok", "path", "root"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        canChangePath = try container.decode(Bool.self, forKey: .canChangePath)
+        lockedRoot = try container.decode(Optional<String>.self, forKey: .lockedRoot)
+        ok = try container.decode(Bool.self, forKey: .ok)
+        path = try container.decode(String.self, forKey: .path)
+        root = try container.decode(Optional<String>.self, forKey: .root)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(canChangePath, forKey: .canChangePath)
+        try container.encode(lockedRoot, forKey: .lockedRoot)
+        try container.encode(ok, forKey: .ok)
+        try container.encode(path, forKey: .path)
+        try container.encode(root, forKey: .root)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``hermes_cli/web_server_files.py::_managed_file_entry``; ``size``/``mime_type`` are null for directories.
+public struct ManagedFileEntry: Codable, Sendable, Hashable {
+    public var isDirectory: Bool
+    public var mimeType: String?
+    public var mtime: Double
+    public var name: String
+    public var path: String
+    public var size: Int?
+
+    public init(isDirectory: Bool, mimeType: String?, mtime: Double, name: String, path: String, size: Int?) {
+        self.isDirectory = isDirectory
+        self.mimeType = mimeType
+        self.mtime = mtime
+        self.name = name
+        self.path = path
+        self.size = size
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isDirectory = "is_directory"
+        case mimeType = "mime_type"
+        case mtime = "mtime"
+        case name = "name"
+        case path = "path"
+        case size = "size"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["is_directory", "mime_type", "mtime", "name", "path", "size"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isDirectory = try container.decode(Bool.self, forKey: .isDirectory)
+        mimeType = try container.decode(Optional<String>.self, forKey: .mimeType)
+        mtime = try container.decode(Double.self, forKey: .mtime)
+        name = try container.decode(String.self, forKey: .name)
+        path = try container.decode(String.self, forKey: .path)
+        size = try container.decode(Optional<Int>.self, forKey: .size)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(isDirectory, forKey: .isDirectory)
+        try container.encode(mimeType, forKey: .mimeType)
+        try container.encode(mtime, forKey: .mtime)
+        try container.encode(name, forKey: .name)
+        try container.encode(path, forKey: .path)
+        try container.encode(size, forKey: .size)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``list_managed_files``; ``parent`` is null at the filesystem or locked root.
+public struct ManagedFileListResponse: Codable, Sendable, Hashable {
+    public var canChangePath: Bool
+    public var entries: [ManagedFileEntry]
+    public var lockedRoot: String?
+    public var parent: String?
+    public var path: String
+    public var root: String?
+
+    public init(canChangePath: Bool, entries: [ManagedFileEntry], lockedRoot: String?, parent: String?, path: String, root: String?) {
+        self.canChangePath = canChangePath
+        self.entries = entries
+        self.lockedRoot = lockedRoot
+        self.parent = parent
+        self.path = path
+        self.root = root
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case canChangePath = "can_change_path"
+        case entries = "entries"
+        case lockedRoot = "locked_root"
+        case parent = "parent"
+        case path = "path"
+        case root = "root"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["can_change_path", "entries", "locked_root", "parent", "path", "root"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        canChangePath = try container.decode(Bool.self, forKey: .canChangePath)
+        entries = try container.decode([ManagedFileEntry].self, forKey: .entries)
+        lockedRoot = try container.decode(Optional<String>.self, forKey: .lockedRoot)
+        parent = try container.decode(Optional<String>.self, forKey: .parent)
+        path = try container.decode(String.self, forKey: .path)
+        root = try container.decode(Optional<String>.self, forKey: .root)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(canChangePath, forKey: .canChangePath)
+        try container.encode(entries, forKey: .entries)
+        try container.encode(lockedRoot, forKey: .lockedRoot)
+        try container.encode(parent, forKey: .parent)
+        try container.encode(path, forKey: .path)
+        try container.encode(root, forKey: .root)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``read_managed_file``.
+public struct ManagedFileReadResponse: Codable, Sendable, Hashable {
+    public var canChangePath: Bool
+    public var dataUrl: String
+    public var lockedRoot: String?
+    public var mimeType: String
+    public var name: String
+    public var path: String
+    public var root: String?
+    public var size: Int
+
+    public init(canChangePath: Bool, dataUrl: String, lockedRoot: String?, mimeType: String, name: String, path: String, root: String?, size: Int) {
+        self.canChangePath = canChangePath
+        self.dataUrl = dataUrl
+        self.lockedRoot = lockedRoot
+        self.mimeType = mimeType
+        self.name = name
+        self.path = path
+        self.root = root
+        self.size = size
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case canChangePath = "can_change_path"
+        case dataUrl = "data_url"
+        case lockedRoot = "locked_root"
+        case mimeType = "mime_type"
+        case name = "name"
+        case path = "path"
+        case root = "root"
+        case size = "size"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["can_change_path", "data_url", "locked_root", "mime_type", "name", "path", "root", "size"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        canChangePath = try container.decode(Bool.self, forKey: .canChangePath)
+        dataUrl = try container.decode(String.self, forKey: .dataUrl)
+        lockedRoot = try container.decode(Optional<String>.self, forKey: .lockedRoot)
+        mimeType = try container.decode(String.self, forKey: .mimeType)
+        name = try container.decode(String.self, forKey: .name)
+        path = try container.decode(String.self, forKey: .path)
+        root = try container.decode(Optional<String>.self, forKey: .root)
+        size = try container.decode(Int.self, forKey: .size)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(canChangePath, forKey: .canChangePath)
+        try container.encode(dataUrl, forKey: .dataUrl)
+        try container.encode(lockedRoot, forKey: .lockedRoot)
+        try container.encode(mimeType, forKey: .mimeType)
+        try container.encode(name, forKey: .name)
+        try container.encode(path, forKey: .path)
+        try container.encode(root, forKey: .root)
+        try container.encode(size, forKey: .size)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ManagedFileUpload: Codable, Sendable, Hashable {
+    public var dataUrl: String
+    public var overwrite: Bool?
+    public var path: String
+
+    public init(dataUrl: String, overwrite: Bool? = nil, path: String) {
+        self.dataUrl = dataUrl
+        self.overwrite = overwrite
+        self.path = path
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case dataUrl = "data_url"
+        case overwrite = "overwrite"
+        case path = "path"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["data_url", "overwrite", "path"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        dataUrl = try container.decode(String.self, forKey: .dataUrl)
+        overwrite = try container.decodeIfPresent(Bool.self, forKey: .overwrite)
+        path = try container.decode(String.self, forKey: .path)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(dataUrl, forKey: .dataUrl)
+        try container.encodeIfPresent(overwrite, forKey: .overwrite)
+        try container.encode(path, forKey: .path)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 /// ``_managed_write_result`` (upload, upload-stream, mkdir).
 public struct ManagedFileWriteResponse: Codable, Sendable, Hashable {
     public var canChangePath: Bool
@@ -1404,299 +1738,5 @@ public struct McpServerProbeTool: Codable, Sendable, Hashable {
         try container.encode(description, forKey: .description)
         try container.encode(name, forKey: .name)
         try container.encodeIfPresent(schemaChars, forKey: .schemaChars)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``test_mcp_server`` — ``ok: false`` carries ``error`` and an empty ``tools``; the prompt and resource counts are only reported on success.
-public struct McpServerTestResponse: Codable, Sendable, Hashable {
-    public var error: String?
-    public var ok: Bool
-    public var prompts: Int?
-    public var resources: Int?
-    public var tools: [McpServerProbeTool]
-
-    public init(error: String? = nil, ok: Bool, prompts: Int? = nil, resources: Int? = nil, tools: [McpServerProbeTool]) {
-        self.error = error
-        self.ok = ok
-        self.prompts = prompts
-        self.resources = resources
-        self.tools = tools
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case error = "error"
-        case ok = "ok"
-        case prompts = "prompts"
-        case resources = "resources"
-        case tools = "tools"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["error", "ok", "prompts", "resources", "tools"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        error = try container.decodeIfPresent(String.self, forKey: .error)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        prompts = try container.decodeIfPresent(Int.self, forKey: .prompts)
-        resources = try container.decodeIfPresent(Int.self, forKey: .resources)
-        tools = try container.decode([McpServerProbeTool].self, forKey: .tools)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(error, forKey: .error)
-        try container.encode(ok, forKey: .ok)
-        try container.encodeIfPresent(prompts, forKey: .prompts)
-        try container.encodeIfPresent(resources, forKey: .resources)
-        try container.encode(tools, forKey: .tools)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// A ``(name, description)`` pair from ``hermes_cli/mcp_config.py::_probe_single_server`` (description truncated to 80 chars, ``""`` when absent).
-public struct McpToolSummary: Codable, Sendable, Hashable {
-    public var description: String
-    public var name: String
-
-    public init(description: String, name: String) {
-        self.description = description
-        self.name = name
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case description = "description"
-        case name = "name"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["description", "name"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        description = try container.decode(String.self, forKey: .description)
-        name = try container.decode(String.self, forKey: .name)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(description, forKey: .description)
-        try container.encode(name, forKey: .name)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL.
-public struct MediaDataUrlResponse: Codable, Sendable, Hashable {
-    public var dataUrl: String
-
-    public init(dataUrl: String) {
-        self.dataUrl = dataUrl
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case dataUrl = "data_url"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["data_url"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        dataUrl = try container.decode(String.self, forKey: .dataUrl)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(dataUrl, forKey: .dataUrl)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// Byte size of ``memories/MEMORY.md`` / ``memories/USER.md`` (0 when absent).
-public struct MemoryBuiltinFileSizes: Codable, Sendable, Hashable {
-    public var memory: Int
-    public var user: Int
-
-    public init(memory: Int, user: Int) {
-        self.memory = memory
-        self.user = user
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case memory = "memory"
-        case user = "user"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["memory", "user"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        memory = try container.decode(Int.self, forKey: .memory)
-        user = try container.decode(Int.self, forKey: .user)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(memory, forKey: .memory)
-        try container.encode(user, forKey: .user)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``start_memory_oauth`` → ``oauth_flow.start_loopback_flow_background()``: the full status on a fresh start, only ``state``/``detail`` when a flow is already pending (idempotent re-click).
-public struct MemoryOAuthStartResponse: Codable, Sendable, Hashable {
-    public var auth: MemoryOAuthStartResponseAuth?
-    public var connected: Bool?
-    public var detail: String
-    public var state: MemoryOAuthStartResponseState
-
-    public init(auth: MemoryOAuthStartResponseAuth? = nil, connected: Bool? = nil, detail: String, state: MemoryOAuthStartResponseState) {
-        self.auth = auth
-        self.connected = connected
-        self.detail = detail
-        self.state = state
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case auth = "auth"
-        case connected = "connected"
-        case detail = "detail"
-        case state = "state"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["auth", "connected", "detail", "state"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        auth = try container.decodeIfPresent(MemoryOAuthStartResponseAuth.self, forKey: .auth)
-        connected = try container.decodeIfPresent(Bool.self, forKey: .connected)
-        detail = try container.decode(String.self, forKey: .detail)
-        state = try container.decode(MemoryOAuthStartResponseState.self, forKey: .state)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(auth, forKey: .auth)
-        try container.encodeIfPresent(connected, forKey: .connected)
-        try container.encode(detail, forKey: .detail)
-        try container.encode(state, forKey: .state)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryOAuthStartResponseAuth: Codable, Sendable, Hashable, RawRepresentable {
-    case oauth
-    case apikey
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "oauth": self = .oauth
-        case "apikey": self = .apikey
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .oauth: "oauth"
-        case .apikey: "apikey"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "oauth": self = .oauth
-        case "apikey": self = .apikey
-        default:
-            guard decoder.decodesTolerantly else {
-                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected MemoryOAuthStartResponseAuth value: \(raw)")
-            }
-            self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum MemoryOAuthStartResponseState: Codable, Sendable, Hashable, RawRepresentable {
-    case idle
-    case pending
-    case connected
-    case error
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "idle": self = .idle
-        case "pending": self = .pending
-        case "connected": self = .connected
-        case "error": self = .error
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .idle: "idle"
-        case .pending: "pending"
-        case .connected: "connected"
-        case .error: "error"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "idle": self = .idle
-        case "pending": self = .pending
-        case "connected": self = .connected
-        case "error": self = .error
-        default:
-            guard decoder.decodesTolerantly else {
-                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected MemoryOAuthStartResponseState value: \(raw)")
-            }
-            self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }

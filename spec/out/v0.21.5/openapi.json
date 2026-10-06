@@ -4213,7 +4213,14 @@
             ]
           },
           "api_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "archived": {
             "type": "boolean"
@@ -4249,10 +4256,24 @@
             ]
           },
           "cache_read_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cache_write_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "chat_id": {
             "anyOf": [
@@ -4381,7 +4402,14 @@
             ]
           },
           "expiry_finalized": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "git_branch": {
             "anyOf": [
@@ -4443,7 +4471,14 @@
             "type": "string"
           },
           "input_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "is_active": {
             "type": "boolean"
@@ -4493,7 +4528,14 @@
             "description": "Read watermark; ``0`` = marked unread, null = never tracked."
           },
           "message_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "model": {
             "anyOf": [
@@ -4526,7 +4568,14 @@
             ]
           },
           "output_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "parent_session_id": {
             "anyOf": [
@@ -4576,7 +4625,14 @@
             ]
           },
           "reasoning_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rewind_count": {
             "type": "integer"
@@ -4648,7 +4704,14 @@
             ]
           },
           "tool_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "tool_names": {
             "anyOf": [
@@ -5510,7 +5573,7 @@
       },
       "DashboardPluginManifest": {
         "additionalProperties": false,
-        "description": "``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*``\nkeys stripped. String fields are the manifest.json values (defaults when absent).",
+        "description": "``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*`` keys stripped. ``name``, ``label``, ``description``, ``icon``, ``version``, ``entry`` and ``css`` are the plugin's ``manifest.json`` values as written (defaults when absent), which Hermes does not validate: a number or ``null`` there arrives as is.",
         "properties": {
           "css": {
             "anyOf": [
@@ -5518,27 +5581,80 @@
                 "type": "string"
               },
               {
+                "type": "number"
+              },
+              {
                 "type": "null"
               }
             ]
           },
           "description": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "entry": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "has_api": {
             "type": "boolean"
           },
           "icon": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "label": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "slots": {
             "items": {
@@ -5558,7 +5674,17 @@
             "$ref": "#/components/schemas/DashboardPluginTab"
           },
           "version": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -17428,10 +17554,20 @@
       },
       "PluginsHubContextOption": {
         "additionalProperties": false,
-        "description": "``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair.",
+        "description": "``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair. ``description`` is the engine's ``plugin.yaml`` value as written, which Hermes does not validate: a number or ``null`` there arrives as is.",
         "properties": {
           "description": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
             "type": "string"
@@ -17445,7 +17581,7 @@
       },
       "PluginsHubPluginRow": {
         "additionalProperties": false,
-        "description": "One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row.",
+        "description": "One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row. ``name``, ``version`` and ``description`` are the plugin's ``plugin.yaml`` values as written, which Hermes does not validate (``version: 1.0`` is a number); an empty ``version`` or ``description`` becomes ``\"\"``, while an empty ``name`` stays ``null``.",
         "properties": {
           "auth_command": {
             "type": "string"
@@ -17470,13 +17606,30 @@
             ]
           },
           "description": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
           },
           "has_dashboard_manifest": {
             "type": "boolean"
           },
           "name": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "path": {
             "type": "string"
@@ -17512,7 +17665,14 @@
             "type": "boolean"
           },
           "version": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
           }
         },
         "required": [
@@ -19395,7 +19555,14 @@
             ]
           },
           "api_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "archived": {
             "type": "integer"
@@ -19431,10 +19598,24 @@
             ]
           },
           "cache_read_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cache_write_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "chat_id": {
             "anyOf": [
@@ -19563,7 +19744,14 @@
             ]
           },
           "expiry_finalized": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "git_branch": {
             "anyOf": [
@@ -19625,7 +19813,14 @@
             "type": "string"
           },
           "input_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "is_default_profile": {
             "type": "boolean"
@@ -19672,7 +19867,14 @@
             "description": "Read watermark; ``0`` = marked unread, null = never tracked."
           },
           "message_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "model": {
             "anyOf": [
@@ -19705,7 +19907,14 @@
             ]
           },
           "output_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "parent_session_id": {
             "anyOf": [
@@ -19744,7 +19953,14 @@
             ]
           },
           "reasoning_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rewind_count": {
             "type": "integer"
@@ -19816,7 +20032,14 @@
             ]
           },
           "tool_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "tool_names": {
             "anyOf": [
@@ -20189,7 +20412,14 @@
             ]
           },
           "api_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "archived": {
             "type": "integer"
@@ -20225,10 +20455,24 @@
             ]
           },
           "cache_read_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cache_write_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "chat_id": {
             "anyOf": [
@@ -20357,7 +20601,14 @@
             ]
           },
           "expiry_finalized": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "git_branch": {
             "anyOf": [
@@ -20419,7 +20670,14 @@
             "type": "string"
           },
           "input_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "last_activity_at": {
             "anyOf": [
@@ -20463,7 +20721,14 @@
             "description": "Read watermark; ``0`` = marked unread, null = never tracked."
           },
           "message_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "messages": {
             "items": {
@@ -20502,7 +20767,14 @@
             ]
           },
           "output_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "parent_session_id": {
             "anyOf": [
@@ -20538,7 +20810,14 @@
             ]
           },
           "reasoning_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rewind_count": {
             "type": "integer"
@@ -20610,7 +20889,14 @@
             ]
           },
           "tool_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "tool_names": {
             "anyOf": [
@@ -20882,7 +21168,14 @@
             ]
           },
           "api_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "archived": {
             "type": "boolean"
@@ -20918,10 +21211,24 @@
             ]
           },
           "cache_read_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cache_write_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "chat_id": {
             "anyOf": [
@@ -21050,7 +21357,14 @@
             ]
           },
           "expiry_finalized": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "git_branch": {
             "anyOf": [
@@ -21119,7 +21433,14 @@
             "type": "string"
           },
           "input_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "is_active": {
             "type": "boolean"
@@ -21172,7 +21493,14 @@
             "description": "Read watermark; ``0`` = marked unread, null = never tracked."
           },
           "message_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "model": {
             "anyOf": [
@@ -21205,7 +21533,14 @@
             ]
           },
           "output_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "parent_session_id": {
             "anyOf": [
@@ -21247,7 +21582,14 @@
             ]
           },
           "reasoning_tokens": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rewind_count": {
             "type": "integer"
@@ -21319,7 +21661,14 @@
             ]
           },
           "tool_call_count": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "tool_names": {
             "anyOf": [

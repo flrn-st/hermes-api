@@ -2,6 +2,468 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum LearningNodeDetailResponseKind: Codable, Sendable, Hashable, RawRepresentable {
+    case skill
+    case memory
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "skill": self = .skill
+        case "memory": self = .memory
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .skill: "skill"
+        case .memory: "memory"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "skill": self = .skill
+        case "memory": self = .memory
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected LearningNodeDetailResponseKind value: \(raw)")
+            }
+            self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct LearningNodeEdit: Codable, Sendable, Hashable {
+    public var content: String
+    public var id: String
+    public var profile: Patch<String>
+
+    public init(content: String, id: String, profile: Patch<String> = .absent) {
+        self.content = content
+        self.id = id
+        self.profile = profile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case content = "content"
+        case id = "id"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["content", "id", "profile"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        content = try container.decode(String.self, forKey: .content)
+        id = try container.decode(String.self, forKey: .id)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(content, forKey: .content)
+        try container.encode(id, forKey: .id)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``agent/learning_mutations.py::delete_node`` / ``edit_node`` (the non-ok results become a 400).
+public struct LearningNodeMutationResponse: Codable, Sendable, Hashable {
+    public var message: String
+    public var ok: Bool
+
+    public init(message: String, ok: Bool) {
+        self.message = message
+        self.ok = ok
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case message = "message"
+        case ok = "ok"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["message", "ok"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        message = try container.decode(String.self, forKey: .message)
+        ok = try container.decode(Bool.self, forKey: .ok)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(message, forKey: .message)
+        try container.encode(ok, forKey: .ok)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct LearningNodeRef: Codable, Sendable, Hashable {
+    public var id: String
+    public var profile: Patch<String>
+
+    public init(id: String, profile: Patch<String> = .absent) {
+        self.id = id
+        self.profile = profile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["id", "profile"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct LinkBody: Codable, Sendable, Hashable {
+    public var childId: String
+    public var parentId: String
+
+    public init(childId: String, parentId: String) {
+        self.childId = childId
+        self.parentId = parentId
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case childId = "child_id"
+        case parentId = "parent_id"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["child_id", "parent_id"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        childId = try container.decode(String.self, forKey: .childId)
+        parentId = try container.decode(String.self, forKey: .parentId)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(childId, forKey: .childId)
+        try container.encode(parentId, forKey: .parentId)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``_catalog_row``. ``fits=false`` rows price the smallest build and add ``fit_detail``; ``fits=true`` rows add the selected variant, plus the start window unless physics refused.
+public struct LocalModelCatalogRow: Codable, Sendable, Hashable {
+    public var description: String
+    public var displayName: String
+    public var downloaded: Bool
+    public var downloadedModelId: String?
+    public var downloadedQuant: String?
+    public var fitDetail: String?
+    public var fitSummary: String
+    public var fits: Bool
+    public var id: String
+    public var minEngine: String?
+    public var modelId: String?
+    public var mtp: Bool
+    public var nativeContext: Int
+    public var nativeContextLabel: String
+    public var needsEngine: Bool
+    public var quant: String?
+    public var quantReason: String?
+    public var quantValidated: Bool?
+    public var recommended: Bool
+    public var recommendedReason: String?
+    public var sizeBytes: Int
+    public var sizeLabel: String
+    public var spilled: Bool?
+    public var startWindow: Int?
+    public var startWindowLabel: String?
+    public var variantCount: Int?
+    public var vision: Bool
+
+    public init(description: String, displayName: String, downloaded: Bool, downloadedModelId: String?, downloadedQuant: String?, fitDetail: String? = nil, fitSummary: String, fits: Bool, id: String, minEngine: String?, modelId: String? = nil, mtp: Bool, nativeContext: Int, nativeContextLabel: String, needsEngine: Bool, quant: String? = nil, quantReason: String? = nil, quantValidated: Bool? = nil, recommended: Bool, recommendedReason: String?, sizeBytes: Int, sizeLabel: String, spilled: Bool? = nil, startWindow: Int? = nil, startWindowLabel: String? = nil, variantCount: Int? = nil, vision: Bool) {
+        self.description = description
+        self.displayName = displayName
+        self.downloaded = downloaded
+        self.downloadedModelId = downloadedModelId
+        self.downloadedQuant = downloadedQuant
+        self.fitDetail = fitDetail
+        self.fitSummary = fitSummary
+        self.fits = fits
+        self.id = id
+        self.minEngine = minEngine
+        self.modelId = modelId
+        self.mtp = mtp
+        self.nativeContext = nativeContext
+        self.nativeContextLabel = nativeContextLabel
+        self.needsEngine = needsEngine
+        self.quant = quant
+        self.quantReason = quantReason
+        self.quantValidated = quantValidated
+        self.recommended = recommended
+        self.recommendedReason = recommendedReason
+        self.sizeBytes = sizeBytes
+        self.sizeLabel = sizeLabel
+        self.spilled = spilled
+        self.startWindow = startWindow
+        self.startWindowLabel = startWindowLabel
+        self.variantCount = variantCount
+        self.vision = vision
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case description = "description"
+        case displayName = "display_name"
+        case downloaded = "downloaded"
+        case downloadedModelId = "downloaded_model_id"
+        case downloadedQuant = "downloaded_quant"
+        case fitDetail = "fit_detail"
+        case fitSummary = "fit_summary"
+        case fits = "fits"
+        case id = "id"
+        case minEngine = "min_engine"
+        case modelId = "model_id"
+        case mtp = "mtp"
+        case nativeContext = "native_context"
+        case nativeContextLabel = "native_context_label"
+        case needsEngine = "needs_engine"
+        case quant = "quant"
+        case quantReason = "quant_reason"
+        case quantValidated = "quant_validated"
+        case recommended = "recommended"
+        case recommendedReason = "recommended_reason"
+        case sizeBytes = "size_bytes"
+        case sizeLabel = "size_label"
+        case spilled = "spilled"
+        case startWindow = "start_window"
+        case startWindowLabel = "start_window_label"
+        case variantCount = "variant_count"
+        case vision = "vision"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["description", "display_name", "downloaded", "downloaded_model_id", "downloaded_quant", "fit_detail", "fit_summary", "fits", "id", "min_engine", "model_id", "mtp", "native_context", "native_context_label", "needs_engine", "quant", "quant_reason", "quant_validated", "recommended", "recommended_reason", "size_bytes", "size_label", "spilled", "start_window", "start_window_label", "variant_count", "vision"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        description = try container.decode(String.self, forKey: .description)
+        displayName = try container.decode(String.self, forKey: .displayName)
+        downloaded = try container.decode(Bool.self, forKey: .downloaded)
+        downloadedModelId = try container.decode(Optional<String>.self, forKey: .downloadedModelId)
+        downloadedQuant = try container.decode(Optional<String>.self, forKey: .downloadedQuant)
+        fitDetail = try container.decodeIfPresent(String.self, forKey: .fitDetail)
+        fitSummary = try container.decode(String.self, forKey: .fitSummary)
+        fits = try container.decode(Bool.self, forKey: .fits)
+        id = try container.decode(String.self, forKey: .id)
+        minEngine = try container.decode(Optional<String>.self, forKey: .minEngine)
+        modelId = try container.decodeIfPresent(String.self, forKey: .modelId)
+        mtp = try container.decode(Bool.self, forKey: .mtp)
+        nativeContext = try container.decode(Int.self, forKey: .nativeContext)
+        nativeContextLabel = try container.decode(String.self, forKey: .nativeContextLabel)
+        needsEngine = try container.decode(Bool.self, forKey: .needsEngine)
+        quant = try container.decodeIfPresent(String.self, forKey: .quant)
+        quantReason = try container.decodeIfPresent(String.self, forKey: .quantReason)
+        quantValidated = try container.decodeIfPresent(Bool.self, forKey: .quantValidated)
+        recommended = try container.decode(Bool.self, forKey: .recommended)
+        recommendedReason = try container.decode(Optional<String>.self, forKey: .recommendedReason)
+        sizeBytes = try container.decode(Int.self, forKey: .sizeBytes)
+        sizeLabel = try container.decode(String.self, forKey: .sizeLabel)
+        spilled = try container.decodeIfPresent(Bool.self, forKey: .spilled)
+        startWindow = try container.decodeIfPresent(Int.self, forKey: .startWindow)
+        startWindowLabel = try container.decodeIfPresent(String.self, forKey: .startWindowLabel)
+        variantCount = try container.decodeIfPresent(Int.self, forKey: .variantCount)
+        vision = try container.decode(Bool.self, forKey: .vision)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(description, forKey: .description)
+        try container.encode(displayName, forKey: .displayName)
+        try container.encode(downloaded, forKey: .downloaded)
+        try container.encode(downloadedModelId, forKey: .downloadedModelId)
+        try container.encode(downloadedQuant, forKey: .downloadedQuant)
+        try container.encodeIfPresent(fitDetail, forKey: .fitDetail)
+        try container.encode(fitSummary, forKey: .fitSummary)
+        try container.encode(fits, forKey: .fits)
+        try container.encode(id, forKey: .id)
+        try container.encode(minEngine, forKey: .minEngine)
+        try container.encodeIfPresent(modelId, forKey: .modelId)
+        try container.encode(mtp, forKey: .mtp)
+        try container.encode(nativeContext, forKey: .nativeContext)
+        try container.encode(nativeContextLabel, forKey: .nativeContextLabel)
+        try container.encode(needsEngine, forKey: .needsEngine)
+        try container.encodeIfPresent(quant, forKey: .quant)
+        try container.encodeIfPresent(quantReason, forKey: .quantReason)
+        try container.encodeIfPresent(quantValidated, forKey: .quantValidated)
+        try container.encode(recommended, forKey: .recommended)
+        try container.encode(recommendedReason, forKey: .recommendedReason)
+        try container.encode(sizeBytes, forKey: .sizeBytes)
+        try container.encode(sizeLabel, forKey: .sizeLabel)
+        try container.encodeIfPresent(spilled, forKey: .spilled)
+        try container.encodeIfPresent(startWindow, forKey: .startWindow)
+        try container.encodeIfPresent(startWindowLabel, forKey: .startWindowLabel)
+        try container.encodeIfPresent(variantCount, forKey: .variantCount)
+        try container.encode(vision, forKey: .vision)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``_job`` record as rendered by ``_job_view`` (tag: ``hermes_cli/web_routers/local_models.py:121``/``:134``). The record is copied verbatim; ``percent`` is added only when ``total_bytes`` is non-zero.
+public struct LocalModelJob: Codable, Sendable, Hashable {
+    public var detail: String
+    public var doneBytes: Int
+    /// Exception text once ``status`` is ``error``.
+    public var error: String?
+    public var jobId: String
+    public var kind: LocalModelJobKind
+    /// Catalog family id (``/download``, quickstart), GGUF-derived variant id (``/download-browsed``, activate); null for runtime installs.
+    public var modelId: String?
+    /// 0-100; present only while ``total_bytes`` is known and non-zero.
+    public var percent: Int?
+    /// Current step name (``starting``, ``downloading``, ``downloading-runtime``, ``unpacking-runtime``, ``verifying-runtime``, ``installing-runtime``, ``restarting``, ``starting-server``, ``setting-default``, ``done``).
+    public var phase: String
+    /// Unix time the job was created.
+    public var startedAt: Double
+    public var status: LocalModelJobStatus
+    /// Human-readable subject, e.g. ``llama.cpp <tag> (<backend>)`` or ``<display name> (<quant>)``.
+    public var target: String
+    public var totalBytes: Int?
+
+    public init(detail: String, doneBytes: Int, error: String?, jobId: String, kind: LocalModelJobKind, modelId: String?, percent: Int? = nil, phase: String, startedAt: Double, status: LocalModelJobStatus, target: String, totalBytes: Int?) {
+        self.detail = detail
+        self.doneBytes = doneBytes
+        self.error = error
+        self.jobId = jobId
+        self.kind = kind
+        self.modelId = modelId
+        self.percent = percent
+        self.phase = phase
+        self.startedAt = startedAt
+        self.status = status
+        self.target = target
+        self.totalBytes = totalBytes
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case detail = "detail"
+        case doneBytes = "done_bytes"
+        case error = "error"
+        case jobId = "job_id"
+        case kind = "kind"
+        case modelId = "model_id"
+        case percent = "percent"
+        case phase = "phase"
+        case startedAt = "started_at"
+        case status = "status"
+        case target = "target"
+        case totalBytes = "total_bytes"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["detail", "done_bytes", "error", "job_id", "kind", "model_id", "percent", "phase", "started_at", "status", "target", "total_bytes"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        detail = try container.decode(String.self, forKey: .detail)
+        doneBytes = try container.decode(Int.self, forKey: .doneBytes)
+        error = try container.decode(Optional<String>.self, forKey: .error)
+        jobId = try container.decode(String.self, forKey: .jobId)
+        kind = try container.decode(LocalModelJobKind.self, forKey: .kind)
+        modelId = try container.decode(Optional<String>.self, forKey: .modelId)
+        percent = try container.decodeIfPresent(Int.self, forKey: .percent)
+        phase = try container.decode(String.self, forKey: .phase)
+        startedAt = try container.decode(Double.self, forKey: .startedAt)
+        status = try container.decode(LocalModelJobStatus.self, forKey: .status)
+        target = try container.decode(String.self, forKey: .target)
+        totalBytes = try container.decode(Optional<Int>.self, forKey: .totalBytes)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(detail, forKey: .detail)
+        try container.encode(doneBytes, forKey: .doneBytes)
+        try container.encode(error, forKey: .error)
+        try container.encode(jobId, forKey: .jobId)
+        try container.encode(kind, forKey: .kind)
+        try container.encode(modelId, forKey: .modelId)
+        try container.encodeIfPresent(percent, forKey: .percent)
+        try container.encode(phase, forKey: .phase)
+        try container.encode(startedAt, forKey: .startedAt)
+        try container.encode(status, forKey: .status)
+        try container.encode(target, forKey: .target)
+        try container.encode(totalBytes, forKey: .totalBytes)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 public enum LocalModelJobKind: Codable, Sendable, Hashable, RawRepresentable {
     case runtimeInstall
     case modelDownload
@@ -1344,339 +1806,5 @@ public struct MainModelAssignment: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(model, forKey: .model)
         try container.encode(provider, forKey: .provider)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct ManagedDirectoryCreate: Codable, Sendable, Hashable {
-    public var path: String
-
-    public init(path: String) {
-        self.path = path
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case path = "path"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["path"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        path = try container.decode(String.self, forKey: .path)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(path, forKey: .path)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct ManagedFileDelete: Codable, Sendable, Hashable {
-    public var path: String
-    public var recursive: Bool?
-
-    public init(path: String, recursive: Bool? = nil) {
-        self.path = path
-        self.recursive = recursive
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case path = "path"
-        case recursive = "recursive"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["path", "recursive"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        path = try container.decode(String.self, forKey: .path)
-        recursive = try container.decodeIfPresent(Bool.self, forKey: .recursive)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(path, forKey: .path)
-        try container.encodeIfPresent(recursive, forKey: .recursive)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``delete_managed_file``.
-public struct ManagedFileDeleteResponse: Codable, Sendable, Hashable {
-    public var canChangePath: Bool
-    public var lockedRoot: String?
-    public var ok: Bool
-    public var path: String
-    public var root: String?
-
-    public init(canChangePath: Bool, lockedRoot: String?, ok: Bool, path: String, root: String?) {
-        self.canChangePath = canChangePath
-        self.lockedRoot = lockedRoot
-        self.ok = ok
-        self.path = path
-        self.root = root
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case canChangePath = "can_change_path"
-        case lockedRoot = "locked_root"
-        case ok = "ok"
-        case path = "path"
-        case root = "root"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["can_change_path", "locked_root", "ok", "path", "root"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        canChangePath = try container.decode(Bool.self, forKey: .canChangePath)
-        lockedRoot = try container.decode(Optional<String>.self, forKey: .lockedRoot)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        path = try container.decode(String.self, forKey: .path)
-        root = try container.decode(Optional<String>.self, forKey: .root)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(canChangePath, forKey: .canChangePath)
-        try container.encode(lockedRoot, forKey: .lockedRoot)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(path, forKey: .path)
-        try container.encode(root, forKey: .root)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``hermes_cli/web_server_files.py::_managed_file_entry``; ``size``/``mime_type`` are null for directories.
-public struct ManagedFileEntry: Codable, Sendable, Hashable {
-    public var isDirectory: Bool
-    public var mimeType: String?
-    public var mtime: Double
-    public var name: String
-    public var path: String
-    public var size: Int?
-
-    public init(isDirectory: Bool, mimeType: String?, mtime: Double, name: String, path: String, size: Int?) {
-        self.isDirectory = isDirectory
-        self.mimeType = mimeType
-        self.mtime = mtime
-        self.name = name
-        self.path = path
-        self.size = size
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case isDirectory = "is_directory"
-        case mimeType = "mime_type"
-        case mtime = "mtime"
-        case name = "name"
-        case path = "path"
-        case size = "size"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["is_directory", "mime_type", "mtime", "name", "path", "size"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        isDirectory = try container.decode(Bool.self, forKey: .isDirectory)
-        mimeType = try container.decode(Optional<String>.self, forKey: .mimeType)
-        mtime = try container.decode(Double.self, forKey: .mtime)
-        name = try container.decode(String.self, forKey: .name)
-        path = try container.decode(String.self, forKey: .path)
-        size = try container.decode(Optional<Int>.self, forKey: .size)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(isDirectory, forKey: .isDirectory)
-        try container.encode(mimeType, forKey: .mimeType)
-        try container.encode(mtime, forKey: .mtime)
-        try container.encode(name, forKey: .name)
-        try container.encode(path, forKey: .path)
-        try container.encode(size, forKey: .size)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``list_managed_files``; ``parent`` is null at the filesystem or locked root.
-public struct ManagedFileListResponse: Codable, Sendable, Hashable {
-    public var canChangePath: Bool
-    public var entries: [ManagedFileEntry]
-    public var lockedRoot: String?
-    public var parent: String?
-    public var path: String
-    public var root: String?
-
-    public init(canChangePath: Bool, entries: [ManagedFileEntry], lockedRoot: String?, parent: String?, path: String, root: String?) {
-        self.canChangePath = canChangePath
-        self.entries = entries
-        self.lockedRoot = lockedRoot
-        self.parent = parent
-        self.path = path
-        self.root = root
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case canChangePath = "can_change_path"
-        case entries = "entries"
-        case lockedRoot = "locked_root"
-        case parent = "parent"
-        case path = "path"
-        case root = "root"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["can_change_path", "entries", "locked_root", "parent", "path", "root"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        canChangePath = try container.decode(Bool.self, forKey: .canChangePath)
-        entries = try container.decode([ManagedFileEntry].self, forKey: .entries)
-        lockedRoot = try container.decode(Optional<String>.self, forKey: .lockedRoot)
-        parent = try container.decode(Optional<String>.self, forKey: .parent)
-        path = try container.decode(String.self, forKey: .path)
-        root = try container.decode(Optional<String>.self, forKey: .root)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(canChangePath, forKey: .canChangePath)
-        try container.encode(entries, forKey: .entries)
-        try container.encode(lockedRoot, forKey: .lockedRoot)
-        try container.encode(parent, forKey: .parent)
-        try container.encode(path, forKey: .path)
-        try container.encode(root, forKey: .root)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``read_managed_file``.
-public struct ManagedFileReadResponse: Codable, Sendable, Hashable {
-    public var canChangePath: Bool
-    public var dataUrl: String
-    public var lockedRoot: String?
-    public var mimeType: String
-    public var name: String
-    public var path: String
-    public var root: String?
-    public var size: Int
-
-    public init(canChangePath: Bool, dataUrl: String, lockedRoot: String?, mimeType: String, name: String, path: String, root: String?, size: Int) {
-        self.canChangePath = canChangePath
-        self.dataUrl = dataUrl
-        self.lockedRoot = lockedRoot
-        self.mimeType = mimeType
-        self.name = name
-        self.path = path
-        self.root = root
-        self.size = size
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case canChangePath = "can_change_path"
-        case dataUrl = "data_url"
-        case lockedRoot = "locked_root"
-        case mimeType = "mime_type"
-        case name = "name"
-        case path = "path"
-        case root = "root"
-        case size = "size"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["can_change_path", "data_url", "locked_root", "mime_type", "name", "path", "root", "size"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        canChangePath = try container.decode(Bool.self, forKey: .canChangePath)
-        dataUrl = try container.decode(String.self, forKey: .dataUrl)
-        lockedRoot = try container.decode(Optional<String>.self, forKey: .lockedRoot)
-        mimeType = try container.decode(String.self, forKey: .mimeType)
-        name = try container.decode(String.self, forKey: .name)
-        path = try container.decode(String.self, forKey: .path)
-        root = try container.decode(Optional<String>.self, forKey: .root)
-        size = try container.decode(Int.self, forKey: .size)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(canChangePath, forKey: .canChangePath)
-        try container.encode(dataUrl, forKey: .dataUrl)
-        try container.encode(lockedRoot, forKey: .lockedRoot)
-        try container.encode(mimeType, forKey: .mimeType)
-        try container.encode(name, forKey: .name)
-        try container.encode(path, forKey: .path)
-        try container.encode(root, forKey: .root)
-        try container.encode(size, forKey: .size)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct ManagedFileUpload: Codable, Sendable, Hashable {
-    public var dataUrl: String
-    public var overwrite: Bool?
-    public var path: String
-
-    public init(dataUrl: String, overwrite: Bool? = nil, path: String) {
-        self.dataUrl = dataUrl
-        self.overwrite = overwrite
-        self.path = path
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case dataUrl = "data_url"
-        case overwrite = "overwrite"
-        case path = "path"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["data_url", "overwrite", "path"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        dataUrl = try container.decode(String.self, forKey: .dataUrl)
-        overwrite = try container.decodeIfPresent(Bool.self, forKey: .overwrite)
-        path = try container.decode(String.self, forKey: .path)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(dataUrl, forKey: .dataUrl)
-        try container.encodeIfPresent(overwrite, forKey: .overwrite)
-        try container.encode(path, forKey: .path)
     }
 }

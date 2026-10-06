@@ -9,6 +9,127 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.update_profile_description``; ``profile`` is the canonical name. */
+@Serializable
+public data class KanbanProfileDescriptionResponse(
+    @SerialName("description")
+    public val description: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("profile")
+    public val profile: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_profile_roster``. */
+@Serializable
+public data class KanbanProfilesResponse(
+    @SerialName("profiles")
+    public val profiles: List<KanbanProfile>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_kanban_projects`` row; empty strings for unset fields. */
+@Serializable
+public data class KanbanProject(
+    @SerialName("color")
+    public val color: String,
+    @SerialName("icon")
+    public val icon: String,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("primary_path")
+    public val primaryPath: String,
+    @SerialName("slug")
+    public val slug: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_kanban_projects``. */
+@Serializable
+public data class KanbanProjectsResponse(
+    @SerialName("projects")
+    public val projects: List<KanbanProject>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.reassign_task_endpoint``; ``assignee`` is ``None`` when unassigned. */
+@Serializable
+public data class KanbanReassignResponse(
+    @SerialName("assignee")
+    public val assignee: String?,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("task_id")
+    public val taskId: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``asdict(kanban_db.Run)`` — one attempt at a task (``task_runs`` row). */
+@Serializable
+public data class KanbanRun(
+    @SerialName("claim_expires")
+    public val claimExpires: Long?,
+    @SerialName("claim_lock")
+    public val claimLock: String?,
+    @SerialName("ended_at")
+    public val endedAt: Long?,
+    @SerialName("error")
+    public val error: String?,
+    @SerialName("id")
+    public val id: Long,
+    @SerialName("last_heartbeat_at")
+    public val lastHeartbeatAt: Long?,
+    @SerialName("max_runtime_seconds")
+    public val maxRuntimeSeconds: Long?,
+    @SerialName("metadata")
+    public val metadata: Map<String, JsonElement>?,
+    @SerialName("outcome")
+    public val outcome: String?,
+    @SerialName("profile")
+    public val profile: String?,
+    @SerialName("started_at")
+    public val startedAt: Long,
+    @SerialName("status")
+    public val status: String,
+    @SerialName("step_key")
+    public val stepKey: String?,
+    @SerialName("summary")
+    public val summary: String?,
+    @SerialName("task_id")
+    public val taskId: String,
+    @SerialName("worker_pid")
+    public val workerPid: Long?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.inspect_run_endpoint`` — the union of the dead (``reason``), live (psutil stats) and access-denied (``error``) shapes. */
+@Serializable
+public data class KanbanRunInspectResponse(
+    @SerialName("alive")
+    public val alive: Boolean,
+    @SerialName("cmdline")
+    public val cmdline: List<String>? = null,
+    @SerialName("cpu_percent")
+    public val cpuPercent: Double? = null,
+    @SerialName("create_time")
+    public val createTime: Double? = null,
+    @SerialName("error")
+    public val error: String? = null,
+    @SerialName("memory_rss_bytes")
+    public val memoryRssBytes: Long? = null,
+    @SerialName("memory_vms_bytes")
+    public val memoryVmsBytes: Long? = null,
+    @SerialName("num_fds")
+    public val numFds: Long? = null,
+    @SerialName("num_threads")
+    public val numThreads: Long? = null,
+    @SerialName("pid")
+    public val pid: Long? = null,
+    @SerialName("reason")
+    public val reason: String? = null,
+    @SerialName("run_id")
+    public val runId: Long,
+    @SerialName("status")
+    public val status: String? = null,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.get_run_endpoint``. */
 @Serializable
 public data class KanbanRunResponse(
@@ -657,242 +778,4 @@ public data class LearningNodeDetailResponse(
     public val label: String,
     @SerialName("ok")
     public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = LearningNodeDetailResponseKind.Serializer::class)
-public sealed interface LearningNodeDetailResponseKind {
-    public data object Skill : LearningNodeDetailResponseKind
-    public data object Memory : LearningNodeDetailResponseKind
-    public data class Unknown(public val raw: kotlin.String) : LearningNodeDetailResponseKind
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Skill -> "skill"
-            Memory -> "memory"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): LearningNodeDetailResponseKind = when (raw) {
-            "skill" -> Skill
-            "memory" -> Memory
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<LearningNodeDetailResponseKind> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningNodeDetailResponseKind", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): LearningNodeDetailResponseKind = when (val raw = decoder.decodeString()) {
-            "skill" -> Skill
-            "memory" -> Memory
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningNodeDetailResponseKind value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: LearningNodeDetailResponseKind) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = LearningNodeEdit.Serializer::class)
-public data class LearningNodeEdit(
-    public val content: String,
-    public val id: String,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<LearningNodeEdit> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): LearningNodeEdit {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("LearningNodeEdit requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("LearningNodeEdit requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("content", "id", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return LearningNodeEdit(
-                content = json.decodeFromJsonElement<String>((input["content"] ?: throw SerializationException("Missing content"))),
-                id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: LearningNodeEdit) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("LearningNodeEdit requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["content"] = json.encodeToJsonElement(value.content)
-            output["id"] = json.encodeToJsonElement(value.id)
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``agent/learning_mutations.py::delete_node`` / ``edit_node`` (the non-ok results become a 400). */
-@Serializable
-public data class LearningNodeMutationResponse(
-    @SerialName("message")
-    public val message: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = LearningNodeRef.Serializer::class)
-public data class LearningNodeRef(
-    public val id: String,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<LearningNodeRef> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): LearningNodeRef {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("LearningNodeRef requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("LearningNodeRef requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("id", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return LearningNodeRef(
-                id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: LearningNodeRef) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("LearningNodeRef requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["id"] = json.encodeToJsonElement(value.id)
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class LinkBody(
-    @SerialName("child_id")
-    public val childId: String,
-    @SerialName("parent_id")
-    public val parentId: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_catalog_row``. ``fits=false`` rows price the smallest build and add ``fit_detail``; ``fits=true`` rows add the selected variant, plus the start window unless physics refused. */
-@Serializable
-public data class LocalModelCatalogRow(
-    @SerialName("description")
-    public val description: String,
-    @SerialName("display_name")
-    public val displayName: String,
-    @SerialName("downloaded")
-    public val downloaded: Boolean,
-    @SerialName("downloaded_model_id")
-    public val downloadedModelId: String?,
-    @SerialName("downloaded_quant")
-    public val downloadedQuant: String?,
-    @SerialName("fit_detail")
-    public val fitDetail: String? = null,
-    @SerialName("fit_summary")
-    public val fitSummary: String,
-    @SerialName("fits")
-    public val fits: Boolean,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("min_engine")
-    public val minEngine: String?,
-    @SerialName("model_id")
-    public val modelId: String? = null,
-    @SerialName("mtp")
-    public val mtp: Boolean,
-    @SerialName("native_context")
-    public val nativeContext: Long,
-    @SerialName("native_context_label")
-    public val nativeContextLabel: String,
-    @SerialName("needs_engine")
-    public val needsEngine: Boolean,
-    @SerialName("quant")
-    public val quant: String? = null,
-    @SerialName("quant_reason")
-    public val quantReason: String? = null,
-    @SerialName("quant_validated")
-    public val quantValidated: Boolean? = null,
-    @SerialName("recommended")
-    public val recommended: Boolean,
-    @SerialName("recommended_reason")
-    public val recommendedReason: String?,
-    @SerialName("size_bytes")
-    public val sizeBytes: Long,
-    @SerialName("size_label")
-    public val sizeLabel: String,
-    @SerialName("spilled")
-    public val spilled: Boolean? = null,
-    @SerialName("start_window")
-    public val startWindow: Long? = null,
-    @SerialName("start_window_label")
-    public val startWindowLabel: String? = null,
-    @SerialName("variant_count")
-    public val variantCount: Long? = null,
-    @SerialName("vision")
-    public val vision: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_job`` record as rendered by ``_job_view`` (tag: ``hermes_cli/web_routers/local_models.py:121``/``:134``). The record is copied verbatim; ``percent`` is added only when ``total_bytes`` is non-zero. */
-@Serializable
-public data class LocalModelJob(
-    @SerialName("detail")
-    public val detail: String,
-    @SerialName("done_bytes")
-    public val doneBytes: Long,
-    /** Exception text once ``status`` is ``error``. */
-    @SerialName("error")
-    public val error: String?,
-    @SerialName("job_id")
-    public val jobId: String,
-    @SerialName("kind")
-    public val kind: LocalModelJobKind,
-    /** Catalog family id (``/download``, quickstart), GGUF-derived variant id (``/download-browsed``, activate); null for runtime installs. */
-    @SerialName("model_id")
-    public val modelId: String?,
-    /** 0-100; present only while ``total_bytes`` is known and non-zero. */
-    @SerialName("percent")
-    public val percent: Long? = null,
-    /** Current step name (``starting``, ``downloading``, ``downloading-runtime``, ``unpacking-runtime``, ``verifying-runtime``, ``installing-runtime``, ``restarting``, ``starting-server``, ``setting-default``, ``done``). */
-    @SerialName("phase")
-    public val phase: String,
-    /** Unix time the job was created. */
-    @SerialName("started_at")
-    public val startedAt: Double,
-    @SerialName("status")
-    public val status: LocalModelJobStatus,
-    /** Human-readable subject, e.g. ``llama.cpp <tag> (<backend>)`` or ``<display name> (<quant>)``. */
-    @SerialName("target")
-    public val target: String,
-    @SerialName("total_bytes")
-    public val totalBytes: Long?,
 )

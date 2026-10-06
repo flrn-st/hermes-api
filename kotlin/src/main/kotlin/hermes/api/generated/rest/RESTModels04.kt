@@ -9,6 +9,119 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class DashboardThemeLayout(
+    @SerialName("density")
+    public val density: DashboardThemeLayoutDensity,
+    @SerialName("radius")
+    public val radius: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardThemeLayoutDensity.Serializer::class)
+public sealed interface DashboardThemeLayoutDensity {
+    public data object Compact : DashboardThemeLayoutDensity
+    public data object Comfortable : DashboardThemeLayoutDensity
+    public data object Spacious : DashboardThemeLayoutDensity
+    public data class Unknown(public val raw: kotlin.String) : DashboardThemeLayoutDensity
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Compact -> "compact"
+            Comfortable -> "comfortable"
+            Spacious -> "spacious"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): DashboardThemeLayoutDensity = when (raw) {
+            "compact" -> Compact
+            "comfortable" -> Comfortable
+            "spacious" -> Spacious
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<DashboardThemeLayoutDensity> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeLayoutDensity", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): DashboardThemeLayoutDensity = when (val raw = decoder.decodeString()) {
+            "compact" -> Compact
+            "comfortable" -> Comfortable
+            "spacious" -> Spacious
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected DashboardThemeLayoutDensity value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardThemeLayoutDensity) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class DashboardThemePalette(
+    @SerialName("background")
+    public val background: DashboardThemeLayer,
+    @SerialName("foreground")
+    public val foreground: DashboardThemeLayer,
+    @SerialName("midground")
+    public val midground: DashboardThemeLayer,
+    @SerialName("noiseOpacity")
+    public val noiseOpacity: Double,
+    @SerialName("warmGlow")
+    public val warmGlow: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_dashboard_theme``. */
+@Serializable
+public data class DashboardThemeSetResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("theme")
+    public val theme: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. Defaults (``_THEME_DEFAULT_TYPOGRAPHY``) overlaid with the non-empty YAML strings. */
+@Serializable
+public data class DashboardThemeTypography(
+    @SerialName("baseSize")
+    public val baseSize: String,
+    @SerialName("fontDisplay")
+    public val fontDisplay: String? = null,
+    @SerialName("fontMono")
+    public val fontMono: String,
+    @SerialName("fontSans")
+    public val fontSans: String,
+    @SerialName("fontUrl")
+    public val fontUrl: String? = null,
+    @SerialName("letterSpacing")
+    public val letterSpacing: String,
+    @SerialName("lineHeight")
+    public val lineHeight: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_dashboard_themes``; ``active`` is ``dashboard.theme`` as stored in config.yaml. */
+@Serializable
+public data class DashboardThemesResponse(
+    @SerialName("active")
+    public val active: String,
+    @SerialName("themes")
+    public val themes: List<DashboardThemeEntry>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class DebugShareRequest(
+    @SerialName("lines")
+    public val lines: Long? = null,
+    @SerialName("redact")
+    public val redact: Boolean? = null,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``run_debug_share_endpoint`` — ``hermes_cli/debug.py::DebugShareResult`` minus ``report``. */
 @Serializable
 public data class DebugShareResponse(
@@ -561,134 +674,3 @@ public sealed interface GatewayDrainRequestAction {
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway_drain``: ``cancel`` answers ``was_draining``; ``drain`` echoes the marker it wrote (``gateway/drain_control.py::write_drain_request``) and whether a drain is now active. */
-@Serializable
-public data class GatewayDrainResponse(
-    @SerialName("action")
-    public val action: GatewayDrainResponseAction,
-    @SerialName("draining")
-    public val draining: Boolean? = null,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("requested_at")
-    public val requestedAt: String? = null,
-    @SerialName("suppress_notification")
-    public val suppressNotification: Boolean? = null,
-    @SerialName("was_draining")
-    public val wasDraining: Boolean? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = GatewayDrainResponseAction.Serializer::class)
-public sealed interface GatewayDrainResponseAction {
-    public data object Drain : GatewayDrainResponseAction
-    public data object Cancel : GatewayDrainResponseAction
-    public data class Unknown(public val raw: kotlin.String) : GatewayDrainResponseAction
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Drain -> "drain"
-            Cancel -> "cancel"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): GatewayDrainResponseAction = when (raw) {
-            "drain" -> Drain
-            "cancel" -> Cancel
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<GatewayDrainResponseAction> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainResponseAction", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): GatewayDrainResponseAction = when (val raw = decoder.decodeString()) {
-            "drain" -> Drain
-            "cancel" -> Cancel
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected GatewayDrainResponseAction value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: GatewayDrainResponseAction) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway_migrate_plan`` → ``hermes_cli/gateway_migrate.py::MigrationPlan.to_dict`` (the same JSON as ``hermes gateway migrate --plan``). */
-@Serializable
-public data class GatewayMigrationPlanResponse(
-    @SerialName("already_multiplexed")
-    public val alreadyMultiplexed: Boolean,
-    @SerialName("blockers")
-    public val blockers: List<String>,
-    @SerialName("command")
-    public val command: String,
-    @SerialName("default_home")
-    public val defaultHome: String,
-    @SerialName("eligible")
-    public val eligible: Boolean,
-    @SerialName("interrupted")
-    public val interrupted: Boolean,
-    @SerialName("live_served")
-    public val liveServed: List<String>?,
-    @SerialName("multiplex_flag_on")
-    public val multiplexFlagOn: Boolean,
-    @SerialName("notices")
-    public val notices: List<String>,
-    @SerialName("profiles")
-    public val profiles: List<GatewayMigrationProfile>,
-    @SerialName("standalone_by_config")
-    public val standaloneByConfig: List<String>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/gateway_migrate.py::ProfileGateway.to_dict``. */
-@Serializable
-public data class GatewayMigrationProfile(
-    @SerialName("home")
-    public val home: String,
-    @SerialName("pid")
-    public val pid: Long?,
-    @SerialName("profile")
-    public val profile: String,
-    @SerialName("run_as_user")
-    public val runAsUser: String?,
-    @SerialName("runtime_home")
-    public val runtimeHome: String?,
-    @SerialName("service")
-    public val service: GatewayMigrationService?,
-    @SerialName("services")
-    public val services: List<GatewayMigrationService>,
-    @SerialName("uid")
-    public val uid: Long?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/gateway_migrate.py::_service_dict`` — ``kind`` is ``systemd``, ``launchd``, ``s6`` or ``windows``; ``system`` marks a system-scope systemd unit. */
-@Serializable
-public data class GatewayMigrationService(
-    @SerialName("kind")
-    public val kind: String,
-    @SerialName("system")
-    public val system: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.base_branch_list`` row. */
-@Serializable
-public data class GitBaseBranchRow(
-    @SerialName("isDefault")
-    public val isDefault: Boolean,
-    @SerialName("isRemote")
-    public val isRemote: Boolean,
-    @SerialName("name")
-    public val name: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``git_base_branches_route``. */
-@Serializable
-public data class GitBaseBranchesResponse(
-    @SerialName("branches")
-    public val branches: List<GitBaseBranchRow>,
-)

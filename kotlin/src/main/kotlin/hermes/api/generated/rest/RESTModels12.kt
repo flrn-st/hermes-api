@@ -9,6 +9,170 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose). */
+@Serializable
+public data class MessagingPlatformEnvVar(
+    @SerialName("advanced")
+    public val advanced: Boolean,
+    @SerialName("description")
+    public val description: String,
+    @SerialName("help")
+    public val help: String,
+    @SerialName("is_password")
+    public val isPassword: Boolean,
+    @SerialName("is_set")
+    public val isSet: Boolean,
+    @SerialName("key")
+    public val key: String,
+    @SerialName("prompt")
+    public val prompt: String,
+    @SerialName("redacted_value")
+    public val redactedValue: String?,
+    @SerialName("required")
+    public val required: Boolean,
+    @SerialName("url")
+    public val url: String?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``test_messaging_platform`` — a verdict over the same payload as the platform list. */
+@Serializable
+public data class MessagingPlatformTestResponse(
+    @SerialName("message")
+    public val message: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("state")
+    public val state: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MessagingPlatformUpdate.Serializer::class)
+public data class MessagingPlatformUpdate(
+    public val clearEnv: List<String>? = null,
+    public val enabled: Patch<Boolean> = Patch.Absent,
+    public val env: Map<String, String>? = null,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<MessagingPlatformUpdate> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): MessagingPlatformUpdate {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("MessagingPlatformUpdate requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("MessagingPlatformUpdate requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("clear_env", "enabled", "env", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return MessagingPlatformUpdate(
+                clearEnv = input["clear_env"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
+                enabled = when (val raw = input["enabled"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
+                env = input["env"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, String>>(it) },
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: MessagingPlatformUpdate) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("MessagingPlatformUpdate requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            value.clearEnv?.let { output["clear_env"] = json.encodeToJsonElement(it) }
+            when (val patch = value.enabled) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["enabled"] = JsonNull
+                is Patch.Value -> output["enabled"] = json.encodeToJsonElement(patch.value)
+            }
+            value.env?.let { output["env"] = json.encodeToJsonElement(it) }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``update_messaging_platform``. */
+@Serializable
+public data class MessagingPlatformUpdateResponse(
+    @SerialName("hot_served")
+    public val hotServed: Boolean,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("platform")
+    public val platform: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_messaging_platforms``. */
+@Serializable
+public data class MessagingPlatformsResponse(
+    @SerialName("env_path")
+    public val envPath: String,
+    @SerialName("gateway_start_command")
+    public val gatewayStartCommand: String,
+    @SerialName("platforms")
+    public val platforms: List<MessagingPlatform>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class MessagingWhatsAppSetup(
+    @SerialName("allowed_users_set")
+    public val allowedUsersSet: Boolean,
+    @SerialName("home_channel_set")
+    public val homeChannelSet: Boolean,
+    @SerialName("mode")
+    public val mode: MessagingWhatsAppSetupMode,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MessagingWhatsAppSetupMode.Serializer::class)
+public sealed interface MessagingWhatsAppSetupMode {
+    public data object Empty : MessagingWhatsAppSetupMode
+    public data object Bot : MessagingWhatsAppSetupMode
+    public data object SelfChat : MessagingWhatsAppSetupMode
+    public data class Unknown(public val raw: kotlin.String) : MessagingWhatsAppSetupMode
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Empty -> ""
+            Bot -> "bot"
+            SelfChat -> "self-chat"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MessagingWhatsAppSetupMode = when (raw) {
+            "" -> Empty
+            "bot" -> Bot
+            "self-chat" -> SelfChat
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<MessagingWhatsAppSetupMode> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MessagingWhatsAppSetupMode", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): MessagingWhatsAppSetupMode = when (val raw = decoder.decodeString()) {
+            "" -> Empty
+            "bot" -> Bot
+            "self-chat" -> SelfChat
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MessagingWhatsAppSetupMode value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: MessagingWhatsAppSetupMode) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = MoaConfigPayload.Serializer::class)
 public data class MoaConfigPayload(
@@ -973,147 +1137,3 @@ public sealed interface OAuthDeviceCodeStartResponseFlow {
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``disconnect_oauth_provider``; ``ok`` is whether any credential was actually cleared. */
-@Serializable
-public data class OAuthDisconnectResponse(
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("provider")
-    public val provider: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_oauth_providers``. */
-@Serializable
-public data class OAuthProviderListResponse(
-    @SerialName("providers")
-    public val providers: List<OAuthProviderRow>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``_build_oauth_catalog`` row; ``disconnectable`` is ``disconnect_hint is None``. */
-@Serializable
-public data class OAuthProviderRow(
-    @SerialName("cli_command")
-    public val cliCommand: String,
-    @SerialName("disconnect_command")
-    public val disconnectCommand: String?,
-    @SerialName("disconnect_hint")
-    public val disconnectHint: String?,
-    @SerialName("disconnectable")
-    public val disconnectable: Boolean,
-    @SerialName("docs_url")
-    public val docsUrl: String,
-    /** Catalog flow: "device_code" or "external" for the built-in cards. */
-    @SerialName("flow")
-    public val flow: String,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("status")
-    public val status: OAuthProviderStatus,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_resolve_provider_status`` — the union of ``_status_card`` (plus the Nous tier fields), the catalog ``status_fn`` cards in ``hermes_cli/web_server_oauth.py`` (``configured`` is copilot-acp only; a logged-out Anthropic/Claude Code card is just ``logged_in`` + ``source``), and the ``{"logged_in": false, "error"}`` fallback when a status helper raised. */
-@Serializable
-public data class OAuthProviderStatus(
-    @SerialName("account_tier")
-    public val accountTier: String? = null,
-    @SerialName("configured")
-    public val configured: Boolean? = null,
-    @SerialName("error")
-    public val error: String? = null,
-    /** As the provider stores it: an ISO timestamp or an epoch number (Claude Code: ms). */
-    @SerialName("expires_at")
-    public val expiresAt: OAuthProviderStatusExpiresAt? = null,
-    @SerialName("free_tier")
-    public val freeTier: Boolean? = null,
-    @SerialName("has_refresh_token")
-    public val hasRefreshToken: Boolean? = null,
-    @SerialName("last_refresh")
-    public val lastRefresh: String? = null,
-    @SerialName("logged_in")
-    public val loggedIn: Boolean,
-    @SerialName("source")
-    public val source: String? = null,
-    @SerialName("source_label")
-    public val sourceLabel: String? = null,
-    /** Last few characters only, never the token. */
-    @SerialName("token_preview")
-    public val tokenPreview: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = OAuthProviderStatusExpiresAt.Serializer::class)
-public sealed interface OAuthProviderStatusExpiresAt {
-    public data class StringValue(public val value: String) : OAuthProviderStatusExpiresAt
-    public data class DoubleValue(public val value: Double) : OAuthProviderStatusExpiresAt
-
-    public object Serializer : KSerializer<OAuthProviderStatusExpiresAt> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): OAuthProviderStatusExpiresAt {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("OAuthProviderStatusExpiresAt requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            try {
-                return StringValue(json.decodeFromJsonElement<String>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            try {
-                return DoubleValue(json.decodeFromJsonElement<Double>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            throw SerializationException("No OAuthProviderStatusExpiresAt variant matched")
-        }
-
-        override fun serialize(encoder: Encoder, value: OAuthProviderStatusExpiresAt) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("OAuthProviderStatusExpiresAt requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is StringValue -> json.encodeToJsonElement(value.value)
-                is DoubleValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``cancel_oauth_session``: ``{"ok": true, "session_id"}`` or, for an unknown session, ``{"ok": false, "message"}``. */
-@Serializable
-public data class OAuthSessionCancelResponse(
-    @SerialName("message")
-    public val message: String? = null,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("session_id")
-    public val sessionId: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``poll_oauth_session``. ``reason`` / ``account_email`` / ``model`` / ``retryable`` / ``retry_after`` are only set by a Nous sign-in over a free-tier identity (``hermes_cli/web_server_oauth.py::_record_sign_in_state``). */
-@Serializable
-public data class OAuthSessionPollResponse(
-    @SerialName("account_email")
-    public val accountEmail: String?,
-    @SerialName("error_message")
-    public val errorMessage: String?,
-    /** Epoch seconds; null until the flow knows it. */
-    @SerialName("expires_at")
-    public val expiresAt: Double?,
-    @SerialName("model")
-    public val model: String?,
-    @SerialName("reason")
-    public val reason: String?,
-    @SerialName("retry_after")
-    public val retryAfter: Long?,
-    @SerialName("retryable")
-    public val retryable: Boolean?,
-    @SerialName("session_id")
-    public val sessionId: String,
-    @SerialName("status")
-    public val status: OAuthSessionPollResponseStatus,
-)

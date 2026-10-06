@@ -480,23 +480,23 @@ public data class DashboardFontSetResponse(
     public val ok: Boolean,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*`` keys stripped. String fields are the manifest.json values (defaults when absent). */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*`` keys stripped. ``name``, ``label``, ``description``, ``icon``, ``version``, ``entry`` and ``css`` are the plugin's ``manifest.json`` values as written (defaults when absent), which Hermes does not validate: a number or ``null`` there arrives as is. */
 @Serializable
 public data class DashboardPluginManifest(
     @SerialName("css")
-    public val css: String?,
+    public val css: DashboardPluginManifestCss?,
     @SerialName("description")
-    public val description: String,
+    public val description: DashboardPluginManifestDescription?,
     @SerialName("entry")
-    public val entry: String,
+    public val entry: DashboardPluginManifestEntry?,
     @SerialName("has_api")
     public val hasApi: Boolean,
     @SerialName("icon")
-    public val icon: String,
+    public val icon: DashboardPluginManifestIcon?,
     @SerialName("label")
-    public val label: String,
+    public val label: DashboardPluginManifestLabel?,
     @SerialName("name")
-    public val name: String,
+    public val name: DashboardPluginManifestName?,
     @SerialName("slots")
     public val slots: List<String>,
     @SerialName("source")
@@ -504,8 +504,248 @@ public data class DashboardPluginManifest(
     @SerialName("tab")
     public val tab: DashboardPluginTab,
     @SerialName("version")
-    public val version: String,
+    public val version: DashboardPluginManifestVersion?,
 )
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardPluginManifestCss.Serializer::class)
+public sealed interface DashboardPluginManifestCss {
+    public data class StringValue(public val value: String) : DashboardPluginManifestCss
+    public data class DoubleValue(public val value: Double) : DashboardPluginManifestCss
+
+    public object Serializer : KSerializer<DashboardPluginManifestCss> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): DashboardPluginManifestCss {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("DashboardPluginManifestCss requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No DashboardPluginManifestCss variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardPluginManifestCss) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("DashboardPluginManifestCss requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardPluginManifestDescription.Serializer::class)
+public sealed interface DashboardPluginManifestDescription {
+    public data class StringValue(public val value: String) : DashboardPluginManifestDescription
+    public data class DoubleValue(public val value: Double) : DashboardPluginManifestDescription
+
+    public object Serializer : KSerializer<DashboardPluginManifestDescription> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): DashboardPluginManifestDescription {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("DashboardPluginManifestDescription requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No DashboardPluginManifestDescription variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardPluginManifestDescription) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("DashboardPluginManifestDescription requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardPluginManifestEntry.Serializer::class)
+public sealed interface DashboardPluginManifestEntry {
+    public data class StringValue(public val value: String) : DashboardPluginManifestEntry
+    public data class DoubleValue(public val value: Double) : DashboardPluginManifestEntry
+
+    public object Serializer : KSerializer<DashboardPluginManifestEntry> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): DashboardPluginManifestEntry {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("DashboardPluginManifestEntry requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No DashboardPluginManifestEntry variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardPluginManifestEntry) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("DashboardPluginManifestEntry requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardPluginManifestIcon.Serializer::class)
+public sealed interface DashboardPluginManifestIcon {
+    public data class StringValue(public val value: String) : DashboardPluginManifestIcon
+    public data class DoubleValue(public val value: Double) : DashboardPluginManifestIcon
+
+    public object Serializer : KSerializer<DashboardPluginManifestIcon> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): DashboardPluginManifestIcon {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("DashboardPluginManifestIcon requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No DashboardPluginManifestIcon variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardPluginManifestIcon) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("DashboardPluginManifestIcon requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardPluginManifestLabel.Serializer::class)
+public sealed interface DashboardPluginManifestLabel {
+    public data class StringValue(public val value: String) : DashboardPluginManifestLabel
+    public data class DoubleValue(public val value: Double) : DashboardPluginManifestLabel
+
+    public object Serializer : KSerializer<DashboardPluginManifestLabel> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): DashboardPluginManifestLabel {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("DashboardPluginManifestLabel requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No DashboardPluginManifestLabel variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardPluginManifestLabel) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("DashboardPluginManifestLabel requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardPluginManifestName.Serializer::class)
+public sealed interface DashboardPluginManifestName {
+    public data class StringValue(public val value: String) : DashboardPluginManifestName
+    public data class DoubleValue(public val value: Double) : DashboardPluginManifestName
+
+    public object Serializer : KSerializer<DashboardPluginManifestName> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): DashboardPluginManifestName {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("DashboardPluginManifestName requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No DashboardPluginManifestName variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardPluginManifestName) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("DashboardPluginManifestName requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = DashboardPluginManifestSource.Serializer::class)
@@ -546,6 +786,46 @@ public sealed interface DashboardPluginManifestSource {
 
         override fun serialize(encoder: Encoder, value: DashboardPluginManifestSource) {
             encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardPluginManifestVersion.Serializer::class)
+public sealed interface DashboardPluginManifestVersion {
+    public data class StringValue(public val value: String) : DashboardPluginManifestVersion
+    public data class DoubleValue(public val value: Double) : DashboardPluginManifestVersion
+
+    public object Serializer : KSerializer<DashboardPluginManifestVersion> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): DashboardPluginManifestVersion {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("DashboardPluginManifestVersion requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No DashboardPluginManifestVersion variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardPluginManifestVersion) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("DashboardPluginManifestVersion requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
         }
     }
 }
@@ -681,117 +961,4 @@ public data class DashboardThemeLayer(
     public val alpha: Double,
     @SerialName("hex")
     public val hex: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class DashboardThemeLayout(
-    @SerialName("density")
-    public val density: DashboardThemeLayoutDensity,
-    @SerialName("radius")
-    public val radius: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = DashboardThemeLayoutDensity.Serializer::class)
-public sealed interface DashboardThemeLayoutDensity {
-    public data object Compact : DashboardThemeLayoutDensity
-    public data object Comfortable : DashboardThemeLayoutDensity
-    public data object Spacious : DashboardThemeLayoutDensity
-    public data class Unknown(public val raw: kotlin.String) : DashboardThemeLayoutDensity
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Compact -> "compact"
-            Comfortable -> "comfortable"
-            Spacious -> "spacious"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): DashboardThemeLayoutDensity = when (raw) {
-            "compact" -> Compact
-            "comfortable" -> Comfortable
-            "spacious" -> Spacious
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<DashboardThemeLayoutDensity> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeLayoutDensity", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): DashboardThemeLayoutDensity = when (val raw = decoder.decodeString()) {
-            "compact" -> Compact
-            "comfortable" -> Comfortable
-            "spacious" -> Spacious
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected DashboardThemeLayoutDensity value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: DashboardThemeLayoutDensity) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class DashboardThemePalette(
-    @SerialName("background")
-    public val background: DashboardThemeLayer,
-    @SerialName("foreground")
-    public val foreground: DashboardThemeLayer,
-    @SerialName("midground")
-    public val midground: DashboardThemeLayer,
-    @SerialName("noiseOpacity")
-    public val noiseOpacity: Double,
-    @SerialName("warmGlow")
-    public val warmGlow: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_dashboard_theme``. */
-@Serializable
-public data class DashboardThemeSetResponse(
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("theme")
-    public val theme: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. Defaults (``_THEME_DEFAULT_TYPOGRAPHY``) overlaid with the non-empty YAML strings. */
-@Serializable
-public data class DashboardThemeTypography(
-    @SerialName("baseSize")
-    public val baseSize: String,
-    @SerialName("fontDisplay")
-    public val fontDisplay: String? = null,
-    @SerialName("fontMono")
-    public val fontMono: String,
-    @SerialName("fontSans")
-    public val fontSans: String,
-    @SerialName("fontUrl")
-    public val fontUrl: String? = null,
-    @SerialName("letterSpacing")
-    public val letterSpacing: String,
-    @SerialName("lineHeight")
-    public val lineHeight: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_dashboard_themes``; ``active`` is ``dashboard.theme`` as stored in config.yaml. */
-@Serializable
-public data class DashboardThemesResponse(
-    @SerialName("active")
-    public val active: String,
-    @SerialName("themes")
-    public val themes: List<DashboardThemeEntry>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class DebugShareRequest(
-    @SerialName("lines")
-    public val lines: Long? = null,
-    @SerialName("redact")
-    public val redact: Boolean? = null,
 )

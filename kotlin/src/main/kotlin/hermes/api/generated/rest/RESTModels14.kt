@@ -9,6 +9,217 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``memory_provider`` is ``""`` for the built-in provider; ``context_engine`` defaults to ``"compressor"``. */
+@Serializable
+public data class PluginsHubProviders(
+    @SerialName("context_engine")
+    public val contextEngine: String,
+    @SerialName("context_options")
+    public val contextOptions: List<PluginsHubContextOption>,
+    @SerialName("memory_options")
+    public val memoryOptions: List<MemoryProviderStatusRow>,
+    @SerialName("memory_provider")
+    public val memoryProvider: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub``. */
+@Serializable
+public data class PluginsHubResponse(
+    @SerialName("orphan_dashboard_plugins")
+    public val orphanDashboardPlugins: List<DashboardPluginManifest>,
+    @SerialName("plugins")
+    public val plugins: List<PluginsHubPluginRow>,
+    @SerialName("providers")
+    public val providers: PluginsHubProviders,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class PortalFeature(
+    @SerialName("label")
+    public val label: String,
+    /** "via Nous Portal", the active provider name, "active" or "not configured". */
+    @SerialName("state")
+    public val state: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_get_portal_status_sync``. */
+@Serializable
+public data class PortalStatusResponse(
+    @SerialName("account_tier")
+    public val accountTier: String?,
+    @SerialName("features")
+    public val features: List<PortalFeature>,
+    @SerialName("free_tier")
+    public val freeTier: Boolean,
+    @SerialName("inference_url")
+    public val inferenceUrl: String?,
+    @SerialName("logged_in")
+    public val loggedIn: Boolean,
+    @SerialName("portal_url")
+    public val portalUrl: String?,
+    @SerialName("provider")
+    public val provider: String,
+    @SerialName("subscription_url")
+    public val subscriptionUrl: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_active_profile_endpoint``: the sticky default and the profile this dashboard serves. */
+@Serializable
+public data class ProfileActiveResponse(
+    @SerialName("active")
+    public val active: String,
+    @SerialName("current")
+    public val current: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ProfileActiveUpdate(
+    @SerialName("name")
+    public val name: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = ProfileCreate.Serializer::class)
+public data class ProfileCreate(
+    public val cloneAll: Boolean? = null,
+    public val cloneChannels: Boolean? = null,
+    public val cloneFrom: Patch<String> = Patch.Absent,
+    public val cloneFromDefault: Boolean? = null,
+    public val description: Patch<String> = Patch.Absent,
+    public val hubSkills: List<String>? = null,
+    public val keepSkills: List<String>? = null,
+    public val mcpServers: List<MCPServerCreate>? = null,
+    public val model: Patch<String> = Patch.Absent,
+    public val name: String,
+    public val noSkills: Boolean? = null,
+    public val provider: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ProfileCreate> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ProfileCreate {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ProfileCreate requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ProfileCreate requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("clone_all", "clone_channels", "clone_from", "clone_from_default", "description", "hub_skills", "keep_skills", "mcp_servers", "model", "name", "no_skills", "provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return ProfileCreate(
+                cloneAll = input["clone_all"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                cloneChannels = input["clone_channels"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                cloneFrom = when (val raw = input["clone_from"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                cloneFromDefault = input["clone_from_default"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                description = when (val raw = input["description"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                hubSkills = input["hub_skills"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
+                keepSkills = input["keep_skills"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
+                mcpServers = input["mcp_servers"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<MCPServerCreate>>(it) },
+                model = when (val raw = input["model"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                noSkills = input["no_skills"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                provider = when (val raw = input["provider"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ProfileCreate) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ProfileCreate requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            value.cloneAll?.let { output["clone_all"] = json.encodeToJsonElement(it) }
+            value.cloneChannels?.let { output["clone_channels"] = json.encodeToJsonElement(it) }
+            when (val patch = value.cloneFrom) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["clone_from"] = JsonNull
+                is Patch.Value -> output["clone_from"] = json.encodeToJsonElement(patch.value)
+            }
+            value.cloneFromDefault?.let { output["clone_from_default"] = json.encodeToJsonElement(it) }
+            when (val patch = value.description) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["description"] = JsonNull
+                is Patch.Value -> output["description"] = json.encodeToJsonElement(patch.value)
+            }
+            value.hubSkills?.let { output["hub_skills"] = json.encodeToJsonElement(it) }
+            value.keepSkills?.let { output["keep_skills"] = json.encodeToJsonElement(it) }
+            value.mcpServers?.let { output["mcp_servers"] = json.encodeToJsonElement(it) }
+            when (val patch = value.model) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["model"] = JsonNull
+                is Patch.Value -> output["model"] = json.encodeToJsonElement(patch.value)
+            }
+            output["name"] = json.encodeToJsonElement(value.name)
+            value.noSkills?.let { output["no_skills"] = json.encodeToJsonElement(it) }
+            when (val patch = value.provider) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["provider"] = JsonNull
+                is Patch.Value -> output["provider"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``create_profile_endpoint``; ``model_error`` is ``""`` unless the model pick was rejected. */
+@Serializable
+public data class ProfileCreateResponse(
+    @SerialName("hub_installs")
+    public val hubInstalls: List<ProfileHubInstall>,
+    @SerialName("mcp_written")
+    public val mcpWritten: Long,
+    @SerialName("model_error")
+    public val modelError: String,
+    @SerialName("model_set")
+    public val modelSet: Boolean,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("skills_disabled")
+    public val skillsDisabled: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_profile_endpoint``; the settlement keys ride only when the directory is gone but ``ProfileIdentitySettlementPending`` left its identity unsettled. */
+@Serializable
+public data class ProfileDeleteResponse(
+    @SerialName("identity_settled")
+    public val identitySettled: Boolean? = null,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("retry_command")
+    public val retryCommand: String? = null,
+    @SerialName("settlement_pending")
+    public val settlementPending: Boolean? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ProfileDescribeAuto(
+    @SerialName("overwrite")
+    public val overwrite: Boolean? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``describe_profile_auto_endpoint`` over ``hermes_cli/profile_describer.py::DescribeOutcome``; a failed generation is ``ok: false`` with its ``reason``. */
+@Serializable
+public data class ProfileDescribeAutoResponse(
+    @SerialName("description")
+    public val description: String?,
+    @SerialName("description_auto")
+    public val descriptionAuto: Boolean,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("reason")
+    public val reason: String,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``update_profile_description_endpoint``. */
 @Serializable
 public data class ProfileDescriptionResponse(
@@ -413,159 +624,3 @@ public sealed interface ProfileSessionsResponseStorageValue {
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_profiles_sessions_sidebar`` — the recents / cron / messaging slices in one scan. */
-@Serializable
-public data class ProfileSessionsSidebarResponse(
-    @SerialName("cron")
-    public val cron: ProfileSidebarSlice,
-    @SerialName("errors")
-    public val errors: List<ProfileReadError>,
-    @SerialName("messaging")
-    public val messaging: ProfileSidebarMessaging,
-    @SerialName("recents")
-    public val recents: ProfileSidebarRecents,
-    @SerialName("storage")
-    public val storage: Map<String, ProfileSessionsSidebarResponseStorageValue>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ProfileSessionsSidebarResponseStorageValue.Serializer::class)
-public sealed interface ProfileSessionsSidebarResponseStorageValue {
-    public data object Corrupt : ProfileSessionsSidebarResponseStorageValue
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Corrupt -> "corrupt"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ProfileSessionsSidebarResponseStorageValue? = when (raw) {
-            "corrupt" -> Corrupt
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ProfileSessionsSidebarResponseStorageValue> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ProfileSessionsSidebarResponseStorageValue", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ProfileSessionsSidebarResponseStorageValue = when (val raw = decoder.decodeString()) {
-            "corrupt" -> Corrupt
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ProfileSessionsSidebarResponseStorageValue) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_active_profile_endpoint``. */
-@Serializable
-public data class ProfileSetActiveResponse(
-    @SerialName("active")
-    public val active: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_profile_setup_command``. */
-@Serializable
-public data class ProfileSetupCommandResponse(
-    @SerialName("command")
-    public val command: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ProfileSidebarMessaging(
-    @SerialName("sessions")
-    public val sessions: List<RESTSessionListRow>,
-    @SerialName("total")
-    public val total: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ProfileSidebarRecents(
-    @SerialName("profiles_truncated")
-    public val profilesTruncated: Map<String, Boolean>,
-    @SerialName("profiles_usage")
-    public val profilesUsage: Map<String, ProfileSidebarUsage>,
-    @SerialName("sessions")
-    public val sessions: List<RESTSessionListRow>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A sidebar slice: the merged, recency-sorted window across the scanned profiles (plus pinned rows past it). A profile whose scan failed only shows in the top-level ``errors``. */
-@Serializable
-public data class ProfileSidebarSlice(
-    @SerialName("sessions")
-    public val sessions: List<RESTSessionListRow>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``SessionDB.usage_totals``. */
-@Serializable
-public data class ProfileSidebarUsage(
-    @SerialName("cost_usd")
-    public val costUsd: Double,
-    @SerialName("tokens")
-    public val tokens: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_profile_soul``; a missing SOUL.md is ``content: ""``, ``exists: false``. */
-@Serializable
-public data class ProfileSoulResponse(
-    @SerialName("content")
-    public val content: String,
-    @SerialName("exists")
-    public val exists: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ProfileSoulUpdate(
-    @SerialName("content")
-    public val content: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_profile_to_dict``, or ``web_server_profiles.py::_fallback_profile_entry`` when ``list_profiles`` fails (that scan omits ``display_name`` and ``role``). */
-@Serializable
-public data class ProfileSummary(
-    @SerialName("bot_title")
-    public val botTitle: String,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("description_auto")
-    public val descriptionAuto: Boolean,
-    @SerialName("display_name")
-    public val displayName: String? = null,
-    @SerialName("distribution_name")
-    public val distributionName: String?,
-    @SerialName("distribution_source")
-    public val distributionSource: String?,
-    @SerialName("distribution_version")
-    public val distributionVersion: String?,
-    @SerialName("gateway_running")
-    public val gatewayRunning: Boolean,
-    @SerialName("has_alias")
-    public val hasAlias: Boolean,
-    @SerialName("has_env")
-    public val hasEnv: Boolean,
-    @SerialName("is_default")
-    public val isDefault: Boolean,
-    @SerialName("model")
-    public val model: String?,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("provider")
-    public val provider: String?,
-    /** ``hermes_cli.profiles.PROFILE_ROLES`` ("setup") or null. */
-    @SerialName("role")
-    public val role: String? = null,
-    @SerialName("skill_count")
-    public val skillCount: Long,
-)

@@ -9,6 +9,103 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ManagedDirectoryCreate(
+    @SerialName("path")
+    public val path: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ManagedFileDelete(
+    @SerialName("path")
+    public val path: String,
+    @SerialName("recursive")
+    public val recursive: Boolean? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_managed_file``. */
+@Serializable
+public data class ManagedFileDeleteResponse(
+    @SerialName("can_change_path")
+    public val canChangePath: Boolean,
+    @SerialName("locked_root")
+    public val lockedRoot: String?,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("root")
+    public val root: String?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_files.py::_managed_file_entry``; ``size``/``mime_type`` are null for directories. */
+@Serializable
+public data class ManagedFileEntry(
+    @SerialName("is_directory")
+    public val isDirectory: Boolean,
+    @SerialName("mime_type")
+    public val mimeType: String?,
+    @SerialName("mtime")
+    public val mtime: Double,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("size")
+    public val size: Long?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_managed_files``; ``parent`` is null at the filesystem or locked root. */
+@Serializable
+public data class ManagedFileListResponse(
+    @SerialName("can_change_path")
+    public val canChangePath: Boolean,
+    @SerialName("entries")
+    public val entries: List<ManagedFileEntry>,
+    @SerialName("locked_root")
+    public val lockedRoot: String?,
+    @SerialName("parent")
+    public val parent: String?,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("root")
+    public val root: String?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``read_managed_file``. */
+@Serializable
+public data class ManagedFileReadResponse(
+    @SerialName("can_change_path")
+    public val canChangePath: Boolean,
+    @SerialName("data_url")
+    public val dataUrl: String,
+    @SerialName("locked_root")
+    public val lockedRoot: String?,
+    @SerialName("mime_type")
+    public val mimeType: String,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("root")
+    public val root: String?,
+    @SerialName("size")
+    public val size: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ManagedFileUpload(
+    @SerialName("data_url")
+    public val dataUrl: String,
+    @SerialName("overwrite")
+    public val overwrite: Boolean? = null,
+    @SerialName("path")
+    public val path: String,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``_managed_write_result`` (upload, upload-stream, mkdir). */
 @Serializable
 public data class ManagedFileWriteResponse(
@@ -769,142 +866,3 @@ public data class McpServerProbeTool(
     @SerialName("schema_chars")
     public val schemaChars: Long? = null,
 )
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``test_mcp_server`` — ``ok: false`` carries ``error`` and an empty ``tools``; the prompt and resource counts are only reported on success. */
-@Serializable
-public data class McpServerTestResponse(
-    @SerialName("error")
-    public val error: String? = null,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("prompts")
-    public val prompts: Long? = null,
-    @SerialName("resources")
-    public val resources: Long? = null,
-    @SerialName("tools")
-    public val tools: List<McpServerProbeTool>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A ``(name, description)`` pair from ``hermes_cli/mcp_config.py::_probe_single_server`` (description truncated to 80 chars, ``""`` when absent). */
-@Serializable
-public data class McpToolSummary(
-    @SerialName("description")
-    public val description: String,
-    @SerialName("name")
-    public val name: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL. */
-@Serializable
-public data class MediaDataUrlResponse(
-    @SerialName("data_url")
-    public val dataUrl: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. Byte size of ``memories/MEMORY.md`` / ``memories/USER.md`` (0 when absent). */
-@Serializable
-public data class MemoryBuiltinFileSizes(
-    @SerialName("memory")
-    public val memory: Long,
-    @SerialName("user")
-    public val user: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``start_memory_oauth`` → ``oauth_flow.start_loopback_flow_background()``: the full status on a fresh start, only ``state``/``detail`` when a flow is already pending (idempotent re-click). */
-@Serializable
-public data class MemoryOAuthStartResponse(
-    @SerialName("auth")
-    public val auth: MemoryOAuthStartResponseAuth? = null,
-    @SerialName("connected")
-    public val connected: Boolean? = null,
-    @SerialName("detail")
-    public val detail: String,
-    @SerialName("state")
-    public val state: MemoryOAuthStartResponseState,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = MemoryOAuthStartResponseAuth.Serializer::class)
-public sealed interface MemoryOAuthStartResponseAuth {
-    public data object Oauth : MemoryOAuthStartResponseAuth
-    public data object Apikey : MemoryOAuthStartResponseAuth
-    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStartResponseAuth
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Oauth -> "oauth"
-            Apikey -> "apikey"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): MemoryOAuthStartResponseAuth = when (raw) {
-            "oauth" -> Oauth
-            "apikey" -> Apikey
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<MemoryOAuthStartResponseAuth> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStartResponseAuth", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): MemoryOAuthStartResponseAuth = when (val raw = decoder.decodeString()) {
-            "oauth" -> Oauth
-            "apikey" -> Apikey
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStartResponseAuth value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: MemoryOAuthStartResponseAuth) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = MemoryOAuthStartResponseState.Serializer::class)
-public sealed interface MemoryOAuthStartResponseState {
-    public data object Idle : MemoryOAuthStartResponseState
-    public data object Pending : MemoryOAuthStartResponseState
-    public data object Connected : MemoryOAuthStartResponseState
-    public data object Error : MemoryOAuthStartResponseState
-    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStartResponseState
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Idle -> "idle"
-            Pending -> "pending"
-            Connected -> "connected"
-            Error -> "error"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): MemoryOAuthStartResponseState = when (raw) {
-            "idle" -> Idle
-            "pending" -> Pending
-            "connected" -> Connected
-            "error" -> Error
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<MemoryOAuthStartResponseState> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStartResponseState", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): MemoryOAuthStartResponseState = when (val raw = decoder.decodeString()) {
-            "idle" -> Idle
-            "pending" -> Pending
-            "connected" -> Connected
-            "error" -> Error
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStartResponseState value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: MemoryOAuthStartResponseState) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}

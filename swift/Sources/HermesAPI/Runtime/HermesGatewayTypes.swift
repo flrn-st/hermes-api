@@ -79,7 +79,8 @@ public struct HermesGatewayConfiguration: Sendable {
     /// Reacts to network changes. `nil` disables it; the heartbeat still detects dead sockets.
     public let networkMonitor: (any GatewayNetworkMonitor)?
     public let requestTimeout: Duration
-    /// Bounds the WebSocket handshake and capability exchange of each connection attempt.
+    /// Bounds each connection attempt's credential request and WebSocket upgrade, and then its capability
+    /// exchange.
     public let connectTimeout: Duration
     public let reconnectDelay: @Sendable (Int) -> Duration
     /// After this long without an inbound frame, the gateway sends a `gateway.ping`.

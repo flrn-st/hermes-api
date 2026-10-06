@@ -250,7 +250,7 @@ public actor HermesGateway: HermesGatewayClient {
         let current = generation
         do {
             let baseURL = try await configuration.address.resolve(previousFailure: previousFailure)
-            let socket = try await openSocket(baseURL: baseURL)
+            let socket = try await openSocket(baseURL: baseURL, within: configuration.connectTimeout)
             guard current == generation, wantsConnection, !Task.isCancelled else {
                 await socket.close()
                 throw HermesGatewayError.cancelled
@@ -296,6 +296,32 @@ public actor HermesGateway: HermesGatewayClient {
                 await closeConnection(error: failure)
             }
             throw failure
+        }
+    }
+
+    /// Opens the WebSocket, or gives up once `limit` passes. A credential request or an upgrade that never
+    /// answers (a session that waits for connectivity, a dead tunnel) would otherwise hold the attempt open for
+    /// minutes, and no other attempt starts while one is open.
+    private func openSocket(baseURL: URL, within limit: Duration) async throws -> any GatewayConnection {
+        try await withThrowingTaskGroup(of: (any GatewayConnection)?.self) { group in
+            group.addTask {
+                let socket = try await self.openSocket(baseURL: baseURL)
+                // Opened just as the attempt gave up: nobody will use it.
+                if Task.isCancelled {
+                    await socket.close()
+                    throw CancellationError()
+                }
+                return socket
+            }
+            group.addTask {
+                try await Task.sleep(for: limit)
+                return nil
+            }
+            defer { group.cancelAll() }
+            guard let socket = try await group.next() ?? nil else {
+                throw HermesGatewayError.transport("Hermes did not open the connection within \(limit)")
+            }
+            return socket
         }
     }
 
@@ -366,10 +392,17 @@ public actor HermesGateway: HermesGatewayClient {
         stateBroadcast.yield(state)
     }
 
+    /// Why a call cannot be sent while no connection is wanted: the failure the gateway gave up on, if it did,
+    /// so the caller learns why nothing works rather than only that nothing is connected.
+    private var notConnected: HermesGatewayError {
+        if case .failed(let failure)? = stateBroadcast.latest { return failure }
+        return .transport("Gateway is disconnected")
+    }
+
     /// Waits until the gateway is connected, or throws what prevents it.
     private func awaitConnection(within timeout: Duration?) async throws {
         if ready { return }
-        guard wantsConnection else { throw HermesGatewayError.transport("Gateway is disconnected") }
+        guard wantsConnection else { throw notConnected }
         let states = stateBroadcast.subscribe()
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
@@ -485,9 +518,7 @@ public actor HermesGateway: HermesGatewayClient {
         if waitsForConnection && !ready {
             try await awaitConnection(within: timeout)
         }
-        guard let socket = activeSocket else {
-            throw HermesGatewayError.transport("Gateway is disconnected")
-        }
+        guard let socket = activeSocket else { throw notConnected }
         let current = generation
         let id = nextID
         nextID += 1

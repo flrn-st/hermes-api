@@ -4200,7 +4200,7 @@
       },
       "CronJobRunSession": {
         "additionalProperties": true,
-        "description": "One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression\nlineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool,\n``pinned`` stays SQLite 0/1.",
+        "description": "One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression\nlineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool,\n``pinned`` stays SQLite 0/1. A script-only fire with no session is a ``_cron_output_run_row``\n(``source`` ``cron_output``, id ``cron_output:<job>:<stem>``) and carries only the required fields.",
         "properties": {
           "actual_cost_usd": {
             "anyOf": [
@@ -4591,7 +4591,14 @@
             "type": "integer"
           },
           "preview": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "pricing_version": {
             "anyOf": [
@@ -4747,66 +4754,19 @@
         "required": [
           "id",
           "source",
-          "user_id",
-          "session_key",
-          "chat_id",
-          "chat_type",
-          "thread_id",
-          "display_name",
-          "origin_json",
-          "expiry_finalized",
-          "model",
-          "parent_session_id",
+          "title",
+          "preview",
           "started_at",
+          "last_active",
           "ended_at",
-          "end_reason",
           "message_count",
           "tool_call_count",
           "input_tokens",
           "output_tokens",
-          "cache_read_tokens",
-          "cache_write_tokens",
-          "reasoning_tokens",
+          "model",
           "cwd",
-          "git_branch",
-          "git_repo_root",
-          "billing_provider",
-          "billing_base_url",
-          "billing_mode",
-          "estimated_cost_usd",
-          "actual_cost_usd",
-          "cost_status",
-          "cost_source",
-          "pricing_version",
-          "title",
-          "title_source",
-          "last_activity_at",
-          "last_activity_description",
-          "last_activity_provenance",
-          "api_call_count",
-          "handoff_state",
-          "handoff_platform",
-          "handoff_error",
-          "compression_failure_cooldown_until",
-          "compression_failure_error",
-          "compression_fallback_streak",
-          "compression_ineffective_count",
-          "compression_recovery_deadline",
-          "profile_name",
-          "transport_profile",
-          "rewind_count",
-          "hidden",
-          "last_read_at",
-          "tool_names",
           "archived",
-          "pinned",
-          "preview",
-          "last_active",
-          "is_active",
-          "model_config",
-          "system_prompt",
-          "system_prompt_hash",
-          "git_metadata_generation"
+          "is_active"
         ],
         "type": "object"
       },

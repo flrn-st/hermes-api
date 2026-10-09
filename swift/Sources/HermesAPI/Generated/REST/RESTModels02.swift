@@ -1840,7 +1840,7 @@ public struct CronJobRepeat: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1.
+/// One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1. A script-only fire with no session is a ``_cron_output_run_row`` (``source`` ``cron_output``, id ``cron_output:<job>:<stem>``) and carries only the required fields.
 public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var actualCostUsd: Double?
     public var apiCallCount: Int?
@@ -1854,8 +1854,8 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var chatType: String?
     public var compressionFailureCooldownUntil: Double?
     public var compressionFailureError: String?
-    public var compressionFallbackStreak: Int
-    public var compressionIneffectiveCount: Int
+    public var compressionFallbackStreak: Int?
+    public var compressionIneffectiveCount: Int?
     public var compressionRecoveryDeadline: Double?
     public var costSource: String?
     public var costStatus: String?
@@ -1866,12 +1866,12 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var estimatedCostUsd: Double?
     public var expiryFinalized: Int?
     public var gitBranch: String?
-    public var gitMetadataGeneration: Int
+    public var gitMetadataGeneration: Int?
     public var gitRepoRoot: String?
     public var handoffError: String?
     public var handoffPlatform: String?
     public var handoffState: String?
-    public var hidden: Int
+    public var hidden: Int?
     public var id: String
     public var inputTokens: Int?
     public var isActive: Bool
@@ -1887,14 +1887,14 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var originJson: String?
     public var outputTokens: Int?
     public var parentSessionId: String?
-    public var pinned: Int
-    public var preview: String
+    public var pinned: Int?
+    public var preview: String?
     public var pricingVersion: String?
     /// Absent when no profile holds the job.
     public var profile: String?
     public var profileName: String?
     public var reasoningTokens: Int?
-    public var rewindCount: Int
+    public var rewindCount: Int?
     public var sessionKey: String?
     public var source: String
     public var startedAt: Double
@@ -1909,7 +1909,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, preview: String, pricingVersion: String?, profile: String? = nil, profileName: String?, reasoningTokens: Int?, rewindCount: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(actualCostUsd: Double? = nil, apiCallCount: Int? = nil, archived: Bool, billingBaseUrl: String? = nil, billingMode: String? = nil, billingProvider: String? = nil, cacheReadTokens: Int? = nil, cacheWriteTokens: Int? = nil, chatId: String? = nil, chatType: String? = nil, compressionFailureCooldownUntil: Double? = nil, compressionFailureError: String? = nil, compressionFallbackStreak: Int? = nil, compressionIneffectiveCount: Int? = nil, compressionRecoveryDeadline: Double? = nil, costSource: String? = nil, costStatus: String? = nil, cwd: String?, displayName: String? = nil, endReason: String? = nil, endedAt: Double?, estimatedCostUsd: Double? = nil, expiryFinalized: Int? = nil, gitBranch: String? = nil, gitMetadataGeneration: Int? = nil, gitRepoRoot: String? = nil, handoffError: String? = nil, handoffPlatform: String? = nil, handoffState: String? = nil, hidden: Int? = nil, id: String, inputTokens: Int?, isActive: Bool, lastActive: Double, lastActivityAt: Double? = nil, lastActivityDescription: String? = nil, lastActivityProvenance: String? = nil, lastReadAt: Double? = nil, messageCount: Int?, model: String?, modelConfig: String? = nil, originJson: String? = nil, outputTokens: Int?, parentSessionId: String? = nil, pinned: Int? = nil, preview: String?, pricingVersion: String? = nil, profile: String? = nil, profileName: String? = nil, reasoningTokens: Int? = nil, rewindCount: Int? = nil, sessionKey: String? = nil, source: String, startedAt: Double, systemPrompt: String? = nil, systemPromptHash: String? = nil, threadId: String? = nil, title: String?, titleSource: String? = nil, toolCallCount: Int?, toolNames: String? = nil, transportProfile: String? = nil, userId: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
         self.actualCostUsd = actualCostUsd
         self.apiCallCount = apiCallCount
         self.archived = archived
@@ -2044,69 +2044,69 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
-        apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
+        actualCostUsd = try container.decodeIfPresent(Double.self, forKey: .actualCostUsd)
+        apiCallCount = try container.decodeIfPresent(Int.self, forKey: .apiCallCount)
         archived = try container.decode(Bool.self, forKey: .archived)
-        billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
-        billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
-        billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
-        cacheReadTokens = try container.decode(Optional<Int>.self, forKey: .cacheReadTokens)
-        cacheWriteTokens = try container.decode(Optional<Int>.self, forKey: .cacheWriteTokens)
-        chatId = try container.decode(Optional<String>.self, forKey: .chatId)
-        chatType = try container.decode(Optional<String>.self, forKey: .chatType)
-        compressionFailureCooldownUntil = try container.decode(Optional<Double>.self, forKey: .compressionFailureCooldownUntil)
-        compressionFailureError = try container.decode(Optional<String>.self, forKey: .compressionFailureError)
-        compressionFallbackStreak = try container.decode(Int.self, forKey: .compressionFallbackStreak)
-        compressionIneffectiveCount = try container.decode(Int.self, forKey: .compressionIneffectiveCount)
-        compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
-        costSource = try container.decode(Optional<String>.self, forKey: .costSource)
-        costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
+        billingBaseUrl = try container.decodeIfPresent(String.self, forKey: .billingBaseUrl)
+        billingMode = try container.decodeIfPresent(String.self, forKey: .billingMode)
+        billingProvider = try container.decodeIfPresent(String.self, forKey: .billingProvider)
+        cacheReadTokens = try container.decodeIfPresent(Int.self, forKey: .cacheReadTokens)
+        cacheWriteTokens = try container.decodeIfPresent(Int.self, forKey: .cacheWriteTokens)
+        chatId = try container.decodeIfPresent(String.self, forKey: .chatId)
+        chatType = try container.decodeIfPresent(String.self, forKey: .chatType)
+        compressionFailureCooldownUntil = try container.decodeIfPresent(Double.self, forKey: .compressionFailureCooldownUntil)
+        compressionFailureError = try container.decodeIfPresent(String.self, forKey: .compressionFailureError)
+        compressionFallbackStreak = try container.decodeIfPresent(Int.self, forKey: .compressionFallbackStreak)
+        compressionIneffectiveCount = try container.decodeIfPresent(Int.self, forKey: .compressionIneffectiveCount)
+        compressionRecoveryDeadline = try container.decodeIfPresent(Double.self, forKey: .compressionRecoveryDeadline)
+        costSource = try container.decodeIfPresent(String.self, forKey: .costSource)
+        costStatus = try container.decodeIfPresent(String.self, forKey: .costStatus)
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
-        displayName = try container.decode(Optional<String>.self, forKey: .displayName)
-        endReason = try container.decode(Optional<String>.self, forKey: .endReason)
+        displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
+        endReason = try container.decodeIfPresent(String.self, forKey: .endReason)
         endedAt = try container.decode(Optional<Double>.self, forKey: .endedAt)
-        estimatedCostUsd = try container.decode(Optional<Double>.self, forKey: .estimatedCostUsd)
-        expiryFinalized = try container.decode(Optional<Int>.self, forKey: .expiryFinalized)
-        gitBranch = try container.decode(Optional<String>.self, forKey: .gitBranch)
-        gitMetadataGeneration = try container.decode(Int.self, forKey: .gitMetadataGeneration)
-        gitRepoRoot = try container.decode(Optional<String>.self, forKey: .gitRepoRoot)
-        handoffError = try container.decode(Optional<String>.self, forKey: .handoffError)
-        handoffPlatform = try container.decode(Optional<String>.self, forKey: .handoffPlatform)
-        handoffState = try container.decode(Optional<String>.self, forKey: .handoffState)
-        hidden = try container.decode(Int.self, forKey: .hidden)
+        estimatedCostUsd = try container.decodeIfPresent(Double.self, forKey: .estimatedCostUsd)
+        expiryFinalized = try container.decodeIfPresent(Int.self, forKey: .expiryFinalized)
+        gitBranch = try container.decodeIfPresent(String.self, forKey: .gitBranch)
+        gitMetadataGeneration = try container.decodeIfPresent(Int.self, forKey: .gitMetadataGeneration)
+        gitRepoRoot = try container.decodeIfPresent(String.self, forKey: .gitRepoRoot)
+        handoffError = try container.decodeIfPresent(String.self, forKey: .handoffError)
+        handoffPlatform = try container.decodeIfPresent(String.self, forKey: .handoffPlatform)
+        handoffState = try container.decodeIfPresent(String.self, forKey: .handoffState)
+        hidden = try container.decodeIfPresent(Int.self, forKey: .hidden)
         id = try container.decode(String.self, forKey: .id)
         inputTokens = try container.decode(Optional<Int>.self, forKey: .inputTokens)
         isActive = try container.decode(Bool.self, forKey: .isActive)
         lastActive = try container.decode(Double.self, forKey: .lastActive)
-        lastActivityAt = try container.decode(Optional<Double>.self, forKey: .lastActivityAt)
-        lastActivityDescription = try container.decode(Optional<String>.self, forKey: .lastActivityDescription)
-        lastActivityProvenance = try container.decode(Optional<String>.self, forKey: .lastActivityProvenance)
-        lastReadAt = try container.decode(Optional<Double>.self, forKey: .lastReadAt)
+        lastActivityAt = try container.decodeIfPresent(Double.self, forKey: .lastActivityAt)
+        lastActivityDescription = try container.decodeIfPresent(String.self, forKey: .lastActivityDescription)
+        lastActivityProvenance = try container.decodeIfPresent(String.self, forKey: .lastActivityProvenance)
+        lastReadAt = try container.decodeIfPresent(Double.self, forKey: .lastReadAt)
         messageCount = try container.decode(Optional<Int>.self, forKey: .messageCount)
         model = try container.decode(Optional<String>.self, forKey: .model)
-        modelConfig = try container.decode(Optional<String>.self, forKey: .modelConfig)
-        originJson = try container.decode(Optional<String>.self, forKey: .originJson)
+        modelConfig = try container.decodeIfPresent(String.self, forKey: .modelConfig)
+        originJson = try container.decodeIfPresent(String.self, forKey: .originJson)
         outputTokens = try container.decode(Optional<Int>.self, forKey: .outputTokens)
-        parentSessionId = try container.decode(Optional<String>.self, forKey: .parentSessionId)
-        pinned = try container.decode(Int.self, forKey: .pinned)
-        preview = try container.decode(String.self, forKey: .preview)
-        pricingVersion = try container.decode(Optional<String>.self, forKey: .pricingVersion)
+        parentSessionId = try container.decodeIfPresent(String.self, forKey: .parentSessionId)
+        pinned = try container.decodeIfPresent(Int.self, forKey: .pinned)
+        preview = try container.decode(Optional<String>.self, forKey: .preview)
+        pricingVersion = try container.decodeIfPresent(String.self, forKey: .pricingVersion)
         profile = try container.decodeIfPresent(String.self, forKey: .profile)
-        profileName = try container.decode(Optional<String>.self, forKey: .profileName)
-        reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
-        rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
+        profileName = try container.decodeIfPresent(String.self, forKey: .profileName)
+        reasoningTokens = try container.decodeIfPresent(Int.self, forKey: .reasoningTokens)
+        rewindCount = try container.decodeIfPresent(Int.self, forKey: .rewindCount)
+        sessionKey = try container.decodeIfPresent(String.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Double.self, forKey: .startedAt)
-        systemPrompt = try container.decode(Optional<String>.self, forKey: .systemPrompt)
-        systemPromptHash = try container.decode(Optional<String>.self, forKey: .systemPromptHash)
-        threadId = try container.decode(Optional<String>.self, forKey: .threadId)
+        systemPrompt = try container.decodeIfPresent(String.self, forKey: .systemPrompt)
+        systemPromptHash = try container.decodeIfPresent(String.self, forKey: .systemPromptHash)
+        threadId = try container.decodeIfPresent(String.self, forKey: .threadId)
         title = try container.decode(Optional<String>.self, forKey: .title)
-        titleSource = try container.decode(Optional<String>.self, forKey: .titleSource)
+        titleSource = try container.decodeIfPresent(String.self, forKey: .titleSource)
         toolCallCount = try container.decode(Optional<Int>.self, forKey: .toolCallCount)
-        toolNames = try container.decode(Optional<String>.self, forKey: .toolNames)
-        transportProfile = try container.decode(Optional<String>.self, forKey: .transportProfile)
-        userId = try container.decode(Optional<String>.self, forKey: .userId)
+        toolNames = try container.decodeIfPresent(String.self, forKey: .toolNames)
+        transportProfile = try container.decodeIfPresent(String.self, forKey: .transportProfile)
+        userId = try container.decodeIfPresent(String.self, forKey: .userId)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
         let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
         var extra: [String: JSONValue] = [:]
@@ -2118,69 +2118,69 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(actualCostUsd, forKey: .actualCostUsd)
-        try container.encode(apiCallCount, forKey: .apiCallCount)
+        try container.encodeIfPresent(actualCostUsd, forKey: .actualCostUsd)
+        try container.encodeIfPresent(apiCallCount, forKey: .apiCallCount)
         try container.encode(archived, forKey: .archived)
-        try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
-        try container.encode(billingMode, forKey: .billingMode)
-        try container.encode(billingProvider, forKey: .billingProvider)
-        try container.encode(cacheReadTokens, forKey: .cacheReadTokens)
-        try container.encode(cacheWriteTokens, forKey: .cacheWriteTokens)
-        try container.encode(chatId, forKey: .chatId)
-        try container.encode(chatType, forKey: .chatType)
-        try container.encode(compressionFailureCooldownUntil, forKey: .compressionFailureCooldownUntil)
-        try container.encode(compressionFailureError, forKey: .compressionFailureError)
-        try container.encode(compressionFallbackStreak, forKey: .compressionFallbackStreak)
-        try container.encode(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
-        try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
-        try container.encode(costSource, forKey: .costSource)
-        try container.encode(costStatus, forKey: .costStatus)
+        try container.encodeIfPresent(billingBaseUrl, forKey: .billingBaseUrl)
+        try container.encodeIfPresent(billingMode, forKey: .billingMode)
+        try container.encodeIfPresent(billingProvider, forKey: .billingProvider)
+        try container.encodeIfPresent(cacheReadTokens, forKey: .cacheReadTokens)
+        try container.encodeIfPresent(cacheWriteTokens, forKey: .cacheWriteTokens)
+        try container.encodeIfPresent(chatId, forKey: .chatId)
+        try container.encodeIfPresent(chatType, forKey: .chatType)
+        try container.encodeIfPresent(compressionFailureCooldownUntil, forKey: .compressionFailureCooldownUntil)
+        try container.encodeIfPresent(compressionFailureError, forKey: .compressionFailureError)
+        try container.encodeIfPresent(compressionFallbackStreak, forKey: .compressionFallbackStreak)
+        try container.encodeIfPresent(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
+        try container.encodeIfPresent(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
+        try container.encodeIfPresent(costSource, forKey: .costSource)
+        try container.encodeIfPresent(costStatus, forKey: .costStatus)
         try container.encode(cwd, forKey: .cwd)
-        try container.encode(displayName, forKey: .displayName)
-        try container.encode(endReason, forKey: .endReason)
+        try container.encodeIfPresent(displayName, forKey: .displayName)
+        try container.encodeIfPresent(endReason, forKey: .endReason)
         try container.encode(endedAt, forKey: .endedAt)
-        try container.encode(estimatedCostUsd, forKey: .estimatedCostUsd)
-        try container.encode(expiryFinalized, forKey: .expiryFinalized)
-        try container.encode(gitBranch, forKey: .gitBranch)
-        try container.encode(gitMetadataGeneration, forKey: .gitMetadataGeneration)
-        try container.encode(gitRepoRoot, forKey: .gitRepoRoot)
-        try container.encode(handoffError, forKey: .handoffError)
-        try container.encode(handoffPlatform, forKey: .handoffPlatform)
-        try container.encode(handoffState, forKey: .handoffState)
-        try container.encode(hidden, forKey: .hidden)
+        try container.encodeIfPresent(estimatedCostUsd, forKey: .estimatedCostUsd)
+        try container.encodeIfPresent(expiryFinalized, forKey: .expiryFinalized)
+        try container.encodeIfPresent(gitBranch, forKey: .gitBranch)
+        try container.encodeIfPresent(gitMetadataGeneration, forKey: .gitMetadataGeneration)
+        try container.encodeIfPresent(gitRepoRoot, forKey: .gitRepoRoot)
+        try container.encodeIfPresent(handoffError, forKey: .handoffError)
+        try container.encodeIfPresent(handoffPlatform, forKey: .handoffPlatform)
+        try container.encodeIfPresent(handoffState, forKey: .handoffState)
+        try container.encodeIfPresent(hidden, forKey: .hidden)
         try container.encode(id, forKey: .id)
         try container.encode(inputTokens, forKey: .inputTokens)
         try container.encode(isActive, forKey: .isActive)
         try container.encode(lastActive, forKey: .lastActive)
-        try container.encode(lastActivityAt, forKey: .lastActivityAt)
-        try container.encode(lastActivityDescription, forKey: .lastActivityDescription)
-        try container.encode(lastActivityProvenance, forKey: .lastActivityProvenance)
-        try container.encode(lastReadAt, forKey: .lastReadAt)
+        try container.encodeIfPresent(lastActivityAt, forKey: .lastActivityAt)
+        try container.encodeIfPresent(lastActivityDescription, forKey: .lastActivityDescription)
+        try container.encodeIfPresent(lastActivityProvenance, forKey: .lastActivityProvenance)
+        try container.encodeIfPresent(lastReadAt, forKey: .lastReadAt)
         try container.encode(messageCount, forKey: .messageCount)
         try container.encode(model, forKey: .model)
-        try container.encode(modelConfig, forKey: .modelConfig)
-        try container.encode(originJson, forKey: .originJson)
+        try container.encodeIfPresent(modelConfig, forKey: .modelConfig)
+        try container.encodeIfPresent(originJson, forKey: .originJson)
         try container.encode(outputTokens, forKey: .outputTokens)
-        try container.encode(parentSessionId, forKey: .parentSessionId)
-        try container.encode(pinned, forKey: .pinned)
+        try container.encodeIfPresent(parentSessionId, forKey: .parentSessionId)
+        try container.encodeIfPresent(pinned, forKey: .pinned)
         try container.encode(preview, forKey: .preview)
-        try container.encode(pricingVersion, forKey: .pricingVersion)
+        try container.encodeIfPresent(pricingVersion, forKey: .pricingVersion)
         try container.encodeIfPresent(profile, forKey: .profile)
-        try container.encode(profileName, forKey: .profileName)
-        try container.encode(reasoningTokens, forKey: .reasoningTokens)
-        try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encode(sessionKey, forKey: .sessionKey)
+        try container.encodeIfPresent(profileName, forKey: .profileName)
+        try container.encodeIfPresent(reasoningTokens, forKey: .reasoningTokens)
+        try container.encodeIfPresent(rewindCount, forKey: .rewindCount)
+        try container.encodeIfPresent(sessionKey, forKey: .sessionKey)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)
-        try container.encode(systemPrompt, forKey: .systemPrompt)
-        try container.encode(systemPromptHash, forKey: .systemPromptHash)
-        try container.encode(threadId, forKey: .threadId)
+        try container.encodeIfPresent(systemPrompt, forKey: .systemPrompt)
+        try container.encodeIfPresent(systemPromptHash, forKey: .systemPromptHash)
+        try container.encodeIfPresent(threadId, forKey: .threadId)
         try container.encode(title, forKey: .title)
-        try container.encode(titleSource, forKey: .titleSource)
+        try container.encodeIfPresent(titleSource, forKey: .titleSource)
         try container.encode(toolCallCount, forKey: .toolCallCount)
-        try container.encode(toolNames, forKey: .toolNames)
-        try container.encode(transportProfile, forKey: .transportProfile)
-        try container.encode(userId, forKey: .userId)
+        try container.encodeIfPresent(toolNames, forKey: .toolNames)
+        try container.encodeIfPresent(transportProfile, forKey: .transportProfile)
+        try container.encodeIfPresent(userId, forKey: .userId)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
         let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
         for (key, value) in additionalProperties {

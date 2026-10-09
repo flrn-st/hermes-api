@@ -937,74 +937,74 @@ public data class CronJobRepeat(
     public val times: Long?,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1. A script-only fire with no session is a ``_cron_output_run_row`` (``source`` ``cron_output``, id ``cron_output:<job>:<stem>``) and carries only the required fields. */
 @Serializable(with = CronJobRunSession.Serializer::class)
 public data class CronJobRunSession(
-    public val actualCostUsd: Double?,
-    public val apiCallCount: Long?,
+    public val actualCostUsd: Double? = null,
+    public val apiCallCount: Long? = null,
     public val archived: Boolean,
-    public val billingBaseUrl: String?,
-    public val billingMode: String?,
-    public val billingProvider: String?,
-    public val cacheReadTokens: Long?,
-    public val cacheWriteTokens: Long?,
-    public val chatId: String?,
-    public val chatType: String?,
-    public val compressionFailureCooldownUntil: Double?,
-    public val compressionFailureError: String?,
-    public val compressionFallbackStreak: Long,
-    public val compressionIneffectiveCount: Long,
-    public val compressionRecoveryDeadline: Double?,
-    public val costSource: String?,
-    public val costStatus: String?,
+    public val billingBaseUrl: String? = null,
+    public val billingMode: String? = null,
+    public val billingProvider: String? = null,
+    public val cacheReadTokens: Long? = null,
+    public val cacheWriteTokens: Long? = null,
+    public val chatId: String? = null,
+    public val chatType: String? = null,
+    public val compressionFailureCooldownUntil: Double? = null,
+    public val compressionFailureError: String? = null,
+    public val compressionFallbackStreak: Long? = null,
+    public val compressionIneffectiveCount: Long? = null,
+    public val compressionRecoveryDeadline: Double? = null,
+    public val costSource: String? = null,
+    public val costStatus: String? = null,
     public val cwd: String?,
-    public val displayName: String?,
-    public val endReason: String?,
+    public val displayName: String? = null,
+    public val endReason: String? = null,
     public val endedAt: Double?,
-    public val estimatedCostUsd: Double?,
-    public val expiryFinalized: Long?,
-    public val gitBranch: String?,
-    public val gitMetadataGeneration: Long,
-    public val gitRepoRoot: String?,
-    public val handoffError: String?,
-    public val handoffPlatform: String?,
-    public val handoffState: String?,
-    public val hidden: Long,
+    public val estimatedCostUsd: Double? = null,
+    public val expiryFinalized: Long? = null,
+    public val gitBranch: String? = null,
+    public val gitMetadataGeneration: Long? = null,
+    public val gitRepoRoot: String? = null,
+    public val handoffError: String? = null,
+    public val handoffPlatform: String? = null,
+    public val handoffState: String? = null,
+    public val hidden: Long? = null,
     public val id: String,
     public val inputTokens: Long?,
     public val isActive: Boolean,
     public val lastActive: Double,
-    public val lastActivityAt: Double?,
-    public val lastActivityDescription: String?,
-    public val lastActivityProvenance: String?,
+    public val lastActivityAt: Double? = null,
+    public val lastActivityDescription: String? = null,
+    public val lastActivityProvenance: String? = null,
     /** Read watermark; ``0`` = marked unread, null = never tracked. */
-    public val lastReadAt: Double?,
+    public val lastReadAt: Double? = null,
     public val messageCount: Long?,
     public val model: String?,
-    public val modelConfig: String?,
-    public val originJson: String?,
+    public val modelConfig: String? = null,
+    public val originJson: String? = null,
     public val outputTokens: Long?,
-    public val parentSessionId: String?,
-    public val pinned: Long,
-    public val preview: String,
-    public val pricingVersion: String?,
+    public val parentSessionId: String? = null,
+    public val pinned: Long? = null,
+    public val preview: String?,
+    public val pricingVersion: String? = null,
     /** Absent when no profile holds the job. */
     public val profile: String? = null,
-    public val profileName: String?,
-    public val reasoningTokens: Long?,
-    public val rewindCount: Long,
-    public val sessionKey: String?,
+    public val profileName: String? = null,
+    public val reasoningTokens: Long? = null,
+    public val rewindCount: Long? = null,
+    public val sessionKey: String? = null,
     public val source: String,
     public val startedAt: Double,
-    public val systemPrompt: String?,
-    public val systemPromptHash: String?,
-    public val threadId: String?,
+    public val systemPrompt: String? = null,
+    public val systemPromptHash: String? = null,
+    public val threadId: String? = null,
     public val title: String?,
-    public val titleSource: String?,
+    public val titleSource: String? = null,
     public val toolCallCount: Long?,
-    public val toolNames: String?,
-    public val transportProfile: String?,
-    public val userId: String?,
+    public val toolNames: String? = null,
+    public val transportProfile: String? = null,
+    public val userId: String? = null,
     public val additionalProperties: Map<String, JsonElement> = emptyMap(),
 )
 {
@@ -1018,69 +1018,69 @@ public data class CronJobRunSession(
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CronJobRunSession requires an object")
             return CronJobRunSession(
-                actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
-                apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
+                actualCostUsd = input["actual_cost_usd"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
+                apiCallCount = input["api_call_count"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 archived = json.decodeFromJsonElement<Boolean>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
-                billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
-                billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
-                cacheReadTokens = if ((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens"))),
-                cacheWriteTokens = if ((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens"))),
-                chatId = if ((input["chat_id"] ?: throw SerializationException("Missing chat_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_id"] ?: throw SerializationException("Missing chat_id"))),
-                chatType = if ((input["chat_type"] ?: throw SerializationException("Missing chat_type")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_type"] ?: throw SerializationException("Missing chat_type"))),
-                compressionFailureCooldownUntil = if ((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until"))),
-                compressionFailureError = if ((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error"))),
-                compressionFallbackStreak = json.decodeFromJsonElement<Long>((input["compression_fallback_streak"] ?: throw SerializationException("Missing compression_fallback_streak"))),
-                compressionIneffectiveCount = json.decodeFromJsonElement<Long>((input["compression_ineffective_count"] ?: throw SerializationException("Missing compression_ineffective_count"))),
-                compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
-                costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
-                costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
+                billingBaseUrl = input["billing_base_url"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                billingMode = input["billing_mode"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                billingProvider = input["billing_provider"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                cacheReadTokens = input["cache_read_tokens"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                cacheWriteTokens = input["cache_write_tokens"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                chatId = input["chat_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                chatType = input["chat_type"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                compressionFailureCooldownUntil = input["compression_failure_cooldown_until"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
+                compressionFailureError = input["compression_failure_error"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                compressionFallbackStreak = input["compression_fallback_streak"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                compressionIneffectiveCount = input["compression_ineffective_count"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                compressionRecoveryDeadline = input["compression_recovery_deadline"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
+                costSource = input["cost_source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                costStatus = input["cost_status"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
-                displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
-                endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
+                displayName = input["display_name"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                endReason = input["end_reason"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 endedAt = if ((input["ended_at"] ?: throw SerializationException("Missing ended_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["ended_at"] ?: throw SerializationException("Missing ended_at"))),
-                estimatedCostUsd = if ((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd"))),
-                expiryFinalized = if ((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized"))),
-                gitBranch = if ((input["git_branch"] ?: throw SerializationException("Missing git_branch")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_branch"] ?: throw SerializationException("Missing git_branch"))),
-                gitMetadataGeneration = json.decodeFromJsonElement<Long>((input["git_metadata_generation"] ?: throw SerializationException("Missing git_metadata_generation"))),
-                gitRepoRoot = if ((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root"))),
-                handoffError = if ((input["handoff_error"] ?: throw SerializationException("Missing handoff_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_error"] ?: throw SerializationException("Missing handoff_error"))),
-                handoffPlatform = if ((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform"))),
-                handoffState = if ((input["handoff_state"] ?: throw SerializationException("Missing handoff_state")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_state"] ?: throw SerializationException("Missing handoff_state"))),
-                hidden = json.decodeFromJsonElement<Long>((input["hidden"] ?: throw SerializationException("Missing hidden"))),
+                estimatedCostUsd = input["estimated_cost_usd"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
+                expiryFinalized = input["expiry_finalized"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                gitBranch = input["git_branch"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                gitMetadataGeneration = input["git_metadata_generation"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                gitRepoRoot = input["git_repo_root"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                handoffError = input["handoff_error"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                handoffPlatform = input["handoff_platform"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                handoffState = input["handoff_state"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                hidden = input["hidden"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
                 inputTokens = if ((input["input_tokens"] ?: throw SerializationException("Missing input_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["input_tokens"] ?: throw SerializationException("Missing input_tokens"))),
                 isActive = json.decodeFromJsonElement<Boolean>((input["is_active"] ?: throw SerializationException("Missing is_active"))),
                 lastActive = json.decodeFromJsonElement<Double>((input["last_active"] ?: throw SerializationException("Missing last_active"))),
-                lastActivityAt = if ((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at"))),
-                lastActivityDescription = if ((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description"))),
-                lastActivityProvenance = if ((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance"))),
-                lastReadAt = if ((input["last_read_at"] ?: throw SerializationException("Missing last_read_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_read_at"] ?: throw SerializationException("Missing last_read_at"))),
+                lastActivityAt = input["last_activity_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
+                lastActivityDescription = input["last_activity_description"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                lastActivityProvenance = input["last_activity_provenance"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                lastReadAt = input["last_read_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
                 messageCount = if ((input["message_count"] ?: throw SerializationException("Missing message_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["message_count"] ?: throw SerializationException("Missing message_count"))),
                 model = if ((input["model"] ?: throw SerializationException("Missing model")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model"] ?: throw SerializationException("Missing model"))),
-                modelConfig = if ((input["model_config"] ?: throw SerializationException("Missing model_config")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model_config"] ?: throw SerializationException("Missing model_config"))),
-                originJson = if ((input["origin_json"] ?: throw SerializationException("Missing origin_json")) is JsonNull) null else json.decodeFromJsonElement<String>((input["origin_json"] ?: throw SerializationException("Missing origin_json"))),
+                modelConfig = input["model_config"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                originJson = input["origin_json"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 outputTokens = if ((input["output_tokens"] ?: throw SerializationException("Missing output_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["output_tokens"] ?: throw SerializationException("Missing output_tokens"))),
-                parentSessionId = if ((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id"))),
-                pinned = json.decodeFromJsonElement<Long>((input["pinned"] ?: throw SerializationException("Missing pinned"))),
-                preview = json.decodeFromJsonElement<String>((input["preview"] ?: throw SerializationException("Missing preview"))),
-                pricingVersion = if ((input["pricing_version"] ?: throw SerializationException("Missing pricing_version")) is JsonNull) null else json.decodeFromJsonElement<String>((input["pricing_version"] ?: throw SerializationException("Missing pricing_version"))),
+                parentSessionId = input["parent_session_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                pinned = input["pinned"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                preview = if ((input["preview"] ?: throw SerializationException("Missing preview")) is JsonNull) null else json.decodeFromJsonElement<String>((input["preview"] ?: throw SerializationException("Missing preview"))),
+                pricingVersion = input["pricing_version"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 profile = input["profile"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
-                reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
-                rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
-                sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
+                profileName = input["profile_name"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                reasoningTokens = input["reasoning_tokens"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                rewindCount = input["rewind_count"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                sessionKey = input["session_key"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
                 startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
-                systemPrompt = if ((input["system_prompt"] ?: throw SerializationException("Missing system_prompt")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt"] ?: throw SerializationException("Missing system_prompt"))),
-                systemPromptHash = if ((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash"))),
-                threadId = if ((input["thread_id"] ?: throw SerializationException("Missing thread_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["thread_id"] ?: throw SerializationException("Missing thread_id"))),
+                systemPrompt = input["system_prompt"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                systemPromptHash = input["system_prompt_hash"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                threadId = input["thread_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 title = if ((input["title"] ?: throw SerializationException("Missing title")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title"] ?: throw SerializationException("Missing title"))),
-                titleSource = if ((input["title_source"] ?: throw SerializationException("Missing title_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title_source"] ?: throw SerializationException("Missing title_source"))),
+                titleSource = input["title_source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 toolCallCount = if ((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count"))),
-                toolNames = if ((input["tool_names"] ?: throw SerializationException("Missing tool_names")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_names"] ?: throw SerializationException("Missing tool_names"))),
-                transportProfile = if ((input["transport_profile"] ?: throw SerializationException("Missing transport_profile")) is JsonNull) null else json.decodeFromJsonElement<String>((input["transport_profile"] ?: throw SerializationException("Missing transport_profile"))),
-                userId = if ((input["user_id"] ?: throw SerializationException("Missing user_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["user_id"] ?: throw SerializationException("Missing user_id"))),
+                toolNames = input["tool_names"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                transportProfile = input["transport_profile"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                userId = input["user_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 additionalProperties = input.filterKeys { it !in setOf("actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id") },
             )
         }
@@ -1095,69 +1095,69 @@ public data class CronJobRunSession(
                 throw SerializationException("Additional property conflicts with a known field")
             }
             output.putAll(value.additionalProperties)
-            output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
-            output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
+            value.actualCostUsd?.let { output["actual_cost_usd"] = json.encodeToJsonElement(it) }
+            value.apiCallCount?.let { output["api_call_count"] = json.encodeToJsonElement(it) }
             output["archived"] = json.encodeToJsonElement(value.archived)
-            output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
-            output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
-            output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
-            output["cache_read_tokens"] = json.encodeToJsonElement(value.cacheReadTokens)
-            output["cache_write_tokens"] = json.encodeToJsonElement(value.cacheWriteTokens)
-            output["chat_id"] = json.encodeToJsonElement(value.chatId)
-            output["chat_type"] = json.encodeToJsonElement(value.chatType)
-            output["compression_failure_cooldown_until"] = json.encodeToJsonElement(value.compressionFailureCooldownUntil)
-            output["compression_failure_error"] = json.encodeToJsonElement(value.compressionFailureError)
-            output["compression_fallback_streak"] = json.encodeToJsonElement(value.compressionFallbackStreak)
-            output["compression_ineffective_count"] = json.encodeToJsonElement(value.compressionIneffectiveCount)
-            output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
-            output["cost_source"] = json.encodeToJsonElement(value.costSource)
-            output["cost_status"] = json.encodeToJsonElement(value.costStatus)
+            value.billingBaseUrl?.let { output["billing_base_url"] = json.encodeToJsonElement(it) }
+            value.billingMode?.let { output["billing_mode"] = json.encodeToJsonElement(it) }
+            value.billingProvider?.let { output["billing_provider"] = json.encodeToJsonElement(it) }
+            value.cacheReadTokens?.let { output["cache_read_tokens"] = json.encodeToJsonElement(it) }
+            value.cacheWriteTokens?.let { output["cache_write_tokens"] = json.encodeToJsonElement(it) }
+            value.chatId?.let { output["chat_id"] = json.encodeToJsonElement(it) }
+            value.chatType?.let { output["chat_type"] = json.encodeToJsonElement(it) }
+            value.compressionFailureCooldownUntil?.let { output["compression_failure_cooldown_until"] = json.encodeToJsonElement(it) }
+            value.compressionFailureError?.let { output["compression_failure_error"] = json.encodeToJsonElement(it) }
+            value.compressionFallbackStreak?.let { output["compression_fallback_streak"] = json.encodeToJsonElement(it) }
+            value.compressionIneffectiveCount?.let { output["compression_ineffective_count"] = json.encodeToJsonElement(it) }
+            value.compressionRecoveryDeadline?.let { output["compression_recovery_deadline"] = json.encodeToJsonElement(it) }
+            value.costSource?.let { output["cost_source"] = json.encodeToJsonElement(it) }
+            value.costStatus?.let { output["cost_status"] = json.encodeToJsonElement(it) }
             output["cwd"] = json.encodeToJsonElement(value.cwd)
-            output["display_name"] = json.encodeToJsonElement(value.displayName)
-            output["end_reason"] = json.encodeToJsonElement(value.endReason)
+            value.displayName?.let { output["display_name"] = json.encodeToJsonElement(it) }
+            value.endReason?.let { output["end_reason"] = json.encodeToJsonElement(it) }
             output["ended_at"] = json.encodeToJsonElement(value.endedAt)
-            output["estimated_cost_usd"] = json.encodeToJsonElement(value.estimatedCostUsd)
-            output["expiry_finalized"] = json.encodeToJsonElement(value.expiryFinalized)
-            output["git_branch"] = json.encodeToJsonElement(value.gitBranch)
-            output["git_metadata_generation"] = json.encodeToJsonElement(value.gitMetadataGeneration)
-            output["git_repo_root"] = json.encodeToJsonElement(value.gitRepoRoot)
-            output["handoff_error"] = json.encodeToJsonElement(value.handoffError)
-            output["handoff_platform"] = json.encodeToJsonElement(value.handoffPlatform)
-            output["handoff_state"] = json.encodeToJsonElement(value.handoffState)
-            output["hidden"] = json.encodeToJsonElement(value.hidden)
+            value.estimatedCostUsd?.let { output["estimated_cost_usd"] = json.encodeToJsonElement(it) }
+            value.expiryFinalized?.let { output["expiry_finalized"] = json.encodeToJsonElement(it) }
+            value.gitBranch?.let { output["git_branch"] = json.encodeToJsonElement(it) }
+            value.gitMetadataGeneration?.let { output["git_metadata_generation"] = json.encodeToJsonElement(it) }
+            value.gitRepoRoot?.let { output["git_repo_root"] = json.encodeToJsonElement(it) }
+            value.handoffError?.let { output["handoff_error"] = json.encodeToJsonElement(it) }
+            value.handoffPlatform?.let { output["handoff_platform"] = json.encodeToJsonElement(it) }
+            value.handoffState?.let { output["handoff_state"] = json.encodeToJsonElement(it) }
+            value.hidden?.let { output["hidden"] = json.encodeToJsonElement(it) }
             output["id"] = json.encodeToJsonElement(value.id)
             output["input_tokens"] = json.encodeToJsonElement(value.inputTokens)
             output["is_active"] = json.encodeToJsonElement(value.isActive)
             output["last_active"] = json.encodeToJsonElement(value.lastActive)
-            output["last_activity_at"] = json.encodeToJsonElement(value.lastActivityAt)
-            output["last_activity_description"] = json.encodeToJsonElement(value.lastActivityDescription)
-            output["last_activity_provenance"] = json.encodeToJsonElement(value.lastActivityProvenance)
-            output["last_read_at"] = json.encodeToJsonElement(value.lastReadAt)
+            value.lastActivityAt?.let { output["last_activity_at"] = json.encodeToJsonElement(it) }
+            value.lastActivityDescription?.let { output["last_activity_description"] = json.encodeToJsonElement(it) }
+            value.lastActivityProvenance?.let { output["last_activity_provenance"] = json.encodeToJsonElement(it) }
+            value.lastReadAt?.let { output["last_read_at"] = json.encodeToJsonElement(it) }
             output["message_count"] = json.encodeToJsonElement(value.messageCount)
             output["model"] = json.encodeToJsonElement(value.model)
-            output["model_config"] = json.encodeToJsonElement(value.modelConfig)
-            output["origin_json"] = json.encodeToJsonElement(value.originJson)
+            value.modelConfig?.let { output["model_config"] = json.encodeToJsonElement(it) }
+            value.originJson?.let { output["origin_json"] = json.encodeToJsonElement(it) }
             output["output_tokens"] = json.encodeToJsonElement(value.outputTokens)
-            output["parent_session_id"] = json.encodeToJsonElement(value.parentSessionId)
-            output["pinned"] = json.encodeToJsonElement(value.pinned)
+            value.parentSessionId?.let { output["parent_session_id"] = json.encodeToJsonElement(it) }
+            value.pinned?.let { output["pinned"] = json.encodeToJsonElement(it) }
             output["preview"] = json.encodeToJsonElement(value.preview)
-            output["pricing_version"] = json.encodeToJsonElement(value.pricingVersion)
+            value.pricingVersion?.let { output["pricing_version"] = json.encodeToJsonElement(it) }
             value.profile?.let { output["profile"] = json.encodeToJsonElement(it) }
-            output["profile_name"] = json.encodeToJsonElement(value.profileName)
-            output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
-            output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
-            output["session_key"] = json.encodeToJsonElement(value.sessionKey)
+            value.profileName?.let { output["profile_name"] = json.encodeToJsonElement(it) }
+            value.reasoningTokens?.let { output["reasoning_tokens"] = json.encodeToJsonElement(it) }
+            value.rewindCount?.let { output["rewind_count"] = json.encodeToJsonElement(it) }
+            value.sessionKey?.let { output["session_key"] = json.encodeToJsonElement(it) }
             output["source"] = json.encodeToJsonElement(value.source)
             output["started_at"] = json.encodeToJsonElement(value.startedAt)
-            output["system_prompt"] = json.encodeToJsonElement(value.systemPrompt)
-            output["system_prompt_hash"] = json.encodeToJsonElement(value.systemPromptHash)
-            output["thread_id"] = json.encodeToJsonElement(value.threadId)
+            value.systemPrompt?.let { output["system_prompt"] = json.encodeToJsonElement(it) }
+            value.systemPromptHash?.let { output["system_prompt_hash"] = json.encodeToJsonElement(it) }
+            value.threadId?.let { output["thread_id"] = json.encodeToJsonElement(it) }
             output["title"] = json.encodeToJsonElement(value.title)
-            output["title_source"] = json.encodeToJsonElement(value.titleSource)
+            value.titleSource?.let { output["title_source"] = json.encodeToJsonElement(it) }
             output["tool_call_count"] = json.encodeToJsonElement(value.toolCallCount)
-            output["tool_names"] = json.encodeToJsonElement(value.toolNames)
-            output["transport_profile"] = json.encodeToJsonElement(value.transportProfile)
-            output["user_id"] = json.encodeToJsonElement(value.userId)
+            value.toolNames?.let { output["tool_names"] = json.encodeToJsonElement(it) }
+            value.transportProfile?.let { output["transport_profile"] = json.encodeToJsonElement(it) }
+            value.userId?.let { output["user_id"] = json.encodeToJsonElement(it) }
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }

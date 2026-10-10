@@ -827,6 +827,78 @@ private actor RenewingAuth: HermesAuth {
     await gateway.disconnect()
 }
 
+/// After a reconnect, the first frame the gateway sends is the caller's ping: nothing was rebound.
+private func expectNothingRebound(_ gateway: HermesGateway, sent: inout AsyncStream<Data>.Iterator,
+                                  on socket: ScriptedGatewaySocket) async throws {
+    try await state(of: gateway) { $0 == .connected }
+    let ping = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }
+    let (next, pingID) = try sentCall(try #require(await sent.next()))
+    #expect(next == "ping")
+    await socket.inject(result(pingID, #"{"pong":true}"#))
+    #expect(try await ping.value.pong)
+}
+
+/// Bug #2b: a chat closing its runtime while the app is suspended cannot reach Hermes. The id stayed tracked,
+/// so every foreground activated it (4001) and resumed it under a runtime no chat owned.
+@Test func aCloseThatNeverReachesHermesStillStopsTheRebind() async throws {
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]), timeout: .milliseconds(200))
+    try await gateway.connect()
+    try await createSession(gateway, on: first, id: "r1", stored: "k1")
+    await gateway.enterBackground()
+    await #expect(throws: HermesGatewayError.self) {
+        try await gateway.call("session.close", params: SessionCloseParams(sessionId: "r1"), as: JSONValue.self)
+    }
+    var sent = second.sent.makeAsyncIterator()
+    await gateway.enterForeground()
+    try await expectNothingRebound(gateway, sent: &sent, on: second)
+    await gateway.disconnect()
+}
+
+/// Bug #2b: Hermes answers the close of a runtime it already reaped with 4001; that runtime is gone too.
+@Test func aCloseHermesRefusesStillStopsTheRebind() async throws {
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
+    try await gateway.connect()
+    try await createSession(gateway, on: first, id: "r1", stored: "k1")
+    var firstSent = first.sent.makeAsyncIterator()
+    let closed = Task {
+        try await gateway.call("session.close", params: SessionCloseParams(sessionId: "r1"), as: JSONValue.self)
+    }
+    let (_, closeID) = try sentCall(try #require(await firstSent.next()))
+    await first.inject(error(closeID, code: 4001, "session not found"))
+    _ = try? await closed.value
+    var sent = second.sent.makeAsyncIterator()
+    await first.sever()
+    try await expectNothingRebound(gateway, sent: &sent, on: second)
+    await gateway.disconnect()
+}
+
+/// Bug #2b: an event of a closed runtime arriving after the close must not track it again through its watermark.
+@Test func aLateEventDoesNotTrackAClosedSessionAgain() async throws {
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
+    try await gateway.connect()
+    try await createSession(gateway, on: first, id: "r1", stored: "k1")
+    var events = gateway.events().makeAsyncIterator()
+    var firstSent = first.sent.makeAsyncIterator()
+    let closed = Task {
+        try await gateway.call("session.close", params: SessionCloseParams(sessionId: "r1"), as: JSONValue.self)
+    }
+    let (_, closeID) = try sentCall(try #require(await firstSent.next()))
+    await first.inject(result(closeID, #"{"closed":true}"#))
+    _ = try await closed.value
+    await first.inject(event("message.complete", session: "r1", seq: 7, payload: #"{"text":"late"}"#))
+    #expect(await events.next()?.seq == 7)
+    var sent = second.sent.makeAsyncIterator()
+    await first.sever()
+    try await expectNothingRebound(gateway, sent: &sent, on: second)
+    await gateway.disconnect()
+}
+
 @Test func reclaimedSessionIsReportedAndForgotten() async throws {
     let socket = ScriptedGatewaySocket()
     let gateway = client(socket: socket)

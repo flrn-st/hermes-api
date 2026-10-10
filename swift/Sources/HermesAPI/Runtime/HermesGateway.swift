@@ -85,6 +85,9 @@ public actor HermesGateway: HermesGatewayClient {
 
     private var sessions: [String: TrackedSession] = [:]
     private var lastSequence: [String: Int] = [:]
+    /// Runtime ids this client stopped tracking (closed, reclaimed, retired). A late event of one must not
+    /// track it again through its watermark; a new server process (replay epoch) drops them all.
+    private var forgotten: Set<String> = []
     private var activeTurns: Set<String> = []
     private var replayEpoch: String?
     private var hasConnected = false
@@ -515,10 +518,13 @@ public actor HermesGateway: HermesGatewayClient {
     ) async throws -> Result {
         try Task.checkCancellation()
         guard timeout > .zero else { throw HermesGatewayError.timeout }
+        forgetClosedSession(method: method, params: params)
         if waitsForConnection && !ready {
             try await awaitConnection(within: timeout)
         }
         guard let socket = activeSocket else { throw notConnected }
+        // A rebind may have tracked the id again while the close waited for the connection.
+        forgetClosedSession(method: method, params: params)
         let current = generation
         let id = nextID
         nextID += 1
@@ -739,7 +745,7 @@ public actor HermesGateway: HermesGatewayClient {
         default:
             break
         }
-        if let sessionID, let seq { lastSequence[sessionID] = seq }
+        if let sessionID, let seq, !forgotten.contains(sessionID) { lastSequence[sessionID] = seq }
         eventBroadcast.yield(GatewayEvent(type: type, sessionID: sessionID, seq: seq, payload: payload, replayed: replayed))
     }
 
@@ -845,11 +851,22 @@ public actor HermesGateway: HermesGatewayClient {
             session.source = arguments["source"]?.stringValue ?? session.source
             if case .boolean(let close)? = arguments["close_on_disconnect"] { session.closeOnDisconnect = close }
             sessions[sessionID] = session
-        case "session.close":
-            if let sessionID = arguments["session_id"]?.stringValue { forgetSession(sessionID) }
+            forgotten.remove(sessionID)
         default:
             break
         }
+    }
+
+    /// Closing a runtime ends this client's interest in it whatever the close's outcome: a close that times
+    /// out while the app is suspended, or that Hermes answers with 4001 because it already reaped the
+    /// runtime, would otherwise leave the id to be activated again on every reconnect and resumed under a
+    /// new runtime no caller owns. It is forgotten before the frame goes out, not when the answer arrives,
+    /// so a rebind answered after the close (the caller reopening the id) keeps it tracked.
+    private func forgetClosedSession<Params: Encodable>(method: String, params: Params) {
+        guard method == "session.close",
+              let arguments = (try? JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(params)))?.objectValue,
+              let sessionID = arguments["session_id"]?.stringValue else { return }
+        forgetSession(sessionID)
     }
 
     /// A resumed or activated session carries the requests still waiting for an answer, for example after
@@ -867,6 +884,7 @@ public actor HermesGateway: HermesGatewayClient {
     private func forgetSession(_ sessionID: String) {
         sessions[sessionID] = nil
         lastSequence[sessionID] = nil
+        forgotten.insert(sessionID)
         setTurn(sessionID, active: false)
     }
 
@@ -874,6 +892,7 @@ public actor HermesGateway: HermesGatewayClient {
     /// resumes the ones that did not survive.
     private func resetWatermarks() {
         for sessionID in lastSequence.keys { lastSequence[sessionID] = 0 }
+        forgotten.removeAll()
     }
 
     private enum Rebind {

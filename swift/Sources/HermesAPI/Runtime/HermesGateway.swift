@@ -607,7 +607,10 @@ public actor HermesGateway: HermesGatewayClient {
         switch credential {
         case .ticket(let ticket, let headers):
             guard !ticket.isEmpty else { throw HermesGatewayError.transport("Empty WebSocket ticket") }
-            // Hermes accepts a ticket in the protocol header and echoes only the public protocol.
+            // Hermes 0.20.6 and later read the ticket from the protocol header and echo only the public
+            // protocol; earlier releases read only `?ticket=` and refuse the upgrade without it. The ticket
+            // is single-use and lives 30 seconds, so it rides in both (a newer Hermes prefers the header).
+            components.queryItems = [URLQueryItem(name: "ticket", value: ticket)]
             guard let url = components.url else { throw HermesGatewayError.transport("Invalid WebSocket URL") }
             return (url, headers, ["hermes-gateway-v1", "hermes-gateway-ticket.\(ticket)"])
         case .localToken(let token, let headers):

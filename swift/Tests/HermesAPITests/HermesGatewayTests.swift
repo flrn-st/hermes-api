@@ -378,8 +378,24 @@ private actor StallingTransport: GatewayTransport {
         httpTransport: TicketHTTPTransport(path: "/agents/box/api/auth/ws-ticket")
     )
     try await gateway.connect()
-    #expect(await transport.urls.map(\.absoluteString) == ["wss://relay.example/agents/box/api/ws"])
+    #expect(await transport.urls.map(\.absoluteString) == ["wss://relay.example/agents/box/api/ws?ticket=fresh-ticket"])
     #expect(await transport.subprotocols == [["hermes-gateway-v1", "hermes-gateway-ticket.fresh-ticket"]])
+    await gateway.disconnect()
+}
+
+/// Hermes before 0.20.6 reads the WebSocket ticket only from the query (bug #8: a 0.20.0 dashboard closed the
+/// upgrade with 4401 `no_credential`, which the app reported as a rejected sign-in).
+@Test func theTicketAlsoRidesInTheQueryForOlderHermes() async throws {
+    let socket = ScriptedGatewaySocket()
+    let transport = ScriptedGatewayTransport([socket])
+    let gateway = client(
+        transport, baseURL: try #require(URL(string: "https://box.example.ts.net")),
+        auth: DashboardTicketAuth { ["Authorization": "Bearer test"] }, httpTransport: TicketHTTPTransport()
+    )
+    try await gateway.connect()
+    let url = try #require(await transport.urls.first)
+    let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+    #expect(query == [URLQueryItem(name: "ticket", value: "fresh-ticket")])
     await gateway.disconnect()
 }
 
@@ -414,6 +430,7 @@ private actor AddressBook {
         if reconnected && state == .connected { break }
     }
     #expect(await transport.urls.map(\.absoluteString)
+            .map { $0.components(separatedBy: "?")[0] }
             == ["wss://primary.example/api/ws", "wss://fallback.example/api/ws", "wss://primary.example/api/ws"])
     #expect(await book.failures == [nil, .transport("primary unreachable"), .transport("connection reset")])
     await gateway.disconnect()

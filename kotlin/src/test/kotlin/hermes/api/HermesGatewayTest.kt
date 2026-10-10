@@ -322,7 +322,7 @@ class HermesGatewayTest {
         ), scope = backgroundScope)
         gateway.connect()
         assertEquals("https://relay.example/agents/box/api/auth/ws-ticket", ticketURI.toString())
-        assertEquals("wss://relay.example/agents/box/api/ws", socketURI.toString())
+        assertEquals("wss://relay.example/agents/box/api/ws?ticket=single-use", socketURI.toString())
         assertEquals(listOf("hermes-gateway-v1", "hermes-gateway-ticket.single-use"), socketProtocols)
         gateway.disconnect()
     }

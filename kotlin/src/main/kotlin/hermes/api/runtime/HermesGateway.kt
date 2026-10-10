@@ -970,7 +970,10 @@ public class HermesGateway(
         return when (credential) {
             is GatewayCredential.Ticket -> {
                 if (credential.value.isEmpty()) throw HermesGatewayException.Transport("Empty WebSocket ticket")
-                Triple(socketURI(), credential.headers, listOf("hermes-gateway-v1", "hermes-gateway-ticket.${credential.value}"))
+                // Hermes 0.20.6 and later read the ticket from the protocol header and echo only the public
+                // protocol; earlier releases read only `?ticket=` and refuse the upgrade without it. The ticket
+                // is single-use and lives 30 seconds, so it rides in both (a newer Hermes prefers the header).
+                Triple(socketURI("ticket=" + URLEncoder.encode(credential.value, "UTF-8")), credential.headers, listOf("hermes-gateway-v1", "hermes-gateway-ticket.${credential.value}"))
             }
             is GatewayCredential.LocalToken -> {
                 if (credential.value.isEmpty()) throw HermesGatewayException.Transport("Empty local token")

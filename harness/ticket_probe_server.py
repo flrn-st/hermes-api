@@ -1,4 +1,4 @@
-"""Minimal WebSocket peer that enforces the Hermes ticket subprotocol shape."""
+"""Minimal WebSocket peer that enforces the Hermes ticket subprotocol shape and the `?ticket=` older releases read."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ async def main(port: int) -> None:
         protocols = [value.strip() for value in socket.request.headers.get("Sec-WebSocket-Protocol", "").split(",")]
         if (socket.subprotocol != "hermes-gateway-v1" or
                 protocols != ["hermes-gateway-v1", f"hermes-gateway-ticket.{ticket}"] or
-                urlsplit(socket.request.path).query):
+                urlsplit(socket.request.path).query != f"ticket={ticket}"):
             await socket.close(code=1008, reason="Invalid ticket subprotocol")
             return
         await socket.send(json.dumps({"jsonrpc": "2.0", "method": "event", "params": {

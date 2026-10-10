@@ -132,8 +132,9 @@ The voice status handler always includes `reason`, which can be JSON `null`;
 both generated decoders preserve that distinction and reject a missing key.
 
 A separate strict WebSocket probe verifies both client adapters transmit the
-public `hermes-gateway-v1` and private ticket subprotocols, with no ticket in
-the URL. This found a Kotlin transport bug: an `io.ktor.http.headers` import
+public `hermes-gateway-v1` and private ticket subprotocols. Both clients also
+put the ticket in `?ticket=`, because Hermes before 0.20.6 reads only the query
+and refuses the upgrade without it. This found a Kotlin transport bug: an `io.ktor.http.headers` import
 created and discarded a standalone headers object. App authentication headers
 on the ticket POST were also lost. The transport now appends headers to the
 actual Ktor request, uses the planned OkHttp engine by default, and a local

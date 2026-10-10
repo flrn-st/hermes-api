@@ -9,6 +9,137 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway_drain``: ``cancel`` answers ``was_draining``; ``drain`` echoes the marker it wrote (``gateway/drain_control.py::write_drain_request``) and whether a drain is now active. */
+@Serializable
+public data class GatewayDrainResponse(
+    @SerialName("action")
+    public val action: GatewayDrainResponseAction,
+    @SerialName("draining")
+    public val draining: Boolean? = null,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("requested_at")
+    public val requestedAt: String? = null,
+    @SerialName("suppress_notification")
+    public val suppressNotification: Boolean? = null,
+    @SerialName("was_draining")
+    public val wasDraining: Boolean? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = GatewayDrainResponseAction.Serializer::class)
+public sealed interface GatewayDrainResponseAction {
+    public data object Drain : GatewayDrainResponseAction
+    public data object Cancel : GatewayDrainResponseAction
+    public data class Unknown(public val raw: kotlin.String) : GatewayDrainResponseAction
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Drain -> "drain"
+            Cancel -> "cancel"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): GatewayDrainResponseAction = when (raw) {
+            "drain" -> Drain
+            "cancel" -> Cancel
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<GatewayDrainResponseAction> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainResponseAction", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): GatewayDrainResponseAction = when (val raw = decoder.decodeString()) {
+            "drain" -> Drain
+            "cancel" -> Cancel
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected GatewayDrainResponseAction value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: GatewayDrainResponseAction) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway_migrate_plan`` → ``hermes_cli/gateway_migrate.py::MigrationPlan.to_dict`` (the same JSON as ``hermes gateway migrate --plan``). */
+@Serializable
+public data class GatewayMigrationPlanResponse(
+    @SerialName("already_multiplexed")
+    public val alreadyMultiplexed: Boolean,
+    @SerialName("blockers")
+    public val blockers: List<String>,
+    @SerialName("command")
+    public val command: String,
+    @SerialName("default_home")
+    public val defaultHome: String,
+    @SerialName("eligible")
+    public val eligible: Boolean,
+    @SerialName("interrupted")
+    public val interrupted: Boolean,
+    @SerialName("live_served")
+    public val liveServed: List<String>?,
+    @SerialName("multiplex_flag_on")
+    public val multiplexFlagOn: Boolean,
+    @SerialName("notices")
+    public val notices: List<String>,
+    @SerialName("profiles")
+    public val profiles: List<GatewayMigrationProfile>,
+    @SerialName("standalone_by_config")
+    public val standaloneByConfig: List<String>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/gateway_migrate.py::ProfileGateway.to_dict``. */
+@Serializable
+public data class GatewayMigrationProfile(
+    @SerialName("home")
+    public val home: String,
+    @SerialName("pid")
+    public val pid: Long?,
+    @SerialName("profile")
+    public val profile: String,
+    @SerialName("run_as_user")
+    public val runAsUser: String?,
+    @SerialName("runtime_home")
+    public val runtimeHome: String?,
+    @SerialName("service")
+    public val service: GatewayMigrationService?,
+    @SerialName("services")
+    public val services: List<GatewayMigrationService>,
+    @SerialName("uid")
+    public val uid: Long?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/gateway_migrate.py::_service_dict`` — ``kind`` is ``systemd``, ``launchd``, ``s6`` or ``windows``; ``system`` marks a system-scope systemd unit. */
+@Serializable
+public data class GatewayMigrationService(
+    @SerialName("kind")
+    public val kind: String,
+    @SerialName("system")
+    public val system: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.base_branch_list`` row. */
+@Serializable
+public data class GitBaseBranchRow(
+    @SerialName("isDefault")
+    public val isDefault: Boolean,
+    @SerialName("isRemote")
+    public val isRemote: Boolean,
+    @SerialName("name")
+    public val name: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``git_base_branches_route``. */
+@Serializable
+public data class GitBaseBranchesResponse(
+    @SerialName("branches")
+    public val branches: List<GitBaseBranchRow>,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.branch_list`` row: local heads, then remote-tracking refs without a local head. */
 @Serializable
 public data class GitBranchRow(
@@ -398,159 +529,4 @@ public data class HealthIdleResponse(
     public val ok: Boolean,
     @SerialName("reason")
     public val reason: HealthIdleResponseReason?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = HealthIdleResponseReason.Serializer::class)
-public sealed interface HealthIdleResponseReason {
-    public data object TurnProbeUnavailable : HealthIdleResponseReason
-    public data object TurnInFlight : HealthIdleResponseReason
-    public data object InputProbeUnavailable : HealthIdleResponseReason
-    public data object AwaitingHumanInput : HealthIdleResponseReason
-    public data class Unknown(public val raw: kotlin.String) : HealthIdleResponseReason
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            TurnProbeUnavailable -> "turn_probe_unavailable"
-            TurnInFlight -> "turn_in_flight"
-            InputProbeUnavailable -> "input_probe_unavailable"
-            AwaitingHumanInput -> "awaiting_human_input"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): HealthIdleResponseReason = when (raw) {
-            "turn_probe_unavailable" -> TurnProbeUnavailable
-            "turn_in_flight" -> TurnInFlight
-            "input_probe_unavailable" -> InputProbeUnavailable
-            "awaiting_human_input" -> AwaitingHumanInput
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<HealthIdleResponseReason> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("HealthIdleResponseReason", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): HealthIdleResponseReason = when (val raw = decoder.decodeString()) {
-            "turn_probe_unavailable" -> TurnProbeUnavailable
-            "turn_in_flight" -> TurnInFlight
-            "input_probe_unavailable" -> InputProbeUnavailable
-            "awaiting_human_input" -> AwaitingHumanInput
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected HealthIdleResponseReason value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: HealthIdleResponseReason) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_health``. ``version`` is ``hermes_cli.__version__``. */
-@Serializable
-public data class HealthResponse(
-    @SerialName("auth_required")
-    public val authRequired: Boolean,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("version")
-    public val version: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``post_health_retirement``: ``token`` (from ``prepare``) is required to ``commit`` or ``cancel``. */
-@Serializable
-public data class HealthRetirementRequest(
-    @SerialName("action")
-    public val action: HealthRetirementRequestAction,
-    @SerialName("token")
-    public val token: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = HealthRetirementRequestAction.Serializer::class)
-public sealed interface HealthRetirementRequestAction {
-    public data object Prepare : HealthRetirementRequestAction
-    public data object Commit : HealthRetirementRequestAction
-    public data object Cancel : HealthRetirementRequestAction
-    public data class Unknown(public val raw: kotlin.String) : HealthRetirementRequestAction
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Prepare -> "prepare"
-            Commit -> "commit"
-            Cancel -> "cancel"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): HealthRetirementRequestAction = when (raw) {
-            "prepare" -> Prepare
-            "commit" -> Commit
-            "cancel" -> Cancel
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<HealthRetirementRequestAction> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("HealthRetirementRequestAction", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): HealthRetirementRequestAction = when (val raw = decoder.decodeString()) {
-            "prepare" -> Prepare
-            "commit" -> Commit
-            "cancel" -> Cancel
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected HealthRetirementRequestAction value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: HealthRetirementRequestAction) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``post_health_retirement`` — ``hermes_cli/backend_retirement.py::RetirementFence`` ``prepare`` / ``commit`` / ``cancel``. Only ``prepare`` carries ``idle`` (``null`` = cannot prove idle) and, when it succeeded, ``token``. */
-@Serializable
-public data class HealthRetirementResponse(
-    @SerialName("idle")
-    public val idle: Boolean? = null,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("token")
-    public val token: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``check_hermes_update``. ``behind``: commits behind, ``0`` up to date, ``-1`` behind by an unknown count, ``null`` when the check could not run or does not apply. ``install_method`` is ``detect_install_method``'s value, or ``"managed-runtime"`` (with ``update_command: "managed outside dashboard"``) when the dashboard's local updater is managed externally. ``commits`` only when an update is available. */
-@Serializable
-public data class HermesUpdateCheckResponse(
-    @SerialName("behind")
-    public val behind: Long?,
-    @SerialName("can_apply")
-    public val canApply: Boolean,
-    @SerialName("commits")
-    public val commits: List<HermesUpdateCommit>? = null,
-    @SerialName("current_version")
-    public val currentVersion: String,
-    @SerialName("install_method")
-    public val installMethod: String,
-    @SerialName("message")
-    public val message: String?,
-    @SerialName("update_available")
-    public val updateAvailable: Boolean,
-    @SerialName("update_command")
-    public val updateCommand: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/banner.py::upstream_commits_behind`` row (GitHub compare, newest first, at most 20): ``sha`` shortened to 7 chars, ``summary`` the first message line, ``at`` the committer date in epoch seconds (``0`` when unparseable); the list is ``[]`` when the compare is unavailable. */
-@Serializable
-public data class HermesUpdateCommit(
-    @SerialName("at")
-    public val at: Long,
-    @SerialName("author")
-    public val author: String,
-    @SerialName("sha")
-    public val sha: String,
-    @SerialName("summary")
-    public val summary: String,
 )

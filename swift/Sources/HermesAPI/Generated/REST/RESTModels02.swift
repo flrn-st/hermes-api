@@ -1843,13 +1843,13 @@ public struct CronJobRepeat: Codable, Sendable, Hashable {
 /// One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1.
 public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var actualCostUsd: Double?
-    public var apiCallCount: Int
+    public var apiCallCount: Int?
     public var archived: Bool
     public var billingBaseUrl: String?
     public var billingMode: String?
     public var billingProvider: String?
-    public var cacheReadTokens: Int
-    public var cacheWriteTokens: Int
+    public var cacheReadTokens: Int?
+    public var cacheWriteTokens: Int?
     public var chatId: String?
     public var chatType: String?
     public var compressionFailureCooldownUntil: Double?
@@ -1864,7 +1864,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var endReason: String?
     public var endedAt: Double?
     public var estimatedCostUsd: Double?
-    public var expiryFinalized: Int
+    public var expiryFinalized: Int?
     public var gitBranch: String?
     public var gitMetadataGeneration: Int
     public var gitRepoRoot: String?
@@ -1873,7 +1873,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var handoffState: String?
     public var hidden: Int
     public var id: String
-    public var inputTokens: Int
+    public var inputTokens: Int?
     public var isActive: Bool
     public var lastActive: Double
     public var lastActivityAt: Double?
@@ -1881,11 +1881,11 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var lastActivityProvenance: String?
     /// Read watermark; ``0`` = marked unread, null = never tracked.
     public var lastReadAt: Double?
-    public var messageCount: Int
+    public var messageCount: Int?
     public var model: String?
     public var modelConfig: String?
     public var originJson: String?
-    public var outputTokens: Int
+    public var outputTokens: Int?
     public var parentSessionId: String?
     public var pinned: Int
     public var preview: String
@@ -1893,7 +1893,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     /// Absent when no profile holds the job.
     public var profile: String?
     public var profileName: String?
-    public var reasoningTokens: Int
+    public var reasoningTokens: Int?
     public var rewindCount: Int
     public var sessionKey: String?
     public var source: String
@@ -1903,13 +1903,13 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var threadId: String?
     public var title: String?
     public var titleSource: String?
-    public var toolCallCount: Int
+    public var toolCallCount: Int?
     public var toolNames: String?
     public var transportProfile: String?
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(actualCostUsd: Double?, apiCallCount: Int, archived: Bool, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int, cacheWriteTokens: Int, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int, isActive: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int, parentSessionId: String?, pinned: Int, preview: String, pricingVersion: String?, profile: String? = nil, profileName: String?, reasoningTokens: Int, rewindCount: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, preview: String, pricingVersion: String?, profile: String? = nil, profileName: String?, reasoningTokens: Int?, rewindCount: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
         self.actualCostUsd = actualCostUsd
         self.apiCallCount = apiCallCount
         self.archived = archived
@@ -2045,13 +2045,13 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
-        apiCallCount = try container.decode(Int.self, forKey: .apiCallCount)
+        apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
         archived = try container.decode(Bool.self, forKey: .archived)
         billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
         billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
         billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
-        cacheReadTokens = try container.decode(Int.self, forKey: .cacheReadTokens)
-        cacheWriteTokens = try container.decode(Int.self, forKey: .cacheWriteTokens)
+        cacheReadTokens = try container.decode(Optional<Int>.self, forKey: .cacheReadTokens)
+        cacheWriteTokens = try container.decode(Optional<Int>.self, forKey: .cacheWriteTokens)
         chatId = try container.decode(Optional<String>.self, forKey: .chatId)
         chatType = try container.decode(Optional<String>.self, forKey: .chatType)
         compressionFailureCooldownUntil = try container.decode(Optional<Double>.self, forKey: .compressionFailureCooldownUntil)
@@ -2066,7 +2066,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         endReason = try container.decode(Optional<String>.self, forKey: .endReason)
         endedAt = try container.decode(Optional<Double>.self, forKey: .endedAt)
         estimatedCostUsd = try container.decode(Optional<Double>.self, forKey: .estimatedCostUsd)
-        expiryFinalized = try container.decode(Int.self, forKey: .expiryFinalized)
+        expiryFinalized = try container.decode(Optional<Int>.self, forKey: .expiryFinalized)
         gitBranch = try container.decode(Optional<String>.self, forKey: .gitBranch)
         gitMetadataGeneration = try container.decode(Int.self, forKey: .gitMetadataGeneration)
         gitRepoRoot = try container.decode(Optional<String>.self, forKey: .gitRepoRoot)
@@ -2075,25 +2075,25 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         handoffState = try container.decode(Optional<String>.self, forKey: .handoffState)
         hidden = try container.decode(Int.self, forKey: .hidden)
         id = try container.decode(String.self, forKey: .id)
-        inputTokens = try container.decode(Int.self, forKey: .inputTokens)
+        inputTokens = try container.decode(Optional<Int>.self, forKey: .inputTokens)
         isActive = try container.decode(Bool.self, forKey: .isActive)
         lastActive = try container.decode(Double.self, forKey: .lastActive)
         lastActivityAt = try container.decode(Optional<Double>.self, forKey: .lastActivityAt)
         lastActivityDescription = try container.decode(Optional<String>.self, forKey: .lastActivityDescription)
         lastActivityProvenance = try container.decode(Optional<String>.self, forKey: .lastActivityProvenance)
         lastReadAt = try container.decode(Optional<Double>.self, forKey: .lastReadAt)
-        messageCount = try container.decode(Int.self, forKey: .messageCount)
+        messageCount = try container.decode(Optional<Int>.self, forKey: .messageCount)
         model = try container.decode(Optional<String>.self, forKey: .model)
         modelConfig = try container.decode(Optional<String>.self, forKey: .modelConfig)
         originJson = try container.decode(Optional<String>.self, forKey: .originJson)
-        outputTokens = try container.decode(Int.self, forKey: .outputTokens)
+        outputTokens = try container.decode(Optional<Int>.self, forKey: .outputTokens)
         parentSessionId = try container.decode(Optional<String>.self, forKey: .parentSessionId)
         pinned = try container.decode(Int.self, forKey: .pinned)
         preview = try container.decode(String.self, forKey: .preview)
         pricingVersion = try container.decode(Optional<String>.self, forKey: .pricingVersion)
         profile = try container.decodeIfPresent(String.self, forKey: .profile)
         profileName = try container.decode(Optional<String>.self, forKey: .profileName)
-        reasoningTokens = try container.decode(Int.self, forKey: .reasoningTokens)
+        reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
         rewindCount = try container.decode(Int.self, forKey: .rewindCount)
         sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
@@ -2103,7 +2103,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         threadId = try container.decode(Optional<String>.self, forKey: .threadId)
         title = try container.decode(Optional<String>.self, forKey: .title)
         titleSource = try container.decode(Optional<String>.self, forKey: .titleSource)
-        toolCallCount = try container.decode(Int.self, forKey: .toolCallCount)
+        toolCallCount = try container.decode(Optional<Int>.self, forKey: .toolCallCount)
         toolNames = try container.decode(Optional<String>.self, forKey: .toolNames)
         transportProfile = try container.decode(Optional<String>.self, forKey: .transportProfile)
         userId = try container.decode(Optional<String>.self, forKey: .userId)

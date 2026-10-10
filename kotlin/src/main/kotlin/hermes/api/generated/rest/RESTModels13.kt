@@ -9,6 +9,150 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``disconnect_oauth_provider``; ``ok`` is whether any credential was actually cleared. */
+@Serializable
+public data class OAuthDisconnectResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("provider")
+    public val provider: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_oauth_providers``. */
+@Serializable
+public data class OAuthProviderListResponse(
+    @SerialName("providers")
+    public val providers: List<OAuthProviderRow>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``_build_oauth_catalog`` row; ``disconnectable`` is ``disconnect_hint is None``. */
+@Serializable
+public data class OAuthProviderRow(
+    @SerialName("cli_command")
+    public val cliCommand: String,
+    @SerialName("disconnect_command")
+    public val disconnectCommand: String?,
+    @SerialName("disconnect_hint")
+    public val disconnectHint: String?,
+    @SerialName("disconnectable")
+    public val disconnectable: Boolean,
+    @SerialName("docs_url")
+    public val docsUrl: String,
+    /** Catalog flow: "device_code" or "external" for the built-in cards. */
+    @SerialName("flow")
+    public val flow: String,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("status")
+    public val status: OAuthProviderStatus,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_resolve_provider_status`` — the union of ``_status_card`` (plus the Nous tier fields), the catalog ``status_fn`` cards in ``hermes_cli/web_server_oauth.py`` (``configured`` is copilot-acp only; a logged-out Anthropic/Claude Code card is just ``logged_in`` + ``source``), and the ``{"logged_in": false, "error"}`` fallback when a status helper raised. */
+@Serializable
+public data class OAuthProviderStatus(
+    @SerialName("account_tier")
+    public val accountTier: String? = null,
+    @SerialName("configured")
+    public val configured: Boolean? = null,
+    @SerialName("error")
+    public val error: String? = null,
+    /** As the provider stores it: an ISO timestamp or an epoch number (Claude Code: ms). */
+    @SerialName("expires_at")
+    public val expiresAt: OAuthProviderStatusExpiresAt? = null,
+    @SerialName("free_tier")
+    public val freeTier: Boolean? = null,
+    @SerialName("has_refresh_token")
+    public val hasRefreshToken: Boolean? = null,
+    @SerialName("last_refresh")
+    public val lastRefresh: String? = null,
+    @SerialName("logged_in")
+    public val loggedIn: Boolean,
+    @SerialName("source")
+    public val source: String? = null,
+    @SerialName("source_label")
+    public val sourceLabel: String? = null,
+    /** Last few characters only, never the token. */
+    @SerialName("token_preview")
+    public val tokenPreview: String? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = OAuthProviderStatusExpiresAt.Serializer::class)
+public sealed interface OAuthProviderStatusExpiresAt {
+    public data class StringValue(public val value: String) : OAuthProviderStatusExpiresAt
+    public data class DoubleValue(public val value: Double) : OAuthProviderStatusExpiresAt
+
+    public object Serializer : KSerializer<OAuthProviderStatusExpiresAt> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): OAuthProviderStatusExpiresAt {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("OAuthProviderStatusExpiresAt requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No OAuthProviderStatusExpiresAt variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: OAuthProviderStatusExpiresAt) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("OAuthProviderStatusExpiresAt requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``cancel_oauth_session``: ``{"ok": true, "session_id"}`` or, for an unknown session, ``{"ok": false, "message"}``. */
+@Serializable
+public data class OAuthSessionCancelResponse(
+    @SerialName("message")
+    public val message: String? = null,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("session_id")
+    public val sessionId: String? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``poll_oauth_session``. ``reason`` / ``account_email`` / ``model`` / ``retryable`` / ``retry_after`` are only set by a Nous sign-in over a free-tier identity (``hermes_cli/web_server_oauth.py::_record_sign_in_state``). */
+@Serializable
+public data class OAuthSessionPollResponse(
+    @SerialName("account_email")
+    public val accountEmail: String?,
+    @SerialName("error_message")
+    public val errorMessage: String?,
+    /** Epoch seconds; null until the flow knows it. */
+    @SerialName("expires_at")
+    public val expiresAt: Double?,
+    @SerialName("model")
+    public val model: String?,
+    @SerialName("reason")
+    public val reason: String?,
+    @SerialName("retry_after")
+    public val retryAfter: Long?,
+    @SerialName("retryable")
+    public val retryable: Boolean?,
+    @SerialName("session_id")
+    public val sessionId: String,
+    @SerialName("status")
+    public val status: OAuthSessionPollResponseStatus,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = OAuthSessionPollResponseStatus.Serializer::class)
 public sealed interface OAuthSessionPollResponseStatus {
@@ -563,16 +707,56 @@ public data class PluginVisibilityResponse(
     public val ok: Boolean,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair. ``description`` is the engine's ``plugin.yaml`` value as written, which Hermes does not validate: a number or ``null`` there arrives as is. */
 @Serializable
 public data class PluginsHubContextOption(
     @SerialName("description")
-    public val description: String,
+    public val description: PluginsHubContextOptionDescription?,
     @SerialName("name")
     public val name: String,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = PluginsHubContextOptionDescription.Serializer::class)
+public sealed interface PluginsHubContextOptionDescription {
+    public data class StringValue(public val value: String) : PluginsHubContextOptionDescription
+    public data class DoubleValue(public val value: Double) : PluginsHubContextOptionDescription
+
+    public object Serializer : KSerializer<PluginsHubContextOptionDescription> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): PluginsHubContextOptionDescription {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("PluginsHubContextOptionDescription requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No PluginsHubContextOptionDescription variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: PluginsHubContextOptionDescription) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("PluginsHubContextOptionDescription requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row. ``name``, ``version`` and ``description`` are the plugin's ``plugin.yaml`` values as written, which Hermes does not validate (``version: 1.0`` is a number); an empty ``version`` or ``description`` becomes ``""``, while an empty ``name`` stays ``null``. */
 @Serializable
 public data class PluginsHubPluginRow(
     @SerialName("auth_command")
@@ -586,11 +770,11 @@ public data class PluginsHubPluginRow(
     @SerialName("dashboard_manifest")
     public val dashboardManifest: DashboardPluginManifest?,
     @SerialName("description")
-    public val description: String,
+    public val description: PluginsHubPluginRowDescription,
     @SerialName("has_dashboard_manifest")
     public val hasDashboardManifest: Boolean,
     @SerialName("name")
-    public val name: String,
+    public val name: PluginsHubPluginRowName?,
     @SerialName("path")
     public val path: String,
     @SerialName("removed_reason")
@@ -602,8 +786,88 @@ public data class PluginsHubPluginRow(
     @SerialName("user_hidden")
     public val userHidden: Boolean,
     @SerialName("version")
-    public val version: String,
+    public val version: PluginsHubPluginRowVersion,
 )
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = PluginsHubPluginRowDescription.Serializer::class)
+public sealed interface PluginsHubPluginRowDescription {
+    public data class StringValue(public val value: String) : PluginsHubPluginRowDescription
+    public data class DoubleValue(public val value: Double) : PluginsHubPluginRowDescription
+
+    public object Serializer : KSerializer<PluginsHubPluginRowDescription> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): PluginsHubPluginRowDescription {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("PluginsHubPluginRowDescription requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No PluginsHubPluginRowDescription variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: PluginsHubPluginRowDescription) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("PluginsHubPluginRowDescription requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = PluginsHubPluginRowName.Serializer::class)
+public sealed interface PluginsHubPluginRowName {
+    public data class StringValue(public val value: String) : PluginsHubPluginRowName
+    public data class DoubleValue(public val value: Double) : PluginsHubPluginRowName
+
+    public object Serializer : KSerializer<PluginsHubPluginRowName> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): PluginsHubPluginRowName {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("PluginsHubPluginRowName requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No PluginsHubPluginRowName variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: PluginsHubPluginRowName) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("PluginsHubPluginRowName requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = PluginsHubPluginRowRuntimeStatus.Serializer::class)
@@ -695,213 +959,42 @@ public sealed interface PluginsHubPluginRowSource {
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``memory_provider`` is ``""`` for the built-in provider; ``context_engine`` defaults to ``"compressor"``. */
-@Serializable
-public data class PluginsHubProviders(
-    @SerialName("context_engine")
-    public val contextEngine: String,
-    @SerialName("context_options")
-    public val contextOptions: List<PluginsHubContextOption>,
-    @SerialName("memory_options")
-    public val memoryOptions: List<MemoryProviderStatusRow>,
-    @SerialName("memory_provider")
-    public val memoryProvider: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub``. */
-@Serializable
-public data class PluginsHubResponse(
-    @SerialName("orphan_dashboard_plugins")
-    public val orphanDashboardPlugins: List<DashboardPluginManifest>,
-    @SerialName("plugins")
-    public val plugins: List<PluginsHubPluginRow>,
-    @SerialName("providers")
-    public val providers: PluginsHubProviders,
-)
-
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class PortalFeature(
-    @SerialName("label")
-    public val label: String,
-    /** "via Nous Portal", the active provider name, "active" or "not configured". */
-    @SerialName("state")
-    public val state: String,
-)
+@Serializable(with = PluginsHubPluginRowVersion.Serializer::class)
+public sealed interface PluginsHubPluginRowVersion {
+    public data class StringValue(public val value: String) : PluginsHubPluginRowVersion
+    public data class DoubleValue(public val value: Double) : PluginsHubPluginRowVersion
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_get_portal_status_sync``. */
-@Serializable
-public data class PortalStatusResponse(
-    @SerialName("account_tier")
-    public val accountTier: String?,
-    @SerialName("features")
-    public val features: List<PortalFeature>,
-    @SerialName("free_tier")
-    public val freeTier: Boolean,
-    @SerialName("inference_url")
-    public val inferenceUrl: String?,
-    @SerialName("logged_in")
-    public val loggedIn: Boolean,
-    @SerialName("portal_url")
-    public val portalUrl: String?,
-    @SerialName("provider")
-    public val provider: String,
-    @SerialName("subscription_url")
-    public val subscriptionUrl: String,
-)
+    public object Serializer : KSerializer<PluginsHubPluginRowVersion> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_active_profile_endpoint``: the sticky default and the profile this dashboard serves. */
-@Serializable
-public data class ProfileActiveResponse(
-    @SerialName("active")
-    public val active: String,
-    @SerialName("current")
-    public val current: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ProfileActiveUpdate(
-    @SerialName("name")
-    public val name: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ProfileCreate.Serializer::class)
-public data class ProfileCreate(
-    public val cloneAll: Boolean? = null,
-    public val cloneChannels: Boolean? = null,
-    public val cloneFrom: Patch<String> = Patch.Absent,
-    public val cloneFromDefault: Boolean? = null,
-    public val description: Patch<String> = Patch.Absent,
-    public val hubSkills: List<String>? = null,
-    public val keepSkills: List<String>? = null,
-    public val mcpServers: List<MCPServerCreate>? = null,
-    public val model: Patch<String> = Patch.Absent,
-    public val name: String,
-    public val noSkills: Boolean? = null,
-    public val provider: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ProfileCreate> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ProfileCreate {
+        override fun deserialize(decoder: Decoder): PluginsHubPluginRowVersion {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ProfileCreate requires JSON")
+                ?: throw SerializationException("PluginsHubPluginRowVersion requires JSON")
             val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ProfileCreate requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("clone_all", "clone_channels", "clone_from", "clone_from_default", "description", "hub_skills", "keep_skills", "mcp_servers", "model", "name", "no_skills", "provider")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
             }
-            return ProfileCreate(
-                cloneAll = input["clone_all"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                cloneChannels = input["clone_channels"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                cloneFrom = when (val raw = input["clone_from"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                cloneFromDefault = input["clone_from_default"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                description = when (val raw = input["description"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                hubSkills = input["hub_skills"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                keepSkills = input["keep_skills"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                mcpServers = input["mcp_servers"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<MCPServerCreate>>(it) },
-                model = when (val raw = input["model"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
-                noSkills = input["no_skills"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                provider = when (val raw = input["provider"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
+            try {
+                return DoubleValue(json.decodeFromJsonElement<Double>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No PluginsHubPluginRowVersion variant matched")
         }
 
-        override fun serialize(encoder: Encoder, value: ProfileCreate) {
+        override fun serialize(encoder: Encoder, value: PluginsHubPluginRowVersion) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ProfileCreate requires JSON")
+                ?: throw SerializationException("PluginsHubPluginRowVersion requires JSON")
             val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            value.cloneAll?.let { output["clone_all"] = json.encodeToJsonElement(it) }
-            value.cloneChannels?.let { output["clone_channels"] = json.encodeToJsonElement(it) }
-            when (val patch = value.cloneFrom) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["clone_from"] = JsonNull
-                is Patch.Value -> output["clone_from"] = json.encodeToJsonElement(patch.value)
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is DoubleValue -> json.encodeToJsonElement(value.value)
             }
-            value.cloneFromDefault?.let { output["clone_from_default"] = json.encodeToJsonElement(it) }
-            when (val patch = value.description) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["description"] = JsonNull
-                is Patch.Value -> output["description"] = json.encodeToJsonElement(patch.value)
-            }
-            value.hubSkills?.let { output["hub_skills"] = json.encodeToJsonElement(it) }
-            value.keepSkills?.let { output["keep_skills"] = json.encodeToJsonElement(it) }
-            value.mcpServers?.let { output["mcp_servers"] = json.encodeToJsonElement(it) }
-            when (val patch = value.model) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["model"] = JsonNull
-                is Patch.Value -> output["model"] = json.encodeToJsonElement(patch.value)
-            }
-            output["name"] = json.encodeToJsonElement(value.name)
-            value.noSkills?.let { output["no_skills"] = json.encodeToJsonElement(it) }
-            when (val patch = value.provider) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["provider"] = JsonNull
-                is Patch.Value -> output["provider"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
+            jsonEncoder.encodeJsonElement(element)
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``create_profile_endpoint``; ``model_error`` is ``""`` unless the model pick was rejected. */
-@Serializable
-public data class ProfileCreateResponse(
-    @SerialName("hub_installs")
-    public val hubInstalls: List<ProfileHubInstall>,
-    @SerialName("mcp_written")
-    public val mcpWritten: Long,
-    @SerialName("model_error")
-    public val modelError: String,
-    @SerialName("model_set")
-    public val modelSet: Boolean,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("skills_disabled")
-    public val skillsDisabled: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_profile_endpoint``; the settlement keys ride only when the directory is gone but ``ProfileIdentitySettlementPending`` left its identity unsettled. */
-@Serializable
-public data class ProfileDeleteResponse(
-    @SerialName("identity_settled")
-    public val identitySettled: Boolean? = null,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("retry_command")
-    public val retryCommand: String? = null,
-    @SerialName("settlement_pending")
-    public val settlementPending: Boolean? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ProfileDescribeAuto(
-    @SerialName("overwrite")
-    public val overwrite: Boolean? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``describe_profile_auto_endpoint`` over ``hermes_cli/profile_describer.py::DescribeOutcome``; a failed generation is ``ok: false`` with its ``reason``. */
-@Serializable
-public data class ProfileDescribeAutoResponse(
-    @SerialName("description")
-    public val description: String?,
-    @SerialName("description_auto")
-    public val descriptionAuto: Boolean,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("reason")
-    public val reason: String,
-)

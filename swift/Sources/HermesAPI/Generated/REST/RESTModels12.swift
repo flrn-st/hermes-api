@@ -2,6 +2,357 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+/// One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose).
+public struct MessagingPlatformEnvVar: Codable, Sendable, Hashable {
+    public var advanced: Bool
+    public var description: String
+    public var help: String
+    public var isPassword: Bool
+    public var isSet: Bool
+    public var key: String
+    public var prompt: String
+    public var redactedValue: String?
+    public var required: Bool
+    public var url: String?
+
+    public init(advanced: Bool, description: String, help: String, isPassword: Bool, isSet: Bool, key: String, prompt: String, redactedValue: String?, required: Bool, url: String?) {
+        self.advanced = advanced
+        self.description = description
+        self.help = help
+        self.isPassword = isPassword
+        self.isSet = isSet
+        self.key = key
+        self.prompt = prompt
+        self.redactedValue = redactedValue
+        self.required = required
+        self.url = url
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case advanced = "advanced"
+        case description = "description"
+        case help = "help"
+        case isPassword = "is_password"
+        case isSet = "is_set"
+        case key = "key"
+        case prompt = "prompt"
+        case redactedValue = "redacted_value"
+        case required = "required"
+        case url = "url"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["advanced", "description", "help", "is_password", "is_set", "key", "prompt", "redacted_value", "required", "url"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        advanced = try container.decode(Bool.self, forKey: .advanced)
+        description = try container.decode(String.self, forKey: .description)
+        help = try container.decode(String.self, forKey: .help)
+        isPassword = try container.decode(Bool.self, forKey: .isPassword)
+        isSet = try container.decode(Bool.self, forKey: .isSet)
+        key = try container.decode(String.self, forKey: .key)
+        prompt = try container.decode(String.self, forKey: .prompt)
+        redactedValue = try container.decode(Optional<String>.self, forKey: .redactedValue)
+        required = try container.decode(Bool.self, forKey: .required)
+        url = try container.decode(Optional<String>.self, forKey: .url)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(advanced, forKey: .advanced)
+        try container.encode(description, forKey: .description)
+        try container.encode(help, forKey: .help)
+        try container.encode(isPassword, forKey: .isPassword)
+        try container.encode(isSet, forKey: .isSet)
+        try container.encode(key, forKey: .key)
+        try container.encode(prompt, forKey: .prompt)
+        try container.encode(redactedValue, forKey: .redactedValue)
+        try container.encode(required, forKey: .required)
+        try container.encode(url, forKey: .url)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``test_messaging_platform`` — a verdict over the same payload as the platform list.
+public struct MessagingPlatformTestResponse: Codable, Sendable, Hashable {
+    public var message: String
+    public var ok: Bool
+    public var state: String
+
+    public init(message: String, ok: Bool, state: String) {
+        self.message = message
+        self.ok = ok
+        self.state = state
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case message = "message"
+        case ok = "ok"
+        case state = "state"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["message", "ok", "state"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        message = try container.decode(String.self, forKey: .message)
+        ok = try container.decode(Bool.self, forKey: .ok)
+        state = try container.decode(String.self, forKey: .state)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(message, forKey: .message)
+        try container.encode(ok, forKey: .ok)
+        try container.encode(state, forKey: .state)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct MessagingPlatformUpdate: Codable, Sendable, Hashable {
+    public var clearEnv: [String]?
+    public var enabled: Patch<Bool>
+    public var env: [String: String]?
+    public var profile: Patch<String>
+
+    public init(clearEnv: [String]? = nil, enabled: Patch<Bool> = .absent, env: [String: String]? = nil, profile: Patch<String> = .absent) {
+        self.clearEnv = clearEnv
+        self.enabled = enabled
+        self.env = env
+        self.profile = profile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case clearEnv = "clear_env"
+        case enabled = "enabled"
+        case env = "env"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["clear_env", "enabled", "env", "profile"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        clearEnv = try container.decodeIfPresent([String].self, forKey: .clearEnv)
+        if !container.contains(.enabled) {
+            enabled = .absent
+        } else if try container.decodeNil(forKey: .enabled) {
+            enabled = .null
+        } else {
+            enabled = .value(try container.decode(Bool.self, forKey: .enabled))
+        }
+        env = try container.decodeIfPresent([String: String].self, forKey: .env)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(clearEnv, forKey: .clearEnv)
+        switch enabled {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .enabled)
+        case .value(let value): try container.encode(value, forKey: .enabled)
+        }
+        try container.encodeIfPresent(env, forKey: .env)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``update_messaging_platform``.
+public struct MessagingPlatformUpdateResponse: Codable, Sendable, Hashable {
+    public var hotServed: Bool
+    public var ok: Bool
+    public var platform: String
+
+    public init(hotServed: Bool, ok: Bool, platform: String) {
+        self.hotServed = hotServed
+        self.ok = ok
+        self.platform = platform
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case hotServed = "hot_served"
+        case ok = "ok"
+        case platform = "platform"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["hot_served", "ok", "platform"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        hotServed = try container.decode(Bool.self, forKey: .hotServed)
+        ok = try container.decode(Bool.self, forKey: .ok)
+        platform = try container.decode(String.self, forKey: .platform)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(hotServed, forKey: .hotServed)
+        try container.encode(ok, forKey: .ok)
+        try container.encode(platform, forKey: .platform)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``get_messaging_platforms``.
+public struct MessagingPlatformsResponse: Codable, Sendable, Hashable {
+    public var envPath: String
+    public var gatewayStartCommand: String
+    public var platforms: [MessagingPlatform]
+
+    public init(envPath: String, gatewayStartCommand: String, platforms: [MessagingPlatform]) {
+        self.envPath = envPath
+        self.gatewayStartCommand = gatewayStartCommand
+        self.platforms = platforms
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case envPath = "env_path"
+        case gatewayStartCommand = "gateway_start_command"
+        case platforms = "platforms"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["env_path", "gateway_start_command", "platforms"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        envPath = try container.decode(String.self, forKey: .envPath)
+        gatewayStartCommand = try container.decode(String.self, forKey: .gatewayStartCommand)
+        platforms = try container.decode([MessagingPlatform].self, forKey: .platforms)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(envPath, forKey: .envPath)
+        try container.encode(gatewayStartCommand, forKey: .gatewayStartCommand)
+        try container.encode(platforms, forKey: .platforms)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct MessagingWhatsAppSetup: Codable, Sendable, Hashable {
+    public var allowedUsersSet: Bool
+    public var homeChannelSet: Bool
+    public var mode: MessagingWhatsAppSetupMode
+
+    public init(allowedUsersSet: Bool, homeChannelSet: Bool, mode: MessagingWhatsAppSetupMode) {
+        self.allowedUsersSet = allowedUsersSet
+        self.homeChannelSet = homeChannelSet
+        self.mode = mode
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case allowedUsersSet = "allowed_users_set"
+        case homeChannelSet = "home_channel_set"
+        case mode = "mode"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["allowed_users_set", "home_channel_set", "mode"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        allowedUsersSet = try container.decode(Bool.self, forKey: .allowedUsersSet)
+        homeChannelSet = try container.decode(Bool.self, forKey: .homeChannelSet)
+        mode = try container.decode(MessagingWhatsAppSetupMode.self, forKey: .mode)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(allowedUsersSet, forKey: .allowedUsersSet)
+        try container.encode(homeChannelSet, forKey: .homeChannelSet)
+        try container.encode(mode, forKey: .mode)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum MessagingWhatsAppSetupMode: Codable, Sendable, Hashable, RawRepresentable {
+    case empty
+    case bot
+    case selfChat
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "": self = .empty
+        case "bot": self = .bot
+        case "self-chat": self = .selfChat
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .empty: ""
+        case .bot: "bot"
+        case .selfChat: "self-chat"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "": self = .empty
+        case "bot": self = .bot
+        case "self-chat": self = .selfChat
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected MessagingWhatsAppSetupMode value: \(raw)")
+            }
+            self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 public struct MoaConfigPayload: Codable, Sendable, Hashable {
     public var activePreset: String?
     public var aggregator: MoaModelSlot?
@@ -1688,367 +2039,5 @@ public enum OAuthDeviceCodeStartResponseFlow: Codable, Sendable, Hashable, RawRe
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``disconnect_oauth_provider``; ``ok`` is whether any credential was actually cleared.
-public struct OAuthDisconnectResponse: Codable, Sendable, Hashable {
-    public var ok: Bool
-    public var provider: String
-
-    public init(ok: Bool, provider: String) {
-        self.ok = ok
-        self.provider = provider
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case ok = "ok"
-        case provider = "provider"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["ok", "provider"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        provider = try container.decode(String.self, forKey: .provider)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(provider, forKey: .provider)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``list_oauth_providers``.
-public struct OAuthProviderListResponse: Codable, Sendable, Hashable {
-    public var providers: [OAuthProviderRow]
-
-    public init(providers: [OAuthProviderRow]) {
-        self.providers = providers
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case providers = "providers"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["providers"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        providers = try container.decode([OAuthProviderRow].self, forKey: .providers)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(providers, forKey: .providers)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// One ``_build_oauth_catalog`` row; ``disconnectable`` is ``disconnect_hint is None``.
-public struct OAuthProviderRow: Codable, Sendable, Hashable {
-    public var cliCommand: String
-    public var disconnectCommand: String?
-    public var disconnectHint: String?
-    public var disconnectable: Bool
-    public var docsUrl: String
-    /// Catalog flow: "device_code" or "external" for the built-in cards.
-    public var flow: String
-    public var id: String
-    public var name: String
-    public var status: OAuthProviderStatus
-
-    public init(cliCommand: String, disconnectCommand: String?, disconnectHint: String?, disconnectable: Bool, docsUrl: String, flow: String, id: String, name: String, status: OAuthProviderStatus) {
-        self.cliCommand = cliCommand
-        self.disconnectCommand = disconnectCommand
-        self.disconnectHint = disconnectHint
-        self.disconnectable = disconnectable
-        self.docsUrl = docsUrl
-        self.flow = flow
-        self.id = id
-        self.name = name
-        self.status = status
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case cliCommand = "cli_command"
-        case disconnectCommand = "disconnect_command"
-        case disconnectHint = "disconnect_hint"
-        case disconnectable = "disconnectable"
-        case docsUrl = "docs_url"
-        case flow = "flow"
-        case id = "id"
-        case name = "name"
-        case status = "status"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["cli_command", "disconnect_command", "disconnect_hint", "disconnectable", "docs_url", "flow", "id", "name", "status"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        cliCommand = try container.decode(String.self, forKey: .cliCommand)
-        disconnectCommand = try container.decode(Optional<String>.self, forKey: .disconnectCommand)
-        disconnectHint = try container.decode(Optional<String>.self, forKey: .disconnectHint)
-        disconnectable = try container.decode(Bool.self, forKey: .disconnectable)
-        docsUrl = try container.decode(String.self, forKey: .docsUrl)
-        flow = try container.decode(String.self, forKey: .flow)
-        id = try container.decode(String.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
-        status = try container.decode(OAuthProviderStatus.self, forKey: .status)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(cliCommand, forKey: .cliCommand)
-        try container.encode(disconnectCommand, forKey: .disconnectCommand)
-        try container.encode(disconnectHint, forKey: .disconnectHint)
-        try container.encode(disconnectable, forKey: .disconnectable)
-        try container.encode(docsUrl, forKey: .docsUrl)
-        try container.encode(flow, forKey: .flow)
-        try container.encode(id, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encode(status, forKey: .status)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``_resolve_provider_status`` — the union of ``_status_card`` (plus the Nous tier fields), the catalog ``status_fn`` cards in ``hermes_cli/web_server_oauth.py`` (``configured`` is copilot-acp only; a logged-out Anthropic/Claude Code card is just ``logged_in`` + ``source``), and the ``{"logged_in": false, "error"}`` fallback when a status helper raised.
-public struct OAuthProviderStatus: Codable, Sendable, Hashable {
-    public var accountTier: String?
-    public var configured: Bool?
-    public var error: String?
-    /// As the provider stores it: an ISO timestamp or an epoch number (Claude Code: ms).
-    public var expiresAt: OAuthProviderStatusExpiresAt?
-    public var freeTier: Bool?
-    public var hasRefreshToken: Bool?
-    public var lastRefresh: String?
-    public var loggedIn: Bool
-    public var source: String?
-    public var sourceLabel: String?
-    /// Last few characters only, never the token.
-    public var tokenPreview: String?
-
-    public init(accountTier: String? = nil, configured: Bool? = nil, error: String? = nil, expiresAt: OAuthProviderStatusExpiresAt? = nil, freeTier: Bool? = nil, hasRefreshToken: Bool? = nil, lastRefresh: String? = nil, loggedIn: Bool, source: String? = nil, sourceLabel: String? = nil, tokenPreview: String? = nil) {
-        self.accountTier = accountTier
-        self.configured = configured
-        self.error = error
-        self.expiresAt = expiresAt
-        self.freeTier = freeTier
-        self.hasRefreshToken = hasRefreshToken
-        self.lastRefresh = lastRefresh
-        self.loggedIn = loggedIn
-        self.source = source
-        self.sourceLabel = sourceLabel
-        self.tokenPreview = tokenPreview
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case accountTier = "account_tier"
-        case configured = "configured"
-        case error = "error"
-        case expiresAt = "expires_at"
-        case freeTier = "free_tier"
-        case hasRefreshToken = "has_refresh_token"
-        case lastRefresh = "last_refresh"
-        case loggedIn = "logged_in"
-        case source = "source"
-        case sourceLabel = "source_label"
-        case tokenPreview = "token_preview"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["account_tier", "configured", "error", "expires_at", "free_tier", "has_refresh_token", "last_refresh", "logged_in", "source", "source_label", "token_preview"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        accountTier = try container.decodeIfPresent(String.self, forKey: .accountTier)
-        configured = try container.decodeIfPresent(Bool.self, forKey: .configured)
-        error = try container.decodeIfPresent(String.self, forKey: .error)
-        expiresAt = try container.decodeIfPresent(OAuthProviderStatusExpiresAt.self, forKey: .expiresAt)
-        freeTier = try container.decodeIfPresent(Bool.self, forKey: .freeTier)
-        hasRefreshToken = try container.decodeIfPresent(Bool.self, forKey: .hasRefreshToken)
-        lastRefresh = try container.decodeIfPresent(String.self, forKey: .lastRefresh)
-        loggedIn = try container.decode(Bool.self, forKey: .loggedIn)
-        source = try container.decodeIfPresent(String.self, forKey: .source)
-        sourceLabel = try container.decodeIfPresent(String.self, forKey: .sourceLabel)
-        tokenPreview = try container.decodeIfPresent(String.self, forKey: .tokenPreview)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(accountTier, forKey: .accountTier)
-        try container.encodeIfPresent(configured, forKey: .configured)
-        try container.encodeIfPresent(error, forKey: .error)
-        try container.encodeIfPresent(expiresAt, forKey: .expiresAt)
-        try container.encodeIfPresent(freeTier, forKey: .freeTier)
-        try container.encodeIfPresent(hasRefreshToken, forKey: .hasRefreshToken)
-        try container.encodeIfPresent(lastRefresh, forKey: .lastRefresh)
-        try container.encode(loggedIn, forKey: .loggedIn)
-        try container.encodeIfPresent(source, forKey: .source)
-        try container.encodeIfPresent(sourceLabel, forKey: .sourceLabel)
-        try container.encodeIfPresent(tokenPreview, forKey: .tokenPreview)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum OAuthProviderStatusExpiresAt: Codable, Sendable, Hashable {
-    case string(String)
-    case double(Double)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(String.self) {
-            self = .string(value)
-            return
-        }
-        if let value = try? container.decode(Double.self) {
-            self = .double(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .string(let value): try container.encode(value)
-        case .double(let value): try container.encode(value)
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``cancel_oauth_session``: ``{"ok": true, "session_id"}`` or, for an unknown session, ``{"ok": false, "message"}``.
-public struct OAuthSessionCancelResponse: Codable, Sendable, Hashable {
-    public var message: String?
-    public var ok: Bool
-    public var sessionId: String?
-
-    public init(message: String? = nil, ok: Bool, sessionId: String? = nil) {
-        self.message = message
-        self.ok = ok
-        self.sessionId = sessionId
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case message = "message"
-        case ok = "ok"
-        case sessionId = "session_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["message", "ok", "session_id"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        message = try container.decodeIfPresent(String.self, forKey: .message)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        sessionId = try container.decodeIfPresent(String.self, forKey: .sessionId)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(message, forKey: .message)
-        try container.encode(ok, forKey: .ok)
-        try container.encodeIfPresent(sessionId, forKey: .sessionId)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``poll_oauth_session``. ``reason`` / ``account_email`` / ``model`` / ``retryable`` / ``retry_after`` are only set by a Nous sign-in over a free-tier identity (``hermes_cli/web_server_oauth.py::_record_sign_in_state``).
-public struct OAuthSessionPollResponse: Codable, Sendable, Hashable {
-    public var accountEmail: String?
-    public var errorMessage: String?
-    /// Epoch seconds; null until the flow knows it.
-    public var expiresAt: Double?
-    public var model: String?
-    public var reason: String?
-    public var retryAfter: Int?
-    public var retryable: Bool?
-    public var sessionId: String
-    public var status: OAuthSessionPollResponseStatus
-
-    public init(accountEmail: String?, errorMessage: String?, expiresAt: Double?, model: String?, reason: String?, retryAfter: Int?, retryable: Bool?, sessionId: String, status: OAuthSessionPollResponseStatus) {
-        self.accountEmail = accountEmail
-        self.errorMessage = errorMessage
-        self.expiresAt = expiresAt
-        self.model = model
-        self.reason = reason
-        self.retryAfter = retryAfter
-        self.retryable = retryable
-        self.sessionId = sessionId
-        self.status = status
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case accountEmail = "account_email"
-        case errorMessage = "error_message"
-        case expiresAt = "expires_at"
-        case model = "model"
-        case reason = "reason"
-        case retryAfter = "retry_after"
-        case retryable = "retryable"
-        case sessionId = "session_id"
-        case status = "status"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["account_email", "error_message", "expires_at", "model", "reason", "retry_after", "retryable", "session_id", "status"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        accountEmail = try container.decode(Optional<String>.self, forKey: .accountEmail)
-        errorMessage = try container.decode(Optional<String>.self, forKey: .errorMessage)
-        expiresAt = try container.decode(Optional<Double>.self, forKey: .expiresAt)
-        model = try container.decode(Optional<String>.self, forKey: .model)
-        reason = try container.decode(Optional<String>.self, forKey: .reason)
-        retryAfter = try container.decode(Optional<Int>.self, forKey: .retryAfter)
-        retryable = try container.decode(Optional<Bool>.self, forKey: .retryable)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-        status = try container.decode(OAuthSessionPollResponseStatus.self, forKey: .status)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(accountEmail, forKey: .accountEmail)
-        try container.encode(errorMessage, forKey: .errorMessage)
-        try container.encode(expiresAt, forKey: .expiresAt)
-        try container.encode(model, forKey: .model)
-        try container.encode(reason, forKey: .reason)
-        try container.encode(retryAfter, forKey: .retryAfter)
-        try container.encode(retryable, forKey: .retryable)
-        try container.encode(sessionId, forKey: .sessionId)
-        try container.encode(status, forKey: .status)
     }
 }

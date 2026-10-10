@@ -21,12 +21,86 @@ components:
     properties:
       accept_capabilities:
         type: boolean
+  DashboardPluginManifest:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*``
+      keys stripped. ``name``, ``label``, ``description``, ``icon``, ``version``, ``entry`` and ``css`` are
+      the plugin''s ``manifest.json`` values as written (defaults when absent), which Hermes does not
+      validate: a number or ``null`` there arrives as is.'
+    properties:
+      css:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+      description:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+      entry:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+      has_api:
+        type: boolean
+      icon:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+      label:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+      name:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+      slots:
+        items:
+          type: string
+        type: array
+      source:
+        enum:
+        - user
+        - bundled
+        - project
+        type: string
+      tab:
+        $ref: '#/components/schemas/DashboardPluginTab'
+      version:
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
+    required:
+    - name
+    - label
+    - description
+    - icon
+    - version
+    - tab
+    - slots
+    - entry
+    - css
+    - has_api
+    - source
+    type: object
   PluginsHubContextOption:
     additionalProperties: false
-    description: '``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair.'
+    description: '``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair. ``description`` is the
+      engine''s ``plugin.yaml`` value as written, which Hermes does not validate: a number or ``null``
+      there arrives as is.'
     properties:
       description:
-        type: string
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
       name:
         type: string
     required:
@@ -35,7 +109,10 @@ components:
     type: object
   PluginsHubPluginRow:
     additionalProperties: false
-    description: One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row.
+    description: 'One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row. ``name``,
+      ``version`` and ``description`` are the plugin''s ``plugin.yaml`` values as written, which Hermes does
+      not validate (``version: 1.0`` is a number); an empty ``version`` or ``description`` becomes ``""``,
+      while an empty ``name`` stays ``null``.'
     properties:
       auth_command:
         type: string
@@ -50,11 +127,16 @@ components:
         - $ref: '#/components/schemas/DashboardPluginManifest'
         - type: 'null'
       description:
-        type: string
+        anyOf:
+        - type: string
+        - type: number
       has_dashboard_manifest:
         type: boolean
       name:
-        type: string
+        anyOf:
+        - type: string
+        - type: number
+        - type: 'null'
       path:
         type: string
       removed_reason:
@@ -77,7 +159,9 @@ components:
       user_hidden:
         type: boolean
       version:
-        type: string
+        anyOf:
+        - type: string
+        - type: number
     required:
     - name
     - version

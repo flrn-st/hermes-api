@@ -24,7 +24,9 @@ components:
         - type: number
         - type: 'null'
       api_call_count:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       archived:
         type: boolean
       billing_base_url:
@@ -40,9 +42,13 @@ components:
         - type: string
         - type: 'null'
       cache_read_tokens:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       cache_write_tokens:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       chat_id:
         anyOf:
         - type: string
@@ -96,7 +102,9 @@ components:
         - type: number
         - type: 'null'
       expiry_finalized:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       git_branch:
         anyOf:
         - type: string
@@ -124,7 +132,9 @@ components:
       id:
         type: string
       input_tokens:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       is_active:
         type: boolean
       last_active:
@@ -147,7 +157,9 @@ components:
         - type: 'null'
         description: Read watermark; ``0`` = marked unread, null = never tracked.
       message_count:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       model:
         anyOf:
         - type: string
@@ -161,7 +173,9 @@ components:
         - type: string
         - type: 'null'
       output_tokens:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       parent_session_id:
         anyOf:
         - type: string
@@ -184,7 +198,9 @@ components:
         - type: string
         - type: 'null'
       reasoning_tokens:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       rewind_count:
         type: integer
       session_key:
@@ -216,7 +232,9 @@ components:
         - type: string
         - type: 'null'
       tool_call_count:
-        type: integer
+        anyOf:
+        - type: integer
+        - type: 'null'
       tool_names:
         anyOf:
         - type: string

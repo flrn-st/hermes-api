@@ -138,6 +138,56 @@ private func callReporting(contract: Int, through gateway: HermesGateway, on soc
     #expect(gateway.connectionState == .failed(.incompatibleServer(6)), "no retrying a server that is too old")
 }
 
+@Test func callsAfterATerminalFailureThrowIt() async throws {
+    let gateway = client(socket: ScriptedGatewaySocket(knowsCapabilities: false))
+    await #expect(throws: HermesGatewayError.incompatibleServer(6)) { try await gateway.connect() }
+    // Not "Gateway is disconnected": the app shows this to say why nothing works.
+    await #expect(throws: HermesGatewayError.incompatibleServer(6)) {
+        let _: JSONValue = try await gateway.call("profiles.list", params: [String: String](), as: JSONValue.self)
+    }
+}
+
+/// Hands out a socket only on the second attempt; the first never answers, like a ticket request on a
+/// session that waits for connectivity.
+private actor StallingTransport: GatewayTransport {
+    private let socket: ScriptedGatewaySocket
+    private(set) var attempts = 0
+
+    init(then socket: ScriptedGatewaySocket) { self.socket = socket }
+
+    func connect(url: URL, headers: [String: String], subprotocols: [String]) async throws -> any GatewayConnection {
+        attempts += 1
+        if attempts == 1 {
+            try await Task.sleep(for: .seconds(3600))
+            throw HermesGatewayError.cancelled
+        }
+        return socket
+    }
+}
+
+@Test func aConnectionAttemptThatNeverAnswersIsGivenUpAndRetried() async throws {
+    let transport = StallingTransport(then: ScriptedGatewaySocket())
+    let gateway = HermesGateway(configuration: .init(
+        address: HermesDashboardAddress(URL(string: "https://example.test")!), auth: TestAuth(), transport: transport,
+        httpTransport: TicketHTTPTransport(), networkMonitor: nil, requestTimeout: .seconds(1),
+        connectTimeout: .milliseconds(200), reconnectDelay: { _ in .zero }
+    ))
+    let started = ContinuousClock.now
+    try await withThrowingTaskGroup(of: Void.self) { group in
+        group.addTask { try await gateway.connect() }
+        group.addTask {
+            try await Task.sleep(for: .seconds(5))
+            throw HermesGatewayError.timeout
+        }
+        defer { group.cancelAll() }
+        try await group.next()
+    }
+    #expect(ContinuousClock.now - started < .seconds(5))
+    #expect(await transport.attempts == 2)
+    #expect(gateway.connectionState == .connected)
+    await gateway.disconnect()
+}
+
 @Test func goesOnWithoutServerRequestsWhenTheClientDoesNotNeedThem() async throws {
     let gateway = client(socket: ScriptedGatewaySocket(knowsCapabilities: false), minimumContract: 6)
     try await gateway.connect()

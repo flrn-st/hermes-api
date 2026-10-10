@@ -10,6 +10,246 @@ import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillHubScanResponsePolicy.Serializer::class)
+public sealed interface SkillHubScanResponsePolicy {
+    public data object Allow : SkillHubScanResponsePolicy
+    public data object Ask : SkillHubScanResponsePolicy
+    public data object Block : SkillHubScanResponsePolicy
+    public data class Unknown(public val raw: kotlin.String) : SkillHubScanResponsePolicy
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Allow -> "allow"
+            Ask -> "ask"
+            Block -> "block"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SkillHubScanResponsePolicy = when (raw) {
+            "allow" -> Allow
+            "ask" -> Ask
+            "block" -> Block
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<SkillHubScanResponsePolicy> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillHubScanResponsePolicy", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): SkillHubScanResponsePolicy = when (val raw = decoder.decodeString()) {
+            "allow" -> Allow
+            "ask" -> Ask
+            "block" -> Block
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SkillHubScanResponsePolicy value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillHubScanResponsePolicy) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillHubScanResponseVerdict.Serializer::class)
+public sealed interface SkillHubScanResponseVerdict {
+    public data object Safe : SkillHubScanResponseVerdict
+    public data object Caution : SkillHubScanResponseVerdict
+    public data object Dangerous : SkillHubScanResponseVerdict
+    public data class Unknown(public val raw: kotlin.String) : SkillHubScanResponseVerdict
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Safe -> "safe"
+            Caution -> "caution"
+            Dangerous -> "dangerous"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SkillHubScanResponseVerdict = when (raw) {
+            "safe" -> Safe
+            "caution" -> Caution
+            "dangerous" -> Dangerous
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<SkillHubScanResponseVerdict> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillHubScanResponseVerdict", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): SkillHubScanResponseVerdict = when (val raw = decoder.decodeString()) {
+            "safe" -> Safe
+            "caution" -> Caution
+            "dangerous" -> Dangerous
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SkillHubScanResponseVerdict value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillHubScanResponseVerdict) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class SkillHubScanSeverityCounts(
+    @SerialName("critical")
+    public val critical: Long,
+    @SerialName("high")
+    public val high: Long,
+    @SerialName("low")
+    public val low: Long,
+    @SerialName("medium")
+    public val medium: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``search_skills_hub`` (all-empty for a blank query); ``source_counts`` / ``timed_out`` come from ``tools/skills_hub_search.py::parallel_search_sources``. */
+@Serializable
+public data class SkillHubSearchResponse(
+    @SerialName("installed")
+    public val installed: Map<String, SkillHubInstalledRecord>,
+    @SerialName("results")
+    public val results: List<SkillHubEntry>,
+    @SerialName("source_counts")
+    public val sourceCounts: Map<String, Long>,
+    @SerialName("timed_out")
+    public val timedOut: List<String>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_skills_hub_sources`` row; ``rate_limited`` only for ``github``, ``available`` only for ``hermes-index``. */
+@Serializable
+public data class SkillHubSource(
+    @SerialName("available")
+    public val available: Boolean? = null,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("rate_limited")
+    public val rateLimited: Boolean? = null,
+    @SerialName("searchable")
+    public val searchable: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_skills_hub_sources``; ``installed`` is keyed by hub identifier. */
+@Serializable
+public data class SkillHubSourcesResponse(
+    @SerialName("featured")
+    public val featured: List<SkillHubEntry>,
+    @SerialName("index_available")
+    public val indexAvailable: Boolean,
+    @SerialName("installed")
+    public val installed: Map<String, SkillHubInstalledRecord>,
+    @SerialName("sources")
+    public val sources: List<SkillHubSource>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tools/skillevaluator_scan.py::Tier1Finding``; ``secrets_class`` is ``is_secrets_class``. */
+@Serializable
+public data class SkillHubTier1Finding(
+    @SerialName("check")
+    public val check: String,
+    @SerialName("file")
+    public val file: String,
+    @SerialName("line")
+    public val line: Long,
+    @SerialName("message")
+    public val message: String,
+    @SerialName("secrets_class")
+    public val secretsClass: Boolean,
+    @SerialName("severity")
+    public val severity: String,
+    @SerialName("validator")
+    public val validator: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. Advisory SkillEvaluator Tier 1 result (``tools/skillevaluator_scan.py::Tier1Report``). */
+@Serializable
+public data class SkillHubTier1Report(
+    @SerialName("findings")
+    public val findings: List<SkillHubTier1Finding>,
+    @SerialName("incomplete_checks")
+    public val incompleteChecks: List<String>,
+    @SerialName("passed")
+    public val passed: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillInstallRequest.Serializer::class)
+public data class SkillInstallRequest(
+    public val identifier: String,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<SkillInstallRequest> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SkillInstallRequest {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SkillInstallRequest requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SkillInstallRequest requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("identifier", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return SkillInstallRequest(
+                identifier = json.decodeFromJsonElement<String>((input["identifier"] ?: throw SerializationException("Missing identifier"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillInstallRequest) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SkillInstallRequest requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["identifier"] = json.encodeToJsonElement(value.identifier)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tools/skill_manager_tool.py::_attach_lint_findings`` row (advisory). */
+@Serializable
+public data class SkillLintWarning(
+    @SerialName("message")
+    public val message: String,
+    @SerialName("rule")
+    public val rule: String,
+    @SerialName("severity")
+    public val severity: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_skills`` row: ``tools/skills_tool.py::_find_all_skills`` (``category`` is ``null`` for a top-level skill) annotated with enabled state, usage count and provenance. */
+@Serializable
+public data class SkillListRow(
+    @SerialName("category")
+    public val category: String?,
+    @SerialName("description")
+    public val description: String,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("provenance")
+    public val provenance: SkillListRowProvenance,
+    @SerialName("usage")
+    public val usage: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = SkillListRowProvenance.Serializer::class)
 public sealed interface SkillListRowProvenance {
     public data object Hub : SkillListRowProvenance
@@ -680,375 +920,3 @@ public sealed interface StatusPlatformsComponentStatus {
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_status`` — the public liveness probe. The host-recon keys (``hermes_home`` … ``gateways``) are present only when the auth gate is off; ``install_id`` only when it could be persisted; ``fts_rebuild`` only while a deferred FTS rebuild is pending. */
-@Serializable
-public data class StatusResponse(
-    @SerialName("active_agents")
-    public val activeAgents: Long,
-    @SerialName("active_sessions")
-    public val activeSessions: Long,
-    @SerialName("auth_flows")
-    public val authFlows: List<StatusResponseAuthFlowsItem>,
-    @SerialName("auth_providers")
-    public val authProviders: List<String>,
-    @SerialName("auth_required")
-    public val authRequired: Boolean,
-    @SerialName("can_update_hermes")
-    public val canUpdateHermes: Boolean,
-    @SerialName("components")
-    public val components: StatusComponents,
-    @SerialName("config_path")
-    public val configPath: String? = null,
-    @SerialName("config_version")
-    public val configVersion: Long,
-    @SerialName("disk")
-    public val disk: StatusDiskPressure,
-    @SerialName("env_path")
-    public val envPath: String? = null,
-    @SerialName("fts_rebuild")
-    public val ftsRebuild: StatusFtsRebuild? = null,
-    @SerialName("gateway_busy")
-    public val gatewayBusy: Boolean,
-    @SerialName("gateway_drainable")
-    public val gatewayDrainable: Boolean,
-    @SerialName("gateway_exit_reason")
-    public val gatewayExitReason: String?,
-    @SerialName("gateway_health_url")
-    public val gatewayHealthUrl: String? = null,
-    @SerialName("gateway_heartbeat_stale_s")
-    public val gatewayHeartbeatStaleS: Long?,
-    @SerialName("gateway_mode")
-    public val gatewayMode: StatusResponseGatewayMode,
-    @SerialName("gateway_pid")
-    public val gatewayPid: Long? = null,
-    /** Plain platform names plus validated "<profile>:<platform>" keys. */
-    @SerialName("gateway_platforms")
-    public val gatewayPlatforms: Map<String, StatusGatewayPlatform>,
-    @SerialName("gateway_running")
-    public val gatewayRunning: Boolean,
-    @SerialName("gateway_shared_with")
-    public val gatewaySharedWith: List<String>?,
-    @SerialName("gateway_state")
-    public val gatewayState: String?,
-    @SerialName("gateway_updated_at")
-    public val gatewayUpdatedAt: String?,
-    @SerialName("gateways")
-    public val gateways: List<StatusGatewayTopologyEntry>? = null,
-    @SerialName("hermes_home")
-    public val hermesHome: String? = null,
-    @SerialName("install_id")
-    public val installId: String? = null,
-    @SerialName("latest_config_version")
-    public val latestConfigVersion: Long,
-    @SerialName("memory")
-    public val memory: StatusMemoryPressure,
-    @SerialName("multiplex_standalone_reason")
-    public val multiplexStandaloneReason: String?,
-    @SerialName("nous_session_valid")
-    public val nousSessionValid: StatusResponseNousSessionValid,
-    @SerialName("overall")
-    public val overall: StatusResponseOverall,
-    @SerialName("parked_profiles")
-    public val parkedProfiles: List<String>,
-    @SerialName("profiles")
-    public val profiles: List<String>,
-    @SerialName("release_date")
-    public val releaseDate: String,
-    @SerialName("restart_drain_timeout")
-    public val restartDrainTimeout: Double,
-    @SerialName("version")
-    public val version: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusResponseAuthFlowsItem.Serializer::class)
-public sealed interface StatusResponseAuthFlowsItem {
-    public data object Cookie : StatusResponseAuthFlowsItem
-    public data object NativePkce : StatusResponseAuthFlowsItem
-    public data class Unknown(public val raw: kotlin.String) : StatusResponseAuthFlowsItem
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Cookie -> "cookie"
-            NativePkce -> "native_pkce"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusResponseAuthFlowsItem = when (raw) {
-            "cookie" -> Cookie
-            "native_pkce" -> NativePkce
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusResponseAuthFlowsItem> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseAuthFlowsItem", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusResponseAuthFlowsItem = when (val raw = decoder.decodeString()) {
-            "cookie" -> Cookie
-            "native_pkce" -> NativePkce
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseAuthFlowsItem value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusResponseAuthFlowsItem) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusResponseGatewayMode.Serializer::class)
-public sealed interface StatusResponseGatewayMode {
-    public data object Multiplex : StatusResponseGatewayMode
-    public data object Single : StatusResponseGatewayMode
-    public data object Multiple : StatusResponseGatewayMode
-    public data object None : StatusResponseGatewayMode
-    public data object KnownUnknown : StatusResponseGatewayMode
-    public data class Unknown(public val raw: kotlin.String) : StatusResponseGatewayMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Multiplex -> "multiplex"
-            Single -> "single"
-            Multiple -> "multiple"
-            None -> "none"
-            KnownUnknown -> "unknown"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusResponseGatewayMode = when (raw) {
-            "multiplex" -> Multiplex
-            "single" -> Single
-            "multiple" -> Multiple
-            "none" -> None
-            "unknown" -> KnownUnknown
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusResponseGatewayMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseGatewayMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusResponseGatewayMode = when (val raw = decoder.decodeString()) {
-            "multiplex" -> Multiplex
-            "single" -> Single
-            "multiple" -> Multiple
-            "none" -> None
-            "unknown" -> KnownUnknown
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseGatewayMode value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusResponseGatewayMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusResponseNousSessionValid.Serializer::class)
-public sealed interface StatusResponseNousSessionValid {
-    public data object Valid : StatusResponseNousSessionValid
-    public data object Terminal : StatusResponseNousSessionValid
-    public data object KnownUnknown : StatusResponseNousSessionValid
-    public data class Unknown(public val raw: kotlin.String) : StatusResponseNousSessionValid
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Valid -> "valid"
-            Terminal -> "terminal"
-            KnownUnknown -> "unknown"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusResponseNousSessionValid = when (raw) {
-            "valid" -> Valid
-            "terminal" -> Terminal
-            "unknown" -> KnownUnknown
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusResponseNousSessionValid> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseNousSessionValid", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusResponseNousSessionValid = when (val raw = decoder.decodeString()) {
-            "valid" -> Valid
-            "terminal" -> Terminal
-            "unknown" -> KnownUnknown
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseNousSessionValid value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusResponseNousSessionValid) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusResponseOverall.Serializer::class)
-public sealed interface StatusResponseOverall {
-    public data object Ok : StatusResponseOverall
-    public data object Degraded : StatusResponseOverall
-    public data class Unknown(public val raw: kotlin.String) : StatusResponseOverall
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Ok -> "ok"
-            Degraded -> "degraded"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusResponseOverall = when (raw) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusResponseOverall> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseOverall", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusResponseOverall = when (val raw = decoder.decodeString()) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseOverall value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusResponseOverall) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/readiness.py::_probe_state_db`` reduced to its status enum. */
-@Serializable
-public data class StatusStorageComponent(
-    @SerialName("reason")
-    public val reason: StatusStorageComponentReason? = null,
-    @SerialName("status")
-    public val status: StatusStorageComponentStatus,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusStorageComponentReason.Serializer::class)
-public sealed interface StatusStorageComponentReason {
-    public data object Corrupt : StatusStorageComponentReason
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Corrupt -> "corrupt"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): StatusStorageComponentReason? = when (raw) {
-            "corrupt" -> Corrupt
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<StatusStorageComponentReason> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusStorageComponentReason", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusStorageComponentReason = when (val raw = decoder.decodeString()) {
-            "corrupt" -> Corrupt
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusStorageComponentReason) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusStorageComponentStatus.Serializer::class)
-public sealed interface StatusStorageComponentStatus {
-    public data object Ok : StatusStorageComponentStatus
-    public data object Degraded : StatusStorageComponentStatus
-    public data class Unknown(public val raw: kotlin.String) : StatusStorageComponentStatus
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Ok -> "ok"
-            Degraded -> "degraded"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusStorageComponentStatus = when (raw) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusStorageComponentStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusStorageComponentStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusStorageComponentStatus = when (val raw = decoder.decodeString()) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusStorageComponentStatus value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusStorageComponentStatus) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class SystemStatsDisk(
-    @SerialName("free")
-    public val free: Long,
-    @SerialName("percent")
-    public val percent: Double,
-    @SerialName("total")
-    public val total: Long,
-    @SerialName("used")
-    public val used: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class SystemStatsMemory(
-    @SerialName("available")
-    public val available: Long,
-    @SerialName("percent")
-    public val percent: Double,
-    @SerialName("total")
-    public val total: Long,
-    @SerialName("used")
-    public val used: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class SystemStatsProcess(
-    @SerialName("create_time")
-    public val createTime: Long,
-    @SerialName("num_threads")
-    public val numThreads: Long,
-    @SerialName("pid")
-    public val pid: Long,
-    @SerialName("rss")
-    public val rss: Long,
-)

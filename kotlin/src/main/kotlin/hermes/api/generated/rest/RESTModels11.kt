@@ -9,6 +9,145 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``test_mcp_server`` — ``ok: false`` carries ``error`` and an empty ``tools``; the prompt and resource counts are only reported on success. */
+@Serializable
+public data class McpServerTestResponse(
+    @SerialName("error")
+    public val error: String? = null,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("prompts")
+    public val prompts: Long? = null,
+    @SerialName("resources")
+    public val resources: Long? = null,
+    @SerialName("tools")
+    public val tools: List<McpServerProbeTool>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. A ``(name, description)`` pair from ``hermes_cli/mcp_config.py::_probe_single_server`` (description truncated to 80 chars, ``""`` when absent). */
+@Serializable
+public data class McpToolSummary(
+    @SerialName("description")
+    public val description: String,
+    @SerialName("name")
+    public val name: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL. */
+@Serializable
+public data class MediaDataUrlResponse(
+    @SerialName("data_url")
+    public val dataUrl: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. Byte size of ``memories/MEMORY.md`` / ``memories/USER.md`` (0 when absent). */
+@Serializable
+public data class MemoryBuiltinFileSizes(
+    @SerialName("memory")
+    public val memory: Long,
+    @SerialName("user")
+    public val user: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``start_memory_oauth`` → ``oauth_flow.start_loopback_flow_background()``: the full status on a fresh start, only ``state``/``detail`` when a flow is already pending (idempotent re-click). */
+@Serializable
+public data class MemoryOAuthStartResponse(
+    @SerialName("auth")
+    public val auth: MemoryOAuthStartResponseAuth? = null,
+    @SerialName("connected")
+    public val connected: Boolean? = null,
+    @SerialName("detail")
+    public val detail: String,
+    @SerialName("state")
+    public val state: MemoryOAuthStartResponseState,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MemoryOAuthStartResponseAuth.Serializer::class)
+public sealed interface MemoryOAuthStartResponseAuth {
+    public data object Oauth : MemoryOAuthStartResponseAuth
+    public data object Apikey : MemoryOAuthStartResponseAuth
+    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStartResponseAuth
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Oauth -> "oauth"
+            Apikey -> "apikey"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryOAuthStartResponseAuth = when (raw) {
+            "oauth" -> Oauth
+            "apikey" -> Apikey
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<MemoryOAuthStartResponseAuth> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStartResponseAuth", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): MemoryOAuthStartResponseAuth = when (val raw = decoder.decodeString()) {
+            "oauth" -> Oauth
+            "apikey" -> Apikey
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStartResponseAuth value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: MemoryOAuthStartResponseAuth) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MemoryOAuthStartResponseState.Serializer::class)
+public sealed interface MemoryOAuthStartResponseState {
+    public data object Idle : MemoryOAuthStartResponseState
+    public data object Pending : MemoryOAuthStartResponseState
+    public data object Connected : MemoryOAuthStartResponseState
+    public data object Error : MemoryOAuthStartResponseState
+    public data class Unknown(public val raw: kotlin.String) : MemoryOAuthStartResponseState
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Idle -> "idle"
+            Pending -> "pending"
+            Connected -> "connected"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryOAuthStartResponseState = when (raw) {
+            "idle" -> Idle
+            "pending" -> Pending
+            "connected" -> Connected
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<MemoryOAuthStartResponseState> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryOAuthStartResponseState", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): MemoryOAuthStartResponseState = when (val raw = decoder.decodeString()) {
+            "idle" -> Idle
+            "pending" -> Pending
+            "connected" -> Connected
+            "error" -> Error
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryOAuthStartResponseState value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: MemoryOAuthStartResponseState) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``memory_oauth_status`` → the provider's ``oauth_flow.get_flow_status()`` (``plugins/memory/honcho/oauth_flow.py``); ``auth`` names the stored credential, if any. */
 @Serializable
 public data class MemoryOAuthStatusResponse(
@@ -660,167 +799,3 @@ public data class MessagingPlatform(
     @SerialName("whatsapp_setup")
     public val whatsappSetup: MessagingWhatsAppSetup? = null,
 )
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose). */
-@Serializable
-public data class MessagingPlatformEnvVar(
-    @SerialName("advanced")
-    public val advanced: Boolean,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("help")
-    public val help: String,
-    @SerialName("is_password")
-    public val isPassword: Boolean,
-    @SerialName("is_set")
-    public val isSet: Boolean,
-    @SerialName("key")
-    public val key: String,
-    @SerialName("prompt")
-    public val prompt: String,
-    @SerialName("redacted_value")
-    public val redactedValue: String?,
-    @SerialName("required")
-    public val required: Boolean,
-    @SerialName("url")
-    public val url: String?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``test_messaging_platform`` — a verdict over the same payload as the platform list. */
-@Serializable
-public data class MessagingPlatformTestResponse(
-    @SerialName("message")
-    public val message: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("state")
-    public val state: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = MessagingPlatformUpdate.Serializer::class)
-public data class MessagingPlatformUpdate(
-    public val clearEnv: List<String>? = null,
-    public val enabled: Patch<Boolean> = Patch.Absent,
-    public val env: Map<String, String>? = null,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<MessagingPlatformUpdate> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): MessagingPlatformUpdate {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("MessagingPlatformUpdate requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("MessagingPlatformUpdate requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("clear_env", "enabled", "env", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return MessagingPlatformUpdate(
-                clearEnv = input["clear_env"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                enabled = when (val raw = input["enabled"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-                env = input["env"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, String>>(it) },
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: MessagingPlatformUpdate) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("MessagingPlatformUpdate requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            value.clearEnv?.let { output["clear_env"] = json.encodeToJsonElement(it) }
-            when (val patch = value.enabled) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["enabled"] = JsonNull
-                is Patch.Value -> output["enabled"] = json.encodeToJsonElement(patch.value)
-            }
-            value.env?.let { output["env"] = json.encodeToJsonElement(it) }
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``update_messaging_platform``. */
-@Serializable
-public data class MessagingPlatformUpdateResponse(
-    @SerialName("hot_served")
-    public val hotServed: Boolean,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("platform")
-    public val platform: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_messaging_platforms``. */
-@Serializable
-public data class MessagingPlatformsResponse(
-    @SerialName("env_path")
-    public val envPath: String,
-    @SerialName("gateway_start_command")
-    public val gatewayStartCommand: String,
-    @SerialName("platforms")
-    public val platforms: List<MessagingPlatform>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class MessagingWhatsAppSetup(
-    @SerialName("allowed_users_set")
-    public val allowedUsersSet: Boolean,
-    @SerialName("home_channel_set")
-    public val homeChannelSet: Boolean,
-    @SerialName("mode")
-    public val mode: MessagingWhatsAppSetupMode,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = MessagingWhatsAppSetupMode.Serializer::class)
-public sealed interface MessagingWhatsAppSetupMode {
-    public data object Empty : MessagingWhatsAppSetupMode
-    public data object Bot : MessagingWhatsAppSetupMode
-    public data object SelfChat : MessagingWhatsAppSetupMode
-    public data class Unknown(public val raw: kotlin.String) : MessagingWhatsAppSetupMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Empty -> ""
-            Bot -> "bot"
-            SelfChat -> "self-chat"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): MessagingWhatsAppSetupMode = when (raw) {
-            "" -> Empty
-            "bot" -> Bot
-            "self-chat" -> SelfChat
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<MessagingWhatsAppSetupMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MessagingWhatsAppSetupMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): MessagingWhatsAppSetupMode = when (val raw = decoder.decodeString()) {
-            "" -> Empty
-            "bot" -> Bot
-            "self-chat" -> SelfChat
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MessagingWhatsAppSetupMode value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: MessagingWhatsAppSetupMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}

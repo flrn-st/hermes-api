@@ -966,21 +966,21 @@ public struct DashboardFontSetResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*`` keys stripped. String fields are the manifest.json values (defaults when absent).
+/// ``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*`` keys stripped. ``name``, ``label``, ``description``, ``icon``, ``version``, ``entry`` and ``css`` are the plugin's ``manifest.json`` values as written (defaults when absent), which Hermes does not validate: a number or ``null`` there arrives as is.
 public struct DashboardPluginManifest: Codable, Sendable, Hashable {
-    public var css: String?
-    public var description: String
-    public var entry: String
+    public var css: DashboardPluginManifestCss?
+    public var description: DashboardPluginManifestDescription?
+    public var entry: DashboardPluginManifestEntry?
     public var hasApi: Bool
-    public var icon: String
-    public var label: String
-    public var name: String
+    public var icon: DashboardPluginManifestIcon?
+    public var label: DashboardPluginManifestLabel?
+    public var name: DashboardPluginManifestName?
     public var slots: [String]
     public var source: DashboardPluginManifestSource
     public var tab: DashboardPluginTab
-    public var version: String
+    public var version: DashboardPluginManifestVersion?
 
-    public init(css: String?, description: String, entry: String, hasApi: Bool, icon: String, label: String, name: String, slots: [String], source: DashboardPluginManifestSource, tab: DashboardPluginTab, version: String) {
+    public init(css: DashboardPluginManifestCss?, description: DashboardPluginManifestDescription?, entry: DashboardPluginManifestEntry?, hasApi: Bool, icon: DashboardPluginManifestIcon?, label: DashboardPluginManifestLabel?, name: DashboardPluginManifestName?, slots: [String], source: DashboardPluginManifestSource, tab: DashboardPluginTab, version: DashboardPluginManifestVersion?) {
         self.css = css
         self.description = description
         self.entry = entry
@@ -1017,17 +1017,17 @@ public struct DashboardPluginManifest: Codable, Sendable, Hashable {
             }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        css = try container.decode(Optional<String>.self, forKey: .css)
-        description = try container.decode(String.self, forKey: .description)
-        entry = try container.decode(String.self, forKey: .entry)
+        css = try container.decode(Optional<DashboardPluginManifestCss>.self, forKey: .css)
+        description = try container.decode(Optional<DashboardPluginManifestDescription>.self, forKey: .description)
+        entry = try container.decode(Optional<DashboardPluginManifestEntry>.self, forKey: .entry)
         hasApi = try container.decode(Bool.self, forKey: .hasApi)
-        icon = try container.decode(String.self, forKey: .icon)
-        label = try container.decode(String.self, forKey: .label)
-        name = try container.decode(String.self, forKey: .name)
+        icon = try container.decode(Optional<DashboardPluginManifestIcon>.self, forKey: .icon)
+        label = try container.decode(Optional<DashboardPluginManifestLabel>.self, forKey: .label)
+        name = try container.decode(Optional<DashboardPluginManifestName>.self, forKey: .name)
         slots = try container.decode([String].self, forKey: .slots)
         source = try container.decode(DashboardPluginManifestSource.self, forKey: .source)
         tab = try container.decode(DashboardPluginTab.self, forKey: .tab)
-        version = try container.decode(String.self, forKey: .version)
+        version = try container.decode(Optional<DashboardPluginManifestVersion>.self, forKey: .version)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -1043,6 +1043,168 @@ public struct DashboardPluginManifest: Codable, Sendable, Hashable {
         try container.encode(source, forKey: .source)
         try container.encode(tab, forKey: .tab)
         try container.encode(version, forKey: .version)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum DashboardPluginManifestCss: Codable, Sendable, Hashable {
+    case string(String)
+    case double(Double)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        if let value = try? container.decode(Double.self) {
+            self = .double(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum DashboardPluginManifestDescription: Codable, Sendable, Hashable {
+    case string(String)
+    case double(Double)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        if let value = try? container.decode(Double.self) {
+            self = .double(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum DashboardPluginManifestEntry: Codable, Sendable, Hashable {
+    case string(String)
+    case double(Double)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        if let value = try? container.decode(Double.self) {
+            self = .double(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum DashboardPluginManifestIcon: Codable, Sendable, Hashable {
+    case string(String)
+    case double(Double)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        if let value = try? container.decode(Double.self) {
+            self = .double(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum DashboardPluginManifestLabel: Codable, Sendable, Hashable {
+    case string(String)
+    case double(Double)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        if let value = try? container.decode(Double.self) {
+            self = .double(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum DashboardPluginManifestName: Codable, Sendable, Hashable {
+    case string(String)
+    case double(Double)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        if let value = try? container.decode(Double.self) {
+            self = .double(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        }
     }
 }
 
@@ -1090,6 +1252,33 @@ public enum DashboardPluginManifestSource: Codable, Sendable, Hashable, RawRepre
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum DashboardPluginManifestVersion: Codable, Sendable, Hashable {
+    case string(String)
+    case double(Double)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        if let value = try? container.decode(Double.self) {
+            self = .double(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        }
     }
 }
 
@@ -1443,305 +1632,5 @@ public struct DashboardThemeLayer: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(alpha, forKey: .alpha)
         try container.encode(hex, forKey: .hex)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct DashboardThemeLayout: Codable, Sendable, Hashable {
-    public var density: DashboardThemeLayoutDensity
-    public var radius: String
-
-    public init(density: DashboardThemeLayoutDensity, radius: String) {
-        self.density = density
-        self.radius = radius
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case density = "density"
-        case radius = "radius"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["density", "radius"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        density = try container.decode(DashboardThemeLayoutDensity.self, forKey: .density)
-        radius = try container.decode(String.self, forKey: .radius)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(density, forKey: .density)
-        try container.encode(radius, forKey: .radius)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum DashboardThemeLayoutDensity: Codable, Sendable, Hashable, RawRepresentable {
-    case compact
-    case comfortable
-    case spacious
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "compact": self = .compact
-        case "comfortable": self = .comfortable
-        case "spacious": self = .spacious
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .compact: "compact"
-        case .comfortable: "comfortable"
-        case .spacious: "spacious"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "compact": self = .compact
-        case "comfortable": self = .comfortable
-        case "spacious": self = .spacious
-        default:
-            guard decoder.decodesTolerantly else {
-                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected DashboardThemeLayoutDensity value: \(raw)")
-            }
-            self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct DashboardThemePalette: Codable, Sendable, Hashable {
-    public var background: DashboardThemeLayer
-    public var foreground: DashboardThemeLayer
-    public var midground: DashboardThemeLayer
-    public var noiseOpacity: Double
-    public var warmGlow: String
-
-    public init(background: DashboardThemeLayer, foreground: DashboardThemeLayer, midground: DashboardThemeLayer, noiseOpacity: Double, warmGlow: String) {
-        self.background = background
-        self.foreground = foreground
-        self.midground = midground
-        self.noiseOpacity = noiseOpacity
-        self.warmGlow = warmGlow
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case background = "background"
-        case foreground = "foreground"
-        case midground = "midground"
-        case noiseOpacity = "noiseOpacity"
-        case warmGlow = "warmGlow"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["background", "foreground", "midground", "noiseOpacity", "warmGlow"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        background = try container.decode(DashboardThemeLayer.self, forKey: .background)
-        foreground = try container.decode(DashboardThemeLayer.self, forKey: .foreground)
-        midground = try container.decode(DashboardThemeLayer.self, forKey: .midground)
-        noiseOpacity = try container.decode(Double.self, forKey: .noiseOpacity)
-        warmGlow = try container.decode(String.self, forKey: .warmGlow)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(background, forKey: .background)
-        try container.encode(foreground, forKey: .foreground)
-        try container.encode(midground, forKey: .midground)
-        try container.encode(noiseOpacity, forKey: .noiseOpacity)
-        try container.encode(warmGlow, forKey: .warmGlow)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``set_dashboard_theme``.
-public struct DashboardThemeSetResponse: Codable, Sendable, Hashable {
-    public var ok: Bool
-    public var theme: String
-
-    public init(ok: Bool, theme: String) {
-        self.ok = ok
-        self.theme = theme
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case ok = "ok"
-        case theme = "theme"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["ok", "theme"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        theme = try container.decode(String.self, forKey: .theme)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(theme, forKey: .theme)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// Defaults (``_THEME_DEFAULT_TYPOGRAPHY``) overlaid with the non-empty YAML strings.
-public struct DashboardThemeTypography: Codable, Sendable, Hashable {
-    public var baseSize: String
-    public var fontDisplay: String?
-    public var fontMono: String
-    public var fontSans: String
-    public var fontUrl: String?
-    public var letterSpacing: String
-    public var lineHeight: String
-
-    public init(baseSize: String, fontDisplay: String? = nil, fontMono: String, fontSans: String, fontUrl: String? = nil, letterSpacing: String, lineHeight: String) {
-        self.baseSize = baseSize
-        self.fontDisplay = fontDisplay
-        self.fontMono = fontMono
-        self.fontSans = fontSans
-        self.fontUrl = fontUrl
-        self.letterSpacing = letterSpacing
-        self.lineHeight = lineHeight
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case baseSize = "baseSize"
-        case fontDisplay = "fontDisplay"
-        case fontMono = "fontMono"
-        case fontSans = "fontSans"
-        case fontUrl = "fontUrl"
-        case letterSpacing = "letterSpacing"
-        case lineHeight = "lineHeight"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["baseSize", "fontDisplay", "fontMono", "fontSans", "fontUrl", "letterSpacing", "lineHeight"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        baseSize = try container.decode(String.self, forKey: .baseSize)
-        fontDisplay = try container.decodeIfPresent(String.self, forKey: .fontDisplay)
-        fontMono = try container.decode(String.self, forKey: .fontMono)
-        fontSans = try container.decode(String.self, forKey: .fontSans)
-        fontUrl = try container.decodeIfPresent(String.self, forKey: .fontUrl)
-        letterSpacing = try container.decode(String.self, forKey: .letterSpacing)
-        lineHeight = try container.decode(String.self, forKey: .lineHeight)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(baseSize, forKey: .baseSize)
-        try container.encodeIfPresent(fontDisplay, forKey: .fontDisplay)
-        try container.encode(fontMono, forKey: .fontMono)
-        try container.encode(fontSans, forKey: .fontSans)
-        try container.encodeIfPresent(fontUrl, forKey: .fontUrl)
-        try container.encode(letterSpacing, forKey: .letterSpacing)
-        try container.encode(lineHeight, forKey: .lineHeight)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_dashboard_themes``; ``active`` is ``dashboard.theme`` as stored in config.yaml.
-public struct DashboardThemesResponse: Codable, Sendable, Hashable {
-    public var active: String
-    public var themes: [DashboardThemeEntry]
-
-    public init(active: String, themes: [DashboardThemeEntry]) {
-        self.active = active
-        self.themes = themes
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case active = "active"
-        case themes = "themes"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["active", "themes"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        active = try container.decode(String.self, forKey: .active)
-        themes = try container.decode([DashboardThemeEntry].self, forKey: .themes)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(active, forKey: .active)
-        try container.encode(themes, forKey: .themes)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct DebugShareRequest: Codable, Sendable, Hashable {
-    public var lines: Int?
-    public var redact: Bool?
-
-    public init(lines: Int? = nil, redact: Bool? = nil) {
-        self.lines = lines
-        self.redact = redact
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case lines = "lines"
-        case redact = "redact"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["lines", "redact"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        lines = try container.decodeIfPresent(Int.self, forKey: .lines)
-        redact = try container.decodeIfPresent(Bool.self, forKey: .redact)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(lines, forKey: .lines)
-        try container.encodeIfPresent(redact, forKey: .redact)
     }
 }

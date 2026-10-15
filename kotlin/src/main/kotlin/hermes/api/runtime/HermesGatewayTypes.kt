@@ -59,6 +59,32 @@ public sealed interface GatewaySessionRecovery {
         GatewaySessionRecovery
 }
 
+/**
+ * Which Hermes gateway runtime the current connection talks to, read from its `gateway.ready` event.
+ *
+ * Hermes v0.22.1 and later serve a *session authority* on the gateway's own listener (`session_authority: true`):
+ * sessions there take closed, revision-fenced methods. The client translates the legacy methods apps call
+ * (see the gateway guide), so apps need not branch on it; [sessionAuthority] is for what has no translation.
+ * Older gateways and a standalone dashboard report [legacy], and every call goes out unchanged.
+ */
+public data class GatewayRuntime(
+    /** The socket is served by the Hermes session authority. */
+    val sessionAuthority: Boolean,
+    /** `runtime.describe`: the owner's instance, its profile home and its authority epoch. */
+    val instanceId: String? = null,
+    val profileId: String? = null,
+    val authorityEpoch: Long? = null,
+    /** `runtime.describe.capabilities`, such as `durable-admission-v1` and `event-replay-v1`. */
+    val capabilities: List<String> = emptyList(),
+    /** The `source` values and parameter names `session.create` accepts on this authority. */
+    val sessionCreateSources: List<String> = emptyList(),
+    val sessionCreateParameters: List<String> = emptyList(),
+) {
+    public companion object {
+        public val legacy: GatewayRuntime = GatewayRuntime(sessionAuthority = false)
+    }
+}
+
 public data class GatewayEvent(
     val type: String,
     val sessionId: String?,

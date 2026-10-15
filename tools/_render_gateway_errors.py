@@ -7,6 +7,16 @@ resolve to the functions they wrap and the codes they were given; the source is 
 following calls to module-level functions by name. A code listed for a method is one some path of its
 handler can produce, not one every call risks. Calls through variables, class methods and recursion past
 its first level are not followed, so a handler can have codes the extraction misses.
+
+Releases with the unified gateway runtime (v0.22.1 on) also serve a session authority socket
+(``gateway/session_controls.py`` ``AuthorityConnection.dispatch``). Its handlers refuse by raising
+``RuntimeStoreError(reason)``, which dispatch answers as ``4001`` with the reason as the message and in
+``data.reason``. ``authority`` in the output lists, for every method the authority serves, the reasons its
+handler can raise, read the same way over ``gateway/``, ``tui_gateway/`` and the ``hermes_state*`` modules. The
+authority's handlers reach the store through objects, so calls through attributes are followed too:
+``self.name(...)`` to the method of the enclosing class (or a base class in that source), a call on a receiver
+named in ``RECEIVERS`` to that class's method, and any other ``x.name(...)`` only to a function or method whose
+name is defined once in that source. Other calls are not followed, so the extraction can miss reasons.
 """
 
 from __future__ import annotations
@@ -23,6 +33,12 @@ from pathlib import Path
 BUILDERS = {"_err": 1, "_error": 0}
 # Frames answered by the socket loop itself, whatever the method.
 TRANSPORT_FILES = ("ws.py", "transport.py", "entry.py")
+# The session authority's refusal: its first argument is the reason, answered with code 4001.
+REFUSAL = "RuntimeStoreError"
+REFUSAL_CODE = 4001
+# Receivers the authority's modules name consistently, and the class each one holds (gateway/session_controls.py
+# keeps the SessionAuthority as ``authority``; the store's mixins compose ``SessionDB``, handed round as ``db``).
+RECEIVERS = {"authority": "SessionAuthority", "db": "SessionDB", "_db": "SessionDB"}
 
 
 @dataclass(frozen=True)
@@ -45,14 +61,20 @@ class Site:
 class Source:
     """Every function of the ``tui_gateway`` package, indexed for lookups by code object and by name."""
 
-    def __init__(self, package: Path) -> None:
+    def __init__(self, package: Path, files: list[Path] | None = None) -> None:
+        """Index ``files`` (by default every module of ``package``), named relative to ``package.parent``."""
         self.package = package
         self.by_start: dict[tuple[str, int], ast.AST] = {}
         self.by_name: dict[str, list[tuple[str, ast.AST]]] = {}
+        # Every function and method by name, for calls through attributes.
+        self.defined: dict[str, list[tuple[str, ast.AST]]] = {}
         self.module_aliases: dict[str, set[str]] = {}
         self.constants: dict[str, dict[str, object]] = {}
         self.file_of: dict[int, str] = {}
-        for path in sorted(package.rglob("*.py")):
+        # Concrete classes by name (typing Protocols left out): their base names and methods.
+        self.classes: dict[str, list[tuple[list[str], dict[str, ast.AST]]]] = {}
+        self.class_of: dict[int, str] = {}
+        for path in sorted(files if files is not None else package.rglob("*.py")):
             relative = path.relative_to(package.parent).as_posix()
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             aliases: set[str] = set()
@@ -62,6 +84,8 @@ class Source:
                     self.by_start[(relative, min(starts))] = node
                     self.by_start.setdefault((relative, node.lineno), node)
                     self.file_of[id(node)] = relative
+                    if not isinstance(node, ast.Lambda):
+                        self.defined.setdefault(node.name, []).append((relative, node))
                 elif isinstance(node, ast.Import):
                     aliases.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
                 elif isinstance(node, ast.ImportFrom):
@@ -69,6 +93,15 @@ class Source:
             for node in tree.body:
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     self.by_name.setdefault(node.name, []).append((relative, node))
+                elif isinstance(node, ast.ClassDef):
+                    bases = [base.id if isinstance(base, ast.Name) else getattr(base, "attr", "")
+                             for base in node.bases]
+                    methods = {item.name: item for item in node.body
+                               if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))}
+                    for item in methods.values():
+                        self.class_of[id(item)] = node.name
+                    if "Protocol" not in bases:
+                        self.classes.setdefault(node.name, []).append((bases, methods))
             self.module_aliases[relative] = aliases | {"server"}
 
     def load_constants(self) -> None:
@@ -87,9 +120,24 @@ class Source:
             }
 
 
+    def method(self, owner: str, name: str, seen: frozenset[str] = frozenset()) -> list[ast.AST]:
+        """``owner.name``: defined on the class or, failing that, on a base class in this source."""
+        found: list[ast.AST] = []
+        for bases, methods in self.classes.get(owner, []):
+            if name in methods:
+                found.append(methods[name])
+                continue
+            for base in bases:
+                if base not in seen:
+                    found += self.method(base, name, seen | {owner})
+        return found
+
+
 class Analyzer:
-    def __init__(self, source: Source) -> None:
+    def __init__(self, source: Source, *, authority: bool = False) -> None:
+        """``authority`` reads ``RuntimeStoreError`` refusals and follows calls through attributes."""
         self.source = source
+        self.authority = authority
         self.memo: dict[tuple[int, tuple], frozenset[Site]] = {}
         self.active: set[tuple[int, tuple]] = set()
 
@@ -105,11 +153,12 @@ class Analyzer:
         scope = {name: Param(name) for name in params}
         scope.update(bindings)
         sites: set[Site] = set()
+        owner = self.source.class_of.get(id(node))
         body = node.body if isinstance(node.body, list) else [node.body]
         for statement in body:
             for child in ast.walk(statement):
                 if isinstance(child, ast.Call):
-                    sites.update(self._call_sites(child, file, scope, follow))
+                    sites.update(self._call_sites(child, file, scope, follow, owner))
                 elif isinstance(child, ast.Dict):
                     sites.update(self._dict_sites(child, file, scope))
         result = frozenset(sites)
@@ -117,10 +166,17 @@ class Analyzer:
         self.memo[key] = result
         return result
 
-    def _call_sites(self, call: ast.Call, file: str, scope: dict[str, object], follow: bool) -> set[Site]:
+    def _call_sites(self, call: ast.Call, file: str, scope: dict[str, object], follow: bool,
+                    owner: str | None = None) -> set[Site]:
         name = _callee(call, self.source.module_aliases.get(file, set()))
+        through_attribute = False
+        if name is None and self.authority and isinstance(call.func, ast.Attribute):
+            name, through_attribute = call.func.attr, True
         if name is None:
             return set()
+        if self.authority and name == REFUSAL and not through_attribute:
+            reason = _argument(call, 0, "reason")
+            return {Site(REFUSAL_CODE, self._message(reason, file, scope), file, call.lineno)}
         if name in BUILDERS:
             index = BUILDERS[name]
             code = _argument(call, index, "code")
@@ -131,7 +187,15 @@ class Analyzer:
         if not follow:
             return set()
         sites: set[Site] = set()
-        for callee_file, callee in self.source.by_name.get(name, []):
+        if through_attribute:
+            targets = [(self.source.file_of[id(target)], target)
+                       for target in self._receiver_methods(call.func.value, name, owner)]
+            if not targets:
+                candidates = self.source.defined.get(name, [])
+                targets = candidates if len(candidates) == 1 else []
+        else:
+            targets = self.source.by_name.get(name, [])
+        for callee_file, callee in targets:
             params = _parameters(callee)
             for site in self.function_sites(callee, {}):
                 code, message = site.code, site.message
@@ -155,6 +219,15 @@ class Analyzer:
                         message = None
                 sites.update(Site(value, message, site.file, site.line) for value in code_values)
         return sites
+
+    def _receiver_methods(self, receiver: ast.AST, name: str, owner: str | None) -> list[ast.AST]:
+        """The methods ``receiver.name`` calls when the receiver's class is known (see ``RECEIVERS``)."""
+        label = receiver.id if isinstance(receiver, ast.Name) else getattr(receiver, "attr", None)
+        if label == "self" and owner is not None:
+            return self.source.method(owner, name)
+        if label in RECEIVERS:
+            return self.source.method(RECEIVERS[label], name)
+        return []
 
     def _dict_sites(self, node: ast.Dict, file: str, scope: dict[str, object]) -> set[Site]:
         fields = {key.value: value for key, value in zip(node.keys, node.values, strict=True)
@@ -336,13 +409,86 @@ def analyze(package: Path, methods: dict[str, object], dispatch: object) -> dict
             "methods": {name: _describe(sites_of(methods[name])) for name in sorted(methods)}}
 
 
+def render_authority(source_repo: Path) -> dict[str, object] | None:
+    """The session authority's refusals per served method, or None for a release without the authority."""
+    repo = source_repo.resolve()
+    if not (repo / "gateway" / "session_controls.py").exists():
+        return None
+    from gateway.session_controls import AuthorityConnection
+    from gateway.session_group_controls import GROUP_METHODS, dispatch_group_control
+    from tui_gateway.contracts.registry import CANONICAL_METHODS
+
+    class _Connection:
+        """Stands in for a connection so ``handlers()`` can bind the authority's verbs without a socket."""
+
+        def __getattr__(self, name: str) -> object:
+            attribute = getattr(AuthorityConnection, name, None)
+            if callable(attribute):
+                return types.MethodType(attribute, self)
+            raise AttributeError(name)
+
+    handlers: dict[str, object] = dict(AuthorityConnection.handlers(_Connection()))
+    # dispatch routes the hosted-room verbs and profiles.list to one function.
+    for name in [*GROUP_METHODS, "profiles.list"]:
+        handlers.setdefault(name, dispatch_group_control)
+    unserved = sorted(set(CANONICAL_METHODS) - set(handlers))
+    if unserved:
+        raise ValueError(f"Canonical methods the authority does not serve: {unserved}")
+
+    files = sorted([*(repo / "gateway").rglob("*.py"), *(repo / "tui_gateway").rglob("*.py"),
+                    *repo.glob("hermes_state*.py")])
+    source = Source(repo / "gateway", files)
+    source.load_constants()
+    analyzer = Analyzer(source, authority=True)
+
+    def sites_of(fn: object, *, follow: bool = True) -> set[Site]:
+        sites: set[Site] = set()
+        for code, bindings in _entries(fn):
+            try:
+                relative = Path(code.co_filename).resolve().relative_to(repo).as_posix()
+            except ValueError:
+                continue
+            node = source.by_start.get((relative, code.co_firstlineno))
+            if node is None:
+                raise ValueError(f"No source function starts at {relative}:{code.co_firstlineno}")
+            sites |= analyzer.function_sites(node, bindings, follow=follow)
+        return sites
+
+    # What dispatch answers itself (param checks, unknown methods, storage), and the profile routing every
+    # call with a ``profile`` passes through. Dispatch's own calls are not followed: they build the handler
+    # table, whose every verb would otherwise count for every method.
+    common = sites_of(AuthorityConnection.dispatch, follow=False) | sites_of(AuthorityConnection._sibling_for)
+    common = {site for site in common if isinstance(site.code, int)}
+    # Every reason raised anywhere in the authority's modules, reachable or not: the inventory to review.
+    every: set[Site] = set()
+    for path in files:
+        relative = path.relative_to(repo).as_posix()
+        if not relative.startswith(("gateway/", "hermes_state")):
+            continue
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"), filename=str(path))):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == REFUSAL
+                    and isinstance(reason := _argument(node, 0, "reason"), ast.Constant)
+                    and isinstance(reason.value, str)):
+                every.add(Site(REFUSAL_CODE, reason.value, relative, node.lineno))
+    return {
+        "canonical": sorted(CANONICAL_METHODS),
+        "reasons": _describe(every),
+        "common": _describe(common),
+        "methods": {name: _describe(sites_of(handlers[name])) for name in sorted(handlers)},
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-repo", type=Path, required=True)
     # Importing the server takes over stdout for its stdio transport, so the result goes to a file.
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    args.output.write_text(json.dumps(render(args.source_repo), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    rendered = render(args.source_repo)
+    authority = render_authority(args.source_repo)
+    if authority is not None:
+        rendered["authority"] = authority
+    args.output.write_text(json.dumps(rendered, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

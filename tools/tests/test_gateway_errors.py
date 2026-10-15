@@ -12,8 +12,8 @@ import pytest
 import yaml
 
 from tools import _render_gateway_errors as render
-from tools.gateway_errors import load, reviewed_hash
-from tools.gen_gateway_api import _error_lines, _swift_literal
+from tools.gateway_errors import load, load_refusals, reviewed_hash
+from tools.gen_gateway_api import _canonical_views, _error_lines, _refusal_lines, _swift_literal
 from tools.ref_policy import current_release
 
 CURRENT = current_release()
@@ -187,3 +187,110 @@ def test_swift_literals_use_braced_unicode_escapes() -> None:
     assert _swift_literal("a — b") == '"a \\u{2014} b"'
     # A backslash in the message stays text.
     assert _swift_literal("x\\u1234") == '"x\\\\u1234"'
+
+
+AUTHORITY = '''
+    class RuntimeStoreError(ValueError):
+        def __init__(self, reason):
+            self.reason = reason
+
+
+    def _require(value):
+        if not value:
+            raise RuntimeStoreError('invalid_params')
+
+
+    class SessionAuthority:
+        def submit(self, params):
+            if params.get("stale"):
+                raise RuntimeStoreError('stale_generation')
+            return self._queue(params)
+
+        def _queue(self, params):
+            raise RuntimeStoreError('queue_full')
+
+
+    class Other:
+        def submit(self, params):
+            raise RuntimeStoreError('never_from_the_connection')
+
+
+    class Connection:
+        def __init__(self, authority):
+            self.authority = authority
+
+        def submit(self, ref, params):
+            _require(params.get("session_id"))
+            return self.authority.submit(params)
+
+        def detach(self, ref, params):
+            self._check(params)
+
+        def _check(self, params):
+            raise RuntimeStoreError('not_found')
+'''
+
+
+def _authority_reasons(tmp_path: Path, method: str) -> list[str]:
+    root = tmp_path / "gateway"
+    root.mkdir(exist_ok=True)
+    (root / "session_controls.py").write_text(textwrap.dedent(AUTHORITY), encoding="utf-8")
+    source = render.Source(root)
+    analyzer = render.Analyzer(source, authority=True)
+    node = source.method("Connection", method)[0]
+    return sorted(site.message for site in analyzer.function_sites(node, {}))
+
+
+def test_authority_refusals_follow_self_and_typed_receivers(tmp_path: Path) -> None:
+    # A module helper, the authority's method (not the same-named one of another class) and what it calls.
+    assert _authority_reasons(tmp_path, "submit") == ["invalid_params", "queue_full", "stale_generation"]
+    assert _authority_reasons(tmp_path, "detach") == ["not_found"]
+
+
+def _authority_extracted(tmp_path: Path, reasons: list[str], methods: dict[str, list[dict]]) -> Path:
+    path = tmp_path / "gateway-errors.json"
+    path.write_text(json.dumps({
+        "ref": CURRENT, "commit": "c", "common": [], "methods": {},
+        "authority": {"canonical": sorted(methods), "common": [_error(-32601, "unknown method: {…}")],
+                      "methods": methods, "reasons": [_error(4001, *reasons)]},
+    }), encoding="utf-8")
+    return path
+
+
+def test_refusal_review_loads_and_must_agree(tmp_path: Path) -> None:
+    extracted = _authority_extracted(tmp_path, ["not_found", "session_busy"],
+                                     {"session.mutate": [_error(4001, "not_found", "session_busy")]})
+    reasons = {"not_found": "notFound", "session_busy": "busy"}
+    good = {"refusals": {"reviewed": reviewed_hash(set(reasons)), "reasons": reasons}}
+    catalog = load_refusals(CURRENT, extracted_path=extracted, review_path=_review(tmp_path, good))
+    assert catalog.reasons == (("not_found", "notFound"), ("session_busy", "busy"))
+    assert catalog.canonical == ("session.mutate",)
+    assert _refusal_lines(catalog.methods["session.mutate"], catalog) == [
+        "- 4001 notFound: `not_found`; busy: `session_busy`"]
+    for review, problem in [
+        ({"reviewed": reviewed_hash(set(reasons)), "reasons": {"not_found": "notFound"}}, "session_busy is new"),
+        ({"reviewed": "0", "reasons": reasons}, "changed since review"),
+        ({"reviewed": reviewed_hash(set(reasons)), "reasons": {**reasons, "gone": "conflict"}}, "gone is no longer"),
+        ({"reviewed": reviewed_hash(set(reasons)), "reasons": {**reasons, "not_found": "missing"}}, "kind 'missing'"),
+    ]:
+        with pytest.raises(ValueError, match=problem):
+            load_refusals(CURRENT, extracted_path=extracted, review_path=_review(tmp_path, {"refusals": review}))
+
+
+def test_committed_refusal_review_matches_the_pinned_release() -> None:
+    catalog = load_refusals(CURRENT)
+    assert set(catalog.canonical) <= set(catalog.methods)
+
+
+def test_canonical_methods_get_their_own_namespaces() -> None:
+    contract = {"x-canonical-methods": [{
+        "name": "session.mutate", "summary": "Edit a session.",
+        "params": [{"name": "params", "schema": {"$ref": "#/components/schemas/SessionMutateParams"}}],
+        "result": {"name": "result", "schema": {"$ref": "#/components/schemas/SessionMutateResult"}},
+    }]}
+    views = _canonical_views(contract, None)
+    assert views is not None
+    namespace = views["namespaces"][0]
+    assert (namespace["type_name"], namespace["swift_name"]) == ("CanonicalSessionMethods", "session")
+    assert namespace["methods"][0]["params"] == "SessionMutateParams"
+    assert _canonical_views({"methods": []}, None) is None

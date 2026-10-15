@@ -170,3 +170,50 @@ def load(ref: str, *, extracted_path: Path | None = None, review_path: Path = RE
         common=_method_errors(extracted["common"]),
         methods={name: _method_errors(entries) for name, entries in sorted(extracted["methods"].items())},
     )
+
+
+@dataclass(frozen=True)
+class RefusalCatalog:
+    """The session authority's reviewed refusals (releases with the unified runtime, v0.22.1 on)."""
+
+    # (reason, kind), sorted by reason.
+    reasons: tuple[tuple[str, str], ...]
+    common: tuple[MethodError, ...]
+    methods: dict[str, tuple[MethodError, ...]]
+    canonical: tuple[str, ...]
+
+
+def load_refusals(ref: str, *, extracted_path: Path | None = None, review_path: Path = REVIEW) -> RefusalCatalog:
+    """The ``authority`` part of the extracted errors, checked against ``refusals`` in the review file."""
+    ref = require_release(ref)
+    path = extracted_path or ROOT / "spec" / "out" / ref / "gateway-errors.json"
+    extracted = json.loads(path.read_text(encoding="utf-8"))
+    if extracted.get("ref") != ref:
+        raise ValueError(f"{path} was extracted from {extracted.get('ref')}, not {ref}")
+    authority = extracted.get("authority")
+    if authority is None:
+        raise ValueError(f"{ref} has no session authority; run make rest")
+    review = (yaml.safe_load(review_path.read_text(encoding="utf-8")) or {}).get("refusals") or {}
+    inventory = {message for entry in authority["reasons"] for message in entry["messages"]}
+    reviewed = review.get("reasons") or {}
+    problems: list[str] = []
+    for reason in sorted(inventory - set(reviewed)):
+        problems.append(f"refusal {reason} is new: classify it")
+    for reason in sorted(set(reviewed) - inventory):
+        problems.append(f"refusal {reason} is no longer raised by {ref}: remove it")
+    for reason, kind in sorted(reviewed.items()):
+        if kind not in KINDS:
+            problems.append(f"refusal {reason} has kind {kind!r}; expected one of {KINDS}")
+    expected = reviewed_hash(inventory)
+    if review.get("reviewed") != expected:
+        problems.append(f"refusals changed since review: {sorted(inventory)}; review their kinds, then set "
+                        f"reviewed: {expected}")
+    if problems:
+        raise ValueError(f"{review_path.relative_to(ROOT) if review_path.is_relative_to(ROOT) else review_path} "
+                         "disagrees with the extracted refusals:\n  " + "\n  ".join(problems))
+    return RefusalCatalog(
+        reasons=tuple(sorted(reviewed.items())),
+        common=_method_errors(authority["common"]),
+        methods={name: _method_errors(entries) for name, entries in sorted(authority["methods"].items())},
+        canonical=tuple(authority["canonical"]),
+    )

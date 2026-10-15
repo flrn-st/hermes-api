@@ -26,6 +26,27 @@ public enum GatewayKnownError: String, Sendable, Hashable, CaseIterable {
     }
 }
 
+/// Why Hermes' session authority (the unified gateway runtime) refused a call: the reason of its `4001`
+/// answers, which it sends as the message and as `data.reason`. See `HermesGatewayError.refusal`.
+public enum GatewayRefusalReason: String, Sendable, Hashable, CaseIterable {
+{% for reason in refusals %}
+    case {{ reason.swift }} = {{ reason.literal }}
+{% endfor %}
+
+{% if refusals %}
+    public var kind: GatewayErrorKind {
+        switch self {
+{% for reason in refusals %}
+        case .{{ reason.swift }}: .{{ reason.kind }}
+{% endfor %}
+        }
+    }
+{% else %}
+    /// This release has no session authority, so it refuses with no reason.
+    public var kind: GatewayErrorKind { .unknown }
+{% endif %}
+}
+
 extension GatewayErrorCatalog {
     static let codes: [Int: GatewayCodeRule] = [
 {% for code in codes %}

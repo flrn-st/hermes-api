@@ -10,7 +10,15 @@ from collections import defaultdict
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from tools.gateway_errors import KIND_SUMMARIES, KINDS, Catalog, MethodError, segments
+from tools.gateway_errors import (
+    KIND_SUMMARIES,
+    KINDS,
+    Catalog,
+    MethodError,
+    RefusalCatalog,
+    load_refusals,
+    segments,
+)
 from tools.gateway_errors import load as load_errors
 from tools.gen_gateway_models import (
     KOTLIN_OUT,
@@ -22,8 +30,9 @@ from tools.gen_gateway_models import (
     _literal,
     _swift,
 )
-from tools.naming import camel, checked_method_symbols, pascal
+from tools.naming import MethodSymbol, camel, checked_method_symbols, pascal
 from tools.ref_policy import require_release
+from tools.schema_audit import CANONICAL_METHODS
 
 
 def _ref(schema: dict[str, object]) -> str:
@@ -61,11 +70,29 @@ def _error_lines(errors: tuple[MethodError, ...], catalog: Catalog) -> list[str]
     return lines
 
 
-def _docs(summary: str, errors: list[str]) -> tuple[list[str], list[str]]:
+def _refusal_lines(errors: tuple[MethodError, ...], refusals: RefusalCatalog) -> list[str]:
+    """The reasons a canonical method's handler can refuse with (``4001``), by kind, and any other code."""
+    known = dict(refusals.reasons)
+    lines = []
+    for error in errors:
+        if error.code == 4001:
+            by_kind: dict[str, list[str]] = {}
+            for reason in sorted(message for message in error.messages if message in known):
+                by_kind.setdefault(known[reason], []).append(f"`{reason}`")
+            if by_kind:
+                lines.append("- 4001 " + "; ".join(f"{kind}: {', '.join(by_kind[kind])}"
+                                                   for kind in KINDS if kind in by_kind))
+        elif error.code is not None:
+            lines.append(f"- {error.code}")
+    return lines
+
+
+def _docs(summary: str, errors: list[str],
+          intro: str = "Hermes' handler can answer with these errors:") -> tuple[list[str], list[str]]:
     text = " ".join(summary.split())
     body = [text] if text else []
     if errors:
-        body += ([""] if body else []) + ["Hermes' handler can answer with these errors:"] + errors
+        body += ([""] if body else []) + [intro] + errors
     swift = [f"/// {line}".rstrip() for line in body]
     kotlin = [] if not body else (["/**"] + [f" * {_kdoc_safe(line)}".rstrip() for line in body] + [" */"])
     return swift, kotlin
@@ -89,29 +116,57 @@ def _method_view(item: dict[str, object], public_name: str, catalog: Catalog | N
     }
 
 
-def _views(contract: dict[str, object], catalog: Catalog) -> tuple[dict[str, object], dict[str, object]]:
-    methods = contract["methods"]
-    missing = sorted({item["name"] for item in methods} - set(catalog.methods))
-    if missing:
-        raise ValueError(f"No extracted errors for {missing}; run make rest")
-    symbols = checked_method_symbols(item["name"] for item in methods)
-    namespaces: dict[str, list[dict[str, str]]] = defaultdict(list)
-    root_methods: list[dict[str, str]] = []
-    for item, symbol in zip(methods, symbols, strict=True):
-        view = _method_view(item, symbol.name, catalog)
+def _namespaced(views: list[tuple[dict[str, object], MethodSymbol]], prefix: str = "") -> dict[str, object]:
+    """Method views grouped into namespace types (``{prefix}{Namespace}Methods``) and root methods."""
+    namespaces: dict[str, list[dict[str, object]]] = defaultdict(list)
+    root_methods: list[dict[str, object]] = []
+    for view, symbol in views:
         (namespaces[symbol.namespace] if symbol.namespace else root_methods).append(view)
     namespace_views = [
         {
             "wire_name": name,
             "swift_name": _swift(name),
             "kotlin_name": _kotlin(name),
-            "type_name": f"{pascal(name)}Methods",
+            "type_name": f"{prefix}{pascal(name)}Methods",
             "methods": sorted(items, key=lambda item: item["wire_name"]),
         }
         for name, items in sorted(namespaces.items())
     ]
-    method_view = {"namespaces": namespace_views,
-                   "root_methods": sorted(root_methods, key=lambda item: item["wire_name"])}
+    return {"namespaces": namespace_views,
+            "root_methods": sorted(root_methods, key=lambda item: item["wire_name"])}
+
+
+def _canonical_views(contract: dict[str, object], refusals: RefusalCatalog | None) -> dict[str, object] | None:
+    """The unified runtime's strict methods (``x-canonical-methods``) under ``canonical``, or None for a release
+    without them. They keep Hermes' component names, which already tell a shared name's strict variant apart
+    (``CanonicalCreateParams`` beside ``SessionCreateParams``); their namespaces are ``Canonical{Name}Methods``."""
+    methods = contract.get(CANONICAL_METHODS, [])
+    if not methods:
+        return None
+    if refusals is not None:
+        missing = sorted({item["name"] for item in methods} - set(refusals.methods))
+        if missing:
+            raise ValueError(f"No extracted refusals for canonical {missing}; run make rest")
+    views = []
+    for item, symbol in zip(methods, checked_method_symbols(item["name"] for item in methods), strict=True):
+        view = _method_view(item, symbol.name)
+        lines = _refusal_lines(refusals.methods[item["name"]], refusals) if refusals else []
+        view["swift_doc"], view["kotlin_doc"] = _docs(str(item.get("summary") or ""), lines,
+                                                      intro="The session authority can refuse it with:")
+        views.append((view, symbol))
+    return _namespaced(views, prefix="Canonical")
+
+
+def _views(contract: dict[str, object], catalog: Catalog) -> tuple[dict[str, object], dict[str, object]]:
+    methods = contract["methods"]
+    missing = sorted({item["name"] for item in methods} - set(catalog.methods))
+    if missing:
+        raise ValueError(f"No extracted errors for {missing}; run make rest")
+    symbols = checked_method_symbols(item["name"] for item in methods)
+    if any(symbol.namespace == "canonical" for symbol in symbols):
+        raise ValueError("A gateway namespace is named canonical, which the strict methods' catalog uses")
+    method_view = _namespaced([(_method_view(item, symbol.name, catalog), symbol)
+                               for item, symbol in zip(methods, symbols, strict=True)])
 
     events: list[dict[str, object]] = []
     for item in contract["x-notifications"]:
@@ -170,7 +225,7 @@ def _constant(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).upper()
 
 
-def _error_views(catalog: Catalog) -> dict[str, object]:
+def _error_views(catalog: Catalog, refusals: RefusalCatalog | None = None) -> dict[str, object]:
     kinds = [{"name": kind, "summary": KIND_SUMMARIES[kind], "kotlin": _constant(kind)} for kind in KINDS]
     names = [{"name": name.name, "summary": name.summary, "kind": name.kind,
               "kotlin": _constant(name.name), "kotlin_kind": _constant(name.kind)} for name in catalog.names]
@@ -188,7 +243,9 @@ def _error_views(catalog: Catalog) -> dict[str, object]:
             # A message template before the entries that match every message of the code.
             "names": sorted(name_rules.get(code.code, []), key=lambda rule: not rule["specific"]),
         })
-    return {"kinds": kinds, "names": names, "codes": codes}
+    reasons = [{"swift": _swift(camel(reason)), "kotlin": reason.upper(), "literal": _literal(reason),
+                "kind": kind, "kotlin_kind": _constant(kind)} for reason, kind in (refusals.reasons if refusals else ())]
+    return {"kinds": kinds, "names": names, "codes": codes, "refusals": reasons}
 
 
 def generate(ref: str, *, check: bool = False) -> int:
@@ -197,7 +254,9 @@ def generate(ref: str, *, check: bool = False) -> int:
     meta = json.loads((ROOT / "spec" / "out" / ref / "meta.json").read_text())
     catalog = load_errors(ref)
     methods, events = _views(contract, catalog)
-    errors = _error_views(catalog)
+    refusals = load_refusals(ref) if contract.get(CANONICAL_METHODS) else None
+    canonical = _canonical_views(contract, refusals)
+    errors = _error_views(catalog, refusals)
     read_only = yaml.safe_load((ROOT / "spec" / "gateway-read-only.yaml").read_text(encoding="utf-8"))["methods"]
     unknown = sorted(set(read_only) - {item["name"] for item in contract["methods"]})
     if unknown:
@@ -206,8 +265,8 @@ def generate(ref: str, *, check: bool = False) -> int:
     env = Environment(loader=FileSystemLoader(TEMPLATES), undefined=StrictUndefined,
                       trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     outputs = {
-        SWIFT_OUT / "GatewayMethods.swift": env.get_template("swift_methods.j2").render(**methods),
-        KOTLIN_OUT / "GatewayMethods.kt": env.get_template("kotlin_methods.j2").render(**methods),
+        SWIFT_OUT / "GatewayMethods.swift": env.get_template("swift_methods.j2").render(**methods, canonical=canonical),
+        KOTLIN_OUT / "GatewayMethods.kt": env.get_template("kotlin_methods.j2").render(**methods, canonical=canonical),
         SWIFT_OUT / "GatewayEvents.swift": env.get_template("swift_events.j2").render(**events),
         KOTLIN_OUT / "GatewayEvents.kt": env.get_template("kotlin_events.j2").render(**events),
         SWIFT_LIVE_OUT / "GatewayOperations.swift": env.get_template("swift_gateway_operations.j2").render(
@@ -241,6 +300,11 @@ def generate(ref: str, *, check: bool = False) -> int:
         manifest["methods"].append({"wire": item["wire_name"], "public": item["swift_name"],
                                     "params": item["params"], "result": item["result"]})
     manifest["methods"].sort(key=lambda item: item["wire"])
+    manifest["canonical_methods"] = sorted(
+        ({"wire": item["wire_name"], "public": f"canonical.{ns['wire_name']}.{item['swift_name']}",
+          "params": item["params"], "result": item["result"]}
+         for ns in (canonical or {}).get("namespaces", []) for item in ns["methods"]),
+        key=lambda item: item["wire"])
     outputs[ROOT / "spec" / "out" / ref / "gateway-symbols.json"] = (
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )

@@ -23,6 +23,28 @@ public enum class GatewayKnownError(
 {% endfor %}
 }
 
+/**
+ * Why Hermes' session authority (the unified gateway runtime) refused a call: the reason of its `4001`
+ * answers, which it sends as the message and as `data.reason`. See [hermes.api.runtime.refusal].
+ */
+public enum class GatewayRefusalReason(
+    /** The reason as Hermes sends it. */
+    public val wire: String,
+    public val kind: GatewayErrorKind,
+) {
+{% for reason in refusals %}
+    {{ reason.kotlin }}({{ reason.literal }}, GatewayErrorKind.{{ reason.kotlin_kind }}),
+{% endfor %}
+    ;
+
+    public companion object {
+        private val byWire = entries.associateBy { it.wire }
+
+        /** The reviewed reason Hermes sent as [wire], or null for one this release does not raise. */
+        public fun fromWire(wire: String): GatewayRefusalReason? = byWire[wire]
+    }
+}
+
 /** The reviewed classification of a code; message templates override its kind. */
 internal class GatewayCodeRule(
     val kind: GatewayErrorKind,

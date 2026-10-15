@@ -1,10 +1,14 @@
 package hermes.api
 
+import kotlinx.serialization.json.Json
 import hermes.api.generated.gateway.GatewayErrorKind
 import hermes.api.generated.gateway.GatewayKnownError
+import hermes.api.generated.gateway.GatewayRefusalReason
+import hermes.api.runtime.GatewayRefusal
 import hermes.api.runtime.HermesGatewayException
 import hermes.api.runtime.kind
 import hermes.api.runtime.known
+import hermes.api.runtime.refusal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -48,5 +52,33 @@ class GatewayErrorCatalogTest {
         assertNull(rpc(4064, "the profile 'work' not found").known)
         assertEquals(GatewayKnownError.PROFILE_NOT_FOUND, rpc(4064, "profile '' not found").known)
         assertNull(rpc(4009, "session busy!").known)
+    }
+
+    private fun json(text: String) = Json.parseToJsonElement(text)
+
+    @Test
+    fun authorityRefusalsAreClassifiedByReason() {
+        val busy = HermesGatewayException.RPC(4001, "session_busy", json("""{"reason":"session_busy"}"""))
+        assertEquals(GatewayKnownError.SESSION_BUSY, busy.known)
+        assertEquals(GatewayErrorKind.BUSY, busy.kind)
+        val missing = HermesGatewayException.RPC(4001, "not_found", json("""{"reason":"not_found"}"""))
+        assertEquals(GatewayKnownError.SESSION_NOT_FOUND, missing.known)
+        val stale = HermesGatewayException.RPC(4001, "stale_generation", json("""{"reason":"stale_generation"}"""))
+        assertEquals(GatewayRefusalReason.STALE_GENERATION, stale.refusal?.known)
+        assertNull(stale.known)
+        assertEquals(GatewayErrorKind.CONFLICT, stale.kind)
+        val invalid = HermesGatewayException.RPC(4001, "invalid_params",
+            json("""{"reason":"invalid_params","fields":["source","cols"],"field":"hidden","detail":"must be a boolean"}"""))
+        assertEquals(GatewayRefusal("invalid_params", listOf("source", "cols"), "hidden", "must be a boolean"), invalid.refusal)
+        assertEquals(GatewayKnownError.INVALID_PARAMS, invalid.known)
+        // A call the client refuses before sending it reads as an unknown method.
+        val unsupported = HermesGatewayException.RPC(-32601, "pdf.attach is not available on this Hermes gateway: x",
+            json("""{"reason":"unsupported_on_authority","field":"pdf.attach","detail":"x"}"""))
+        assertEquals(GatewayKnownError.UNKNOWN_METHOD, unsupported.known)
+        assertEquals(GatewayErrorKind.UNSUPPORTED, unsupported.kind)
+        // Legacy errors keep their catalog classification.
+        val legacy = HermesGatewayException.RPC(4009, "session busy", null)
+        assertNull(legacy.refusal)
+        assertEquals(GatewayKnownError.SESSION_BUSY, legacy.known)
     }
 }

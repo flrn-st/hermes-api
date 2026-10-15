@@ -320,7 +320,7 @@ private let iosCreate = SessionCreateParams(
     let (gateway, socket, initial) = try await authorityWithSession()
     var sent = initial
     let submitted = Task {
-        try await gateway.methods.prompt.submit(.init(sessionId: "local-n", profile: .value("default"), text: .string("hi"), queued: .value(true)))
+        try await gateway.methods.prompt.submit(.init(sessionId: "local-n", profile: .value("default"), text: .string("hi"), queued: .value(true), surface: .value("ios")))
     }
     let attach = try await sent.next("session.resume")
     #expect(attach.params["session_id"] == "local-n")

@@ -245,7 +245,7 @@ does not know yet) resumes the session first.
 | `slash.exec` `/model <m>`, `/branch [title]`, `/compress [focus]` | The same `session.mutate`, answered `{type: "exec", output}` |
 | `session.usage` | `session.stats`, mapped onto the legacy counters (no cost or credit lines) |
 | `session.interrupt`, `session.redirect`, `session.steer` | `execution_generation` added |
-| `prompt.submit` | `submission_id` added (one per call, kept across resends of the same frame); keys outside the canonical submit contract dropped; `status: started` reads as `streaming` |
+| `prompt.submit` | `submission_id` added (one per call, kept across resends of the same frame); keys outside the canonical submit contract dropped, and a `surface` other than `hud` / `voice-live` (with `voice_context` outside a live-voice turn), which the authority refuses; `status: started` reads as `streaming` |
 | `prompt.submit` with `truncate_before_row_id` (edit, rewind) | `session.mutate rewind {target_message_id}`, then the plain submit |
 | `approval.respond {request_id, choice}` | `{prompt_id, choice, execution_generation}`; `resolved` is 1 for `resolved`, 0 for `already_resolved` |
 | `clarify.lock {request_id, answer}` and `request.answer {id, result: {answer}}` for a prompt this socket was shown | `clarify.respond {prompt_id, answer, execution_generation}`; `status` is `ok` or `expired` |

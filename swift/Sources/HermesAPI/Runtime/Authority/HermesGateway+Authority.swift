@@ -187,6 +187,9 @@ extension HermesGateway {
         "api_text", "model_override", "clarify_batch",
     ]
 
+    /// `gateway/session_surface.py` `SURFACES`.
+    static let submitSurfaces: Set<String> = ["hud", "voice-live"]
+
     /// The legacy truncating-submit keys (edit, regenerate, restore).
     static let truncateKeys: Set<String> = [
         "confirm_truncate", "confirm_empty_truncate", "confirm_deep_truncate", "truncate_before_row_id",
@@ -545,7 +548,9 @@ extension HermesGateway {
     ) async throws -> JSONValue {
         let owner = ownerOf(params)
         var prepared = params.filter { $0.key != "expected_hosted_task_id" }
-        if prepared["execution_generation"] == nil {
+        // A caller of the canonical catalog names the generation itself and reads the canonical result.
+        let canonicalCaller = prepared["execution_generation"] != nil
+        if !canonicalCaller {
             if authority.session(owner)?.generation == nil || !authority.isAttached(owner) {
                 try await attach(owner, context)
             }
@@ -562,7 +567,7 @@ extension HermesGateway {
             throw error
         }
         authority.adoptGeneration(result["execution_generation"]?.integerValue, for: owner)
-        guard method == "session.interrupt" else { return result }
+        guard method == "session.interrupt", !canonicalCaller else { return result }
         return .object(["status": "interrupted", "interrupted": true])
     }
 
@@ -583,7 +588,15 @@ extension HermesGateway {
         try await attachIfNeeded(owner, context)
         authority.retireMutations(of: owner)
         var prepared = params.filter { Self.submitKeys.contains($0.key) && !$0.value.isNull }
-        if prepared["submission_id"] == nil && prepared["input_id"] == nil {
+        // The authority knows two surfaces and reads a voice context only for a live-voice turn; anything
+        // else is refused, so it is left out as a legacy gateway ignored it.
+        if let surface = prepared["surface"]?.stringValue, !Self.submitSurfaces.contains(surface) {
+            prepared["surface"] = nil
+        }
+        if prepared["surface"]?.stringValue != "voice-live" { prepared["voice_context"] = nil }
+        // A caller of the canonical catalog brings its own identity and reads the canonical status.
+        let canonicalCaller = prepared["submission_id"] != nil || prepared["input_id"] != nil
+        if !canonicalCaller {
             // One identity per call; a resend of the same frame after a lost connection keeps it.
             prepared["submission_id"] = .string(UUID().uuidString.lowercased())
         }
@@ -596,7 +609,7 @@ extension HermesGateway {
         var result = value.objectValue ?? [:]
         result["session_id"] = .string(admission.ref.sessionId)
         result["submission_id"] = prepared["submission_id"] ?? prepared["input_id"]
-        if admission.status == .started { result["status"] = "streaming" }
+        if admission.status == .started && !canonicalCaller { result["status"] = "streaming" }
         return .object(result)
     }
 

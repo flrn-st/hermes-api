@@ -60,6 +60,13 @@ tasks.register<JavaExec>("smoke") {
     mainClass = "hermes.api.LiveSmokeKt"
 }
 
+tasks.register<JavaExec>("authoritySmoke") {
+    group = "verification"
+    description = "Exercise the legacy methods against a live Hermes session authority (HERMES_AUTHORITY_URL)"
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass = "hermes.api.authority.AuthorityLiveCheckKt"
+}
+
 publishing {
     publications {
         create<MavenPublication>("hermesAPI") {

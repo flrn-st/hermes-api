@@ -105,9 +105,12 @@ public extension HermesGatewayError {
         return GatewayRefusal(data: data)
     }
 
-    /// The named error Hermes answered with, when it is one clients can rely on.
+    /// The named error Hermes answered with, when it is one clients can rely on. A session authority's
+    /// refusal is named by its reason where a legacy error means the same (`session_busy` is `.sessionBusy`,
+    /// `not_found` `.sessionNotFound`), so apps keep branching on `known` against either runtime.
     var known: GatewayKnownError? {
         guard case .rpc(let code, let message, _) = self else { return nil }
+        if let refusal = authorityRefusal { return refusal.legacyKnown }
         return GatewayErrorCatalog.known(code: code, message: message)
     }
 }

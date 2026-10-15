@@ -35,7 +35,7 @@ private struct RPCError: Codable {
 }
 
 /// A session this client rebinds after a reconnect, with what it needs to resume it from storage.
-private struct TrackedSession {
+struct TrackedSession {
     var storedID: String?
     var profile: String?
     var source: String?
@@ -51,25 +51,25 @@ private struct TrackedSession {
 /// sessions Hermes reclaimed meanwhile. Apps call `enterBackground()` and `enterForeground()` from their
 /// lifecycle so no socket, heartbeat or retry runs while the app is suspended.
 public actor HermesGateway: HermesGatewayClient {
-    private let configuration: HermesGatewayConfiguration
-    private let eventBroadcast = Broadcast<GatewayEvent>()
+    let configuration: HermesGatewayConfiguration
+    let eventBroadcast = Broadcast<GatewayEvent>()
     private let stateBroadcast = Broadcast<GatewayConnectionState>(replaysLatest: true, initial: .idle)
-    private let recoveryBroadcast = Broadcast<GatewaySessionRecovery>()
+    let recoveryBroadcast = Broadcast<GatewaySessionRecovery>()
     /// The number of sessions with a turn streaming, so backgrounding can let them finish.
     private let turnActivity = Broadcast<Int>(replaysLatest: true, initial: 0)
 
-    private var activeSocket: (any GatewayConnection)?
+    var activeSocket: (any GatewayConnection)?
     private var readTask: Task<Void, Never>?
     private var heartbeatTask: Task<Void, Never>?
     private var reconnectTask: Task<Void, Never>?
     private var reconnectRun = 0
     private var monitorTask: Task<Void, Never>?
-    private var generation = 0
+    var generation = 0
     /// Set by `connect()`, cleared by `disconnect()` or a terminal failure.
     private var wantsConnection = false
     private var opening = false
     /// The socket is open, sessions are rebound, and app calls may use it.
-    private var ready = false
+    var ready = false
     private var inBackground = false
     private var networkKnown = false
     private var networkAvailable = true
@@ -79,19 +79,30 @@ public actor HermesGateway: HermesGatewayClient {
     private var heartbeatSequence = 0
 
     private var pending: [Int: AsyncThrowingStream<JSONValue, Error>.Continuation] = [:]
-    private var serverTasks: [String: Task<Void, Never>] = [:]
-    private var serverRequestHandler: (@Sendable (ServerRequest) async throws -> ServerRequestResult)?
+    var serverTasks: [String: Task<Void, Never>] = [:]
+    var serverRequestHandler: (@Sendable (ServerRequest) async throws -> ServerRequestResult)?
     private var nextID = 1
 
-    private var sessions: [String: TrackedSession] = [:]
-    private var lastSequence: [String: Int] = [:]
+    var sessions: [String: TrackedSession] = [:]
+    /// The session authority's translation state. It outlives connections, so an edit whose answer a dropped
+    /// socket lost is retried as the same request on the next one.
+    var authority = AuthorityProtocol()
+    /// The current connection is a Hermes session authority (`gateway.ready.session_authority` and
+    /// `runtime.describe`); calls are translated to its canonical protocol.
+    var isAuthority = false
+    /// `gateway.ready` on the current connection announced a session authority.
+    var authoritySignalled = false
+    var authorityDescription: RuntimeDescribeResult?
+    /// The replay epoch and sequence each rebind's snapshot reported while recovering, for the replay after it.
+    var recoverySnapshots: [String: AuthorityReplayPoint] = [:]
+    var lastSequence: [String: Int] = [:]
     /// Runtime ids this client stopped tracking (closed, reclaimed, retired). A late event of one must not
     /// track it again through its watermark; a new server process (replay epoch) drops them all.
-    private var forgotten: Set<String> = []
-    private var activeTurns: Set<String> = []
+    var forgotten: Set<String> = []
+    var activeTurns: Set<String> = []
     private var replayEpoch: String?
     private var hasConnected = false
-    private var replayHold: [String: [[String: JSONValue]]] = [:]
+    var replayHold: [String: [[String: JSONValue]]] = [:]
     /// Turns still streaming when Hermes dropped their session, by runtime id, with when draining began. The
     /// reply keeps landing in Hermes' replay buffer under that id, so the client fetches it until the turn ends.
     private var draining: [String: ContinuousClock.Instant] = [:]
@@ -99,6 +110,11 @@ public actor HermesGateway: HermesGatewayClient {
 
     /// The desktop contract Hermes last reported in a session result, or `nil` before the first one.
     public private(set) var backendContract: Int?
+
+    /// Whether the current connection is a Hermes session authority (the unified gateway runtime of Hermes
+    /// v0.22.1 and later, on the gateway's own listener). The gateway translates calls for it; see
+    /// docs/gateway.md, "Unified runtime".
+    public var sessionAuthority: Bool { isAuthority }
 
     public init(configuration: HermesGatewayConfiguration) {
         self.configuration = configuration
@@ -260,6 +276,11 @@ public actor HermesGateway: HermesGatewayClient {
             }
             activeSocket = socket
             lastInbound = .now
+            // Each connection says again which runtime it is; a subscription never outlives its socket.
+            isAuthority = false
+            authoritySignalled = false
+            authorityDescription = nil
+            authority.connectionChanged()
             if hasConnected {
                 replayHold = Dictionary(uniqueKeysWithValues: trackedSessionIDs.map { ($0, []) })
             }
@@ -276,6 +297,9 @@ public actor HermesGateway: HermesGatewayClient {
                 if configuration.minimumContract >= Self.capabilitiesContract {
                     throw HermesGatewayError.incompatibleServer(backendContract ?? Self.capabilitiesContract - 1)
                 }
+            }
+            if authoritySignalled {
+                try await describeAuthority()
             }
             guard current == generation, activeSocket != nil else {
                 throw HermesGatewayError.transport("Connection ended during handshake")
@@ -357,7 +381,7 @@ public actor HermesGateway: HermesGatewayClient {
 
     /// The socket died underneath a working connection. The first retry is jittered unless the cause is
     /// known to be fixed already, such as a new network path.
-    private func connectionLost(
+    func connectionLost(
         _ error: HermesGatewayError, generation current: Int, retryImmediately: Bool = false
     ) async {
         guard current == generation else { return }
@@ -485,10 +509,34 @@ public actor HermesGateway: HermesGatewayClient {
     /// drops under a call, the call is sent again on the next connection if Hermes never received it, or if
     /// it only reads state (`HermesGatewayContract.readOnlyMethods`). Any other call whose response was
     /// lost fails with `transport`: Hermes may or may not have run it.
-    private func call<Params: Encodable & Sendable, Result: Decodable & Sendable>(
+    func call<Params: Encodable & Sendable, Result: Decodable & Sendable>(
         _ method: String, params: Params, as resultType: Result.Type, timeout: Duration, waitsForConnection: Bool
     ) async throws -> Result {
         let deadline = ContinuousClock.now + timeout
+        if waitsForConnection && !ready && wantsConnection {
+            // Which protocol the call speaks depends on the connection it will go out on.
+            forgetClosedSession(method: method, params: params)
+            do {
+                try await awaitConnection(within: timeout)
+            } catch let error as HermesGatewayError {
+                throw error
+            } catch {
+                throw Self.gatewayError(error)
+            }
+        }
+        guard isAuthority else {
+            return try await wireCall(method, params: params, as: resultType, deadline: deadline,
+                                      waitsForConnection: waitsForConnection)
+        }
+        return try await authorityCall(method, params: params, as: resultType,
+                                       context: AuthorityCallContext(deadline: deadline, waitsForConnection: waitsForConnection))
+    }
+
+    /// Sends one call as it is, repeating it after a lost connection when that is safe.
+    func wireCall<Params: Encodable & Sendable, Result: Decodable & Sendable>(
+        _ method: String, params: Params, as resultType: Result.Type, deadline: ContinuousClock.Instant,
+        waitsForConnection: Bool
+    ) async throws -> Result {
         var attempt = 1
         while true {
             do {
@@ -573,9 +621,12 @@ public actor HermesGateway: HermesGatewayClient {
             } catch {
                 throw HermesGatewayError.decoding(error.localizedDescription)
             }
-            trackSession(method: method, params: params, result: result)
-            if method == "session.resume" || method == "session.activate" {
-                await deliverOpenRequests(in: result, socket: socket, generation: current)
+            // A session authority's results are tracked by the translation that asked for them.
+            if !isAuthority {
+                trackSession(method: method, params: params, result: result)
+                if method == "session.resume" || method == "session.activate" {
+                    await deliverOpenRequests(in: result, socket: socket, generation: current)
+                }
             }
             return decoded
         } catch let error as HermesGatewayError where error.known == .backendRetiring {
@@ -591,7 +642,7 @@ public actor HermesGateway: HermesGatewayClient {
         }
     }
 
-    private static func gatewayError(_ error: any Error) -> HermesGatewayError {
+    static func gatewayError(_ error: any Error) -> HermesGatewayError {
         switch error {
         case let error as HermesGatewayError: error
         case is CancellationError: .cancelled
@@ -706,7 +757,7 @@ public actor HermesGateway: HermesGatewayClient {
         }
     }
 
-    private func handleEvent(_ raw: JSONValue?, replayed: Bool) {
+    func handleEvent(_ raw: JSONValue?, replayed: Bool) {
         guard case .object(let params) = raw, case .string(let type) = params["type"] else {
             configuration.logger.error("Dropped an event without a type")
             return
@@ -717,6 +768,11 @@ public actor HermesGateway: HermesGatewayClient {
             replayHold[sessionID, default: []].append(params)
             return
         }
+        if isAuthority, let sessionID, let epoch = params["replay_epoch"]?.stringValue,
+           authority.adoptEpoch(epoch, for: sessionID) {
+            // The authority re-minted this session's replay epoch: its numbering restarts.
+            lastSequence[sessionID] = 0
+        }
         if let sessionID, let seq, seq <= (lastSequence[sessionID] ?? 0) { return }
         let rawPayload = params["payload"] ?? .object([:])
         // A payload the generated model rejects must not tear down the socket: reconnect replay
@@ -725,7 +781,9 @@ public actor HermesGateway: HermesGatewayClient {
             ?? .unknown(type: type, raw: rawPayload)
         switch payload {
         case .gatewayReady(let ready):
-            if let epoch = replayEpoch, epoch != ready.replayEpoch { resetWatermarks() }
+            authoritySignalled = rawPayload["session_authority"]?.boolValue == true
+            // A session authority numbers each session under its own epoch; the process epoch says nothing.
+            if !authoritySignalled, let epoch = replayEpoch, epoch != ready.replayEpoch { resetWatermarks() }
             replayEpoch = ready.replayEpoch
             // Older backends answer gateway.ping with an error, which still proves the socket alive.
             heartbeatMethod = ready.heartbeat == true ? "gateway.ping" : "ping"
@@ -743,13 +801,22 @@ public actor HermesGateway: HermesGatewayClient {
                 ))
             }
         default:
-            break
+            if type == "gateway.ready" {
+                // A ready frame the generated model rejects still says which runtime this is.
+                authoritySignalled = rawPayload["session_authority"]?.boolValue == true
+                if rawPayload["heartbeat"]?.boolValue == true { heartbeatMethod = "gateway.ping" }
+            }
         }
         if let sessionID, let seq, !forgotten.contains(sessionID) { lastSequence[sessionID] = seq }
-        eventBroadcast.yield(GatewayEvent(type: type, sessionID: sessionID, seq: seq, payload: payload, replayed: replayed))
+        let event = GatewayEvent(type: type, sessionID: sessionID, seq: seq, payload: payload, replayed: replayed)
+        guard isAuthority, let sessionID else {
+            eventBroadcast.yield(event)
+            return
+        }
+        authorityEvent(event, frame: params, sessionID: sessionID)
     }
 
-    private func setTurn(_ sessionID: String, active: Bool) {
+    func setTurn(_ sessionID: String, active: Bool) {
         let changed = active ? activeTurns.insert(sessionID).inserted : activeTurns.remove(sessionID) != nil
         if changed { turnActivity.yield(activeTurns.count) }
     }
@@ -803,7 +870,7 @@ public actor HermesGateway: HermesGatewayClient {
         }
     }
 
-    private func finishServerRequest(_ id: String) { serverTasks[id] = nil }
+    func finishServerRequest(_ id: String) { serverTasks[id] = nil }
 
     private func answerWithError(
         id: String, code: Int, message: String, socket: any GatewayConnection, generation current: Int
@@ -839,7 +906,7 @@ public actor HermesGateway: HermesGatewayClient {
         Set(sessions.keys).union(lastSequence.keys).subtracting(draining.keys)
     }
 
-    private func trackSession<Params: Encodable>(method: String, params: Params, result: JSONValue) {
+    func trackSession<Params: Encodable>(method: String, params: Params, result: JSONValue) {
         let arguments = (try? JSONDecoder().decode(JSONValue.self, from: JSONEncoder().encode(params)))?.objectValue ?? [:]
         switch method {
         case "session.create", "session.resume", "session.activate", "session.branch":
@@ -881,7 +948,7 @@ public actor HermesGateway: HermesGatewayClient {
         }
     }
 
-    private func forgetSession(_ sessionID: String) {
+    func forgetSession(_ sessionID: String) {
         sessions[sessionID] = nil
         lastSequence[sessionID] = nil
         forgotten.insert(sessionID)
@@ -925,7 +992,9 @@ public actor HermesGateway: HermesGatewayClient {
 
     private func recover(_ sessionID: String, socket: any GatewayConnection, generation current: Int) async throws {
         let session = sessions[sessionID] ?? TrackedSession()
-        if session.closeOnDisconnect {
+        if isAuthority && !session.closeOnDisconnect {
+            try await recoverOnAuthority(sessionID, session: session)
+        } else if session.closeOnDisconnect {
             forgetSession(sessionID)
             recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: "Closed on disconnect"))
         } else {
@@ -997,8 +1066,9 @@ public actor HermesGateway: HermesGatewayClient {
 
     /// Stops rebinding a runtime id Hermes dropped. A turn still streaming under it keeps its events flowing:
     /// the client drains the replay buffer until the turn ends.
-    private func retire(_ sessionID: String) {
-        guard activeTurns.contains(sessionID) else {
+    func retire(_ sessionID: String) {
+        // A session the authority no longer finds cannot be read either: nothing is left to drain.
+        guard activeTurns.contains(sessionID), !isAuthority else {
             forgetSession(sessionID)
             return
         }
@@ -1086,14 +1156,14 @@ public actor HermesGateway: HermesGatewayClient {
         }
     }
 
-    private func releaseHeldEvents(for sessionID: String) {
+    func releaseHeldEvents(for sessionID: String) {
         for event in replayHold.removeValue(forKey: sessionID) ?? [] {
             handleEvent(.object(event), replayed: false)
         }
     }
 
     /// Recovery calls must not stall a reconnect behind a wedged backend.
-    private static let recoveryTimeout: Duration = .seconds(10)
+    static let recoveryTimeout: Duration = .seconds(10)
     /// How often a detached turn's replay buffer is fetched, and for how long at most.
     static let drainInterval: Duration = .seconds(1)
     private static let drainLimit: Duration = .seconds(900)

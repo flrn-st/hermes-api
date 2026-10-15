@@ -240,7 +240,7 @@ does not know yet) resumes the session first.
 | `session.compress` | `session.mutate compress {focus?}`, then `session.resume` for the compacted `messages` and `info` |
 | `session.undo` | `session.mutate rewind {target_message_id}` on the last user row; `removed` is `rewound_count` |
 | `session.branch` | `session.mutate branch {title?}`, then the child is resumed; `count` cannot be expressed and is refused |
-| `config.set key: model` (`"<model> --provider <id> [--session]"`) | `session.mutate model {model, provider}`; a guarded target answers `confirm_required` + `confirm_message`, and the resend with `confirm_expensive_model: true` carries the authority's token under the same `request_id` |
+| `config.set key: model` (`"<model> --provider <id> [--session]"`) | `session.mutate model {model, provider}`; a guarded target answers `confirm_required` + `confirm_message`, and the resend with `confirm_expensive_model: true` carries the authority's token (a retry of that resend keeps its `request_id` and token) |
 | `config.set` with `scope` on any key but `reasoning`, or `yolo` with a scope other than `global` | `scope` dropped |
 | `slash.exec` `/model <m>`, `/branch [title]`, `/compress [focus]` | The same `session.mutate`, answered `{type: "exec", output}` |
 | `session.usage` | `session.stats`, mapped onto the legacy counters (no cost or credit lines) |
@@ -255,11 +255,12 @@ does not know yet) resumes the session first.
 | `reload.mcp` | `confirm: true` added |
 
 Mutations follow Desktop's retry rules: one `request_id` per intent, kept with its `expected_revision` and
-`expected_generation` while its outcome is unknown, so a retry after a lost reply is an exact retry; a
-mutation on another subject retires the retained ones; an acknowledged revision retires older
-value-setting edits (`rename`, `archive`, `model`, `reasoning`, `workspace`); `revision_conflict` (and
-`session_busy` on `rewind` / `workspace`) retires the refused one, and the runtime then re-reads the
-revision before the next mutation of that session. `prompt.submit` retires every retained mutation of its
+`expected_generation` while its outcome is unknown, so a retry after a lost reply is an exact retry; another
+edit of the same session retires the retained ones; an acknowledged revision retires older
+value-setting edits (`rename`, `archive`, `model`, `reasoning`, `workspace`); `revision_conflict` and
+`stale_generation` (and `session_busy` on `rewind` / `workspace`) retire the refused one, and the runtime
+re-reads the stale value (by resuming the session) before the next edit. Retiring on `stale_generation` goes
+beyond Desktop, which would retry the refused request forever; a typed refusal wrote nothing, so it is safe. `prompt.submit` retires every retained mutation of its
 session.
 
 Results are given back in the legacy shapes the generated types decode: a `CanonicalSnapshot` becomes a
@@ -271,8 +272,8 @@ legacy field the authority has no equivalent for (`resumed`, `session_key`, `ope
 ### Prompts and events
 
 `approval.request` and `clarify.request` events reach the server request handler as `ServerRequest.approval`
-(`request_id` = `prompt_id`, `choices` as offered) and `ServerRequest.clarify` (one `question` per
-prompt). The handler's answer is sent as `approval.respond` / `clarify.respond`; `approval.settled`,
+(`request_id` = `prompt_id`, `choices` as offered) and `ServerRequest.clarify` (one question per
+prompt, whose `qid` is the prompt id). The handler's answer is sent as `approval.respond` / `clarify.respond`; `approval.settled`,
 `clarify.settled` and a later answer cancel the handler's task like `request.cancel`. Open prompts in a
 snapshot are delivered the same way, as `open_requests` were. A handler that throws leaves the prompt open
 (the authority has no "declined" answer). `sudo` and `secret` remain server requests and are answered as
@@ -288,22 +289,20 @@ resuming the session and replaying from the watermark. A session the authority n
 
 ### Refusals
 
-The authority refuses with `4001 {reason, field?, detail?, fields?}`. `HermesGatewayError.refusal`
-(Kotlin: `HermesGatewayException.RPC.refusal`) is a `GatewayRefusal(reason, field, detail, fields)` whenever
-`error.data.reason` is present. `known` and `kind` read the reason:
+`error.refusal` and `error.kind` read the authority's reason as described above. So that apps keep
+branching on `known` against either runtime, `known` names a refusal by the legacy error it means:
 
-| `reason` | `known` | `kind` |
-|---|---|---|
-| `session_busy` | `.sessionBusy` | `busy` |
-| `not_found` | `.sessionNotFound` | `notFound` |
-| `invalid_params` | `.invalidParams` | `invalidRequest` |
-| `profile_mismatch` | `.profileNotFound` | `notFound` |
-| `storage_unavailable` | `.storageUnavailable` | `unavailable` |
-| `unknown_method` | `.unknownMethod` | `unsupported` |
-| `stale_generation`, `revision_conflict`, `snapshot_required`, `admission_conflict`, `stale_epoch` | — | `conflict` |
-| `permission_denied` | — | `forbidden` |
-| `runtime_draining`, `runtime_retired` | — | `unavailable` |
-| `unsupported_*`, `use_session_mutation_model`, `unsupported_on_authority` | — | `unsupported` |
+| `reason` | `known` |
+|---|---|
+| `session_busy` | `.sessionBusy` |
+| `not_found` | `.sessionNotFound` |
+| `invalid_params` | `.invalidParams` |
+| `profile_mismatch` | `.profileNotFound` |
+| `storage_unavailable` | `.storageUnavailable` |
+| `unknown_method`, `unsupported_on_authority` | `.unknownMethod` |
+
+Other reasons (`stale_generation`, `revision_conflict`, `permission_denied`, …) have no legacy name; read
+`refusal.known` (`GatewayRefusalReason`) or `kind`. A legacy error's `known` is unchanged.
 
 A call the runtime cannot express on the authority fails before it is sent with `-32601` and reason
 `unsupported_on_authority` (`detail` says why): `pdf.attach` and `image.detach` (the sidecar never finds

@@ -12,6 +12,8 @@ public protocol HermesGatewayClient: GatewayCalling, AnyObject {
     func sessionRecoveries() -> AsyncStream<GatewaySessionRecovery>
     /// The desktop contract Hermes last reported, or `nil` before the first session result.
     var backendContract: Int? { get async }
+    /// Whether the current connection is a Hermes session authority, whose calls the gateway translates.
+    var sessionAuthority: Bool { get async }
 
     func setServerRequestHandler(_ handler: @escaping @Sendable (ServerRequest) async throws -> ServerRequestResult) async
     func connect() async throws
@@ -25,4 +27,7 @@ public extension HermesGatewayClient {
     var methods: GatewayMethodCatalog { GatewayMethodCatalog(caller: self) }
 
     func enterBackground() async { await enterBackground(grace: .seconds(25)) }
+
+    /// A client that never speaks to a session authority.
+    var sessionAuthority: Bool { false }
 }

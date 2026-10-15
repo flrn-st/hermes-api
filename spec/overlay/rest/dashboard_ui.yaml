@@ -1,5 +1,6 @@
-# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
-# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+# Hand-reviewed against the tagged handlers: corrections the response contracts get wrong for the tag
+# (undeclared request bodies, media types, values Hermes copies unchecked). These win over
+# spec/overlay/rest/contracts/.
 components:
   AgentPluginActivateRequest:
     type: object
@@ -23,10 +24,10 @@ components:
         type: boolean
   DashboardPluginManifest:
     additionalProperties: false
-    description: '``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*``
-      keys stripped. ``name``, ``label``, ``description``, ``icon``, ``version``, ``entry`` and ``css`` are
-      the plugin''s ``manifest.json`` values as written (defaults when absent), which Hermes does not
-      validate: a number or ``null`` there arrives as is.'
+    description: '``hermes_cli/web_server_dashboard.py::_dashboard_plugin_entry`` with the internal ``_*`` keys
+      stripped. ``name``, ``label``, ``description``, ``icon``, ``version``, ``entry`` and ``css`` are the plugin''s
+      ``manifest.json`` values as written (defaults when absent), which Hermes does not validate: a number or ``null``
+      there arrives as is.'
     properties:
       css:
         anyOf:
@@ -92,9 +93,8 @@ components:
     type: object
   PluginsHubContextOption:
     additionalProperties: false
-    description: '``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair. ``description`` is the
-      engine''s ``plugin.yaml`` value as written, which Hermes does not validate: a number or ``null``
-      there arrives as is.'
+    description: '``hermes_cli/plugins_cmd.py::_discover_context_engines`` pair. ``description`` is the engine''s
+      ``plugin.yaml`` value as written, which Hermes does not validate: a number or ``null`` there arrives as is.'
     properties:
       description:
         anyOf:
@@ -109,10 +109,10 @@ components:
     type: object
   PluginsHubPluginRow:
     additionalProperties: false
-    description: 'One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row. ``name``,
-      ``version`` and ``description`` are the plugin''s ``plugin.yaml`` values as written, which Hermes does
-      not validate (``version: 1.0`` is a number); an empty ``version`` or ``description`` becomes ``""``,
-      while an empty ``name`` stays ``null``.'
+    description: 'One ``hermes_cli/web_server_dashboard.py::_merged_plugins_hub`` agent-plugin row. ``name``, ``version``
+      and ``description`` are the plugin''s ``plugin.yaml`` values as written, which Hermes does not validate (``version:
+      1.0`` is a number); an empty ``version`` or ``description`` becomes ``""``, while an empty ``name`` stays
+      ``null``.'
     properties:
       auth_command:
         type: string
@@ -178,56 +178,13 @@ components:
     - user_hidden
     - removed_reason
     type: object
-  PluginsHubProviders:
-    additionalProperties: false
-    description: '``memory_provider`` is ``""`` for the built-in provider; ``context_engine`` defaults to
-
-      ``"compressor"``.'
-    properties:
-      context_engine:
-        type: string
-      context_options:
-        items:
-          $ref: '#/components/schemas/PluginsHubContextOption'
-        type: array
-      memory_options:
-        items:
-          $ref: '#/components/schemas/MemoryProviderStatusRow'
-        type: array
-      memory_provider:
-        type: string
-    required:
-    - memory_provider
-    - memory_options
-    - context_engine
-    - context_options
-    type: object
-  PluginsHubResponse:
-    additionalProperties: false
-    description: '``hermes_cli/web_server_dashboard.py::_merged_plugins_hub``.'
-    properties:
-      orphan_dashboard_plugins:
-        items:
-          $ref: '#/components/schemas/DashboardPluginManifest'
-        type: array
-      plugins:
-        items:
-          $ref: '#/components/schemas/PluginsHubPluginRow'
-        type: array
-      providers:
-        $ref: '#/components/schemas/PluginsHubProviders'
-    required:
-    - plugins
-    - orphan_dashboard_plugins
-    - providers
-    type: object
 operations:
 - method: POST
   path: /api/dashboard/agent-plugins/activate
-  x-source: hermes_cli/web_routers/dashboard_ui.py:290
+  x-source: hermes_cli/web_routers/dashboard_ui.py:292
   x-handler-hash: 7a8c7656977731c29d6f41a641e1d6c2fba20ed88eab050d6edbbb0265860fec
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AgentPluginActivateResponse
   responses:
     '200':
@@ -242,10 +199,10 @@ operations:
       $ref: '#/components/schemas/AgentPluginActivateRequest'
 - method: POST
   path: /api/dashboard/agent-plugins/{name}/update
-  x-source: hermes_cli/web_routers/dashboard_ui.py:269
+  x-source: hermes_cli/web_routers/dashboard_ui.py:271
   x-handler-hash: fd1834ade1b1fcd050e2ceec563d49629d9cac985e96013653c49f6ef5f766e7
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AgentPluginUpdateResponse
   responses:
     '200':
@@ -258,17 +215,3 @@ operations:
     required: false
     schema:
       $ref: '#/components/schemas/AgentPluginUpdateRequest'
-- method: GET
-  path: /api/dashboard/plugins/hub
-  responses:
-    '200':
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PluginsHubResponse'
-      description: Successful Response
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: PluginsHubResponse
-  x-handler-hash: 6d03941b00882732147bc783e852a1ad8fc435b7a253db702f7f4735cb4b9718
-  x-source: hermes_cli/web_routers/dashboard_ui.py:156

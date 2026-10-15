@@ -67,7 +67,7 @@ operations:
   x-source: hermes_cli/memory_oauth.py:65
   x-handler-hash: a1f4704e0923645fb5ddc01c82180a9adc59a2b5d756833fe1d20b247015d967
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MemoryOAuthStatusResponse
   responses:
     '200':
@@ -81,7 +81,7 @@ operations:
   x-source: hermes_cli/memory_oauth.py:51
   x-handler-hash: 1599695e8c1c342ae2fff7ff4f1b2eb00f4ba0fee67075d99000488d757090be
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MemoryOAuthStartResponse
   responses:
     '200':

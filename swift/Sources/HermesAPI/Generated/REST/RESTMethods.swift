@@ -39,6 +39,7 @@ public struct RESTMethodCatalog: Sendable {
     public var profiles: ProfilesRESTMethods { ProfilesRESTMethods(caller: caller) }
     public var providers: ProvidersRESTMethods { ProvidersRESTMethods(caller: caller) }
     public var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: caller) }
+    public var sharedMetrics: SharedMetricsRESTMethods { SharedMetricsRESTMethods(caller: caller) }
     public var skills: SkillsRESTMethods { SkillsRESTMethods(caller: caller) }
     public var ssh: SshRESTMethods { SshRESTMethods(caller: caller) }
     public var status: StatusRESTMethods { StatusRESTMethods(caller: caller) }
@@ -104,6 +105,14 @@ public struct AudioRESTMethods: Sendable {
         if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/audio/speak", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(AudioSpeakResponse.self, status: 200)
+    }
+
+    /// `POST /api/audio/stt-lease`
+    public func sttLease(body: STTLeaseRequest, profile: String? = nil) async throws -> SttLeaseResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
+        let response = try await caller.send(RESTRequest(method: "POST", path: "/api/audio/stt-lease", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
+        return try response.json(SttLeaseResponse.self, status: 200)
     }
 
     /// `POST /api/audio/transcribe`
@@ -498,8 +507,9 @@ public struct DashboardRESTMethods: Sendable {
     }
 
     /// `GET /api/dashboard/plugins/hub`
-    public func pluginsHub() async throws -> PluginsHubResponse {
-        let query: [String: String] = [:]
+    public func pluginsHub(profile: String? = nil) async throws -> PluginsHubResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/dashboard/plugins/hub", query: query))
         return try response.json(PluginsHubResponse.self, status: 200)
     }
@@ -676,8 +686,9 @@ public struct FsRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
 
     /// `GET /api/fs/default-cwd`
-    public func defaultCwd() async throws -> FsDefaultCwdResponse {
-        let query: [String: String] = [:]
+    public func defaultCwd(profile: String? = nil) async throws -> FsDefaultCwdResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/fs/default-cwd", query: query))
         return try response.json(FsDefaultCwdResponse.self, status: 200)
     }
@@ -693,17 +704,19 @@ public struct FsRESTMethods: Sendable {
     }
 
     /// `GET /api/fs/git-root`
-    public func gitRoot(path: String) async throws -> FsGitRootResponse {
+    public func gitRoot(path: String, profile: String? = nil) async throws -> FsGitRootResponse {
         var query: [String: String] = [:]
         query["path"] = path
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/fs/git-root", query: query))
         return try response.json(FsGitRootResponse.self, status: 200)
     }
 
     /// `GET /api/fs/list`
-    public func list(path: String) async throws -> FsListResponse {
+    public func list(path: String, profile: String? = nil) async throws -> FsListResponse {
         var query: [String: String] = [:]
         query["path"] = path
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/fs/list", query: query))
         return try response.json(FsListResponse.self, status: 200)
     }
@@ -719,16 +732,18 @@ public struct FsRESTMethods: Sendable {
     }
 
     /// `GET /api/fs/read-text`
-    public func readText(path: String) async throws -> FsReadTextResponse {
+    public func readText(path: String, profile: String? = nil) async throws -> FsReadTextResponse {
         var query: [String: String] = [:]
         query["path"] = path
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/fs/read-text", query: query))
         return try response.json(FsReadTextResponse.self, status: 200)
     }
 
     /// `POST /api/fs/write-text`
-    public func writeText(body: FsWriteText) async throws -> FsWriteTextResponse {
-        let query: [String: String] = [:]
+    public func writeText(body: FsWriteText, profile: String? = nil) async throws -> FsWriteTextResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/fs/write-text", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(FsWriteTextResponse.self, status: 200)
     }
@@ -1014,43 +1029,49 @@ public struct HermesAchievementsRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
 
     /// `GET /api/plugins/hermes-achievements/achievements`
-    public func achievements() async throws -> AchievementsResponse {
-        let query: [String: String] = [:]
+    public func achievements(profile: String? = nil) async throws -> AchievementsResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/hermes-achievements/achievements", query: query))
         return try response.json(AchievementsResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/hermes-achievements/recent-unlocks`
-    public func recentUnlocks() async throws -> [AchievementItem] {
-        let query: [String: String] = [:]
+    public func recentUnlocks(profile: String? = nil) async throws -> [AchievementItem] {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/hermes-achievements/recent-unlocks", query: query))
         return try response.json([AchievementItem].self, status: 200)
     }
 
     /// `POST /api/plugins/hermes-achievements/rescan`
-    public func rescan() async throws -> AchievementRescanResponse {
-        let query: [String: String] = [:]
+    public func rescan(profile: String? = nil) async throws -> AchievementRescanResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/hermes-achievements/rescan", query: query))
         return try response.json(AchievementRescanResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/hermes-achievements/reset-state`
-    public func resetState() async throws -> AchievementResetResponse {
-        let query: [String: String] = [:]
+    public func resetState(profile: String? = nil) async throws -> AchievementResetResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/hermes-achievements/reset-state", query: query))
         return try response.json(AchievementResetResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/hermes-achievements/scan-status`
-    public func scanStatus() async throws -> AchievementScanStatus {
-        let query: [String: String] = [:]
+    public func scanStatus(profile: String? = nil) async throws -> AchievementScanStatus {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/hermes-achievements/scan-status", query: query))
         return try response.json(AchievementScanStatus.self, status: 200)
     }
 
     /// `GET /api/plugins/hermes-achievements/sessions/{session_id}/badges`
-    public func sessionsBadges(sessionId: String) async throws -> AchievementSessionBadgesResponse {
-        let query: [String: String] = [:]
+    public func sessionsBadges(sessionId: String, profile: String? = nil) async throws -> AchievementSessionBadgesResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/hermes-achievements/sessions/\(RESTPath.segment(sessionId))/badges", query: query))
         return try response.json(AchievementSessionBadgesResponse.self, status: 200)
     }
@@ -1073,254 +1094,286 @@ public struct KanbanRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
 
     /// `GET /api/plugins/kanban/assignees`
-    public func assignees(board: String? = nil) async throws -> KanbanAssigneesResponse {
+    public func assignees(board: String? = nil, profile: String? = nil) async throws -> KanbanAssigneesResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/assignees", query: query))
         return try response.json(KanbanAssigneesResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/attachments/{attachment_id}`
-    public func attachments(attachmentId: Int, board: String? = nil) async throws -> RESTBinary {
+    public func attachments(attachmentId: Int, board: String? = nil, profile: String? = nil) async throws -> RESTBinary {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/attachments/\(RESTPath.segment(String(attachmentId)))", query: query))
         return try response.binary(status: 200)
     }
 
     /// `GET /api/plugins/kanban/board`
-    public func board(tenant: String? = nil, includeArchived: Bool? = nil, board: String? = nil, workflowTemplateId: String? = nil, currentStepKey: String? = nil) async throws -> KanbanBoardResponse {
+    public func board(tenant: String? = nil, includeArchived: Bool? = nil, board: String? = nil, workflowTemplateId: String? = nil, currentStepKey: String? = nil, profile: String? = nil) async throws -> KanbanBoardResponse {
         var query: [String: String] = [:]
         if let value = tenant { query["tenant"] = value }
         if let value = includeArchived { query["include_archived"] = String(value) }
         if let value = board { query["board"] = value }
         if let value = workflowTemplateId { query["workflow_template_id"] = value }
         if let value = currentStepKey { query["current_step_key"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/board", query: query))
         return try response.json(KanbanBoardResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/boards`
-    public func boards(includeArchived: Bool? = nil) async throws -> KanbanBoardListResponse {
+    public func boards(includeArchived: Bool? = nil, profile: String? = nil) async throws -> KanbanBoardListResponse {
         var query: [String: String] = [:]
         if let value = includeArchived { query["include_archived"] = String(value) }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/boards", query: query))
         return try response.json(KanbanBoardListResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/boards/{slug}/export`
-    public func boardsExport(slug: String, body: ExportBoardBody) async throws -> KanbanBoardExportResponse {
-        let query: [String: String] = [:]
+    public func boardsExport(slug: String, body: ExportBoardBody, profile: String? = nil) async throws -> KanbanBoardExportResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/boards/\(RESTPath.segment(slug))/export", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanBoardExportResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/boards/import`
-    public func boardsImport(body: ImportBoardBody) async throws -> KanbanBoardImportResponse {
-        let query: [String: String] = [:]
+    public func boardsImport(body: ImportBoardBody, profile: String? = nil) async throws -> KanbanBoardImportResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/boards/import", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanBoardImportResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/boards/{slug}/switch`
-    public func boardsSwitch(slug: String) async throws -> KanbanBoardSwitchResponse {
-        let query: [String: String] = [:]
+    public func boardsSwitch(slug: String, profile: String? = nil) async throws -> KanbanBoardSwitchResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/boards/\(RESTPath.segment(slug))/switch", query: query))
         return try response.json(KanbanBoardSwitchResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/config`
-    public func config() async throws -> KanbanDashboardConfigResponse {
-        let query: [String: String] = [:]
+    public func config(profile: String? = nil) async throws -> KanbanDashboardConfigResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/config", query: query))
         return try response.json(KanbanDashboardConfigResponse.self, status: 200)
     }
 
     /// `DELETE /api/plugins/kanban/attachments/{attachment_id}`
-    public func deleteAttachments(attachmentId: Int, board: String? = nil) async throws -> KanbanAttachmentDeleteResponse {
+    public func deleteAttachments(attachmentId: Int, board: String? = nil, profile: String? = nil) async throws -> KanbanAttachmentDeleteResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "DELETE", path: "/api/plugins/kanban/attachments/\(RESTPath.segment(String(attachmentId)))", query: query))
         return try response.json(KanbanAttachmentDeleteResponse.self, status: 200)
     }
 
     /// `DELETE /api/plugins/kanban/boards/{slug}`
-    public func deleteBoards(slug: String, delete: Bool? = nil) async throws -> KanbanBoardDeleteResponse {
+    public func deleteBoards(slug: String, delete: Bool? = nil, profile: String? = nil) async throws -> KanbanBoardDeleteResponse {
         var query: [String: String] = [:]
         if let value = delete { query["delete"] = String(value) }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "DELETE", path: "/api/plugins/kanban/boards/\(RESTPath.segment(slug))", query: query))
         return try response.json(KanbanBoardDeleteResponse.self, status: 200)
     }
 
     /// `DELETE /api/plugins/kanban/links`
-    public func deleteLinks(parentId: String, childId: String, board: String? = nil) async throws -> OkResponse {
+    public func deleteLinks(parentId: String, childId: String, board: String? = nil, profile: String? = nil) async throws -> OkResponse {
         var query: [String: String] = [:]
         query["parent_id"] = parentId
         query["child_id"] = childId
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "DELETE", path: "/api/plugins/kanban/links", query: query))
         return try response.json(OkResponse.self, status: 200)
     }
 
     /// `DELETE /api/plugins/kanban/tasks/{task_id}`
-    public func deleteTasks(taskId: String, board: String? = nil) async throws -> KanbanTaskDeleteResponse {
+    public func deleteTasks(taskId: String, board: String? = nil, profile: String? = nil) async throws -> KanbanTaskDeleteResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "DELETE", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))", query: query))
         return try response.json(KanbanTaskDeleteResponse.self, status: 200)
     }
 
     /// `DELETE /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}`
-    public func deleteTasksHomeSubscribe(taskId: String, platform: String, board: String? = nil) async throws -> KanbanHomeSubscriptionResponse {
+    public func deleteTasksHomeSubscribe(taskId: String, platform: String, board: String? = nil, profile: String? = nil) async throws -> KanbanHomeSubscriptionResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "DELETE", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/home-subscribe/\(RESTPath.segment(platform))", query: query))
         return try response.json(KanbanHomeSubscriptionResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/diagnostics`
-    public func diagnostics(board: String? = nil, severity: String? = nil) async throws -> KanbanDiagnosticsResponse {
+    public func diagnostics(board: String? = nil, severity: String? = nil, profile: String? = nil) async throws -> KanbanDiagnosticsResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
         if let value = severity { query["severity"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/diagnostics", query: query))
         return try response.json(KanbanDiagnosticsResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/dispatch`
-    public func dispatch(dryRun: Bool? = nil, max: Int? = nil, board: String? = nil) async throws -> KanbanDispatchResponse {
+    public func dispatch(dryRun: Bool? = nil, max: Int? = nil, board: String? = nil, profile: String? = nil) async throws -> KanbanDispatchResponse {
         var query: [String: String] = [:]
         if let value = dryRun { query["dry_run"] = String(value) }
         if let value = max { query["max"] = String(value) }
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/dispatch", query: query))
         return try response.json(KanbanDispatchResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/estimate`
-    public func estimate(body: EstimateBody) async throws -> KanbanEstimateResponse {
-        let query: [String: String] = [:]
+    public func estimate(body: EstimateBody, profile: String? = nil) async throws -> KanbanEstimateResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/estimate", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanEstimateResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/home-channels`
-    public func homeChannels(taskId: String? = nil, board: String? = nil) async throws -> KanbanHomeChannelsResponse {
+    public func homeChannels(taskId: String? = nil, board: String? = nil, profile: String? = nil) async throws -> KanbanHomeChannelsResponse {
         var query: [String: String] = [:]
         if let value = taskId { query["task_id"] = value }
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/home-channels", query: query))
         return try response.json(KanbanHomeChannelsResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/links`
-    public func links(body: LinkBody, board: String? = nil) async throws -> KanbanLinkAddResponse {
+    public func links(body: LinkBody, board: String? = nil, profile: String? = nil) async throws -> KanbanLinkAddResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/links", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanLinkAddResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/model-options`
-    public func modelOptions() async throws -> KanbanModelOptionsResponse {
-        let query: [String: String] = [:]
+    public func modelOptions(profile: String? = nil) async throws -> KanbanModelOptionsResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/model-options", query: query))
         return try response.json(KanbanModelOptionsResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/orchestration`
-    public func orchestration() async throws -> KanbanOrchestrationResponse {
-        let query: [String: String] = [:]
+    public func orchestration(profile: String? = nil) async throws -> KanbanOrchestrationResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/orchestration", query: query))
         return try response.json(KanbanOrchestrationResponse.self, status: 200)
     }
 
     /// `PATCH /api/plugins/kanban/boards/{slug}`
-    public func patchBoards(slug: String, body: RenameBoardBody) async throws -> KanbanBoardUpdateResponse {
-        let query: [String: String] = [:]
+    public func patchBoards(slug: String, body: RenameBoardBody, profile: String? = nil) async throws -> KanbanBoardUpdateResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "PATCH", path: "/api/plugins/kanban/boards/\(RESTPath.segment(slug))", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanBoardUpdateResponse.self, status: 200)
     }
 
     /// `PATCH /api/plugins/kanban/profiles/{profile_name}`
-    public func patchProfiles(profileName: String, body: DescribeBody) async throws -> KanbanProfileDescriptionResponse {
-        let query: [String: String] = [:]
+    public func patchProfiles(profileName: String, body: DescribeBody, profile: String? = nil) async throws -> KanbanProfileDescriptionResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "PATCH", path: "/api/plugins/kanban/profiles/\(RESTPath.segment(profileName))", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanProfileDescriptionResponse.self, status: 200)
     }
 
     /// `PATCH /api/plugins/kanban/tasks/{task_id}`
-    public func patchTasks(taskId: String, body: UpdateTaskBody, board: String? = nil) async throws -> KanbanTaskUpdateResponse {
+    public func patchTasks(taskId: String, body: UpdateTaskBody, board: String? = nil, profile: String? = nil) async throws -> KanbanTaskUpdateResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "PATCH", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanTaskUpdateResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/profiles`
-    public func profiles() async throws -> KanbanProfilesResponse {
-        let query: [String: String] = [:]
+    public func profiles(profile: String? = nil) async throws -> KanbanProfilesResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/profiles", query: query))
         return try response.json(KanbanProfilesResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/profiles/{profile_name}/describe-auto`
-    public func profilesDescribeAuto(profileName: String, body: DescribeAutoBody) async throws -> KanbanProfileAutoDescribeResponse {
-        let query: [String: String] = [:]
+    public func profilesDescribeAuto(profileName: String, body: DescribeAutoBody, profile: String? = nil) async throws -> KanbanProfileAutoDescribeResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/profiles/\(RESTPath.segment(profileName))/describe-auto", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanProfileAutoDescribeResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/projects`
-    public func projects() async throws -> KanbanProjectsResponse {
-        let query: [String: String] = [:]
+    public func projects(profile: String? = nil) async throws -> KanbanProjectsResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/projects", query: query))
         return try response.json(KanbanProjectsResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/runs/{run_id}`
-    public func runs(runId: Int, board: String? = nil) async throws -> KanbanRunResponse {
+    public func runs(runId: Int, board: String? = nil, profile: String? = nil) async throws -> KanbanRunResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/runs/\(RESTPath.segment(String(runId)))", query: query))
         return try response.json(KanbanRunResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/runs/{run_id}/inspect`
-    public func runsInspect(runId: Int, board: String? = nil) async throws -> KanbanRunInspectResponse {
+    public func runsInspect(runId: Int, board: String? = nil, profile: String? = nil) async throws -> KanbanRunInspectResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/runs/\(RESTPath.segment(String(runId)))/inspect", query: query))
         return try response.json(KanbanRunInspectResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/runs/{run_id}/terminate`
-    public func runsTerminate(runId: Int, body: TerminateRunBody, board: String? = nil) async throws -> KanbanRunTerminateResponse {
+    public func runsTerminate(runId: Int, body: TerminateRunBody, board: String? = nil, profile: String? = nil) async throws -> KanbanRunTerminateResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/runs/\(RESTPath.segment(String(runId)))/terminate", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanRunTerminateResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/boards`
-    public func setBoards(body: CreateBoardBody) async throws -> KanbanBoardCreateResponse {
-        let query: [String: String] = [:]
+    public func setBoards(body: CreateBoardBody, profile: String? = nil) async throws -> KanbanBoardCreateResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/boards", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanBoardCreateResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks`
-    public func setTasks(body: CreateTaskBody, board: String? = nil) async throws -> KanbanTaskCreateResponse {
+    public func setTasks(body: CreateTaskBody, board: String? = nil, profile: String? = nil) async throws -> KanbanTaskCreateResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanTaskCreateResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/attachments`
-    public func setTasksAttachments(taskId: String, file: RESTFile, board: String? = nil, uploadedBy: String? = nil) async throws -> KanbanAttachmentUploadResponse {
+    public func setTasksAttachments(taskId: String, file: RESTFile, board: String? = nil, profile: String? = nil, uploadedBy: String? = nil) async throws -> KanbanAttachmentUploadResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         var form = RESTMultipart()
         form.file("file", file)
         if let value = uploadedBy { form.text("uploaded_by", value) }
@@ -1329,118 +1382,140 @@ public struct KanbanRESTMethods: Sendable {
     }
 
     /// `GET /api/plugins/kanban/stats`
-    public func stats(board: String? = nil) async throws -> KanbanStatsResponse {
+    public func stats(board: String? = nil, profile: String? = nil) async throws -> KanbanStatsResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/stats", query: query))
         return try response.json(KanbanStatsResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/tasks/{task_id}`
-    public func tasks(taskId: String, board: String? = nil, runStateType: String? = nil, runStateName: String? = nil) async throws -> KanbanTaskDetailResponse {
+    public func tasks(taskId: String, board: String? = nil, runStateType: String? = nil, runStateName: String? = nil, profile: String? = nil) async throws -> KanbanTaskDetailResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
         if let value = runStateType { query["run_state_type"] = value }
         if let value = runStateName { query["run_state_name"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))", query: query))
         return try response.json(KanbanTaskDetailResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/tasks/{task_id}/attachments`
-    public func tasksAttachments(taskId: String, board: String? = nil) async throws -> KanbanAttachmentListResponse {
+    public func tasksAttachments(taskId: String, board: String? = nil, profile: String? = nil) async throws -> KanbanAttachmentListResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/attachments", query: query))
         return try response.json(KanbanAttachmentListResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/bulk`
-    public func tasksBulk(body: BulkTaskBody, board: String? = nil) async throws -> KanbanBulkUpdateResponse {
+    public func tasksBulk(body: BulkTaskBody, board: String? = nil, profile: String? = nil) async throws -> KanbanBulkUpdateResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/bulk", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanBulkUpdateResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/comments`
-    public func tasksComments(taskId: String, body: CommentBody, board: String? = nil) async throws -> OkResponse {
+    public func tasksComments(taskId: String, body: CommentBody, board: String? = nil, profile: String? = nil) async throws -> OkResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/comments", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(OkResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/decompose`
-    public func tasksDecompose(taskId: String, body: DecomposeBody, board: String? = nil) async throws -> KanbanDecomposeResponse {
+    public func tasksDecompose(taskId: String, body: DecomposeBody, board: String? = nil, profile: String? = nil) async throws -> KanbanDecomposeResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/decompose", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanDecomposeResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/estimate`
-    public func tasksEstimate(taskId: String, board: String? = nil) async throws -> KanbanEstimateResponse {
+    public func tasksEstimate(taskId: String, board: String? = nil, profile: String? = nil) async throws -> KanbanEstimateResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/estimate", query: query))
         return try response.json(KanbanEstimateResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}`
-    public func tasksHomeSubscribe(taskId: String, platform: String, board: String? = nil) async throws -> KanbanHomeSubscriptionResponse {
+    public func tasksHomeSubscribe(taskId: String, platform: String, board: String? = nil, profile: String? = nil) async throws -> KanbanHomeSubscriptionResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/home-subscribe/\(RESTPath.segment(platform))", query: query))
         return try response.json(KanbanHomeSubscriptionResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/tasks/{task_id}/log`
     /// - Parameter tail: 1 to 2000000.
-    public func tasksLog(taskId: String, tail: Int? = nil, board: String? = nil) async throws -> KanbanTaskLogResponse {
+    public func tasksLog(taskId: String, tail: Int? = nil, board: String? = nil, profile: String? = nil) async throws -> KanbanTaskLogResponse {
         var query: [String: String] = [:]
         if let value = tail { query["tail"] = String(value) }
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/log", query: query))
         return try response.json(KanbanTaskLogResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/reassign`
-    public func tasksReassign(taskId: String, body: ReassignBody, board: String? = nil) async throws -> KanbanReassignResponse {
+    public func tasksReassign(taskId: String, body: ReassignBody, board: String? = nil, profile: String? = nil) async throws -> KanbanReassignResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/reassign", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanReassignResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/reclaim`
-    public func tasksReclaim(taskId: String, body: ReclaimBody, board: String? = nil) async throws -> KanbanTaskAckResponse {
+    public func tasksReclaim(taskId: String, body: ReclaimBody, board: String? = nil, profile: String? = nil) async throws -> KanbanTaskAckResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/reclaim", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanTaskAckResponse.self, status: 200)
     }
 
     /// `POST /api/plugins/kanban/tasks/{task_id}/specify`
-    public func tasksSpecify(taskId: String, body: SpecifyBody, board: String? = nil) async throws -> KanbanSpecifyResponse {
+    public func tasksSpecify(taskId: String, body: SpecifyBody, board: String? = nil, profile: String? = nil) async throws -> KanbanSpecifyResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/plugins/kanban/tasks/\(RESTPath.segment(taskId))/specify", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanSpecifyResponse.self, status: 200)
     }
 
     /// `PUT /api/plugins/kanban/orchestration`
-    public func updateOrchestration(body: OrchestrationSettingsBody) async throws -> KanbanOrchestrationResponse {
-        let query: [String: String] = [:]
+    public func updateOrchestration(body: OrchestrationSettingsBody, profile: String? = nil) async throws -> KanbanOrchestrationResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "PUT", path: "/api/plugins/kanban/orchestration", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(KanbanOrchestrationResponse.self, status: 200)
     }
 
     /// `GET /api/plugins/kanban/workers/active`
-    public func workersActive(board: String? = nil) async throws -> KanbanActiveWorkersResponse {
+    public func workersActive(board: String? = nil, profile: String? = nil) async throws -> KanbanActiveWorkersResponse {
         var query: [String: String] = [:]
         if let value = board { query["board"] = value }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/workers/active", query: query))
         return try response.json(KanbanActiveWorkersResponse.self, status: 200)
+    }
+
+    /// `GET /api/plugins/kanban/workflow`
+    public func workflow(profile: String? = nil) async throws -> KanbanWorkflowResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
+        let response = try await caller.send(RESTRequest(method: "GET", path: "/api/plugins/kanban/workflow", query: query))
+        return try response.json(KanbanWorkflowResponse.self, status: 200)
     }
 }
 
@@ -1449,8 +1524,9 @@ public struct LearningRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
 
     /// `DELETE /api/learning/node`
-    public func deleteNode(body: LearningNodeRef) async throws -> LearningNodeMutationResponse {
-        let query: [String: String] = [:]
+    public func deleteNode(body: LearningNodeRef, profile: String? = nil) async throws -> LearningNodeMutationResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "DELETE", path: "/api/learning/node", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(LearningNodeMutationResponse.self, status: 200)
     }
@@ -1473,8 +1549,9 @@ public struct LearningRESTMethods: Sendable {
     }
 
     /// `PUT /api/learning/node`
-    public func updateNode(body: LearningNodeEdit) async throws -> LearningNodeMutationResponse {
-        let query: [String: String] = [:]
+    public func updateNode(body: LearningNodeEdit, profile: String? = nil) async throws -> LearningNodeMutationResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "PUT", path: "/api/learning/node", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(LearningNodeMutationResponse.self, status: 200)
     }
@@ -1511,6 +1588,20 @@ public struct LocalModelsRESTMethods: Sendable {
         let query: [String: String] = [:]
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/local-models/download-browsed", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(LocalModelsDownloadResponse.self, status: 200)
+    }
+
+    /// `POST /api/local-models/download/pause`
+    public func downloadPause(body: JobIdBody) async throws -> LocalModelsDownloadPauseResponse {
+        let query: [String: String] = [:]
+        let response = try await caller.send(RESTRequest(method: "POST", path: "/api/local-models/download/pause", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
+        return try response.json(LocalModelsDownloadPauseResponse.self, status: 200)
+    }
+
+    /// `POST /api/local-models/download/resume`
+    public func downloadResume(body: JobIdBody) async throws -> LocalModelsDownloadResumeResponse {
+        let query: [String: String] = [:]
+        let response = try await caller.send(RESTRequest(method: "POST", path: "/api/local-models/download/resume", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
+        return try response.json(LocalModelsDownloadResumeResponse.self, status: 200)
     }
 
     /// `POST /api/local-models/eject`
@@ -1626,10 +1717,9 @@ public struct McpRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
 
     /// `GET /api/mcp/catalog`
-    public func catalog(profile: String? = nil, detectApps: Bool? = nil) async throws -> McpCatalogResponse {
+    public func catalog(profile: String? = nil) async throws -> McpCatalogResponse {
         var query: [String: String] = [:]
         if let value = profile { query["profile"] = value }
-        if let value = detectApps { query["detect_apps"] = String(value) }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/mcp/catalog", query: query))
         return try response.json(McpCatalogResponse.self, status: 200)
     }
@@ -1733,6 +1823,14 @@ public struct MediaRESTMethods: Sendable {
         var query: [String: String] = [:]
         query["path"] = path
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/media", query: query))
+        return try response.json(MediaDataUrlResponse.self, status: 200)
+    }
+
+    /// `GET /api/media/proxy`
+    public func proxy(url: String) async throws -> MediaDataUrlResponse {
+        var query: [String: String] = [:]
+        query["url"] = url
+        let response = try await caller.send(RESTRequest(method: "GET", path: "/api/media/proxy", query: query))
         return try response.json(MediaDataUrlResponse.self, status: 200)
     }
 }
@@ -2226,10 +2324,11 @@ public struct ProfilesRESTMethods: Sendable {
     }
 
     /// `GET /api/profiles/projects/tree`
-    public func projectsTree(previewLimit: Int? = nil, sessionLimit: Int? = nil) async throws -> ProfileProjectsTreeResponse {
+    public func projectsTree(previewLimit: Int? = nil, sessionLimit: Int? = nil, profile: String? = nil) async throws -> ProfileProjectsTreeResponse {
         var query: [String: String] = [:]
         if let value = previewLimit { query["preview_limit"] = String(value) }
         if let value = sessionLimit { query["session_limit"] = String(value) }
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/profiles/projects/tree", query: query))
         return try response.json(ProfileProjectsTreeResponse.self, status: 200)
     }
@@ -2254,8 +2353,9 @@ public struct ProfilesRESTMethods: Sendable {
     }
 
     /// `POST /api/profiles/sessions/pull-requests`
-    public func sessionsPullRequests(body: SessionPrScanBody) async throws -> ProfileSessionPullRequestsResponse {
-        let query: [String: String] = [:]
+    public func sessionsPullRequests(body: SessionPrScanBody, profile: String? = nil) async throws -> ProfileSessionPullRequestsResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/profiles/sessions/pull-requests", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(ProfileSessionPullRequestsResponse.self, status: 200)
     }
@@ -2398,16 +2498,19 @@ public struct SessionsRESTMethods: Sendable {
     init(caller: any RESTCalling) { self.caller = caller }
 
     /// `POST /api/sessions/bulk-delete`
-    public func bulkDelete(body: BulkDeleteSessions) async throws -> SessionDeletedCountResponse {
+    public func bulkDelete(body: BulkDeleteSessions) async throws -> SessionBulkDeleteResponse {
         let query: [String: String] = [:]
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/sessions/bulk-delete", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
-        return try response.json(SessionDeletedCountResponse.self, status: 200)
+        return try response.json(SessionBulkDeleteResponse.self, status: 200)
     }
 
     /// `DELETE /api/sessions/{session_id}`
-    public func delete(sessionId: String, profile: String? = nil) async throws -> SessionDeleteResponse {
+    public func delete(sessionId: String, profile: String? = nil, requestId: String? = nil, expectedRevision: Int? = nil, expectedGeneration: Int? = nil) async throws -> SessionDeleteResponse {
         var query: [String: String] = [:]
         if let value = profile { query["profile"] = value }
+        if let value = requestId { query["request_id"] = value }
+        if let value = expectedRevision { query["expected_revision"] = String(value) }
+        if let value = expectedGeneration { query["expected_generation"] = String(value) }
         let response = try await caller.send(RESTRequest(method: "DELETE", path: "/api/sessions/\(RESTPath.segment(sessionId))", query: query))
         return try response.json(SessionDeleteResponse.self, status: 200)
     }
@@ -2482,13 +2585,14 @@ public struct SessionsRESTMethods: Sendable {
     /// `GET /api/sessions/{session_id}/messages`
     /// - Parameter limit: at least 0.
     /// - Parameter offset: at least 0.
-    public func messages(sessionId: String, profile: String? = nil, limit: Int? = nil, offset: Int? = nil, order: String? = nil, includeCompacted: Bool? = nil) async throws -> SessionMessagesResponse {
+    public func messages(sessionId: String, profile: String? = nil, limit: Int? = nil, offset: Int? = nil, order: String? = nil, includeCompacted: Bool? = nil, inlineImages: Bool? = nil) async throws -> SessionMessagesResponse {
         var query: [String: String] = [:]
         if let value = profile { query["profile"] = value }
         if let value = limit { query["limit"] = String(value) }
         if let value = offset { query["offset"] = String(value) }
         if let value = order { query["order"] = value }
         if let value = includeCompacted { query["include_compacted"] = String(value) }
+        if let value = inlineImages { query["inline_images"] = String(value) }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/sessions/\(RESTPath.segment(sessionId))/messages", query: query))
         return try response.json(SessionMessagesResponse.self, status: 200)
     }
@@ -2503,6 +2607,14 @@ public struct SessionsRESTMethods: Sendable {
         if let value = limit { query["limit"] = String(value) }
         let response = try await caller.send(RESTRequest(method: "GET", path: "/api/sessions/\(RESTPath.segment(sessionId))/messages/around", query: query))
         return try response.json(SessionMessagesAroundResponse.self, status: 200)
+    }
+
+    /// `GET /api/sessions/{session_id}/mutation-snapshot`
+    public func mutationSnapshot(sessionId: String, profile: String? = nil) async throws -> SessionMutationSnapshotResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
+        let response = try await caller.send(RESTRequest(method: "GET", path: "/api/sessions/\(RESTPath.segment(sessionId))/mutation-snapshot", query: query))
+        return try response.json(SessionMutationSnapshotResponse.self, status: 200)
     }
 
     /// `POST /api/sessions/owner-backfill`
@@ -2560,6 +2672,27 @@ public struct SessionsRESTMethods: Sendable {
     }
 }
 
+public struct SharedMetricsRESTMethods: Sendable {
+    private let caller: any RESTCalling
+    init(caller: any RESTCalling) { self.caller = caller }
+
+    /// `GET /api/shared-metrics/consent`
+    public func consent(profile: String? = nil) async throws -> SharedMetricsConsentResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
+        let response = try await caller.send(RESTRequest(method: "GET", path: "/api/shared-metrics/consent", query: query))
+        return try response.json(SharedMetricsConsentResponse.self, status: 200)
+    }
+
+    /// `PUT /api/shared-metrics/consent`
+    public func updateConsent(body: ConsentAnswer, profile: String? = nil) async throws -> SharedMetricsConsentResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
+        let response = try await caller.send(RESTRequest(method: "PUT", path: "/api/shared-metrics/consent", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
+        return try response.json(SharedMetricsConsentResponse.self, status: 200)
+    }
+}
+
 public struct SkillsRESTMethods: Sendable {
     private let caller: any RESTCalling
     init(caller: any RESTCalling) { self.caller = caller }
@@ -2574,8 +2707,9 @@ public struct SkillsRESTMethods: Sendable {
     }
 
     /// `POST /api/skills`
-    public func create(body: SkillCreate) async throws -> SkillCreateResponse {
-        let query: [String: String] = [:]
+    public func create(body: SkillCreate, profile: String? = nil) async throws -> SkillCreateResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "POST", path: "/api/skills", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(SkillCreateResponse.self, status: 200)
     }
@@ -2666,8 +2800,9 @@ public struct SkillsRESTMethods: Sendable {
     }
 
     /// `PUT /api/skills/content`
-    public func updateContent(body: SkillContentUpdate) async throws -> SkillContentUpdateResponse {
-        let query: [String: String] = [:]
+    public func updateContent(body: SkillContentUpdate, profile: String? = nil) async throws -> SkillContentUpdateResponse {
+        var query: [String: String] = [:]
+        if let value = profile { query["profile"] = value }
         let response = try await caller.send(RESTRequest(method: "PUT", path: "/api/skills/content", query: query, body: try JSONEncoder().encode(body), contentType: "application/json"))
         return try response.json(SkillContentUpdateResponse.self, status: 200)
     }
@@ -3006,6 +3141,7 @@ public extension HermesREST {
     var profiles: ProfilesRESTMethods { ProfilesRESTMethods(caller: self) }
     var providers: ProvidersRESTMethods { ProvidersRESTMethods(caller: self) }
     var sessions: SessionsRESTMethods { SessionsRESTMethods(caller: self) }
+    var sharedMetrics: SharedMetricsRESTMethods { SharedMetricsRESTMethods(caller: self) }
     var skills: SkillsRESTMethods { SkillsRESTMethods(caller: self) }
     var ssh: SshRESTMethods { SshRESTMethods(caller: self) }
     var status: StatusRESTMethods { StatusRESTMethods(caller: self) }

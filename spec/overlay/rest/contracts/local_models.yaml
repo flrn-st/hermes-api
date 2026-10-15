@@ -107,6 +107,140 @@ components:
     - size_label
     - fit_summary
     type: object
+  LocalModelJob:
+    additionalProperties: false
+    description: '``_job`` record as rendered by ``_job_view``.'
+    properties:
+      bytes_per_sec:
+        anyOf:
+        - type: number
+        - type: 'null'
+        description: Only while running and measurable.
+      can_pause:
+        type: boolean
+      can_resume:
+        type: boolean
+      detail:
+        type: string
+      done_bytes:
+        type: integer
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      eta_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        description: With ``bytes_per_sec``; null when the total is unknown.
+      job_id:
+        type: string
+      kind:
+        enum:
+        - runtime-install
+        - model-download
+        - quickstart
+        - model-activate
+        type: string
+      model_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Catalog/variant id for download-type jobs.
+      pause_requested:
+        type: boolean
+      percent:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        description: Only once ``total_bytes`` is known.
+      phase:
+        description: Current step name (``starting``, ``downloading``, ``done``, ...).
+        type: string
+      ranges:
+        additionalProperties:
+          items:
+            items:
+              type: integer
+            type: array
+          type: array
+        description: Per-destination half-open ``[start, end)`` byte runs (``pm/downloader.py``).
+        type: object
+      started_at:
+        type: number
+      status:
+        enum:
+        - running
+        - paused
+        - done
+        - error
+        type: string
+      target:
+        type: string
+      total_bytes:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - job_id
+    - kind
+    - target
+    - model_id
+    - status
+    - phase
+    - detail
+    - total_bytes
+    - done_bytes
+    - started_at
+    - error
+    - pause_requested
+    - can_pause
+    - can_resume
+    type: object
+  LocalModelLoadProgress:
+    additionalProperties: false
+    description: '``hermes_cli/local_runtime/load_progress.py::get_loading_progress`` entry.'
+    properties:
+      percent:
+        description: Composite 0-100 across all load stages.
+        type: integer
+      stage:
+        type: string
+      value:
+        description: Progress within ``stage``, 0..1.
+        type: number
+    required:
+    - stage
+    - value
+    - percent
+    type: object
+  LocalModelPlacement:
+    additionalProperties: false
+    description: '``_loaded_models`` facts: the preset decision (``window``/``spilled``) and the window the
+
+      live server actually granted; each group only when known.'
+    properties:
+      granted_window:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      granted_window_label:
+        anyOf:
+        - type: string
+        - type: 'null'
+      spilled:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      window:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      window_label:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
   LocalModelRepoFile:
     additionalProperties: false
     description: '``hermes_cli/local_runtime/hf_browse.py::HFFileGroup`` priced by ``rough_fit``.'
@@ -154,6 +288,21 @@ components:
     - updated
     - gated
     type: object
+  LocalModelStagedRow:
+    additionalProperties: false
+    description: '``_staged_row``: one downloaded variant (a split model''s whole size).'
+    properties:
+      id:
+        type: string
+      size_bytes:
+        type: integer
+      size_label:
+        type: string
+    required:
+    - id
+    - size_bytes
+    - size_label
+    type: object
   LocalModelsActivateResponse:
     additionalProperties: false
     description: '``local_models_activate``.'
@@ -173,6 +322,50 @@ components:
         type: array
     required:
     - models
+    type: object
+  LocalModelsDownloadPauseResponse:
+    additionalProperties: false
+    description: '``local_models_download_pause``; ``paused`` false when the job is not pausable now.'
+    properties:
+      ok:
+        type: boolean
+      paused:
+        type: boolean
+    required:
+    - ok
+    - paused
+    type: object
+  LocalModelsDownloadResponse:
+    additionalProperties: false
+    description: '``local_models_download`` / ``local_models_download_browsed``: ``job_id`` is null (and
+
+      ``already_downloaded`` true) when every file is already on disk.'
+    properties:
+      already_downloaded:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      job_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      model_id:
+        type: string
+    required:
+    - job_id
+    - model_id
+    type: object
+  LocalModelsDownloadResumeResponse:
+    additionalProperties: false
+    description: '``local_models_download_resume``.'
+    properties:
+      ok:
+        type: boolean
+      resumed:
+        type: boolean
+    required:
+    - ok
+    - resumed
     type: object
   LocalModelsHardwareResponse:
     additionalProperties: false
@@ -214,6 +407,56 @@ components:
     - gpu_name
     - gpu_util_percent
     - vram_used_bytes
+    type: object
+  LocalModelsJobsResponse:
+    additionalProperties: false
+    description: '``local_models_jobs``: running/paused first, then up to 20 settled jobs.'
+    properties:
+      jobs:
+        items:
+          $ref: '#/components/schemas/LocalModelJob'
+        type: array
+    required:
+    - jobs
+    type: object
+  LocalModelsQuickstartResponse:
+    additionalProperties: false
+    description: '``local_models_quickstart``; ``model_id`` is the catalog family id.'
+    properties:
+      display_name:
+        type: string
+      download_bytes:
+        type: integer
+      job_id:
+        type: string
+      model_id:
+        type: string
+      needs_download:
+        type: boolean
+      needs_runtime:
+        type: boolean
+    required:
+    - job_id
+    - model_id
+    - display_name
+    - needs_runtime
+    - needs_download
+    - download_bytes
+    type: object
+  LocalModelsRuntimeInstallResponse:
+    additionalProperties: false
+    description: '``local_models_runtime_install``.'
+    properties:
+      backend:
+        type: string
+      job_id:
+        type: string
+      tag:
+        type: string
+    required:
+    - job_id
+    - backend
+    - tag
     type: object
   LocalModelsSearchFilesResponse:
     additionalProperties: false
@@ -268,13 +511,79 @@ components:
     - ok
     - model_id
     type: object
+  LocalModelsStatusResponse:
+    additionalProperties: false
+    description: '``local_models_status``.'
+    properties:
+      active_model_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      configured_tag:
+        type: string
+      enabled:
+        type: boolean
+      loaded_models:
+        additionalProperties:
+          enum:
+          - loaded
+          - ready
+          - loading
+          type: string
+        type: object
+      loading:
+        additionalProperties:
+          $ref: '#/components/schemas/LocalModelLoadProgress'
+        type: object
+      models:
+        items:
+          $ref: '#/components/schemas/LocalModelStagedRow'
+        type: array
+      models_dir:
+        type: string
+      placement:
+        additionalProperties:
+          $ref: '#/components/schemas/LocalModelPlacement'
+        type: object
+      runtime_backend:
+        anyOf:
+        - type: string
+        - type: 'null'
+      runtime_installed:
+        type: boolean
+      server_base_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      server_running:
+        type: boolean
+      tag:
+        type: string
+      update_available:
+        type: boolean
+    required:
+    - enabled
+    - tag
+    - configured_tag
+    - update_available
+    - runtime_installed
+    - runtime_backend
+    - server_running
+    - server_base_url
+    - active_model_id
+    - loaded_models
+    - loading
+    - placement
+    - models
+    - models_dir
+    type: object
 operations:
 - method: DELETE
   path: /api/local-models/models/{model_id}
-  x-source: hermes_cli/web_routers/local_models.py:717
-  x-handler-hash: d5fc6726113d939452ee84eb9fd80d490a2e5d6654004cb2155454d400d2ee7d
+  x-source: hermes_cli/web_routers/local_models.py:736
+  x-handler-hash: 75a3026af4762a43ebf41a08f18216aff44787588f3dbd7498453c7c37fb2b74
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -285,10 +594,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/local-models/catalog
-  x-source: hermes_cli/web_routers/local_models.py:595
-  x-handler-hash: 5cde4d4c6b5bcaf2bfd7b894232d81f31bfffb4a617e38ad8540e1fb85410345
+  x-source: hermes_cli/web_routers/local_models.py:616
+  x-handler-hash: 5bee402bd65124a7e3932c2a58c97436e705c222b3feffe5beb907d8df652374
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LocalModelsCatalogResponse
   responses:
     '200':
@@ -299,10 +608,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/local-models/hardware
-  x-source: hermes_cli/web_routers/local_models.py:523
+  x-source: hermes_cli/web_routers/local_models.py:543
   x-handler-hash: c098ceb9adcb1164ff581527608385741445676657e87727ad2adbefb473e396
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LocalModelsHardwareResponse
   responses:
     '200':
@@ -312,11 +621,39 @@ operations:
             $ref: '#/components/schemas/LocalModelsHardwareResponse'
       description: Successful Response
 - method: GET
+  path: /api/local-models/jobs
+  x-source: hermes_cli/web_routers/local_models.py:920
+  x-handler-hash: 08be3f751e78ed898cf2f62f0a5a60cf756ef87f93e40e7a0aa8230ecbedb15f
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsJobsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsJobsResponse'
+      description: Successful Response
+- method: GET
+  path: /api/local-models/jobs/{job_id}
+  x-source: hermes_cli/web_routers/local_models.py:930
+  x-handler-hash: 80fe816dbbcea6dfd82a67248a8e4537a123bfb260526f6747b06698cecc5427
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelJob
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelJob'
+      description: Successful Response
+- method: GET
   path: /api/local-models/search
-  x-source: hermes_cli/web_routers/local_models.py:905
+  x-source: hermes_cli/web_routers/local_models.py:940
   x-handler-hash: b8de0cf8ddd0d5252b080d74253cd849e2aa6a895ecb849b3be900eb5c1c4757
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LocalModelsSearchResponse
   responses:
     '200':
@@ -327,10 +664,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/local-models/search/files
-  x-source: hermes_cli/web_routers/local_models.py:914
+  x-source: hermes_cli/web_routers/local_models.py:949
   x-handler-hash: 07018791aeb7b2c6450c21e65176670bd7a9ba3996c2d4703ab09b8726b9f82d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LocalModelsSearchFilesResponse
   responses:
     '200':
@@ -339,12 +676,26 @@ operations:
           schema:
             $ref: '#/components/schemas/LocalModelsSearchFilesResponse'
       description: Successful Response
+- method: GET
+  path: /api/local-models/status
+  x-source: hermes_cli/web_routers/local_models.py:492
+  x-handler-hash: 1e166511dc9c60c1fc16a328121c66f713cac75ca543fa24a7e393cba14aa1d0
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsStatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsStatusResponse'
+      description: Successful Response
 - method: POST
   path: /api/local-models/activate
-  x-source: hermes_cli/web_routers/local_models.py:860
+  x-source: hermes_cli/web_routers/local_models.py:893
   x-handler-hash: 65fe174a1dbb23084f83438096794ea5a19e278112951edc834e5988ceecf789
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LocalModelsActivateResponse
   responses:
     '200':
@@ -354,11 +705,67 @@ operations:
             $ref: '#/components/schemas/LocalModelsActivateResponse'
       description: Successful Response
 - method: POST
+  path: /api/local-models/download
+  x-source: hermes_cli/web_routers/local_models.py:697
+  x-handler-hash: b8d7c98336d65f3679fe9d5869ad4d5e66bd08e03caab0edab7df676782bca71
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsDownloadResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsDownloadResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/download-browsed
+  x-source: hermes_cli/web_routers/local_models.py:958
+  x-handler-hash: 76ab9aa3e5f88559a4041716822bd20665435c0360f52e27e86316738bfd75e5
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsDownloadResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsDownloadResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/download/pause
+  x-source: hermes_cli/web_routers/local_models.py:714
+  x-handler-hash: e3c38d33760f238dc95c087a98de8d53e3399f333aff3ffdbe75468da35611f2
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsDownloadPauseResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsDownloadPauseResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/download/resume
+  x-source: hermes_cli/web_routers/local_models.py:727
+  x-handler-hash: b76914ba8def630576f49ea941b1dc781af213a68ed905514dd8f42539031a82
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsDownloadResumeResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsDownloadResumeResponse'
+      description: Successful Response
+- method: POST
   path: /api/local-models/eject
-  x-source: hermes_cli/web_routers/local_models.py:842
+  x-source: hermes_cli/web_routers/local_models.py:875
   x-handler-hash: 11e9286a6c5ab6b68bcb09f73e3819a841ada201271c124e8ab4434fb7ade2ba
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -368,11 +775,39 @@ operations:
             $ref: '#/components/schemas/OkResponse'
       description: Successful Response
 - method: POST
+  path: /api/local-models/quickstart
+  x-source: hermes_cli/web_routers/local_models.py:790
+  x-handler-hash: 5a752ff00d95cf79f3e12544a815f58a2f3ba7a4f313e4b2bdde7c6080b2b9da
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsQuickstartResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsQuickstartResponse'
+      description: Successful Response
+- method: POST
+  path: /api/local-models/runtime/install
+  x-source: hermes_cli/web_routers/local_models.py:662
+  x-handler-hash: a1a773cd5c6ddc3e7b23d341aa766cea1519f9304398b9b5763af30dccc50dfd
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: LocalModelsRuntimeInstallResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LocalModelsRuntimeInstallResponse'
+      description: Successful Response
+- method: POST
   path: /api/local-models/server
-  x-source: hermes_cli/web_routers/local_models.py:825
+  x-source: hermes_cli/web_routers/local_models.py:858
   x-handler-hash: c1ce623a58a4394d4f587541d199a2f004672e90129731bf90a8f81dd0f0e4f3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LocalModelsServerResponse
   responses:
     '200':
@@ -383,10 +818,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/local-models/sideload
-  x-source: hermes_cli/web_routers/local_models.py:950
+  x-source: hermes_cli/web_routers/local_models.py:981
   x-handler-hash: c183df49e4271e1529c559167a6bdf9b12a3ab6a88c5871a78adda0d8255769d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LocalModelsSideloadResponse
   responses:
     '200':

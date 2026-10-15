@@ -1,0 +1,17 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+operations:
+- method: GET
+  path: /assets/{filename}.css
+  x-source: hermes_cli/web_server_dashboard.py:201
+  x-handler-hash: 0ff0126c0960af2bf653a58f094948cf68380c105cdca0045b3f9293b17fe9f7
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: 200 text/css
+  responses:
+    '200':
+      content:
+        text/css:
+          schema:
+            type: string
+      description: Built CSS; asset ``url()``s rewritten under ``X-Forwarded-Prefix``.

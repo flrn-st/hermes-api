@@ -657,7 +657,48 @@ public struct AutomationBlueprintInstantiate: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_auxiliary_models`` — one row per ``_AUX_TASK_SLOTS`` entry.
+/// The route an inheriting plugin task resolves to right now (``_get_auxiliary_task_config``).
+public struct AuxiliaryEffectiveRoute: Codable, Sendable, Hashable {
+    public var baseUrl: String
+    public var model: String
+    public var provider: String
+
+    public init(baseUrl: String, model: String, provider: String) {
+        self.baseUrl = baseUrl
+        self.model = model
+        self.provider = provider
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case baseUrl = "base_url"
+        case model = "model"
+        case provider = "provider"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["base_url", "model", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        baseUrl = try container.decode(String.self, forKey: .baseUrl)
+        model = try container.decode(String.self, forKey: .model)
+        provider = try container.decode(String.self, forKey: .provider)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(baseUrl, forKey: .baseUrl)
+        try container.encode(model, forKey: .model)
+        try container.encode(provider, forKey: .provider)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``get_auxiliary_models`` — one row per ``_AUX_TASK_SLOTS`` entry, then one per plugin-registered auxiliary task of the profile.
 public struct AuxiliaryModelsResponse: Codable, Sendable, Hashable {
     public var main: MainModelAssignment
     public var tasks: [AuxiliaryTaskAssignment]
@@ -693,18 +734,29 @@ public struct AuxiliaryModelsResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+/// One slot's own stored assignment. Plugin-registered tasks follow the built-in slots and add ``label``/``hint``/``plugin`` and ``inherit_from`` (base slot key or null); an inheriting row also carries ``effective``.
 public struct AuxiliaryTaskAssignment: Codable, Sendable, Hashable {
     public var baseUrl: String
+    public var effective: AuxiliaryEffectiveRoute?
+    public var hint: String?
+    public var inheritFrom: String?
+    public var label: String?
     public var localEndpoint: Bool
     public var model: String
+    public var plugin: String?
     public var provider: String
     public var reasoningEffort: String?
     public var task: String
 
-    public init(baseUrl: String, localEndpoint: Bool, model: String, provider: String, reasoningEffort: String?, task: String) {
+    public init(baseUrl: String, effective: AuxiliaryEffectiveRoute? = nil, hint: String? = nil, inheritFrom: String? = nil, label: String? = nil, localEndpoint: Bool, model: String, plugin: String? = nil, provider: String, reasoningEffort: String?, task: String) {
         self.baseUrl = baseUrl
+        self.effective = effective
+        self.hint = hint
+        self.inheritFrom = inheritFrom
+        self.label = label
         self.localEndpoint = localEndpoint
         self.model = model
+        self.plugin = plugin
         self.provider = provider
         self.reasoningEffort = reasoningEffort
         self.task = task
@@ -712,8 +764,13 @@ public struct AuxiliaryTaskAssignment: Codable, Sendable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case baseUrl = "base_url"
+        case effective = "effective"
+        case hint = "hint"
+        case inheritFrom = "inherit_from"
+        case label = "label"
         case localEndpoint = "local_endpoint"
         case model = "model"
+        case plugin = "plugin"
         case provider = "provider"
         case reasoningEffort = "reasoning_effort"
         case task = "task"
@@ -722,15 +779,20 @@ public struct AuxiliaryTaskAssignment: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["base_url", "local_endpoint", "model", "provider", "reasoning_effort", "task"]
+            let known: Set<String> = ["base_url", "effective", "hint", "inherit_from", "label", "local_endpoint", "model", "plugin", "provider", "reasoning_effort", "task"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         baseUrl = try container.decode(String.self, forKey: .baseUrl)
+        effective = try container.decodeIfPresent(AuxiliaryEffectiveRoute.self, forKey: .effective)
+        hint = try container.decodeIfPresent(String.self, forKey: .hint)
+        inheritFrom = try container.decodeIfPresent(String.self, forKey: .inheritFrom)
+        label = try container.decodeIfPresent(String.self, forKey: .label)
         localEndpoint = try container.decode(Bool.self, forKey: .localEndpoint)
         model = try container.decode(String.self, forKey: .model)
+        plugin = try container.decodeIfPresent(String.self, forKey: .plugin)
         provider = try container.decode(String.self, forKey: .provider)
         reasoningEffort = try container.decode(Optional<String>.self, forKey: .reasoningEffort)
         task = try container.decode(String.self, forKey: .task)
@@ -739,8 +801,13 @@ public struct AuxiliaryTaskAssignment: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(baseUrl, forKey: .baseUrl)
+        try container.encodeIfPresent(effective, forKey: .effective)
+        try container.encodeIfPresent(hint, forKey: .hint)
+        try container.encodeIfPresent(inheritFrom, forKey: .inheritFrom)
+        try container.encodeIfPresent(label, forKey: .label)
         try container.encode(localEndpoint, forKey: .localEndpoint)
         try container.encode(model, forKey: .model)
+        try container.encodeIfPresent(plugin, forKey: .plugin)
         try container.encode(provider, forKey: .provider)
         try container.encode(reasoningEffort, forKey: .reasoningEffort)
         try container.encode(task, forKey: .task)
@@ -1797,60 +1864,5 @@ public struct ConfigSchemaField: Codable, Sendable, Hashable {
         try container.encodeIfPresent(options, forKey: .options)
         try container.encodeIfPresent(searchable, forKey: .searchable)
         try container.encode(type, forKey: .type)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum ConfigSchemaFieldType: Codable, Sendable, Hashable, RawRepresentable {
-    case boolean
-    case number
-    case list
-    case string
-    case select
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "boolean": self = .boolean
-        case "number": self = .number
-        case "list": self = .list
-        case "string": self = .string
-        case "select": self = .select
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .boolean: "boolean"
-        case .number: "number"
-        case .list: "list"
-        case .string: "string"
-        case .select: "select"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "boolean": self = .boolean
-        case "number": self = .number
-        case "list": self = .list
-        case "string": self = .string
-        case "select": self = .select
-        default:
-            guard decoder.decodesTolerantly else {
-                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected ConfigSchemaFieldType value: \(raw)")
-            }
-            self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }

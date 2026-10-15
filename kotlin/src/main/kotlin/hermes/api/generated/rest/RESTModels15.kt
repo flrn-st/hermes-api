@@ -9,6 +9,389 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_profiles_failed``: a profile whose scan failed while its siblings listed (Retry-able). */
+@Serializable
+public data class ProfileFailedLoad(
+    @SerialName("error")
+    public val error: String,
+    @SerialName("failed")
+    public val failed: Boolean,
+    @SerialName("retry")
+    public val retry: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. A spawned ``hermes skills install``; ``pid`` is null when the spawn failed. */
+@Serializable
+public data class ProfileHubInstall(
+    @SerialName("identifier")
+    public val identifier: String,
+    @SerialName("pid")
+    public val pid: Long?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = ProfileImport.Serializer::class)
+public data class ProfileImport(
+    public val archive: String,
+    public val name: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ProfileImport> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ProfileImport {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ProfileImport requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ProfileImport requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("archive", "name")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return ProfileImport(
+                archive = json.decodeFromJsonElement<String>((input["archive"] ?: throw SerializationException("Missing archive"))),
+                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ProfileImport) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ProfileImport requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["archive"] = json.encodeToJsonElement(value.archive)
+            when (val patch = value.name) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["name"] = JsonNull
+                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``import_profile_endpoint``; ``desktop`` is the bundled ``desktop.json`` document, null when absent or unreadable. */
+@Serializable
+public data class ProfileImportResponse(
+    @SerialName("desktop")
+    public val desktop: JsonElement,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("path")
+    public val path: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_profiles_endpoint`` (``_read_profiles``). */
+@Serializable
+public data class ProfileListResponse(
+    @SerialName("profiles")
+    public val profiles: List<ProfileSummary>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``update_profile_model_endpoint``. */
+@Serializable
+public data class ProfileModelResponse(
+    @SerialName("model")
+    public val model: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("provider")
+    public val provider: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ProfileModelUpdate(
+    @SerialName("model")
+    public val model: String,
+    @SerialName("provider")
+    public val provider: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``open_profile_terminal_endpoint``. */
+@Serializable
+public data class ProfileOpenTerminalResponse(
+    @SerialName("command")
+    public val command: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One lane of ``tui_gateway/project_tree.py::_build_repos``; ``sessions`` stays empty (the all-profiles tree is built unhydrated). */
+@Serializable
+public data class ProfileProjectTreeLane(
+    @SerialName("id")
+    public val id: String,
+    /** False for a path-only lane of a non-git folder (no branch switching); absent on the Home lane. */
+    @SerialName("isGit")
+    public val isGit: Boolean? = null,
+    @SerialName("isKanban")
+    public val isKanban: Boolean,
+    @SerialName("isMain")
+    public val isMain: Boolean,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("path")
+    public val path: String?,
+    @SerialName("sessions")
+    public val sessions: List<ProfileProjectTreeSession>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tui_gateway/project_tree.py::_project_node`` after ``_merge_profile_tree`` folded the same folder across profiles (counts and totals summed). */
+@Serializable
+public data class ProfileProjectTreeNode(
+    @SerialName("color")
+    public val color: String?,
+    @SerialName("icon")
+    public val icon: String?,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("isAuto")
+    public val isAuto: Boolean,
+    @SerialName("isNoProject")
+    public val isNoProject: Boolean,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("lastActive")
+    public val lastActive: Double,
+    /** The folder identity the merge keyed on (``project_tree._path_key``); a client merging per-profile reads (``?profile=``) folds on it. */
+    @SerialName("mergeKey")
+    public val mergeKey: String,
+    @SerialName("path")
+    public val path: String?,
+    @SerialName("previewSessions")
+    public val previewSessions: List<ProfileProjectTreeSession>,
+    @SerialName("repos")
+    public val repos: List<ProfileProjectTreeRepo>,
+    @SerialName("sessionCount")
+    public val sessionCount: Long,
+    @SerialName("sessionIds")
+    public val sessionIds: List<String>,
+    @SerialName("totalCostUsd")
+    public val totalCostUsd: Double,
+    @SerialName("totalTokens")
+    public val totalTokens: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tui_gateway/project_tree.py::_repo_node``. */
+@Serializable
+public data class ProfileProjectTreeRepo(
+    @SerialName("groups")
+    public val groups: List<ProfileProjectTreeLane>,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("path")
+    public val path: String?,
+    @SerialName("sessionCount")
+    public val sessionCount: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tui_gateway/methods_projects.py::_project_tree_row`` stamped by ``_merge_profile_tree`` (the REST twin of ``ProjectTreeSession`` in ``tui_gateway/contracts/projects_pets.py``). */
+@Serializable
+public data class ProfileProjectTreeSession(
+    /** Set on a /branch fork. */
+    @SerialName("_branched_from")
+    public val branchedFrom: String?,
+    @SerialName("_lineage_ids")
+    public val lineageIds: List<String>?,
+    @SerialName("_lineage_root_id")
+    public val lineageRootId: String?,
+    /** Set on a /new sibling (not a fork). */
+    @SerialName("_reset_from")
+    public val resetFrom: String?,
+    @SerialName("actual_cost_usd")
+    public val actualCostUsd: Double?,
+    @SerialName("archived")
+    public val archived: Boolean,
+    @SerialName("cwd")
+    public val cwd: String?,
+    @SerialName("ended_at")
+    public val endedAt: Double?,
+    @SerialName("estimated_cost_usd")
+    public val estimatedCostUsd: Double?,
+    @SerialName("git_branch")
+    public val gitBranch: String?,
+    @SerialName("git_repo_root")
+    public val gitRepoRoot: String?,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("input_tokens")
+    public val inputTokens: Long,
+    @SerialName("is_active")
+    public val isActive: Boolean,
+    @SerialName("is_default_profile")
+    public val isDefaultProfile: Boolean,
+    @SerialName("last_active")
+    public val lastActive: Double,
+    @SerialName("message_count")
+    public val messageCount: Long,
+    @SerialName("model")
+    public val model: String?,
+    @SerialName("output_tokens")
+    public val outputTokens: Long,
+    @SerialName("parent_session_id")
+    public val parentSessionId: String?,
+    @SerialName("preview")
+    public val preview: String,
+    @SerialName("profile")
+    public val profile: String,
+    @SerialName("source")
+    public val source: String,
+    @SerialName("started_at")
+    public val startedAt: Double,
+    @SerialName("title")
+    public val title: String?,
+    @SerialName("tool_call_count")
+    public val toolCallCount: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_profiles_projects_tree`` — the ``projects.tree`` JSON-RPC result (``ProjectsTreeResult``) across every profile (or only ``?profile=``), plus per-profile read ``errors``. Omits `active_id`, which Hermes always sends as null. */
+@Serializable(with = ProfileProjectsTreeResponse.Serializer::class)
+public data class ProfileProjectsTreeResponse(
+    public val errors: List<ProfileReadError>,
+    public val projects: List<ProfileProjectTreeNode>,
+    public val scopedSessionIds: List<String>,
+)
+{
+    public object Serializer : KSerializer<ProfileProjectsTreeResponse> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ProfileProjectsTreeResponse {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ProfileProjectsTreeResponse requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ProfileProjectsTreeResponse requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("errors", "projects", "scoped_session_ids", "active_id")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+                if (input["active_id"] !is JsonNull) throw SerializationException("Field active_id must be present and null")
+            }
+            return ProfileProjectsTreeResponse(
+                errors = json.decodeFromJsonElement<List<ProfileReadError>>((input["errors"] ?: throw SerializationException("Missing errors"))),
+                projects = json.decodeFromJsonElement<List<ProfileProjectTreeNode>>((input["projects"] ?: throw SerializationException("Missing projects"))),
+                scopedSessionIds = json.decodeFromJsonElement<List<String>>((input["scoped_session_ids"] ?: throw SerializationException("Missing scoped_session_ids"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ProfileProjectsTreeResponse) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ProfileProjectsTreeResponse requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["errors"] = json.encodeToJsonElement(value.errors)
+            output["projects"] = json.encodeToJsonElement(value.projects)
+            output["scoped_session_ids"] = json.encodeToJsonElement(value.scopedSessionIds)
+            output["active_id"] = JsonNull
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One profile whose ``state.db`` read failed (``_read_profile_db``). */
+@Serializable
+public data class ProfileReadError(
+    @SerialName("error")
+    public val error: String,
+    @SerialName("profile")
+    public val profile: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ProfileRename(
+    @SerialName("new_name")
+    public val newName: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``rename_profile_endpoint``; renaming ``default`` only sets ``display_name`` and keeps ``name: "default"``. */
+@Serializable
+public data class ProfileRenameResponse(
+    @SerialName("display_name")
+    public val displayName: String? = null,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("path")
+    public val path: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ProfileSessionPullRequest(
+    @SerialName("number")
+    public val number: Long,
+    @SerialName("url")
+    public val url: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``post_profiles_sessions_pull_requests`` — session id -> the PR its transcript opened. */
+@Serializable
+public data class ProfileSessionPullRequestsResponse(
+    @SerialName("pull_requests")
+    public val pullRequests: Map<String, ProfileSessionPullRequest>,
+    @SerialName("scanned")
+    public val scanned: List<String>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_profiles_sessions`` — rows from every profile's store, tagged with their owner. */
+@Serializable
+public data class ProfileSessionsResponse(
+    @SerialName("errors")
+    public val errors: List<ProfileReadError>,
+    @SerialName("limit")
+    public val limit: Long,
+    @SerialName("offset")
+    public val offset: Long,
+    @SerialName("profile_totals")
+    public val profileTotals: Map<String, Long>,
+    @SerialName("sessions")
+    public val sessions: List<RESTSessionListRow>,
+    @SerialName("storage")
+    public val storage: Map<String, ProfileSessionsResponseStorageValue>,
+    @SerialName("total")
+    public val total: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = ProfileSessionsResponseStorageValue.Serializer::class)
+public sealed interface ProfileSessionsResponseStorageValue {
+    public data object Corrupt : ProfileSessionsResponseStorageValue
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Corrupt -> "corrupt"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): ProfileSessionsResponseStorageValue? = when (raw) {
+            "corrupt" -> Corrupt
+            else -> null
+        }
+    }
+
+    public object Serializer : KSerializer<ProfileSessionsResponseStorageValue> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ProfileSessionsResponseStorageValue", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): ProfileSessionsResponseStorageValue = when (val raw = decoder.decodeString()) {
+            "corrupt" -> Corrupt
+            else -> throw SerializationException("Unexpected const value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: ProfileSessionsResponseStorageValue) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``get_profiles_sessions_sidebar`` — the recents / cron / messaging slices in one scan. */
 @Serializable
 public data class ProfileSessionsSidebarResponse(
@@ -18,6 +401,8 @@ public data class ProfileSessionsSidebarResponse(
     public val errors: List<ProfileReadError>,
     @SerialName("messaging")
     public val messaging: ProfileSidebarMessaging,
+    @SerialName("profiles_failed")
+    public val profilesFailed: Map<String, ProfileFailedLoad>? = null,
     @SerialName("recents")
     public val recents: ProfileSidebarRecents,
     @SerialName("storage")
@@ -76,8 +461,16 @@ public data class ProfileSetupCommandResponse(
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable
 public data class ProfileSidebarMessaging(
+    @SerialName("errors")
+    public val errors: List<ProfileReadError>? = null,
+    @SerialName("failed")
+    public val failed: Boolean? = null,
+    @SerialName("profiles_failed")
+    public val profilesFailed: Map<String, ProfileFailedLoad>? = null,
+    @SerialName("retry")
+    public val retry: Boolean? = null,
     @SerialName("sessions")
-    public val sessions: List<RESTSessionListRow>,
+    public val sessions: List<RESTSessionListRow>? = null,
     @SerialName("total")
     public val total: Long,
 )
@@ -85,19 +478,35 @@ public data class ProfileSidebarMessaging(
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable
 public data class ProfileSidebarRecents(
+    @SerialName("errors")
+    public val errors: List<ProfileReadError>? = null,
+    @SerialName("failed")
+    public val failed: Boolean? = null,
+    @SerialName("profiles_failed")
+    public val profilesFailed: Map<String, ProfileFailedLoad>? = null,
     @SerialName("profiles_truncated")
     public val profilesTruncated: Map<String, Boolean>,
     @SerialName("profiles_usage")
     public val profilesUsage: Map<String, ProfileSidebarUsage>,
+    @SerialName("retry")
+    public val retry: Boolean? = null,
     @SerialName("sessions")
-    public val sessions: List<RESTSessionListRow>,
+    public val sessions: List<RESTSessionListRow>? = null,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. A sidebar slice: the merged, recency-sorted window across the scanned profiles (plus pinned rows past it). A profile whose scan failed only shows in the top-level ``errors``. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. A sidebar slice. When the requested scope's scan failed it is a failed load (``_failed_load_slice``): ``failed``/``retry``/``errors`` and NO ``sessions`` — an empty list would read as a successful empty read. ``profiles_failed``/``errors`` also mark a sibling profile that failed while others listed. */
 @Serializable
 public data class ProfileSidebarSlice(
+    @SerialName("errors")
+    public val errors: List<ProfileReadError>? = null,
+    @SerialName("failed")
+    public val failed: Boolean? = null,
+    @SerialName("profiles_failed")
+    public val profilesFailed: Map<String, ProfileFailedLoad>? = null,
+    @SerialName("retry")
+    public val retry: Boolean? = null,
     @SerialName("sessions")
-    public val sessions: List<RESTSessionListRow>,
+    public val sessions: List<RESTSessionListRow>? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``SessionDB.usage_totals``. */
@@ -125,7 +534,7 @@ public data class ProfileSoulUpdate(
     public val content: String,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_profile_to_dict``, or ``web_server_profiles.py::_fallback_profile_entry`` when ``list_profiles`` fails (that scan omits ``display_name`` and ``role``). */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_profile_to_dict``, or ``web_server_profiles.py::_fallback_profile_entry`` when ``list_profiles`` fails (that scan omits ``display_name``). */
 @Serializable
 public data class ProfileSummary(
     @SerialName("bot_title")
@@ -158,9 +567,6 @@ public data class ProfileSummary(
     public val path: String,
     @SerialName("provider")
     public val provider: String?,
-    /** ``hermes_cli.profiles.PROFILE_ROLES`` ("setup") or null. */
-    @SerialName("role")
-    public val role: String? = null,
     @SerialName("skill_count")
     public val skillCount: Long,
 )
@@ -232,14 +638,20 @@ public data class QuickstartBody(
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``SessionDB.list_sessions_rich`` row as the list endpoints stamp it (``is_active``, ``profile``, boolean ``archived`` / ``pinned``). The prompt-storage columns ride only with ``full=1``; the ``_lineage_*`` keys only on a compression root projected onto its live tip. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``SessionDB.list_sessions_rich`` row as the list endpoints stamp it (``is_active``, ``profile``, boolean ``archived`` / ``pinned``). The prompt-storage columns ride only with ``full=1``; the ``_lineage_*`` keys and ``continuation_kind`` only on a compression root projected onto its live tip. The sessions table's counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count`` and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows can hold null. */
 @Serializable(with = RESTSessionListRow.Serializer::class)
 public data class RESTSessionListRow(
+    /** Lifted from ``model_config`` when set: a /branch fork. */
+    public val branchedFrom: String? = null,
     public val lineageIds: List<String>? = null,
     public val lineageRootId: String? = null,
+    /** Lifted from ``model_config`` when set: a /new sibling. */
+    public val resetFrom: String? = null,
     public val actualCostUsd: Double?,
     public val apiCallCount: Long?,
     public val archived: Boolean,
+    /** SQLite 0/1: archived by the idle sweep, not by hand. */
+    public val autoArchived: Long,
     public val billingBaseUrl: String?,
     public val billingMode: String?,
     public val billingProvider: String?,
@@ -252,8 +664,12 @@ public data class RESTSessionListRow(
     public val compressionFallbackStreak: Long,
     public val compressionIneffectiveCount: Long,
     public val compressionRecoveryDeadline: Double?,
+    /** Only on a compression root projected onto its live tip. */
+    public val continuationKind: RESTSessionListRowContinuationKind? = null,
     public val costSource: String?,
     public val costStatus: String?,
+    /** The source the row was created under; null on rows that predate it. */
+    public val createdSource: String?,
     public val cwd: String?,
     public val displayName: String?,
     public val endReason: String?,
@@ -290,6 +706,10 @@ public data class RESTSessionListRow(
     public val profileName: String?,
     public val reasoningTokens: Long?,
     public val rewindCount: Long,
+    /** Execution generation a turn-affecting mutation must quote. */
+    public val runtimeGeneration: Long,
+    /** Mutation fence: bumped by every committed session mutation. */
+    public val runtimeRevision: Long,
     public val sessionKey: String?,
     public val source: String,
     public val startedAt: Double,
@@ -316,11 +736,14 @@ public data class RESTSessionListRow(
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("RESTSessionListRow requires an object")
             return RESTSessionListRow(
+                branchedFrom = input["_branched_from"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 lineageIds = input["_lineage_ids"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 lineageRootId = input["_lineage_root_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                resetFrom = input["_reset_from"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
                 apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
                 archived = json.decodeFromJsonElement<Boolean>((input["archived"] ?: throw SerializationException("Missing archived"))),
+                autoArchived = json.decodeFromJsonElement<Long>((input["auto_archived"] ?: throw SerializationException("Missing auto_archived"))),
                 billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
                 billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
                 billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
@@ -333,8 +756,10 @@ public data class RESTSessionListRow(
                 compressionFallbackStreak = json.decodeFromJsonElement<Long>((input["compression_fallback_streak"] ?: throw SerializationException("Missing compression_fallback_streak"))),
                 compressionIneffectiveCount = json.decodeFromJsonElement<Long>((input["compression_ineffective_count"] ?: throw SerializationException("Missing compression_ineffective_count"))),
                 compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
+                continuationKind = input["continuation_kind"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<RESTSessionListRowContinuationKind>(it) },
                 costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
                 costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
+                createdSource = if ((input["created_source"] ?: throw SerializationException("Missing created_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["created_source"] ?: throw SerializationException("Missing created_source"))),
                 cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
                 displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
                 endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
@@ -370,6 +795,8 @@ public data class RESTSessionListRow(
                 profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
                 reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
                 rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
+                runtimeGeneration = json.decodeFromJsonElement<Long>((input["runtime_generation"] ?: throw SerializationException("Missing runtime_generation"))),
+                runtimeRevision = json.decodeFromJsonElement<Long>((input["runtime_revision"] ?: throw SerializationException("Missing runtime_revision"))),
                 sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
                 source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
                 startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
@@ -383,7 +810,7 @@ public data class RESTSessionListRow(
                 transportProfile = if ((input["transport_profile"] ?: throw SerializationException("Missing transport_profile")) is JsonNull) null else json.decodeFromJsonElement<String>((input["transport_profile"] ?: throw SerializationException("Missing transport_profile"))),
                 unread = json.decodeFromJsonElement<Boolean>((input["unread"] ?: throw SerializationException("Missing unread"))),
                 userId = if ((input["user_id"] ?: throw SerializationException("Missing user_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["user_id"] ?: throw SerializationException("Missing user_id"))),
-                additionalProperties = input.filterKeys { it !in setOf("_lineage_ids", "_lineage_root_id", "actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id") },
+                additionalProperties = input.filterKeys { it !in setOf("_branched_from", "_lineage_ids", "_lineage_root_id", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "continuation_kind", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id") },
             )
         }
 
@@ -392,16 +819,19 @@ public data class RESTSessionListRow(
                 ?: throw SerializationException("RESTSessionListRow requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("_lineage_ids", "_lineage_root_id", "actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id")
+            val known = setOf("_branched_from", "_lineage_ids", "_lineage_root_id", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "continuation_kind", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id")
             if (value.additionalProperties.keys.any { it in known }) {
                 throw SerializationException("Additional property conflicts with a known field")
             }
             output.putAll(value.additionalProperties)
+            value.branchedFrom?.let { output["_branched_from"] = json.encodeToJsonElement(it) }
             value.lineageIds?.let { output["_lineage_ids"] = json.encodeToJsonElement(it) }
             value.lineageRootId?.let { output["_lineage_root_id"] = json.encodeToJsonElement(it) }
+            value.resetFrom?.let { output["_reset_from"] = json.encodeToJsonElement(it) }
             output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
             output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
             output["archived"] = json.encodeToJsonElement(value.archived)
+            output["auto_archived"] = json.encodeToJsonElement(value.autoArchived)
             output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
             output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
             output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
@@ -414,8 +844,10 @@ public data class RESTSessionListRow(
             output["compression_fallback_streak"] = json.encodeToJsonElement(value.compressionFallbackStreak)
             output["compression_ineffective_count"] = json.encodeToJsonElement(value.compressionIneffectiveCount)
             output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
+            value.continuationKind?.let { output["continuation_kind"] = json.encodeToJsonElement(it) }
             output["cost_source"] = json.encodeToJsonElement(value.costSource)
             output["cost_status"] = json.encodeToJsonElement(value.costStatus)
+            output["created_source"] = json.encodeToJsonElement(value.createdSource)
             output["cwd"] = json.encodeToJsonElement(value.cwd)
             output["display_name"] = json.encodeToJsonElement(value.displayName)
             output["end_reason"] = json.encodeToJsonElement(value.endReason)
@@ -451,6 +883,8 @@ public data class RESTSessionListRow(
             output["profile_name"] = json.encodeToJsonElement(value.profileName)
             output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
             output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
+            output["runtime_generation"] = json.encodeToJsonElement(value.runtimeGeneration)
+            output["runtime_revision"] = json.encodeToJsonElement(value.runtimeRevision)
             output["session_key"] = json.encodeToJsonElement(value.sessionKey)
             output["source"] = json.encodeToJsonElement(value.source)
             output["started_at"] = json.encodeToJsonElement(value.startedAt)
@@ -464,1090 +898,6 @@ public data class RESTSessionListRow(
             output["transport_profile"] = json.encodeToJsonElement(value.transportProfile)
             output["unread"] = json.encodeToJsonElement(value.unread)
             output["user_id"] = json.encodeToJsonElement(value.userId)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = RawConfigUpdate.Serializer::class)
-public data class RawConfigUpdate(
-    public val profile: Patch<String> = Patch.Absent,
-    public val yamlText: String,
-)
-{
-    public object Serializer : KSerializer<RawConfigUpdate> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): RawConfigUpdate {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("RawConfigUpdate requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("RawConfigUpdate requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("profile", "yaml_text")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return RawConfigUpdate(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                yamlText = json.decodeFromJsonElement<String>((input["yaml_text"] ?: throw SerializationException("Missing yaml_text"))),
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: RawConfigUpdate) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("RawConfigUpdate requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            output["yaml_text"] = json.encodeToJsonElement(value.yamlText)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_config_raw`` — ``yaml`` is ``""`` when the profile's ``config.yaml`` does not exist. */
-@Serializable
-public data class RawConfigYamlResponse(
-    @SerialName("path")
-    public val path: String,
-    @SerialName("yaml")
-    public val yaml: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ReassignBody.Serializer::class)
-public data class ReassignBody(
-    public val profile: Patch<String> = Patch.Absent,
-    public val reason: Patch<String> = Patch.Absent,
-    public val reclaimFirst: Boolean? = null,
-)
-{
-    public object Serializer : KSerializer<ReassignBody> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ReassignBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ReassignBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ReassignBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("profile", "reason", "reclaim_first")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return ReassignBody(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                reason = when (val raw = input["reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                reclaimFirst = input["reclaim_first"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ReassignBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ReassignBody requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.reason) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["reason"] = JsonNull
-                is Patch.Value -> output["reason"] = json.encodeToJsonElement(patch.value)
-            }
-            value.reclaimFirst?.let { output["reclaim_first"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ReclaimBody.Serializer::class)
-public data class ReclaimBody(
-    public val reason: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ReclaimBody> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ReclaimBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ReclaimBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ReclaimBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("reason")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return ReclaimBody(
-                reason = when (val raw = input["reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ReclaimBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ReclaimBody requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.reason) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["reason"] = JsonNull
-                is Patch.Value -> output["reason"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_recommended_default_model``; ``free_tier`` is only a bool for Nous and ``model`` may be ``""``. */
-@Serializable
-public data class RecommendedDefaultModelResponse(
-    @SerialName("free_tier")
-    public val freeTier: Boolean?,
-    @SerialName("model")
-    public val model: String,
-    @SerialName("provider")
-    public val provider: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = RenameBoardBody.Serializer::class)
-public data class RenameBoardBody(
-    public val color: Patch<String> = Patch.Absent,
-    public val defaultWorkdir: Patch<String> = Patch.Absent,
-    public val description: Patch<String> = Patch.Absent,
-    public val icon: Patch<String> = Patch.Absent,
-    public val name: Patch<String> = Patch.Absent,
-    public val projectId: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<RenameBoardBody> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): RenameBoardBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("RenameBoardBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("RenameBoardBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("color", "default_workdir", "description", "icon", "name", "project_id")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return RenameBoardBody(
-                color = when (val raw = input["color"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                defaultWorkdir = when (val raw = input["default_workdir"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                description = when (val raw = input["description"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                icon = when (val raw = input["icon"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                projectId = when (val raw = input["project_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: RenameBoardBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("RenameBoardBody requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.color) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["color"] = JsonNull
-                is Patch.Value -> output["color"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.defaultWorkdir) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["default_workdir"] = JsonNull
-                is Patch.Value -> output["default_workdir"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.description) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["description"] = JsonNull
-                is Patch.Value -> output["description"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.icon) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["icon"] = JsonNull
-                is Patch.Value -> output["icon"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.name) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["name"] = JsonNull
-                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.projectId) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["project_id"] = JsonNull
-                is Patch.Value -> output["project_id"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = RuntimeInstallBody.Serializer::class)
-public data class RuntimeInstallBody(
-    public val backend: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<RuntimeInstallBody> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): RuntimeInstallBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("RuntimeInstallBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("RuntimeInstallBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("backend")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return RuntimeInstallBody(
-                backend = when (val raw = input["backend"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: RuntimeInstallBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("RuntimeInstallBody requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.backend) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["backend"] = JsonNull
-                is Patch.Value -> output["backend"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ServerActionBody(
-    @SerialName("action")
-    public val action: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_session_endpoint``; ``already_absent`` marks the idempotent no-op. */
-@Serializable
-public data class SessionDeleteResponse(
-    @SerialName("already_absent")
-    public val alreadyAbsent: Boolean? = null,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``bulk_delete_sessions_endpoint`` / ``delete_empty_sessions_endpoint``. */
-@Serializable
-public data class SessionDeletedCountResponse(
-    @SerialName("deleted")
-    public val deleted: Long,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_session_detail`` — the stored row stamped with its owning profile. */
-@Serializable(with = SessionDetailResponse.Serializer::class)
-public data class SessionDetailResponse(
-    public val actualCostUsd: Double?,
-    public val apiCallCount: Long?,
-    public val archived: Long,
-    public val billingBaseUrl: String?,
-    public val billingMode: String?,
-    public val billingProvider: String?,
-    public val cacheReadTokens: Long?,
-    public val cacheWriteTokens: Long?,
-    public val chatId: String?,
-    public val chatType: String?,
-    public val compressionFailureCooldownUntil: Double?,
-    public val compressionFailureError: String?,
-    public val compressionFallbackStreak: Long,
-    public val compressionIneffectiveCount: Long,
-    public val compressionRecoveryDeadline: Double?,
-    public val costSource: String?,
-    public val costStatus: String?,
-    public val cwd: String?,
-    public val displayName: String?,
-    public val endReason: String?,
-    public val endedAt: Double?,
-    public val estimatedCostUsd: Double?,
-    public val expiryFinalized: Long?,
-    public val gitBranch: String?,
-    public val gitMetadataGeneration: Long,
-    public val gitRepoRoot: String?,
-    public val handoffError: String?,
-    public val handoffPlatform: String?,
-    public val handoffState: String?,
-    public val hidden: Long,
-    public val id: String,
-    public val inputTokens: Long?,
-    public val isDefaultProfile: Boolean,
-    public val lastActivityAt: Double?,
-    public val lastActivityDescription: String?,
-    public val lastActivityProvenance: String?,
-    /** Read watermark; ``0`` = marked unread, null = never tracked. */
-    public val lastReadAt: Double?,
-    public val messageCount: Long?,
-    public val model: String?,
-    public val modelConfig: String?,
-    public val originJson: String?,
-    public val outputTokens: Long?,
-    public val parentSessionId: String?,
-    public val pinned: Long,
-    public val pricingVersion: String?,
-    public val profile: String,
-    public val profileName: String?,
-    public val reasoningTokens: Long?,
-    public val rewindCount: Long,
-    public val sessionKey: String?,
-    public val source: String,
-    public val startedAt: Double,
-    public val systemPrompt: String?,
-    public val systemPromptHash: String?,
-    public val threadId: String?,
-    public val title: String?,
-    public val titleSource: String?,
-    public val toolCallCount: Long?,
-    public val toolNames: String?,
-    public val transportProfile: String?,
-    public val userId: String?,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<SessionDetailResponse> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): SessionDetailResponse {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("SessionDetailResponse requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("SessionDetailResponse requires an object")
-            return SessionDetailResponse(
-                actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
-                apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
-                archived = json.decodeFromJsonElement<Long>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
-                billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
-                billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
-                cacheReadTokens = if ((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens"))),
-                cacheWriteTokens = if ((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens"))),
-                chatId = if ((input["chat_id"] ?: throw SerializationException("Missing chat_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_id"] ?: throw SerializationException("Missing chat_id"))),
-                chatType = if ((input["chat_type"] ?: throw SerializationException("Missing chat_type")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_type"] ?: throw SerializationException("Missing chat_type"))),
-                compressionFailureCooldownUntil = if ((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until"))),
-                compressionFailureError = if ((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error"))),
-                compressionFallbackStreak = json.decodeFromJsonElement<Long>((input["compression_fallback_streak"] ?: throw SerializationException("Missing compression_fallback_streak"))),
-                compressionIneffectiveCount = json.decodeFromJsonElement<Long>((input["compression_ineffective_count"] ?: throw SerializationException("Missing compression_ineffective_count"))),
-                compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
-                costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
-                costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
-                cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
-                displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
-                endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
-                endedAt = if ((input["ended_at"] ?: throw SerializationException("Missing ended_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["ended_at"] ?: throw SerializationException("Missing ended_at"))),
-                estimatedCostUsd = if ((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd"))),
-                expiryFinalized = if ((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized"))),
-                gitBranch = if ((input["git_branch"] ?: throw SerializationException("Missing git_branch")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_branch"] ?: throw SerializationException("Missing git_branch"))),
-                gitMetadataGeneration = json.decodeFromJsonElement<Long>((input["git_metadata_generation"] ?: throw SerializationException("Missing git_metadata_generation"))),
-                gitRepoRoot = if ((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root"))),
-                handoffError = if ((input["handoff_error"] ?: throw SerializationException("Missing handoff_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_error"] ?: throw SerializationException("Missing handoff_error"))),
-                handoffPlatform = if ((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform"))),
-                handoffState = if ((input["handoff_state"] ?: throw SerializationException("Missing handoff_state")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_state"] ?: throw SerializationException("Missing handoff_state"))),
-                hidden = json.decodeFromJsonElement<Long>((input["hidden"] ?: throw SerializationException("Missing hidden"))),
-                id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
-                inputTokens = if ((input["input_tokens"] ?: throw SerializationException("Missing input_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["input_tokens"] ?: throw SerializationException("Missing input_tokens"))),
-                isDefaultProfile = json.decodeFromJsonElement<Boolean>((input["is_default_profile"] ?: throw SerializationException("Missing is_default_profile"))),
-                lastActivityAt = if ((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at"))),
-                lastActivityDescription = if ((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description"))),
-                lastActivityProvenance = if ((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance"))),
-                lastReadAt = if ((input["last_read_at"] ?: throw SerializationException("Missing last_read_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_read_at"] ?: throw SerializationException("Missing last_read_at"))),
-                messageCount = if ((input["message_count"] ?: throw SerializationException("Missing message_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["message_count"] ?: throw SerializationException("Missing message_count"))),
-                model = if ((input["model"] ?: throw SerializationException("Missing model")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model"] ?: throw SerializationException("Missing model"))),
-                modelConfig = if ((input["model_config"] ?: throw SerializationException("Missing model_config")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model_config"] ?: throw SerializationException("Missing model_config"))),
-                originJson = if ((input["origin_json"] ?: throw SerializationException("Missing origin_json")) is JsonNull) null else json.decodeFromJsonElement<String>((input["origin_json"] ?: throw SerializationException("Missing origin_json"))),
-                outputTokens = if ((input["output_tokens"] ?: throw SerializationException("Missing output_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["output_tokens"] ?: throw SerializationException("Missing output_tokens"))),
-                parentSessionId = if ((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id"))),
-                pinned = json.decodeFromJsonElement<Long>((input["pinned"] ?: throw SerializationException("Missing pinned"))),
-                pricingVersion = if ((input["pricing_version"] ?: throw SerializationException("Missing pricing_version")) is JsonNull) null else json.decodeFromJsonElement<String>((input["pricing_version"] ?: throw SerializationException("Missing pricing_version"))),
-                profile = json.decodeFromJsonElement<String>((input["profile"] ?: throw SerializationException("Missing profile"))),
-                profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
-                reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
-                rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
-                sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
-                source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
-                startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
-                systemPrompt = if ((input["system_prompt"] ?: throw SerializationException("Missing system_prompt")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt"] ?: throw SerializationException("Missing system_prompt"))),
-                systemPromptHash = if ((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash"))),
-                threadId = if ((input["thread_id"] ?: throw SerializationException("Missing thread_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["thread_id"] ?: throw SerializationException("Missing thread_id"))),
-                title = if ((input["title"] ?: throw SerializationException("Missing title")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title"] ?: throw SerializationException("Missing title"))),
-                titleSource = if ((input["title_source"] ?: throw SerializationException("Missing title_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title_source"] ?: throw SerializationException("Missing title_source"))),
-                toolCallCount = if ((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count"))),
-                toolNames = if ((input["tool_names"] ?: throw SerializationException("Missing tool_names")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_names"] ?: throw SerializationException("Missing tool_names"))),
-                transportProfile = if ((input["transport_profile"] ?: throw SerializationException("Missing transport_profile")) is JsonNull) null else json.decodeFromJsonElement<String>((input["transport_profile"] ?: throw SerializationException("Missing transport_profile"))),
-                userId = if ((input["user_id"] ?: throw SerializationException("Missing user_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["user_id"] ?: throw SerializationException("Missing user_id"))),
-                additionalProperties = input.filterKeys { it !in setOf("actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_default_profile", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: SessionDetailResponse) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("SessionDetailResponse requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_default_profile", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
-            output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
-            output["archived"] = json.encodeToJsonElement(value.archived)
-            output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
-            output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
-            output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
-            output["cache_read_tokens"] = json.encodeToJsonElement(value.cacheReadTokens)
-            output["cache_write_tokens"] = json.encodeToJsonElement(value.cacheWriteTokens)
-            output["chat_id"] = json.encodeToJsonElement(value.chatId)
-            output["chat_type"] = json.encodeToJsonElement(value.chatType)
-            output["compression_failure_cooldown_until"] = json.encodeToJsonElement(value.compressionFailureCooldownUntil)
-            output["compression_failure_error"] = json.encodeToJsonElement(value.compressionFailureError)
-            output["compression_fallback_streak"] = json.encodeToJsonElement(value.compressionFallbackStreak)
-            output["compression_ineffective_count"] = json.encodeToJsonElement(value.compressionIneffectiveCount)
-            output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
-            output["cost_source"] = json.encodeToJsonElement(value.costSource)
-            output["cost_status"] = json.encodeToJsonElement(value.costStatus)
-            output["cwd"] = json.encodeToJsonElement(value.cwd)
-            output["display_name"] = json.encodeToJsonElement(value.displayName)
-            output["end_reason"] = json.encodeToJsonElement(value.endReason)
-            output["ended_at"] = json.encodeToJsonElement(value.endedAt)
-            output["estimated_cost_usd"] = json.encodeToJsonElement(value.estimatedCostUsd)
-            output["expiry_finalized"] = json.encodeToJsonElement(value.expiryFinalized)
-            output["git_branch"] = json.encodeToJsonElement(value.gitBranch)
-            output["git_metadata_generation"] = json.encodeToJsonElement(value.gitMetadataGeneration)
-            output["git_repo_root"] = json.encodeToJsonElement(value.gitRepoRoot)
-            output["handoff_error"] = json.encodeToJsonElement(value.handoffError)
-            output["handoff_platform"] = json.encodeToJsonElement(value.handoffPlatform)
-            output["handoff_state"] = json.encodeToJsonElement(value.handoffState)
-            output["hidden"] = json.encodeToJsonElement(value.hidden)
-            output["id"] = json.encodeToJsonElement(value.id)
-            output["input_tokens"] = json.encodeToJsonElement(value.inputTokens)
-            output["is_default_profile"] = json.encodeToJsonElement(value.isDefaultProfile)
-            output["last_activity_at"] = json.encodeToJsonElement(value.lastActivityAt)
-            output["last_activity_description"] = json.encodeToJsonElement(value.lastActivityDescription)
-            output["last_activity_provenance"] = json.encodeToJsonElement(value.lastActivityProvenance)
-            output["last_read_at"] = json.encodeToJsonElement(value.lastReadAt)
-            output["message_count"] = json.encodeToJsonElement(value.messageCount)
-            output["model"] = json.encodeToJsonElement(value.model)
-            output["model_config"] = json.encodeToJsonElement(value.modelConfig)
-            output["origin_json"] = json.encodeToJsonElement(value.originJson)
-            output["output_tokens"] = json.encodeToJsonElement(value.outputTokens)
-            output["parent_session_id"] = json.encodeToJsonElement(value.parentSessionId)
-            output["pinned"] = json.encodeToJsonElement(value.pinned)
-            output["pricing_version"] = json.encodeToJsonElement(value.pricingVersion)
-            output["profile"] = json.encodeToJsonElement(value.profile)
-            output["profile_name"] = json.encodeToJsonElement(value.profileName)
-            output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
-            output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
-            output["session_key"] = json.encodeToJsonElement(value.sessionKey)
-            output["source"] = json.encodeToJsonElement(value.source)
-            output["started_at"] = json.encodeToJsonElement(value.startedAt)
-            output["system_prompt"] = json.encodeToJsonElement(value.systemPrompt)
-            output["system_prompt_hash"] = json.encodeToJsonElement(value.systemPromptHash)
-            output["thread_id"] = json.encodeToJsonElement(value.threadId)
-            output["title"] = json.encodeToJsonElement(value.title)
-            output["title_source"] = json.encodeToJsonElement(value.titleSource)
-            output["tool_call_count"] = json.encodeToJsonElement(value.toolCallCount)
-            output["tool_names"] = json.encodeToJsonElement(value.toolNames)
-            output["transport_profile"] = json.encodeToJsonElement(value.transportProfile)
-            output["user_id"] = json.encodeToJsonElement(value.userId)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A message after ``_project_for_display``: bridge tool-call labels, the compaction display projection and ``agent/history_commentary.py::_project_one`` keys, each only when it applies. A recovered compaction carrier drops ``display_kind`` in favour of ``display_content``. */
-@Serializable(with = SessionDisplayMessage.Serializer::class)
-public data class SessionDisplayMessage(
-    public val compressedSummary: Boolean? = null,
-    public val active: Long,
-    public val apiContent: String?,
-    public val codexMessageItems: String?,
-    public val codexReasoningItems: String?,
-    public val compacted: Long,
-    public val content: JsonElement,
-    public val displayCommentary: List<String>? = null,
-    public val displayContent: JsonElement? = null,
-    public val displayKind: String? = null,
-    public val displayMetadata: Map<String, JsonElement>?,
-    public val displayReasoning: String? = null,
-    public val effectDisposition: String?,
-    public val finishReason: String?,
-    public val id: Long,
-    public val observed: Long,
-    public val platformMessageId: String?,
-    public val reasoning: String?,
-    public val reasoningContent: String?,
-    public val reasoningDetails: String?,
-    public val role: String,
-    public val sessionId: String,
-    public val timestamp: Double,
-    public val tokenCount: Long?,
-    public val toolCallId: String?,
-    public val toolCallLabels: Map<String, List<SessionToolCallLabel>>? = null,
-    /** Decoded tool-call list (``[]`` when undecodable), or null. */
-    public val toolCalls: JsonElement,
-    public val toolName: String?,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<SessionDisplayMessage> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): SessionDisplayMessage {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("SessionDisplayMessage requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("SessionDisplayMessage requires an object")
-            return SessionDisplayMessage(
-                compressedSummary = input["_compressed_summary"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                active = json.decodeFromJsonElement<Long>((input["active"] ?: throw SerializationException("Missing active"))),
-                apiContent = if ((input["api_content"] ?: throw SerializationException("Missing api_content")) is JsonNull) null else json.decodeFromJsonElement<String>((input["api_content"] ?: throw SerializationException("Missing api_content"))),
-                codexMessageItems = if ((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items")) is JsonNull) null else json.decodeFromJsonElement<String>((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items"))),
-                codexReasoningItems = if ((input["codex_reasoning_items"] ?: throw SerializationException("Missing codex_reasoning_items")) is JsonNull) null else json.decodeFromJsonElement<String>((input["codex_reasoning_items"] ?: throw SerializationException("Missing codex_reasoning_items"))),
-                compacted = json.decodeFromJsonElement<Long>((input["compacted"] ?: throw SerializationException("Missing compacted"))),
-                content = json.decodeFromJsonElement<JsonElement>((input["content"] ?: throw SerializationException("Missing content"))),
-                displayCommentary = input["display_commentary"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                displayContent = input["display_content"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<JsonElement>(it) },
-                displayKind = input["display_kind"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                displayMetadata = if ((input["display_metadata"] ?: throw SerializationException("Missing display_metadata")) is JsonNull) null else json.decodeFromJsonElement<Map<String, JsonElement>>((input["display_metadata"] ?: throw SerializationException("Missing display_metadata"))),
-                displayReasoning = input["display_reasoning"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                effectDisposition = if ((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition")) is JsonNull) null else json.decodeFromJsonElement<String>((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition"))),
-                finishReason = if ((input["finish_reason"] ?: throw SerializationException("Missing finish_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["finish_reason"] ?: throw SerializationException("Missing finish_reason"))),
-                id = json.decodeFromJsonElement<Long>((input["id"] ?: throw SerializationException("Missing id"))),
-                observed = json.decodeFromJsonElement<Long>((input["observed"] ?: throw SerializationException("Missing observed"))),
-                platformMessageId = if ((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id"))),
-                reasoning = if ((input["reasoning"] ?: throw SerializationException("Missing reasoning")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning"] ?: throw SerializationException("Missing reasoning"))),
-                reasoningContent = if ((input["reasoning_content"] ?: throw SerializationException("Missing reasoning_content")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning_content"] ?: throw SerializationException("Missing reasoning_content"))),
-                reasoningDetails = if ((input["reasoning_details"] ?: throw SerializationException("Missing reasoning_details")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning_details"] ?: throw SerializationException("Missing reasoning_details"))),
-                role = json.decodeFromJsonElement<String>((input["role"] ?: throw SerializationException("Missing role"))),
-                sessionId = json.decodeFromJsonElement<String>((input["session_id"] ?: throw SerializationException("Missing session_id"))),
-                timestamp = json.decodeFromJsonElement<Double>((input["timestamp"] ?: throw SerializationException("Missing timestamp"))),
-                tokenCount = if ((input["token_count"] ?: throw SerializationException("Missing token_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["token_count"] ?: throw SerializationException("Missing token_count"))),
-                toolCallId = if ((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id"))),
-                toolCallLabels = input["tool_call_labels"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, List<SessionToolCallLabel>>>(it) },
-                toolCalls = json.decodeFromJsonElement<JsonElement>((input["tool_calls"] ?: throw SerializationException("Missing tool_calls"))),
-                toolName = if ((input["tool_name"] ?: throw SerializationException("Missing tool_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_name"] ?: throw SerializationException("Missing tool_name"))),
-                additionalProperties = input.filterKeys { it !in setOf("_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_commentary", "display_content", "display_kind", "display_metadata", "display_reasoning", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_call_labels", "tool_calls", "tool_name") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: SessionDisplayMessage) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("SessionDisplayMessage requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_commentary", "display_content", "display_kind", "display_metadata", "display_reasoning", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_call_labels", "tool_calls", "tool_name")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            value.compressedSummary?.let { output["_compressed_summary"] = json.encodeToJsonElement(it) }
-            output["active"] = json.encodeToJsonElement(value.active)
-            output["api_content"] = json.encodeToJsonElement(value.apiContent)
-            output["codex_message_items"] = json.encodeToJsonElement(value.codexMessageItems)
-            output["codex_reasoning_items"] = json.encodeToJsonElement(value.codexReasoningItems)
-            output["compacted"] = json.encodeToJsonElement(value.compacted)
-            output["content"] = json.encodeToJsonElement(value.content)
-            value.displayCommentary?.let { output["display_commentary"] = json.encodeToJsonElement(it) }
-            value.displayContent?.let { output["display_content"] = json.encodeToJsonElement(it) }
-            value.displayKind?.let { output["display_kind"] = json.encodeToJsonElement(it) }
-            output["display_metadata"] = json.encodeToJsonElement(value.displayMetadata)
-            value.displayReasoning?.let { output["display_reasoning"] = json.encodeToJsonElement(it) }
-            output["effect_disposition"] = json.encodeToJsonElement(value.effectDisposition)
-            output["finish_reason"] = json.encodeToJsonElement(value.finishReason)
-            output["id"] = json.encodeToJsonElement(value.id)
-            output["observed"] = json.encodeToJsonElement(value.observed)
-            output["platform_message_id"] = json.encodeToJsonElement(value.platformMessageId)
-            output["reasoning"] = json.encodeToJsonElement(value.reasoning)
-            output["reasoning_content"] = json.encodeToJsonElement(value.reasoningContent)
-            output["reasoning_details"] = json.encodeToJsonElement(value.reasoningDetails)
-            output["role"] = json.encodeToJsonElement(value.role)
-            output["session_id"] = json.encodeToJsonElement(value.sessionId)
-            output["timestamp"] = json.encodeToJsonElement(value.timestamp)
-            output["token_count"] = json.encodeToJsonElement(value.tokenCount)
-            output["tool_call_id"] = json.encodeToJsonElement(value.toolCallId)
-            value.toolCallLabels?.let { output["tool_call_labels"] = json.encodeToJsonElement(it) }
-            output["tool_calls"] = json.encodeToJsonElement(value.toolCalls)
-            output["tool_name"] = json.encodeToJsonElement(value.toolName)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``count_empty_sessions_endpoint``. */
-@Serializable
-public data class SessionEmptyCountResponse(
-    @SerialName("count")
-    public val count: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``export_session_endpoint`` streams this one JSON document: ``SessionDB.get_session`` with the session's active (``active = 1``) raw, unprojected message rows appended. */
-@Serializable(with = SessionExportResponse.Serializer::class)
-public data class SessionExportResponse(
-    public val actualCostUsd: Double?,
-    public val apiCallCount: Long?,
-    public val archived: Long,
-    public val billingBaseUrl: String?,
-    public val billingMode: String?,
-    public val billingProvider: String?,
-    public val cacheReadTokens: Long?,
-    public val cacheWriteTokens: Long?,
-    public val chatId: String?,
-    public val chatType: String?,
-    public val compressionFailureCooldownUntil: Double?,
-    public val compressionFailureError: String?,
-    public val compressionFallbackStreak: Long,
-    public val compressionIneffectiveCount: Long,
-    public val compressionRecoveryDeadline: Double?,
-    public val costSource: String?,
-    public val costStatus: String?,
-    public val cwd: String?,
-    public val displayName: String?,
-    public val endReason: String?,
-    public val endedAt: Double?,
-    public val estimatedCostUsd: Double?,
-    public val expiryFinalized: Long?,
-    public val gitBranch: String?,
-    public val gitMetadataGeneration: Long,
-    public val gitRepoRoot: String?,
-    public val handoffError: String?,
-    public val handoffPlatform: String?,
-    public val handoffState: String?,
-    public val hidden: Long,
-    public val id: String,
-    public val inputTokens: Long?,
-    public val lastActivityAt: Double?,
-    public val lastActivityDescription: String?,
-    public val lastActivityProvenance: String?,
-    /** Read watermark; ``0`` = marked unread, null = never tracked. */
-    public val lastReadAt: Double?,
-    public val messageCount: Long?,
-    public val messages: List<SessionMessage>,
-    public val model: String?,
-    public val modelConfig: String?,
-    public val originJson: String?,
-    public val outputTokens: Long?,
-    public val parentSessionId: String?,
-    public val pinned: Long,
-    public val pricingVersion: String?,
-    public val profileName: String?,
-    public val reasoningTokens: Long?,
-    public val rewindCount: Long,
-    public val sessionKey: String?,
-    public val source: String,
-    public val startedAt: Double,
-    public val systemPrompt: String?,
-    public val systemPromptHash: String?,
-    public val threadId: String?,
-    public val title: String?,
-    public val titleSource: String?,
-    public val toolCallCount: Long?,
-    public val toolNames: String?,
-    public val transportProfile: String?,
-    public val userId: String?,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<SessionExportResponse> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): SessionExportResponse {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("SessionExportResponse requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("SessionExportResponse requires an object")
-            return SessionExportResponse(
-                actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
-                apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
-                archived = json.decodeFromJsonElement<Long>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
-                billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
-                billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
-                cacheReadTokens = if ((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens"))),
-                cacheWriteTokens = if ((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens"))),
-                chatId = if ((input["chat_id"] ?: throw SerializationException("Missing chat_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_id"] ?: throw SerializationException("Missing chat_id"))),
-                chatType = if ((input["chat_type"] ?: throw SerializationException("Missing chat_type")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_type"] ?: throw SerializationException("Missing chat_type"))),
-                compressionFailureCooldownUntil = if ((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until"))),
-                compressionFailureError = if ((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error"))),
-                compressionFallbackStreak = json.decodeFromJsonElement<Long>((input["compression_fallback_streak"] ?: throw SerializationException("Missing compression_fallback_streak"))),
-                compressionIneffectiveCount = json.decodeFromJsonElement<Long>((input["compression_ineffective_count"] ?: throw SerializationException("Missing compression_ineffective_count"))),
-                compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
-                costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
-                costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
-                cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
-                displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
-                endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
-                endedAt = if ((input["ended_at"] ?: throw SerializationException("Missing ended_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["ended_at"] ?: throw SerializationException("Missing ended_at"))),
-                estimatedCostUsd = if ((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd"))),
-                expiryFinalized = if ((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized"))),
-                gitBranch = if ((input["git_branch"] ?: throw SerializationException("Missing git_branch")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_branch"] ?: throw SerializationException("Missing git_branch"))),
-                gitMetadataGeneration = json.decodeFromJsonElement<Long>((input["git_metadata_generation"] ?: throw SerializationException("Missing git_metadata_generation"))),
-                gitRepoRoot = if ((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root"))),
-                handoffError = if ((input["handoff_error"] ?: throw SerializationException("Missing handoff_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_error"] ?: throw SerializationException("Missing handoff_error"))),
-                handoffPlatform = if ((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform"))),
-                handoffState = if ((input["handoff_state"] ?: throw SerializationException("Missing handoff_state")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_state"] ?: throw SerializationException("Missing handoff_state"))),
-                hidden = json.decodeFromJsonElement<Long>((input["hidden"] ?: throw SerializationException("Missing hidden"))),
-                id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
-                inputTokens = if ((input["input_tokens"] ?: throw SerializationException("Missing input_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["input_tokens"] ?: throw SerializationException("Missing input_tokens"))),
-                lastActivityAt = if ((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at"))),
-                lastActivityDescription = if ((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description"))),
-                lastActivityProvenance = if ((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance"))),
-                lastReadAt = if ((input["last_read_at"] ?: throw SerializationException("Missing last_read_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_read_at"] ?: throw SerializationException("Missing last_read_at"))),
-                messageCount = if ((input["message_count"] ?: throw SerializationException("Missing message_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["message_count"] ?: throw SerializationException("Missing message_count"))),
-                messages = json.decodeFromJsonElement<List<SessionMessage>>((input["messages"] ?: throw SerializationException("Missing messages"))),
-                model = if ((input["model"] ?: throw SerializationException("Missing model")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model"] ?: throw SerializationException("Missing model"))),
-                modelConfig = if ((input["model_config"] ?: throw SerializationException("Missing model_config")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model_config"] ?: throw SerializationException("Missing model_config"))),
-                originJson = if ((input["origin_json"] ?: throw SerializationException("Missing origin_json")) is JsonNull) null else json.decodeFromJsonElement<String>((input["origin_json"] ?: throw SerializationException("Missing origin_json"))),
-                outputTokens = if ((input["output_tokens"] ?: throw SerializationException("Missing output_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["output_tokens"] ?: throw SerializationException("Missing output_tokens"))),
-                parentSessionId = if ((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id"))),
-                pinned = json.decodeFromJsonElement<Long>((input["pinned"] ?: throw SerializationException("Missing pinned"))),
-                pricingVersion = if ((input["pricing_version"] ?: throw SerializationException("Missing pricing_version")) is JsonNull) null else json.decodeFromJsonElement<String>((input["pricing_version"] ?: throw SerializationException("Missing pricing_version"))),
-                profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
-                reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
-                rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
-                sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
-                source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
-                startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
-                systemPrompt = if ((input["system_prompt"] ?: throw SerializationException("Missing system_prompt")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt"] ?: throw SerializationException("Missing system_prompt"))),
-                systemPromptHash = if ((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash"))),
-                threadId = if ((input["thread_id"] ?: throw SerializationException("Missing thread_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["thread_id"] ?: throw SerializationException("Missing thread_id"))),
-                title = if ((input["title"] ?: throw SerializationException("Missing title")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title"] ?: throw SerializationException("Missing title"))),
-                titleSource = if ((input["title_source"] ?: throw SerializationException("Missing title_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title_source"] ?: throw SerializationException("Missing title_source"))),
-                toolCallCount = if ((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count"))),
-                toolNames = if ((input["tool_names"] ?: throw SerializationException("Missing tool_names")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_names"] ?: throw SerializationException("Missing tool_names"))),
-                transportProfile = if ((input["transport_profile"] ?: throw SerializationException("Missing transport_profile")) is JsonNull) null else json.decodeFromJsonElement<String>((input["transport_profile"] ?: throw SerializationException("Missing transport_profile"))),
-                userId = if ((input["user_id"] ?: throw SerializationException("Missing user_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["user_id"] ?: throw SerializationException("Missing user_id"))),
-                additionalProperties = input.filterKeys { it !in setOf("actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "messages", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: SessionExportResponse) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("SessionExportResponse requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "messages", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
-            output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
-            output["archived"] = json.encodeToJsonElement(value.archived)
-            output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
-            output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
-            output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
-            output["cache_read_tokens"] = json.encodeToJsonElement(value.cacheReadTokens)
-            output["cache_write_tokens"] = json.encodeToJsonElement(value.cacheWriteTokens)
-            output["chat_id"] = json.encodeToJsonElement(value.chatId)
-            output["chat_type"] = json.encodeToJsonElement(value.chatType)
-            output["compression_failure_cooldown_until"] = json.encodeToJsonElement(value.compressionFailureCooldownUntil)
-            output["compression_failure_error"] = json.encodeToJsonElement(value.compressionFailureError)
-            output["compression_fallback_streak"] = json.encodeToJsonElement(value.compressionFallbackStreak)
-            output["compression_ineffective_count"] = json.encodeToJsonElement(value.compressionIneffectiveCount)
-            output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
-            output["cost_source"] = json.encodeToJsonElement(value.costSource)
-            output["cost_status"] = json.encodeToJsonElement(value.costStatus)
-            output["cwd"] = json.encodeToJsonElement(value.cwd)
-            output["display_name"] = json.encodeToJsonElement(value.displayName)
-            output["end_reason"] = json.encodeToJsonElement(value.endReason)
-            output["ended_at"] = json.encodeToJsonElement(value.endedAt)
-            output["estimated_cost_usd"] = json.encodeToJsonElement(value.estimatedCostUsd)
-            output["expiry_finalized"] = json.encodeToJsonElement(value.expiryFinalized)
-            output["git_branch"] = json.encodeToJsonElement(value.gitBranch)
-            output["git_metadata_generation"] = json.encodeToJsonElement(value.gitMetadataGeneration)
-            output["git_repo_root"] = json.encodeToJsonElement(value.gitRepoRoot)
-            output["handoff_error"] = json.encodeToJsonElement(value.handoffError)
-            output["handoff_platform"] = json.encodeToJsonElement(value.handoffPlatform)
-            output["handoff_state"] = json.encodeToJsonElement(value.handoffState)
-            output["hidden"] = json.encodeToJsonElement(value.hidden)
-            output["id"] = json.encodeToJsonElement(value.id)
-            output["input_tokens"] = json.encodeToJsonElement(value.inputTokens)
-            output["last_activity_at"] = json.encodeToJsonElement(value.lastActivityAt)
-            output["last_activity_description"] = json.encodeToJsonElement(value.lastActivityDescription)
-            output["last_activity_provenance"] = json.encodeToJsonElement(value.lastActivityProvenance)
-            output["last_read_at"] = json.encodeToJsonElement(value.lastReadAt)
-            output["message_count"] = json.encodeToJsonElement(value.messageCount)
-            output["messages"] = json.encodeToJsonElement(value.messages)
-            output["model"] = json.encodeToJsonElement(value.model)
-            output["model_config"] = json.encodeToJsonElement(value.modelConfig)
-            output["origin_json"] = json.encodeToJsonElement(value.originJson)
-            output["output_tokens"] = json.encodeToJsonElement(value.outputTokens)
-            output["parent_session_id"] = json.encodeToJsonElement(value.parentSessionId)
-            output["pinned"] = json.encodeToJsonElement(value.pinned)
-            output["pricing_version"] = json.encodeToJsonElement(value.pricingVersion)
-            output["profile_name"] = json.encodeToJsonElement(value.profileName)
-            output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
-            output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
-            output["session_key"] = json.encodeToJsonElement(value.sessionKey)
-            output["source"] = json.encodeToJsonElement(value.source)
-            output["started_at"] = json.encodeToJsonElement(value.startedAt)
-            output["system_prompt"] = json.encodeToJsonElement(value.systemPrompt)
-            output["system_prompt_hash"] = json.encodeToJsonElement(value.systemPromptHash)
-            output["thread_id"] = json.encodeToJsonElement(value.threadId)
-            output["title"] = json.encodeToJsonElement(value.title)
-            output["title_source"] = json.encodeToJsonElement(value.titleSource)
-            output["tool_call_count"] = json.encodeToJsonElement(value.toolCallCount)
-            output["tool_names"] = json.encodeToJsonElement(value.toolNames)
-            output["transport_profile"] = json.encodeToJsonElement(value.transportProfile)
-            output["user_id"] = json.encodeToJsonElement(value.userId)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_models.py::SessionImport``, streamed and validated by ``import_sessions_endpoint``: sessions as ``GET /api/sessions/{session_id}/export`` returns them. */
-@Serializable(with = SessionImportRequest.Serializer::class)
-public data class SessionImportRequest(
-    public val profile: Patch<String> = Patch.Absent,
-    public val sessions: List<SessionExportResponse>,
-)
-{
-    public object Serializer : KSerializer<SessionImportRequest> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): SessionImportRequest {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("SessionImportRequest requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("SessionImportRequest requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("profile", "sessions")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return SessionImportRequest(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                sessions = json.decodeFromJsonElement<List<SessionExportResponse>>((input["sessions"] ?: throw SerializationException("Missing sessions"))),
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: SessionImportRequest) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("SessionImportRequest requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            output["sessions"] = json.encodeToJsonElement(value.sessions)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``SessionDB.import_sessions`` success result (``ok: false`` is raised as a 400). */
-@Serializable
-public data class SessionImportResponse(
-    @SerialName("detached")
-    public val detached: Long,
-    @SerialName("errors")
-    public val errors: List<Map<String, JsonElement>>,
-    @SerialName("imported")
-    public val imported: Long,
-    @SerialName("imported_ids")
-    public val importedIds: List<String>,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("skipped")
-    public val skipped: Long,
-    @SerialName("skipped_ids")
-    public val skippedIds: List<String>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_session_latest_descendant``. */
-@Serializable
-public data class SessionLatestDescendantResponse(
-    @SerialName("changed")
-    public val changed: Boolean,
-    @SerialName("path")
-    public val path: List<String>,
-    @SerialName("requested_session_id")
-    public val requestedSessionId: String,
-    @SerialName("session_id")
-    public val sessionId: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_sessions``. ``storage`` maps the serving profile to ``"corrupt"`` when its store is latched unreadable, else ``{}``. */
-@Serializable
-public data class SessionListResponse(
-    @SerialName("limit")
-    public val limit: Long,
-    @SerialName("offset")
-    public val offset: Long,
-    @SerialName("sessions")
-    public val sessions: List<RESTSessionListRow>,
-    @SerialName("storage")
-    public val storage: Map<String, SessionListResponseStorageValue>,
-    @SerialName("total")
-    public val total: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = SessionListResponseStorageValue.Serializer::class)
-public sealed interface SessionListResponseStorageValue {
-    public data object Corrupt : SessionListResponseStorageValue
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Corrupt -> "corrupt"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): SessionListResponseStorageValue? = when (raw) {
-            "corrupt" -> Corrupt
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<SessionListResponseStorageValue> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SessionListResponseStorageValue", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): SessionListResponseStorageValue = when (val raw = decoder.decodeString()) {
-            "corrupt" -> Corrupt
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: SessionListResponseStorageValue) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``SessionDB._row_to_message_dict``: a ``messages`` row with ``content`` / ``tool_calls`` / ``display_metadata`` decoded and the display-index columns dropped. ``content`` is text or the decoded multimodal parts; the reasoning sidecars stay JSON text. */
-@Serializable(with = SessionMessage.Serializer::class)
-public data class SessionMessage(
-    public val compressedSummary: Patch<Boolean> = Patch.Absent,
-    public val active: Long,
-    public val apiContent: String?,
-    public val codexMessageItems: String?,
-    public val codexReasoningItems: String?,
-    public val compacted: Long,
-    public val content: JsonElement,
-    public val displayKind: String?,
-    public val displayMetadata: Map<String, JsonElement>?,
-    public val effectDisposition: String?,
-    public val finishReason: String?,
-    public val id: Long,
-    public val observed: Long,
-    public val platformMessageId: String?,
-    public val reasoning: String?,
-    public val reasoningContent: String?,
-    public val reasoningDetails: String?,
-    public val role: String,
-    public val sessionId: String,
-    public val timestamp: Double,
-    public val tokenCount: Long?,
-    public val toolCallId: String?,
-    /** Decoded tool-call list (``[]`` when undecodable), or null. */
-    public val toolCalls: JsonElement,
-    public val toolName: String?,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<SessionMessage> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): SessionMessage {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("SessionMessage requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("SessionMessage requires an object")
-            return SessionMessage(
-                compressedSummary = when (val raw = input["_compressed_summary"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-                active = json.decodeFromJsonElement<Long>((input["active"] ?: throw SerializationException("Missing active"))),
-                apiContent = if ((input["api_content"] ?: throw SerializationException("Missing api_content")) is JsonNull) null else json.decodeFromJsonElement<String>((input["api_content"] ?: throw SerializationException("Missing api_content"))),
-                codexMessageItems = if ((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items")) is JsonNull) null else json.decodeFromJsonElement<String>((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items"))),
-                codexReasoningItems = if ((input["codex_reasoning_items"] ?: throw SerializationException("Missing codex_reasoning_items")) is JsonNull) null else json.decodeFromJsonElement<String>((input["codex_reasoning_items"] ?: throw SerializationException("Missing codex_reasoning_items"))),
-                compacted = json.decodeFromJsonElement<Long>((input["compacted"] ?: throw SerializationException("Missing compacted"))),
-                content = json.decodeFromJsonElement<JsonElement>((input["content"] ?: throw SerializationException("Missing content"))),
-                displayKind = if ((input["display_kind"] ?: throw SerializationException("Missing display_kind")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_kind"] ?: throw SerializationException("Missing display_kind"))),
-                displayMetadata = if ((input["display_metadata"] ?: throw SerializationException("Missing display_metadata")) is JsonNull) null else json.decodeFromJsonElement<Map<String, JsonElement>>((input["display_metadata"] ?: throw SerializationException("Missing display_metadata"))),
-                effectDisposition = if ((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition")) is JsonNull) null else json.decodeFromJsonElement<String>((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition"))),
-                finishReason = if ((input["finish_reason"] ?: throw SerializationException("Missing finish_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["finish_reason"] ?: throw SerializationException("Missing finish_reason"))),
-                id = json.decodeFromJsonElement<Long>((input["id"] ?: throw SerializationException("Missing id"))),
-                observed = json.decodeFromJsonElement<Long>((input["observed"] ?: throw SerializationException("Missing observed"))),
-                platformMessageId = if ((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id"))),
-                reasoning = if ((input["reasoning"] ?: throw SerializationException("Missing reasoning")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning"] ?: throw SerializationException("Missing reasoning"))),
-                reasoningContent = if ((input["reasoning_content"] ?: throw SerializationException("Missing reasoning_content")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning_content"] ?: throw SerializationException("Missing reasoning_content"))),
-                reasoningDetails = if ((input["reasoning_details"] ?: throw SerializationException("Missing reasoning_details")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning_details"] ?: throw SerializationException("Missing reasoning_details"))),
-                role = json.decodeFromJsonElement<String>((input["role"] ?: throw SerializationException("Missing role"))),
-                sessionId = json.decodeFromJsonElement<String>((input["session_id"] ?: throw SerializationException("Missing session_id"))),
-                timestamp = json.decodeFromJsonElement<Double>((input["timestamp"] ?: throw SerializationException("Missing timestamp"))),
-                tokenCount = if ((input["token_count"] ?: throw SerializationException("Missing token_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["token_count"] ?: throw SerializationException("Missing token_count"))),
-                toolCallId = if ((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id"))),
-                toolCalls = json.decodeFromJsonElement<JsonElement>((input["tool_calls"] ?: throw SerializationException("Missing tool_calls"))),
-                toolName = if ((input["tool_name"] ?: throw SerializationException("Missing tool_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_name"] ?: throw SerializationException("Missing tool_name"))),
-                additionalProperties = input.filterKeys { it !in setOf("_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_kind", "display_metadata", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_calls", "tool_name") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: SessionMessage) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("SessionMessage requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_kind", "display_metadata", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_calls", "tool_name")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            when (val patch = value.compressedSummary) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["_compressed_summary"] = JsonNull
-                is Patch.Value -> output["_compressed_summary"] = json.encodeToJsonElement(patch.value)
-            }
-            output["active"] = json.encodeToJsonElement(value.active)
-            output["api_content"] = json.encodeToJsonElement(value.apiContent)
-            output["codex_message_items"] = json.encodeToJsonElement(value.codexMessageItems)
-            output["codex_reasoning_items"] = json.encodeToJsonElement(value.codexReasoningItems)
-            output["compacted"] = json.encodeToJsonElement(value.compacted)
-            output["content"] = json.encodeToJsonElement(value.content)
-            output["display_kind"] = json.encodeToJsonElement(value.displayKind)
-            output["display_metadata"] = json.encodeToJsonElement(value.displayMetadata)
-            output["effect_disposition"] = json.encodeToJsonElement(value.effectDisposition)
-            output["finish_reason"] = json.encodeToJsonElement(value.finishReason)
-            output["id"] = json.encodeToJsonElement(value.id)
-            output["observed"] = json.encodeToJsonElement(value.observed)
-            output["platform_message_id"] = json.encodeToJsonElement(value.platformMessageId)
-            output["reasoning"] = json.encodeToJsonElement(value.reasoning)
-            output["reasoning_content"] = json.encodeToJsonElement(value.reasoningContent)
-            output["reasoning_details"] = json.encodeToJsonElement(value.reasoningDetails)
-            output["role"] = json.encodeToJsonElement(value.role)
-            output["session_id"] = json.encodeToJsonElement(value.sessionId)
-            output["timestamp"] = json.encodeToJsonElement(value.timestamp)
-            output["token_count"] = json.encodeToJsonElement(value.tokenCount)
-            output["tool_call_id"] = json.encodeToJsonElement(value.toolCallId)
-            output["tool_calls"] = json.encodeToJsonElement(value.toolCalls)
-            output["tool_name"] = json.encodeToJsonElement(value.toolName)
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }

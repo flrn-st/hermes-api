@@ -19,27 +19,6 @@ components:
     - kind
     - message
     type: object
-  McpCatalogDiscovery:
-    additionalProperties: false
-    description: '``hermes_cli/mcp_app_detection.py::discover_catalog_apps`` ``discovery`` block (or the
-
-      router''s ``unavailable`` fallback). ``unavailable`` means empty ``detected_apps`` are unknown.'
-    properties:
-      platform:
-        type: string
-      scope:
-        const: backend
-        type: string
-      status:
-        enum:
-        - ok
-        - unavailable
-        type: string
-    required:
-    - scope
-    - status
-    - platform
-    type: object
   McpCatalogEntryRow:
     additionalProperties: false
     description: '``hermes_cli/web_routers/mcp.py::_catalog_entry_json`` over a parsed
@@ -76,13 +55,6 @@ components:
         - type: 'null'
       description:
         type: string
-      detected_apps:
-        anyOf:
-        - items:
-            type: string
-          type: array
-        - type: 'null'
-        description: 'Only with ``detect_apps=true``: matched application labels.'
       enabled:
         type: boolean
       install_ref:
@@ -180,16 +152,12 @@ components:
     type: object
   McpCatalogResponse:
     additionalProperties: false
-    description: '``list_mcp_catalog``; ``discovery`` only with ``detect_apps=true``.'
+    description: '``list_mcp_catalog``.'
     properties:
       diagnostics:
         items:
           $ref: '#/components/schemas/McpCatalogDiagnostic'
         type: array
-      discovery:
-        anyOf:
-        - $ref: '#/components/schemas/McpCatalogDiscovery'
-        - type: 'null'
       entries:
         items:
           $ref: '#/components/schemas/McpCatalogEntryRow'
@@ -531,10 +499,10 @@ components:
 operations:
 - method: DELETE
   path: /api/mcp/oauth/flows/{flow_id}
-  x-source: hermes_cli/web_routers/mcp.py:316
+  x-source: hermes_cli/web_routers/mcp.py:325
   x-handler-hash: d3329ebb72cf3305b26b7d1af6df925d0e50ab042057e769c15ad8da90deba07
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpOAuthCancelResponse
   responses:
     '200':
@@ -545,10 +513,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/mcp/servers/{name}
-  x-source: hermes_cli/web_routers/mcp.py:174
+  x-source: hermes_cli/web_routers/mcp.py:183
   x-handler-hash: 5a0db139b28772ac3a2e117dd6061386f712dc0aca98069345f9d70fe7fcaf7c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -559,10 +527,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/mcp/catalog
-  x-source: hermes_cli/web_routers/mcp.py:430
-  x-handler-hash: 09da9f231963cb22c747ffb3986fbc2f154d5bfa8fd11474c6ff3992d4326ecd
+  x-source: hermes_cli/web_routers/mcp.py:439
+  x-handler-hash: 1cda95d50eea249619e09cd4307d9179a7e5bdf6b0b0087d03b0f91ab9179df8
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpCatalogResponse
   responses:
     '200':
@@ -573,10 +541,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/mcp/oauth/callback/{server_name}
-  x-source: hermes_cli/web_routers/mcp.py:330
+  x-source: hermes_cli/web_routers/mcp.py:339
   x-handler-hash: db246cff2cd857a624d55552bb4501cd1208015a3876d11c96ea4e1f6a2a6e84
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 200 text/html
   responses:
     '200':
@@ -587,10 +555,10 @@ operations:
       description: Authorization received page
 - method: GET
   path: /api/mcp/oauth/flows/{flow_id}
-  x-source: hermes_cli/web_routers/mcp.py:304
+  x-source: hermes_cli/web_routers/mcp.py:313
   x-handler-hash: b8b11bb4599ca4a2a0d8b9f9df9ba567f4c48b3247a39dfd93234e9d288e9dee
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpOAuthFlowStatusResponse
   responses:
     '200':
@@ -604,7 +572,7 @@ operations:
   x-source: hermes_cli/web_routers/mcp.py:94
   x-handler-hash: 14e4212c431c1496e5043c58b781696c34b75e3dc5e01cb02ec3e2e6cb1d6c5a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpServerListResponse
   responses:
     '200':
@@ -615,10 +583,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/mcp/catalog/install
-  x-source: hermes_cli/web_routers/mcp.py:492
+  x-source: hermes_cli/web_routers/mcp.py:471
   x-handler-hash: b5b2f78d81d86a1c77f91d19ed4a958d558736388e4e317b77a57e8614a47f6e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpCatalogInstallResponse
   responses:
     '200':
@@ -630,9 +598,9 @@ operations:
 - method: POST
   path: /api/mcp/servers
   x-source: hermes_cli/web_routers/mcp.py:110
-  x-handler-hash: 0e8b2608f853b452649414442d3a75ad9d0634467be77c416b2cc0461b17dfd4
+  x-handler-hash: 0b76338981c4c498e6a363e8c917a2644ea5662bfdd2f9a3191cc46470578c42
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpServerAddResponse
   responses:
     '200':
@@ -643,10 +611,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/mcp/servers/{name}/auth
-  x-source: hermes_cli/web_routers/mcp.py:245
+  x-source: hermes_cli/web_routers/mcp.py:254
   x-handler-hash: 1f5e4fa311a1e6a76d120c75ba54322dec7f3adb4bf50dd950e0b2c6d03f845d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpOAuthFlowResponse
   responses:
     '200':
@@ -657,10 +625,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/mcp/servers/{name}/test
-  x-source: hermes_cli/web_routers/mcp.py:195
-  x-handler-hash: 45dfcbd25442b570e1cdb220b5fddd9763acc82b9ebfb38691be905d4a9c95ab
+  x-source: hermes_cli/web_routers/mcp.py:204
+  x-handler-hash: cdbeec9036a9b4b1f5a6a76b09b5108c7c619ad51fc2e8ee8be9eddb7b82007f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpServerTestResponse
   responses:
     '200':
@@ -671,10 +639,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/mcp/servers
-  x-source: hermes_cli/web_routers/mcp.py:151
+  x-source: hermes_cli/web_routers/mcp.py:160
   x-handler-hash: 210e0c99f667b266ea827e82d98ec7d38d85dee671c21a13e78491646918c612
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -685,10 +653,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/mcp/servers/{name}/enabled
-  x-source: hermes_cli/web_routers/mcp.py:363
+  x-source: hermes_cli/web_routers/mcp.py:372
   x-handler-hash: 6490de3b97b392f55589b55e0453de8218e233ade81db2c4d7f748e9a61264b1
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: McpServerEnabledResponse
   responses:
     '200':

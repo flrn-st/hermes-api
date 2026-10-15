@@ -9,6 +9,120 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_git_root``: the nearest ancestor holding ``.git``, else null. */
+@Serializable
+public data class FsGitRootResponse(
+    @SerialName("root")
+    public val root: String?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class FsListEntry(
+    @SerialName("isDirectory")
+    public val isDirectory: Boolean,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("path")
+    public val path: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_list``. A read failure is a 200 with ``entries: []`` and ``error`` (an errno name such as ``ENOENT``, else the OS ``strerror`` or ``"read-error"``). */
+@Serializable
+public data class FsListResponse(
+    @SerialName("entries")
+    public val entries: List<FsListEntry>,
+    @SerialName("error")
+    public val error: String? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_read_text``: a UTF-8 (``replace``) preview capped at 512 KiB. */
+@Serializable
+public data class FsReadTextResponse(
+    @SerialName("binary")
+    public val binary: Boolean,
+    @SerialName("byteSize")
+    public val byteSize: Long,
+    @SerialName("language")
+    public val language: String,
+    @SerialName("mimeType")
+    public val mimeType: String,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("text")
+    public val text: String,
+    @SerialName("truncated")
+    public val truncated: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class FsWriteText(
+    @SerialName("content")
+    public val content: String,
+    @SerialName("path")
+    public val path: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_write_text``. */
+@Serializable
+public data class FsWriteTextResponse(
+    @SerialName("byteSize")
+    public val byteSize: Long,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("path")
+    public val path: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``post_gateway_drain``: ``action`` defaults to ``drain``; ``suppress_notification`` only applies to a drain. */
+@Serializable
+public data class GatewayDrainRequest(
+    @SerialName("action")
+    public val action: GatewayDrainRequestAction? = null,
+    @SerialName("suppress_notification")
+    public val suppressNotification: Boolean? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = GatewayDrainRequestAction.Serializer::class)
+public sealed interface GatewayDrainRequestAction {
+    public data object Drain : GatewayDrainRequestAction
+    public data object Cancel : GatewayDrainRequestAction
+    public data class Unknown(public val raw: kotlin.String) : GatewayDrainRequestAction
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Drain -> "drain"
+            Cancel -> "cancel"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): GatewayDrainRequestAction = when (raw) {
+            "drain" -> Drain
+            "cancel" -> Cancel
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<GatewayDrainRequestAction> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainRequestAction", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): GatewayDrainRequestAction = when (val raw = decoder.decodeString()) {
+            "drain" -> Drain
+            "cancel" -> Cancel
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected GatewayDrainRequestAction value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: GatewayDrainRequestAction) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway_drain``: ``cancel`` answers ``was_draining``; ``drain`` echoes the marker it wrote (``gateway/drain_control.py::write_drain_request``) and whether a drain is now active. */
 @Serializable
 public data class GatewayDrainResponse(
@@ -387,146 +501,4 @@ public data class GitShipInfoResponse(
     public val ghReady: Boolean,
     @SerialName("pr")
     public val pr: GitShipInfoPr?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git._classify``. */
-@Serializable
-public data class GitStatusFile(
-    @SerialName("conflicted")
-    public val conflicted: Boolean,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("staged")
-    public val staged: Boolean,
-    @SerialName("unstaged")
-    public val unstaged: Boolean,
-    @SerialName("untracked")
-    public val untracked: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = GitWorktreeAddBody.Serializer::class)
-public data class GitWorktreeAddBody(
-    public val base: Patch<String> = Patch.Absent,
-    public val branch: Patch<String> = Patch.Absent,
-    public val existingBranch: Patch<String> = Patch.Absent,
-    public val name: Patch<String> = Patch.Absent,
-    public val path: String,
-)
-{
-    public object Serializer : KSerializer<GitWorktreeAddBody> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): GitWorktreeAddBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("GitWorktreeAddBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("GitWorktreeAddBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("base", "branch", "existingBranch", "name", "path")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return GitWorktreeAddBody(
-                base = when (val raw = input["base"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                branch = when (val raw = input["branch"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                existingBranch = when (val raw = input["existingBranch"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                path = json.decodeFromJsonElement<String>((input["path"] ?: throw SerializationException("Missing path"))),
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: GitWorktreeAddBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("GitWorktreeAddBody requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.base) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["base"] = JsonNull
-                is Patch.Value -> output["base"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.branch) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["branch"] = JsonNull
-                is Patch.Value -> output["branch"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.existingBranch) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["existingBranch"] = JsonNull
-                is Patch.Value -> output["existingBranch"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.name) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["name"] = JsonNull
-                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
-            }
-            output["path"] = json.encodeToJsonElement(value.path)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.worktree_add`` / ``web_git._worktree_for_existing``. */
-@Serializable
-public data class GitWorktreeAddResponse(
-    @SerialName("branch")
-    public val branch: String,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("repoRoot")
-    public val repoRoot: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class GitWorktreeRemoveBody(
-    @SerialName("force")
-    public val force: Boolean? = null,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("worktreePath")
-    public val worktreePath: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.worktree_remove``. */
-@Serializable
-public data class GitWorktreeRemoveResponse(
-    @SerialName("removed")
-    public val removed: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.worktree_list`` row; the main tree comes first. */
-@Serializable
-public data class GitWorktreeRow(
-    @SerialName("branch")
-    public val branch: String?,
-    @SerialName("detached")
-    public val detached: Boolean,
-    @SerialName("isMain")
-    public val isMain: Boolean,
-    @SerialName("locked")
-    public val locked: Boolean,
-    @SerialName("path")
-    public val path: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``git_worktrees_route``. */
-@Serializable
-public data class GitWorktreesResponse(
-    @SerialName("worktrees")
-    public val worktrees: List<GitWorktreeRow>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_health_idle`` — ``{"ok": true}`` plus ``hermes_cli/web_server_idle_proof.py::idle_proof``. ``idle: null`` means a ledger was unreadable (treat as busy). */
-@Serializable
-public data class HealthIdleResponse(
-    @SerialName("detail")
-    public val detail: String? = null,
-    @SerialName("idle")
-    public val idle: Boolean?,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("reason")
-    public val reason: HealthIdleResponseReason?,
 )

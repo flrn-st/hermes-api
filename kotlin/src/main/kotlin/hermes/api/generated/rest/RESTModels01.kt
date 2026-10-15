@@ -264,7 +264,18 @@ public data class AutomationBlueprintInstantiate(
     public val values: Map<String, JsonElement>? = null,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_auxiliary_models`` — one row per ``_AUX_TASK_SLOTS`` entry. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. The route an inheriting plugin task resolves to right now (``_get_auxiliary_task_config``). */
+@Serializable
+public data class AuxiliaryEffectiveRoute(
+    @SerialName("base_url")
+    public val baseUrl: String,
+    @SerialName("model")
+    public val model: String,
+    @SerialName("provider")
+    public val provider: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_auxiliary_models`` — one row per ``_AUX_TASK_SLOTS`` entry, then one per plugin-registered auxiliary task of the profile. */
 @Serializable
 public data class AuxiliaryModelsResponse(
     @SerialName("main")
@@ -273,15 +284,25 @@ public data class AuxiliaryModelsResponse(
     public val tasks: List<AuxiliaryTaskAssignment>,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. One slot's own stored assignment. Plugin-registered tasks follow the built-in slots and add ``label``/``hint``/``plugin`` and ``inherit_from`` (base slot key or null); an inheriting row also carries ``effective``. */
 @Serializable
 public data class AuxiliaryTaskAssignment(
     @SerialName("base_url")
     public val baseUrl: String,
+    @SerialName("effective")
+    public val effective: AuxiliaryEffectiveRoute? = null,
+    @SerialName("hint")
+    public val hint: String? = null,
+    @SerialName("inherit_from")
+    public val inheritFrom: String? = null,
+    @SerialName("label")
+    public val label: String? = null,
     @SerialName("local_endpoint")
     public val localEndpoint: Boolean,
     @SerialName("model")
     public val model: String,
+    @SerialName("plugin")
+    public val plugin: String? = null,
     @SerialName("provider")
     public val provider: String,
     @SerialName("reasoning_effort")
@@ -847,54 +868,3 @@ public data class ConfigSchemaField(
     @SerialName("type")
     public val type: ConfigSchemaFieldType,
 )
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ConfigSchemaFieldType.Serializer::class)
-public sealed interface ConfigSchemaFieldType {
-    public data object Boolean : ConfigSchemaFieldType
-    public data object Number : ConfigSchemaFieldType
-    public data object List : ConfigSchemaFieldType
-    public data object String : ConfigSchemaFieldType
-    public data object Select : ConfigSchemaFieldType
-    public data class Unknown(public val raw: kotlin.String) : ConfigSchemaFieldType
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Boolean -> "boolean"
-            Number -> "number"
-            List -> "list"
-            String -> "string"
-            Select -> "select"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ConfigSchemaFieldType = when (raw) {
-            "boolean" -> Boolean
-            "number" -> Number
-            "list" -> List
-            "string" -> String
-            "select" -> Select
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ConfigSchemaFieldType> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConfigSchemaFieldType", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConfigSchemaFieldType = when (val raw = decoder.decodeString()) {
-            "boolean" -> Boolean
-            "number" -> Number
-            "list" -> List
-            "string" -> String
-            "select" -> Select
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ConfigSchemaFieldType value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConfigSchemaFieldType) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}

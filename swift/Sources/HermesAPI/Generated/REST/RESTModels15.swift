@@ -2,18 +2,1027 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``_profiles_failed``: a profile whose scan failed while its siblings listed (Retry-able).
+public struct ProfileFailedLoad: Codable, Sendable, Hashable {
+    public var error: String
+    public var failed: Bool
+    public var retry: Bool
+
+    public init(error: String, failed: Bool, retry: Bool) {
+        self.error = error
+        self.failed = failed
+        self.retry = retry
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case error = "error"
+        case failed = "failed"
+        case retry = "retry"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["error", "failed", "retry"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        error = try container.decode(String.self, forKey: .error)
+        failed = try container.decode(Bool.self, forKey: .failed)
+        retry = try container.decode(Bool.self, forKey: .retry)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(error, forKey: .error)
+        try container.encode(failed, forKey: .failed)
+        try container.encode(retry, forKey: .retry)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// A spawned ``hermes skills install``; ``pid`` is null when the spawn failed.
+public struct ProfileHubInstall: Codable, Sendable, Hashable {
+    public var identifier: String
+    public var pid: Int?
+
+    public init(identifier: String, pid: Int?) {
+        self.identifier = identifier
+        self.pid = pid
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case identifier = "identifier"
+        case pid = "pid"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["identifier", "pid"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        identifier = try container.decode(String.self, forKey: .identifier)
+        pid = try container.decode(Optional<Int>.self, forKey: .pid)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(identifier, forKey: .identifier)
+        try container.encode(pid, forKey: .pid)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ProfileImport: Codable, Sendable, Hashable {
+    public var archive: String
+    public var name: Patch<String>
+
+    public init(archive: String, name: Patch<String> = .absent) {
+        self.archive = archive
+        self.name = name
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case archive = "archive"
+        case name = "name"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["archive", "name"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        archive = try container.decode(String.self, forKey: .archive)
+        if !container.contains(.name) {
+            name = .absent
+        } else if try container.decodeNil(forKey: .name) {
+            name = .null
+        } else {
+            name = .value(try container.decode(String.self, forKey: .name))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(archive, forKey: .archive)
+        switch name {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .name)
+        case .value(let value): try container.encode(value, forKey: .name)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``import_profile_endpoint``; ``desktop`` is the bundled ``desktop.json`` document, null when absent or unreadable.
+public struct ProfileImportResponse: Codable, Sendable, Hashable {
+    public var desktop: JSONValue
+    public var name: String
+    public var ok: Bool
+    public var path: String
+
+    public init(desktop: JSONValue, name: String, ok: Bool, path: String) {
+        self.desktop = desktop
+        self.name = name
+        self.ok = ok
+        self.path = path
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case desktop = "desktop"
+        case name = "name"
+        case ok = "ok"
+        case path = "path"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["desktop", "name", "ok", "path"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        desktop = try container.decode(JSONValue.self, forKey: .desktop)
+        name = try container.decode(String.self, forKey: .name)
+        ok = try container.decode(Bool.self, forKey: .ok)
+        path = try container.decode(String.self, forKey: .path)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(desktop, forKey: .desktop)
+        try container.encode(name, forKey: .name)
+        try container.encode(ok, forKey: .ok)
+        try container.encode(path, forKey: .path)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``list_profiles_endpoint`` (``_read_profiles``).
+public struct ProfileListResponse: Codable, Sendable, Hashable {
+    public var profiles: [ProfileSummary]
+
+    public init(profiles: [ProfileSummary]) {
+        self.profiles = profiles
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profiles = "profiles"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["profiles"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        profiles = try container.decode([ProfileSummary].self, forKey: .profiles)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(profiles, forKey: .profiles)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``update_profile_model_endpoint``.
+public struct ProfileModelResponse: Codable, Sendable, Hashable {
+    public var model: String
+    public var ok: Bool
+    public var provider: String
+
+    public init(model: String, ok: Bool, provider: String) {
+        self.model = model
+        self.ok = ok
+        self.provider = provider
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case model = "model"
+        case ok = "ok"
+        case provider = "provider"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["model", "ok", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        model = try container.decode(String.self, forKey: .model)
+        ok = try container.decode(Bool.self, forKey: .ok)
+        provider = try container.decode(String.self, forKey: .provider)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(model, forKey: .model)
+        try container.encode(ok, forKey: .ok)
+        try container.encode(provider, forKey: .provider)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ProfileModelUpdate: Codable, Sendable, Hashable {
+    public var model: String
+    public var provider: String
+
+    public init(model: String, provider: String) {
+        self.model = model
+        self.provider = provider
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case model = "model"
+        case provider = "provider"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["model", "provider"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        model = try container.decode(String.self, forKey: .model)
+        provider = try container.decode(String.self, forKey: .provider)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(model, forKey: .model)
+        try container.encode(provider, forKey: .provider)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``open_profile_terminal_endpoint``.
+public struct ProfileOpenTerminalResponse: Codable, Sendable, Hashable {
+    public var command: String
+    public var ok: Bool
+
+    public init(command: String, ok: Bool) {
+        self.command = command
+        self.ok = ok
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case command = "command"
+        case ok = "ok"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["command", "ok"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        command = try container.decode(String.self, forKey: .command)
+        ok = try container.decode(Bool.self, forKey: .ok)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(command, forKey: .command)
+        try container.encode(ok, forKey: .ok)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// One lane of ``tui_gateway/project_tree.py::_build_repos``; ``sessions`` stays empty (the all-profiles tree is built unhydrated).
+public struct ProfileProjectTreeLane: Codable, Sendable, Hashable {
+    public var id: String
+    /// False for a path-only lane of a non-git folder (no branch switching); absent on the Home lane.
+    public var isGit: Bool?
+    public var isKanban: Bool
+    public var isMain: Bool
+    public var label: String
+    public var path: String?
+    public var sessions: [ProfileProjectTreeSession]
+
+    public init(id: String, isGit: Bool? = nil, isKanban: Bool, isMain: Bool, label: String, path: String?, sessions: [ProfileProjectTreeSession]) {
+        self.id = id
+        self.isGit = isGit
+        self.isKanban = isKanban
+        self.isMain = isMain
+        self.label = label
+        self.path = path
+        self.sessions = sessions
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case isGit = "isGit"
+        case isKanban = "isKanban"
+        case isMain = "isMain"
+        case label = "label"
+        case path = "path"
+        case sessions = "sessions"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["id", "isGit", "isKanban", "isMain", "label", "path", "sessions"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        isGit = try container.decodeIfPresent(Bool.self, forKey: .isGit)
+        isKanban = try container.decode(Bool.self, forKey: .isKanban)
+        isMain = try container.decode(Bool.self, forKey: .isMain)
+        label = try container.decode(String.self, forKey: .label)
+        path = try container.decode(Optional<String>.self, forKey: .path)
+        sessions = try container.decode([ProfileProjectTreeSession].self, forKey: .sessions)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(isGit, forKey: .isGit)
+        try container.encode(isKanban, forKey: .isKanban)
+        try container.encode(isMain, forKey: .isMain)
+        try container.encode(label, forKey: .label)
+        try container.encode(path, forKey: .path)
+        try container.encode(sessions, forKey: .sessions)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``tui_gateway/project_tree.py::_project_node`` after ``_merge_profile_tree`` folded the same folder across profiles (counts and totals summed).
+public struct ProfileProjectTreeNode: Codable, Sendable, Hashable {
+    public var color: String?
+    public var icon: String?
+    public var id: String
+    public var isAuto: Bool
+    public var isNoProject: Bool
+    public var label: String
+    public var lastActive: Double
+    /// The folder identity the merge keyed on (``project_tree._path_key``); a client merging per-profile reads (``?profile=``) folds on it.
+    public var mergeKey: String
+    public var path: String?
+    public var previewSessions: [ProfileProjectTreeSession]
+    public var repos: [ProfileProjectTreeRepo]
+    public var sessionCount: Int
+    public var sessionIds: [String]
+    public var totalCostUsd: Double
+    public var totalTokens: Int
+
+    public init(color: String?, icon: String?, id: String, isAuto: Bool, isNoProject: Bool, label: String, lastActive: Double, mergeKey: String, path: String?, previewSessions: [ProfileProjectTreeSession], repos: [ProfileProjectTreeRepo], sessionCount: Int, sessionIds: [String], totalCostUsd: Double, totalTokens: Int) {
+        self.color = color
+        self.icon = icon
+        self.id = id
+        self.isAuto = isAuto
+        self.isNoProject = isNoProject
+        self.label = label
+        self.lastActive = lastActive
+        self.mergeKey = mergeKey
+        self.path = path
+        self.previewSessions = previewSessions
+        self.repos = repos
+        self.sessionCount = sessionCount
+        self.sessionIds = sessionIds
+        self.totalCostUsd = totalCostUsd
+        self.totalTokens = totalTokens
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case color = "color"
+        case icon = "icon"
+        case id = "id"
+        case isAuto = "isAuto"
+        case isNoProject = "isNoProject"
+        case label = "label"
+        case lastActive = "lastActive"
+        case mergeKey = "mergeKey"
+        case path = "path"
+        case previewSessions = "previewSessions"
+        case repos = "repos"
+        case sessionCount = "sessionCount"
+        case sessionIds = "sessionIds"
+        case totalCostUsd = "totalCostUsd"
+        case totalTokens = "totalTokens"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["color", "icon", "id", "isAuto", "isNoProject", "label", "lastActive", "mergeKey", "path", "previewSessions", "repos", "sessionCount", "sessionIds", "totalCostUsd", "totalTokens"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        color = try container.decode(Optional<String>.self, forKey: .color)
+        icon = try container.decode(Optional<String>.self, forKey: .icon)
+        id = try container.decode(String.self, forKey: .id)
+        isAuto = try container.decode(Bool.self, forKey: .isAuto)
+        isNoProject = try container.decode(Bool.self, forKey: .isNoProject)
+        label = try container.decode(String.self, forKey: .label)
+        lastActive = try container.decode(Double.self, forKey: .lastActive)
+        mergeKey = try container.decode(String.self, forKey: .mergeKey)
+        path = try container.decode(Optional<String>.self, forKey: .path)
+        previewSessions = try container.decode([ProfileProjectTreeSession].self, forKey: .previewSessions)
+        repos = try container.decode([ProfileProjectTreeRepo].self, forKey: .repos)
+        sessionCount = try container.decode(Int.self, forKey: .sessionCount)
+        sessionIds = try container.decode([String].self, forKey: .sessionIds)
+        totalCostUsd = try container.decode(Double.self, forKey: .totalCostUsd)
+        totalTokens = try container.decode(Int.self, forKey: .totalTokens)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(color, forKey: .color)
+        try container.encode(icon, forKey: .icon)
+        try container.encode(id, forKey: .id)
+        try container.encode(isAuto, forKey: .isAuto)
+        try container.encode(isNoProject, forKey: .isNoProject)
+        try container.encode(label, forKey: .label)
+        try container.encode(lastActive, forKey: .lastActive)
+        try container.encode(mergeKey, forKey: .mergeKey)
+        try container.encode(path, forKey: .path)
+        try container.encode(previewSessions, forKey: .previewSessions)
+        try container.encode(repos, forKey: .repos)
+        try container.encode(sessionCount, forKey: .sessionCount)
+        try container.encode(sessionIds, forKey: .sessionIds)
+        try container.encode(totalCostUsd, forKey: .totalCostUsd)
+        try container.encode(totalTokens, forKey: .totalTokens)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``tui_gateway/project_tree.py::_repo_node``.
+public struct ProfileProjectTreeRepo: Codable, Sendable, Hashable {
+    public var groups: [ProfileProjectTreeLane]
+    public var id: String
+    public var label: String
+    public var path: String?
+    public var sessionCount: Int
+
+    public init(groups: [ProfileProjectTreeLane], id: String, label: String, path: String?, sessionCount: Int) {
+        self.groups = groups
+        self.id = id
+        self.label = label
+        self.path = path
+        self.sessionCount = sessionCount
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case groups = "groups"
+        case id = "id"
+        case label = "label"
+        case path = "path"
+        case sessionCount = "sessionCount"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["groups", "id", "label", "path", "sessionCount"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        groups = try container.decode([ProfileProjectTreeLane].self, forKey: .groups)
+        id = try container.decode(String.self, forKey: .id)
+        label = try container.decode(String.self, forKey: .label)
+        path = try container.decode(Optional<String>.self, forKey: .path)
+        sessionCount = try container.decode(Int.self, forKey: .sessionCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(groups, forKey: .groups)
+        try container.encode(id, forKey: .id)
+        try container.encode(label, forKey: .label)
+        try container.encode(path, forKey: .path)
+        try container.encode(sessionCount, forKey: .sessionCount)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``tui_gateway/methods_projects.py::_project_tree_row`` stamped by ``_merge_profile_tree`` (the REST twin of ``ProjectTreeSession`` in ``tui_gateway/contracts/projects_pets.py``).
+public struct ProfileProjectTreeSession: Codable, Sendable, Hashable {
+    /// Set on a /branch fork.
+    public var branchedFrom: String?
+    public var lineageIds: [String]?
+    public var lineageRootId: String?
+    /// Set on a /new sibling (not a fork).
+    public var resetFrom: String?
+    public var actualCostUsd: Double?
+    public var archived: Bool
+    public var cwd: String?
+    public var endedAt: Double?
+    public var estimatedCostUsd: Double?
+    public var gitBranch: String?
+    public var gitRepoRoot: String?
+    public var id: String
+    public var inputTokens: Int
+    public var isActive: Bool
+    public var isDefaultProfile: Bool
+    public var lastActive: Double
+    public var messageCount: Int
+    public var model: String?
+    public var outputTokens: Int
+    public var parentSessionId: String?
+    public var preview: String
+    public var profile: String
+    public var source: String
+    public var startedAt: Double
+    public var title: String?
+    public var toolCallCount: Int
+
+    public init(branchedFrom: String?, lineageIds: [String]?, lineageRootId: String?, resetFrom: String?, actualCostUsd: Double?, archived: Bool, cwd: String?, endedAt: Double?, estimatedCostUsd: Double?, gitBranch: String?, gitRepoRoot: String?, id: String, inputTokens: Int, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, messageCount: Int, model: String?, outputTokens: Int, parentSessionId: String?, preview: String, profile: String, source: String, startedAt: Double, title: String?, toolCallCount: Int) {
+        self.branchedFrom = branchedFrom
+        self.lineageIds = lineageIds
+        self.lineageRootId = lineageRootId
+        self.resetFrom = resetFrom
+        self.actualCostUsd = actualCostUsd
+        self.archived = archived
+        self.cwd = cwd
+        self.endedAt = endedAt
+        self.estimatedCostUsd = estimatedCostUsd
+        self.gitBranch = gitBranch
+        self.gitRepoRoot = gitRepoRoot
+        self.id = id
+        self.inputTokens = inputTokens
+        self.isActive = isActive
+        self.isDefaultProfile = isDefaultProfile
+        self.lastActive = lastActive
+        self.messageCount = messageCount
+        self.model = model
+        self.outputTokens = outputTokens
+        self.parentSessionId = parentSessionId
+        self.preview = preview
+        self.profile = profile
+        self.source = source
+        self.startedAt = startedAt
+        self.title = title
+        self.toolCallCount = toolCallCount
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case branchedFrom = "_branched_from"
+        case lineageIds = "_lineage_ids"
+        case lineageRootId = "_lineage_root_id"
+        case resetFrom = "_reset_from"
+        case actualCostUsd = "actual_cost_usd"
+        case archived = "archived"
+        case cwd = "cwd"
+        case endedAt = "ended_at"
+        case estimatedCostUsd = "estimated_cost_usd"
+        case gitBranch = "git_branch"
+        case gitRepoRoot = "git_repo_root"
+        case id = "id"
+        case inputTokens = "input_tokens"
+        case isActive = "is_active"
+        case isDefaultProfile = "is_default_profile"
+        case lastActive = "last_active"
+        case messageCount = "message_count"
+        case model = "model"
+        case outputTokens = "output_tokens"
+        case parentSessionId = "parent_session_id"
+        case preview = "preview"
+        case profile = "profile"
+        case source = "source"
+        case startedAt = "started_at"
+        case title = "title"
+        case toolCallCount = "tool_call_count"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["_branched_from", "_lineage_ids", "_lineage_root_id", "_reset_from", "actual_cost_usd", "archived", "cwd", "ended_at", "estimated_cost_usd", "git_branch", "git_repo_root", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "message_count", "model", "output_tokens", "parent_session_id", "preview", "profile", "source", "started_at", "title", "tool_call_count"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        branchedFrom = try container.decode(Optional<String>.self, forKey: .branchedFrom)
+        lineageIds = try container.decode(Optional<[String]>.self, forKey: .lineageIds)
+        lineageRootId = try container.decode(Optional<String>.self, forKey: .lineageRootId)
+        resetFrom = try container.decode(Optional<String>.self, forKey: .resetFrom)
+        actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
+        archived = try container.decode(Bool.self, forKey: .archived)
+        cwd = try container.decode(Optional<String>.self, forKey: .cwd)
+        endedAt = try container.decode(Optional<Double>.self, forKey: .endedAt)
+        estimatedCostUsd = try container.decode(Optional<Double>.self, forKey: .estimatedCostUsd)
+        gitBranch = try container.decode(Optional<String>.self, forKey: .gitBranch)
+        gitRepoRoot = try container.decode(Optional<String>.self, forKey: .gitRepoRoot)
+        id = try container.decode(String.self, forKey: .id)
+        inputTokens = try container.decode(Int.self, forKey: .inputTokens)
+        isActive = try container.decode(Bool.self, forKey: .isActive)
+        isDefaultProfile = try container.decode(Bool.self, forKey: .isDefaultProfile)
+        lastActive = try container.decode(Double.self, forKey: .lastActive)
+        messageCount = try container.decode(Int.self, forKey: .messageCount)
+        model = try container.decode(Optional<String>.self, forKey: .model)
+        outputTokens = try container.decode(Int.self, forKey: .outputTokens)
+        parentSessionId = try container.decode(Optional<String>.self, forKey: .parentSessionId)
+        preview = try container.decode(String.self, forKey: .preview)
+        profile = try container.decode(String.self, forKey: .profile)
+        source = try container.decode(String.self, forKey: .source)
+        startedAt = try container.decode(Double.self, forKey: .startedAt)
+        title = try container.decode(Optional<String>.self, forKey: .title)
+        toolCallCount = try container.decode(Int.self, forKey: .toolCallCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(branchedFrom, forKey: .branchedFrom)
+        try container.encode(lineageIds, forKey: .lineageIds)
+        try container.encode(lineageRootId, forKey: .lineageRootId)
+        try container.encode(resetFrom, forKey: .resetFrom)
+        try container.encode(actualCostUsd, forKey: .actualCostUsd)
+        try container.encode(archived, forKey: .archived)
+        try container.encode(cwd, forKey: .cwd)
+        try container.encode(endedAt, forKey: .endedAt)
+        try container.encode(estimatedCostUsd, forKey: .estimatedCostUsd)
+        try container.encode(gitBranch, forKey: .gitBranch)
+        try container.encode(gitRepoRoot, forKey: .gitRepoRoot)
+        try container.encode(id, forKey: .id)
+        try container.encode(inputTokens, forKey: .inputTokens)
+        try container.encode(isActive, forKey: .isActive)
+        try container.encode(isDefaultProfile, forKey: .isDefaultProfile)
+        try container.encode(lastActive, forKey: .lastActive)
+        try container.encode(messageCount, forKey: .messageCount)
+        try container.encode(model, forKey: .model)
+        try container.encode(outputTokens, forKey: .outputTokens)
+        try container.encode(parentSessionId, forKey: .parentSessionId)
+        try container.encode(preview, forKey: .preview)
+        try container.encode(profile, forKey: .profile)
+        try container.encode(source, forKey: .source)
+        try container.encode(startedAt, forKey: .startedAt)
+        try container.encode(title, forKey: .title)
+        try container.encode(toolCallCount, forKey: .toolCallCount)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``get_profiles_projects_tree`` — the ``projects.tree`` JSON-RPC result (``ProjectsTreeResult``) across every profile (or only ``?profile=``), plus per-profile read ``errors``.
+/// Omits `active_id`, which Hermes always sends as null.
+public struct ProfileProjectsTreeResponse: Codable, Sendable, Hashable {
+    public var errors: [ProfileReadError]
+    public var projects: [ProfileProjectTreeNode]
+    public var scopedSessionIds: [String]
+
+    public init(errors: [ProfileReadError], projects: [ProfileProjectTreeNode], scopedSessionIds: [String]) {
+        self.errors = errors
+        self.projects = projects
+        self.scopedSessionIds = scopedSessionIds
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case errors = "errors"
+        case projects = "projects"
+        case scopedSessionIds = "scoped_session_ids"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["errors", "projects", "scoped_session_ids", "active_id"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+            guard keys.contains(DynamicCodingKey("active_id")), try keys.decodeNil(forKey: DynamicCodingKey("active_id")) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Field active_id must be present and null"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        errors = try container.decode([ProfileReadError].self, forKey: .errors)
+        projects = try container.decode([ProfileProjectTreeNode].self, forKey: .projects)
+        scopedSessionIds = try container.decode([String].self, forKey: .scopedSessionIds)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(errors, forKey: .errors)
+        try container.encode(projects, forKey: .projects)
+        try container.encode(scopedSessionIds, forKey: .scopedSessionIds)
+        var nulls = encoder.container(keyedBy: DynamicCodingKey.self)
+        try nulls.encodeNil(forKey: DynamicCodingKey("active_id"))
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// One profile whose ``state.db`` read failed (``_read_profile_db``).
+public struct ProfileReadError: Codable, Sendable, Hashable {
+    public var error: String
+    public var profile: String
+
+    public init(error: String, profile: String) {
+        self.error = error
+        self.profile = profile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case error = "error"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["error", "profile"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        error = try container.decode(String.self, forKey: .error)
+        profile = try container.decode(String.self, forKey: .profile)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(error, forKey: .error)
+        try container.encode(profile, forKey: .profile)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ProfileRename: Codable, Sendable, Hashable {
+    public var newName: String
+
+    public init(newName: String) {
+        self.newName = newName
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case newName = "new_name"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["new_name"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        newName = try container.decode(String.self, forKey: .newName)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(newName, forKey: .newName)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``rename_profile_endpoint``; renaming ``default`` only sets ``display_name`` and keeps ``name: "default"``.
+public struct ProfileRenameResponse: Codable, Sendable, Hashable {
+    public var displayName: String?
+    public var name: String
+    public var ok: Bool
+    public var path: String
+
+    public init(displayName: String? = nil, name: String, ok: Bool, path: String) {
+        self.displayName = displayName
+        self.name = name
+        self.ok = ok
+        self.path = path
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case displayName = "display_name"
+        case name = "name"
+        case ok = "ok"
+        case path = "path"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["display_name", "name", "ok", "path"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
+        name = try container.decode(String.self, forKey: .name)
+        ok = try container.decode(Bool.self, forKey: .ok)
+        path = try container.decode(String.self, forKey: .path)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(displayName, forKey: .displayName)
+        try container.encode(name, forKey: .name)
+        try container.encode(ok, forKey: .ok)
+        try container.encode(path, forKey: .path)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ProfileSessionPullRequest: Codable, Sendable, Hashable {
+    public var number: Int
+    public var url: String
+
+    public init(number: Int, url: String) {
+        self.number = number
+        self.url = url
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case number = "number"
+        case url = "url"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["number", "url"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        number = try container.decode(Int.self, forKey: .number)
+        url = try container.decode(String.self, forKey: .url)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(number, forKey: .number)
+        try container.encode(url, forKey: .url)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``post_profiles_sessions_pull_requests`` — session id -> the PR its transcript opened.
+public struct ProfileSessionPullRequestsResponse: Codable, Sendable, Hashable {
+    public var pullRequests: [String: ProfileSessionPullRequest]
+    public var scanned: [String]
+
+    public init(pullRequests: [String: ProfileSessionPullRequest], scanned: [String]) {
+        self.pullRequests = pullRequests
+        self.scanned = scanned
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case pullRequests = "pull_requests"
+        case scanned = "scanned"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["pull_requests", "scanned"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        pullRequests = try container.decode([String: ProfileSessionPullRequest].self, forKey: .pullRequests)
+        scanned = try container.decode([String].self, forKey: .scanned)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(pullRequests, forKey: .pullRequests)
+        try container.encode(scanned, forKey: .scanned)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``get_profiles_sessions`` — rows from every profile's store, tagged with their owner.
+public struct ProfileSessionsResponse: Codable, Sendable, Hashable {
+    public var errors: [ProfileReadError]
+    public var limit: Int
+    public var offset: Int
+    public var profileTotals: [String: Int]
+    public var sessions: [RESTSessionListRow]
+    public var storage: [String: ProfileSessionsResponseStorageValue]
+    public var total: Int
+
+    public init(errors: [ProfileReadError], limit: Int, offset: Int, profileTotals: [String: Int], sessions: [RESTSessionListRow], storage: [String: ProfileSessionsResponseStorageValue], total: Int) {
+        self.errors = errors
+        self.limit = limit
+        self.offset = offset
+        self.profileTotals = profileTotals
+        self.sessions = sessions
+        self.storage = storage
+        self.total = total
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case errors = "errors"
+        case limit = "limit"
+        case offset = "offset"
+        case profileTotals = "profile_totals"
+        case sessions = "sessions"
+        case storage = "storage"
+        case total = "total"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["errors", "limit", "offset", "profile_totals", "sessions", "storage", "total"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        errors = try container.decode([ProfileReadError].self, forKey: .errors)
+        limit = try container.decode(Int.self, forKey: .limit)
+        offset = try container.decode(Int.self, forKey: .offset)
+        profileTotals = try container.decode([String: Int].self, forKey: .profileTotals)
+        sessions = try container.decode([RESTSessionListRow].self, forKey: .sessions)
+        storage = try container.decode([String: ProfileSessionsResponseStorageValue].self, forKey: .storage)
+        total = try container.decode(Int.self, forKey: .total)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(errors, forKey: .errors)
+        try container.encode(limit, forKey: .limit)
+        try container.encode(offset, forKey: .offset)
+        try container.encode(profileTotals, forKey: .profileTotals)
+        try container.encode(sessions, forKey: .sessions)
+        try container.encode(storage, forKey: .storage)
+        try container.encode(total, forKey: .total)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum ProfileSessionsResponseStorageValue: Codable, Sendable, Hashable, RawRepresentable {
+    case corrupt
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "corrupt": self = .corrupt
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .corrupt: "corrupt"
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "corrupt": self = .corrupt
+        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 /// ``get_profiles_sessions_sidebar`` — the recents / cron / messaging slices in one scan.
 public struct ProfileSessionsSidebarResponse: Codable, Sendable, Hashable {
     public var cron: ProfileSidebarSlice
     public var errors: [ProfileReadError]
     public var messaging: ProfileSidebarMessaging
+    public var profilesFailed: [String: ProfileFailedLoad]?
     public var recents: ProfileSidebarRecents
     public var storage: [String: ProfileSessionsSidebarResponseStorageValue]
 
-    public init(cron: ProfileSidebarSlice, errors: [ProfileReadError], messaging: ProfileSidebarMessaging, recents: ProfileSidebarRecents, storage: [String: ProfileSessionsSidebarResponseStorageValue]) {
+    public init(cron: ProfileSidebarSlice, errors: [ProfileReadError], messaging: ProfileSidebarMessaging, profilesFailed: [String: ProfileFailedLoad]? = nil, recents: ProfileSidebarRecents, storage: [String: ProfileSessionsSidebarResponseStorageValue]) {
         self.cron = cron
         self.errors = errors
         self.messaging = messaging
+        self.profilesFailed = profilesFailed
         self.recents = recents
         self.storage = storage
     }
@@ -22,6 +1031,7 @@ public struct ProfileSessionsSidebarResponse: Codable, Sendable, Hashable {
         case cron = "cron"
         case errors = "errors"
         case messaging = "messaging"
+        case profilesFailed = "profiles_failed"
         case recents = "recents"
         case storage = "storage"
     }
@@ -29,7 +1039,7 @@ public struct ProfileSessionsSidebarResponse: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["cron", "errors", "messaging", "recents", "storage"]
+            let known: Set<String> = ["cron", "errors", "messaging", "profiles_failed", "recents", "storage"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
@@ -38,6 +1048,7 @@ public struct ProfileSessionsSidebarResponse: Codable, Sendable, Hashable {
         cron = try container.decode(ProfileSidebarSlice.self, forKey: .cron)
         errors = try container.decode([ProfileReadError].self, forKey: .errors)
         messaging = try container.decode(ProfileSidebarMessaging.self, forKey: .messaging)
+        profilesFailed = try container.decodeIfPresent([String: ProfileFailedLoad].self, forKey: .profilesFailed)
         recents = try container.decode(ProfileSidebarRecents.self, forKey: .recents)
         storage = try container.decode([String: ProfileSessionsSidebarResponseStorageValue].self, forKey: .storage)
     }
@@ -47,6 +1058,7 @@ public struct ProfileSessionsSidebarResponse: Codable, Sendable, Hashable {
         try container.encode(cron, forKey: .cron)
         try container.encode(errors, forKey: .errors)
         try container.encode(messaging, forKey: .messaging)
+        try container.encodeIfPresent(profilesFailed, forKey: .profilesFailed)
         try container.encode(recents, forKey: .recents)
         try container.encode(storage, forKey: .storage)
     }
@@ -153,15 +1165,27 @@ public struct ProfileSetupCommandResponse: Codable, Sendable, Hashable {
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
 public struct ProfileSidebarMessaging: Codable, Sendable, Hashable {
-    public var sessions: [RESTSessionListRow]
+    public var errors: [ProfileReadError]?
+    public var failed: Bool?
+    public var profilesFailed: [String: ProfileFailedLoad]?
+    public var retry: Bool?
+    public var sessions: [RESTSessionListRow]?
     public var total: Int
 
-    public init(sessions: [RESTSessionListRow], total: Int) {
+    public init(errors: [ProfileReadError]? = nil, failed: Bool? = nil, profilesFailed: [String: ProfileFailedLoad]? = nil, retry: Bool? = nil, sessions: [RESTSessionListRow]? = nil, total: Int) {
+        self.errors = errors
+        self.failed = failed
+        self.profilesFailed = profilesFailed
+        self.retry = retry
         self.sessions = sessions
         self.total = total
     }
 
     private enum CodingKeys: String, CodingKey {
+        case errors = "errors"
+        case failed = "failed"
+        case profilesFailed = "profiles_failed"
+        case retry = "retry"
         case sessions = "sessions"
         case total = "total"
     }
@@ -169,91 +1193,139 @@ public struct ProfileSidebarMessaging: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["sessions", "total"]
+            let known: Set<String> = ["errors", "failed", "profiles_failed", "retry", "sessions", "total"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        sessions = try container.decode([RESTSessionListRow].self, forKey: .sessions)
+        errors = try container.decodeIfPresent([ProfileReadError].self, forKey: .errors)
+        failed = try container.decodeIfPresent(Bool.self, forKey: .failed)
+        profilesFailed = try container.decodeIfPresent([String: ProfileFailedLoad].self, forKey: .profilesFailed)
+        retry = try container.decodeIfPresent(Bool.self, forKey: .retry)
+        sessions = try container.decodeIfPresent([RESTSessionListRow].self, forKey: .sessions)
         total = try container.decode(Int.self, forKey: .total)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(sessions, forKey: .sessions)
+        try container.encodeIfPresent(errors, forKey: .errors)
+        try container.encodeIfPresent(failed, forKey: .failed)
+        try container.encodeIfPresent(profilesFailed, forKey: .profilesFailed)
+        try container.encodeIfPresent(retry, forKey: .retry)
+        try container.encodeIfPresent(sessions, forKey: .sessions)
         try container.encode(total, forKey: .total)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
 public struct ProfileSidebarRecents: Codable, Sendable, Hashable {
+    public var errors: [ProfileReadError]?
+    public var failed: Bool?
+    public var profilesFailed: [String: ProfileFailedLoad]?
     public var profilesTruncated: [String: Bool]
     public var profilesUsage: [String: ProfileSidebarUsage]
-    public var sessions: [RESTSessionListRow]
+    public var retry: Bool?
+    public var sessions: [RESTSessionListRow]?
 
-    public init(profilesTruncated: [String: Bool], profilesUsage: [String: ProfileSidebarUsage], sessions: [RESTSessionListRow]) {
+    public init(errors: [ProfileReadError]? = nil, failed: Bool? = nil, profilesFailed: [String: ProfileFailedLoad]? = nil, profilesTruncated: [String: Bool], profilesUsage: [String: ProfileSidebarUsage], retry: Bool? = nil, sessions: [RESTSessionListRow]? = nil) {
+        self.errors = errors
+        self.failed = failed
+        self.profilesFailed = profilesFailed
         self.profilesTruncated = profilesTruncated
         self.profilesUsage = profilesUsage
+        self.retry = retry
         self.sessions = sessions
     }
 
     private enum CodingKeys: String, CodingKey {
+        case errors = "errors"
+        case failed = "failed"
+        case profilesFailed = "profiles_failed"
         case profilesTruncated = "profiles_truncated"
         case profilesUsage = "profiles_usage"
+        case retry = "retry"
         case sessions = "sessions"
     }
 
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["profiles_truncated", "profiles_usage", "sessions"]
+            let known: Set<String> = ["errors", "failed", "profiles_failed", "profiles_truncated", "profiles_usage", "retry", "sessions"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        errors = try container.decodeIfPresent([ProfileReadError].self, forKey: .errors)
+        failed = try container.decodeIfPresent(Bool.self, forKey: .failed)
+        profilesFailed = try container.decodeIfPresent([String: ProfileFailedLoad].self, forKey: .profilesFailed)
         profilesTruncated = try container.decode([String: Bool].self, forKey: .profilesTruncated)
         profilesUsage = try container.decode([String: ProfileSidebarUsage].self, forKey: .profilesUsage)
-        sessions = try container.decode([RESTSessionListRow].self, forKey: .sessions)
+        retry = try container.decodeIfPresent(Bool.self, forKey: .retry)
+        sessions = try container.decodeIfPresent([RESTSessionListRow].self, forKey: .sessions)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(errors, forKey: .errors)
+        try container.encodeIfPresent(failed, forKey: .failed)
+        try container.encodeIfPresent(profilesFailed, forKey: .profilesFailed)
         try container.encode(profilesTruncated, forKey: .profilesTruncated)
         try container.encode(profilesUsage, forKey: .profilesUsage)
-        try container.encode(sessions, forKey: .sessions)
+        try container.encodeIfPresent(retry, forKey: .retry)
+        try container.encodeIfPresent(sessions, forKey: .sessions)
     }
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// A sidebar slice: the merged, recency-sorted window across the scanned profiles (plus pinned rows past it). A profile whose scan failed only shows in the top-level ``errors``.
+/// A sidebar slice. When the requested scope's scan failed it is a failed load (``_failed_load_slice``): ``failed``/``retry``/``errors`` and NO ``sessions`` — an empty list would read as a successful empty read. ``profiles_failed``/``errors`` also mark a sibling profile that failed while others listed.
 public struct ProfileSidebarSlice: Codable, Sendable, Hashable {
-    public var sessions: [RESTSessionListRow]
+    public var errors: [ProfileReadError]?
+    public var failed: Bool?
+    public var profilesFailed: [String: ProfileFailedLoad]?
+    public var retry: Bool?
+    public var sessions: [RESTSessionListRow]?
 
-    public init(sessions: [RESTSessionListRow]) {
+    public init(errors: [ProfileReadError]? = nil, failed: Bool? = nil, profilesFailed: [String: ProfileFailedLoad]? = nil, retry: Bool? = nil, sessions: [RESTSessionListRow]? = nil) {
+        self.errors = errors
+        self.failed = failed
+        self.profilesFailed = profilesFailed
+        self.retry = retry
         self.sessions = sessions
     }
 
     private enum CodingKeys: String, CodingKey {
+        case errors = "errors"
+        case failed = "failed"
+        case profilesFailed = "profiles_failed"
+        case retry = "retry"
         case sessions = "sessions"
     }
 
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["sessions"]
+            let known: Set<String> = ["errors", "failed", "profiles_failed", "retry", "sessions"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        sessions = try container.decode([RESTSessionListRow].self, forKey: .sessions)
+        errors = try container.decodeIfPresent([ProfileReadError].self, forKey: .errors)
+        failed = try container.decodeIfPresent(Bool.self, forKey: .failed)
+        profilesFailed = try container.decodeIfPresent([String: ProfileFailedLoad].self, forKey: .profilesFailed)
+        retry = try container.decodeIfPresent(Bool.self, forKey: .retry)
+        sessions = try container.decodeIfPresent([RESTSessionListRow].self, forKey: .sessions)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(sessions, forKey: .sessions)
+        try container.encodeIfPresent(errors, forKey: .errors)
+        try container.encodeIfPresent(failed, forKey: .failed)
+        try container.encodeIfPresent(profilesFailed, forKey: .profilesFailed)
+        try container.encodeIfPresent(retry, forKey: .retry)
+        try container.encodeIfPresent(sessions, forKey: .sessions)
     }
 }
 
@@ -360,7 +1432,7 @@ public struct ProfileSoulUpdate: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``_profile_to_dict``, or ``web_server_profiles.py::_fallback_profile_entry`` when ``list_profiles`` fails (that scan omits ``display_name`` and ``role``).
+/// ``_profile_to_dict``, or ``web_server_profiles.py::_fallback_profile_entry`` when ``list_profiles`` fails (that scan omits ``display_name``).
 public struct ProfileSummary: Codable, Sendable, Hashable {
     public var botTitle: String
     public var description: String
@@ -377,11 +1449,9 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
     public var name: String
     public var path: String
     public var provider: String?
-    /// ``hermes_cli.profiles.PROFILE_ROLES`` ("setup") or null.
-    public var role: String?
     public var skillCount: Int
 
-    public init(botTitle: String, description: String, descriptionAuto: Bool, displayName: String? = nil, distributionName: String?, distributionSource: String?, distributionVersion: String?, gatewayRunning: Bool, hasAlias: Bool, hasEnv: Bool, isDefault: Bool, model: String?, name: String, path: String, provider: String?, role: String? = nil, skillCount: Int) {
+    public init(botTitle: String, description: String, descriptionAuto: Bool, displayName: String? = nil, distributionName: String?, distributionSource: String?, distributionVersion: String?, gatewayRunning: Bool, hasAlias: Bool, hasEnv: Bool, isDefault: Bool, model: String?, name: String, path: String, provider: String?, skillCount: Int) {
         self.botTitle = botTitle
         self.description = description
         self.descriptionAuto = descriptionAuto
@@ -397,7 +1467,6 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         self.name = name
         self.path = path
         self.provider = provider
-        self.role = role
         self.skillCount = skillCount
     }
 
@@ -417,14 +1486,13 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         case name = "name"
         case path = "path"
         case provider = "provider"
-        case role = "role"
         case skillCount = "skill_count"
     }
 
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["bot_title", "description", "description_auto", "display_name", "distribution_name", "distribution_source", "distribution_version", "gateway_running", "has_alias", "has_env", "is_default", "model", "name", "path", "provider", "role", "skill_count"]
+            let known: Set<String> = ["bot_title", "description", "description_auto", "display_name", "distribution_name", "distribution_source", "distribution_version", "gateway_running", "has_alias", "has_env", "is_default", "model", "name", "path", "provider", "skill_count"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
@@ -445,7 +1513,6 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         name = try container.decode(String.self, forKey: .name)
         path = try container.decode(String.self, forKey: .path)
         provider = try container.decode(Optional<String>.self, forKey: .provider)
-        role = try container.decodeIfPresent(String.self, forKey: .role)
         skillCount = try container.decode(Int.self, forKey: .skillCount)
     }
 
@@ -466,7 +1533,6 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         try container.encode(name, forKey: .name)
         try container.encode(path, forKey: .path)
         try container.encode(provider, forKey: .provider)
-        try container.encodeIfPresent(role, forKey: .role)
         try container.encode(skillCount, forKey: .skillCount)
     }
 }
@@ -609,13 +1675,19 @@ public struct QuickstartBody: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// One ``SessionDB.list_sessions_rich`` row as the list endpoints stamp it (``is_active``, ``profile``, boolean ``archived`` / ``pinned``). The prompt-storage columns ride only with ``full=1``; the ``_lineage_*`` keys only on a compression root projected onto its live tip.
+/// One ``SessionDB.list_sessions_rich`` row as the list endpoints stamp it (``is_active``, ``profile``, boolean ``archived`` / ``pinned``). The prompt-storage columns ride only with ``full=1``; the ``_lineage_*`` keys and ``continuation_kind`` only on a compression root projected onto its live tip. The sessions table's counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count`` and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows can hold null.
 public struct RESTSessionListRow: Codable, Sendable, Hashable {
+    /// Lifted from ``model_config`` when set: a /branch fork.
+    public var branchedFrom: String?
     public var lineageIds: [String]?
     public var lineageRootId: String?
+    /// Lifted from ``model_config`` when set: a /new sibling.
+    public var resetFrom: String?
     public var actualCostUsd: Double?
     public var apiCallCount: Int?
     public var archived: Bool
+    /// SQLite 0/1: archived by the idle sweep, not by hand.
+    public var autoArchived: Int
     public var billingBaseUrl: String?
     public var billingMode: String?
     public var billingProvider: String?
@@ -628,8 +1700,12 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
     public var compressionFallbackStreak: Int
     public var compressionIneffectiveCount: Int
     public var compressionRecoveryDeadline: Double?
+    /// Only on a compression root projected onto its live tip.
+    public var continuationKind: RESTSessionListRowContinuationKind?
     public var costSource: String?
     public var costStatus: String?
+    /// The source the row was created under; null on rows that predate it.
+    public var createdSource: String?
     public var cwd: String?
     public var displayName: String?
     public var endReason: String?
@@ -666,6 +1742,10 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
     public var profileName: String?
     public var reasoningTokens: Int?
     public var rewindCount: Int
+    /// Execution generation a turn-affecting mutation must quote.
+    public var runtimeGeneration: Int
+    /// Mutation fence: bumped by every committed session mutation.
+    public var runtimeRevision: Int
     public var sessionKey: String?
     public var source: String
     public var startedAt: Double
@@ -681,12 +1761,15 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(lineageIds: [String]? = nil, lineageRootId: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int? = nil, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String? = nil, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Bool, preview: String, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String? = nil, systemPromptHash: String? = nil, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, unread: Bool, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(branchedFrom: String? = nil, lineageIds: [String]? = nil, lineageRootId: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, autoArchived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, continuationKind: RESTSessionListRowContinuationKind? = nil, costSource: String?, costStatus: String?, createdSource: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int? = nil, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String? = nil, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Bool, preview: String, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int, runtimeRevision: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String? = nil, systemPromptHash: String? = nil, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, unread: Bool, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+        self.branchedFrom = branchedFrom
         self.lineageIds = lineageIds
         self.lineageRootId = lineageRootId
+        self.resetFrom = resetFrom
         self.actualCostUsd = actualCostUsd
         self.apiCallCount = apiCallCount
         self.archived = archived
+        self.autoArchived = autoArchived
         self.billingBaseUrl = billingBaseUrl
         self.billingMode = billingMode
         self.billingProvider = billingProvider
@@ -699,8 +1782,10 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         self.compressionFallbackStreak = compressionFallbackStreak
         self.compressionIneffectiveCount = compressionIneffectiveCount
         self.compressionRecoveryDeadline = compressionRecoveryDeadline
+        self.continuationKind = continuationKind
         self.costSource = costSource
         self.costStatus = costStatus
+        self.createdSource = createdSource
         self.cwd = cwd
         self.displayName = displayName
         self.endReason = endReason
@@ -736,6 +1821,8 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         self.profileName = profileName
         self.reasoningTokens = reasoningTokens
         self.rewindCount = rewindCount
+        self.runtimeGeneration = runtimeGeneration
+        self.runtimeRevision = runtimeRevision
         self.sessionKey = sessionKey
         self.source = source
         self.startedAt = startedAt
@@ -753,11 +1840,14 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
     }
 
     private enum CodingKeys: String, CodingKey {
+        case branchedFrom = "_branched_from"
         case lineageIds = "_lineage_ids"
         case lineageRootId = "_lineage_root_id"
+        case resetFrom = "_reset_from"
         case actualCostUsd = "actual_cost_usd"
         case apiCallCount = "api_call_count"
         case archived = "archived"
+        case autoArchived = "auto_archived"
         case billingBaseUrl = "billing_base_url"
         case billingMode = "billing_mode"
         case billingProvider = "billing_provider"
@@ -770,8 +1860,10 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         case compressionFallbackStreak = "compression_fallback_streak"
         case compressionIneffectiveCount = "compression_ineffective_count"
         case compressionRecoveryDeadline = "compression_recovery_deadline"
+        case continuationKind = "continuation_kind"
         case costSource = "cost_source"
         case costStatus = "cost_status"
+        case createdSource = "created_source"
         case cwd = "cwd"
         case displayName = "display_name"
         case endReason = "end_reason"
@@ -807,6 +1899,8 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         case profileName = "profile_name"
         case reasoningTokens = "reasoning_tokens"
         case rewindCount = "rewind_count"
+        case runtimeGeneration = "runtime_generation"
+        case runtimeRevision = "runtime_revision"
         case sessionKey = "session_key"
         case source = "source"
         case startedAt = "started_at"
@@ -824,11 +1918,14 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        branchedFrom = try container.decodeIfPresent(String.self, forKey: .branchedFrom)
         lineageIds = try container.decodeIfPresent([String].self, forKey: .lineageIds)
         lineageRootId = try container.decodeIfPresent(String.self, forKey: .lineageRootId)
+        resetFrom = try container.decodeIfPresent(String.self, forKey: .resetFrom)
         actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
         apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
         archived = try container.decode(Bool.self, forKey: .archived)
+        autoArchived = try container.decode(Int.self, forKey: .autoArchived)
         billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
         billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
         billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
@@ -841,8 +1938,10 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         compressionFallbackStreak = try container.decode(Int.self, forKey: .compressionFallbackStreak)
         compressionIneffectiveCount = try container.decode(Int.self, forKey: .compressionIneffectiveCount)
         compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
+        continuationKind = try container.decodeIfPresent(RESTSessionListRowContinuationKind.self, forKey: .continuationKind)
         costSource = try container.decode(Optional<String>.self, forKey: .costSource)
         costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
+        createdSource = try container.decode(Optional<String>.self, forKey: .createdSource)
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
         displayName = try container.decode(Optional<String>.self, forKey: .displayName)
         endReason = try container.decode(Optional<String>.self, forKey: .endReason)
@@ -878,6 +1977,8 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         profileName = try container.decode(Optional<String>.self, forKey: .profileName)
         reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
         rewindCount = try container.decode(Int.self, forKey: .rewindCount)
+        runtimeGeneration = try container.decode(Int.self, forKey: .runtimeGeneration)
+        runtimeRevision = try container.decode(Int.self, forKey: .runtimeRevision)
         sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Double.self, forKey: .startedAt)
@@ -892,7 +1993,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         unread = try container.decode(Bool.self, forKey: .unread)
         userId = try container.decode(Optional<String>.self, forKey: .userId)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_lineage_ids", "_lineage_root_id", "actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id"]
+        let known: Set<String> = ["_branched_from", "_lineage_ids", "_lineage_root_id", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "continuation_kind", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id"]
         var extra: [String: JSONValue] = [:]
         for key in dynamic.allKeys where !known.contains(key.stringValue) {
             extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
@@ -902,11 +2003,14 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(branchedFrom, forKey: .branchedFrom)
         try container.encodeIfPresent(lineageIds, forKey: .lineageIds)
         try container.encodeIfPresent(lineageRootId, forKey: .lineageRootId)
+        try container.encodeIfPresent(resetFrom, forKey: .resetFrom)
         try container.encode(actualCostUsd, forKey: .actualCostUsd)
         try container.encode(apiCallCount, forKey: .apiCallCount)
         try container.encode(archived, forKey: .archived)
+        try container.encode(autoArchived, forKey: .autoArchived)
         try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
         try container.encode(billingMode, forKey: .billingMode)
         try container.encode(billingProvider, forKey: .billingProvider)
@@ -919,8 +2023,10 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         try container.encode(compressionFallbackStreak, forKey: .compressionFallbackStreak)
         try container.encode(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
         try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
+        try container.encodeIfPresent(continuationKind, forKey: .continuationKind)
         try container.encode(costSource, forKey: .costSource)
         try container.encode(costStatus, forKey: .costStatus)
+        try container.encode(createdSource, forKey: .createdSource)
         try container.encode(cwd, forKey: .cwd)
         try container.encode(displayName, forKey: .displayName)
         try container.encode(endReason, forKey: .endReason)
@@ -956,6 +2062,8 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         try container.encode(profileName, forKey: .profileName)
         try container.encode(reasoningTokens, forKey: .reasoningTokens)
         try container.encode(rewindCount, forKey: .rewindCount)
+        try container.encode(runtimeGeneration, forKey: .runtimeGeneration)
+        try container.encode(runtimeRevision, forKey: .runtimeRevision)
         try container.encode(sessionKey, forKey: .sessionKey)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)
@@ -970,1776 +2078,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         try container.encode(unread, forKey: .unread)
         try container.encode(userId, forKey: .userId)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_lineage_ids", "_lineage_root_id", "actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id"]
-        for (key, value) in additionalProperties {
-            guard !known.contains(key) else {
-                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
-            }
-            try dynamic.encode(value, forKey: DynamicCodingKey(key))
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct RawConfigUpdate: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var yamlText: String
-
-    public init(profile: Patch<String> = .absent, yamlText: String) {
-        self.profile = profile
-        self.yamlText = yamlText
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case yamlText = "yaml_text"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["profile", "yaml_text"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        yamlText = try container.decode(String.self, forKey: .yamlText)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-        try container.encode(yamlText, forKey: .yamlText)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_config_raw`` — ``yaml`` is ``""`` when the profile's ``config.yaml`` does not exist.
-public struct RawConfigYamlResponse: Codable, Sendable, Hashable {
-    public var path: String
-    public var yaml: String
-
-    public init(path: String, yaml: String) {
-        self.path = path
-        self.yaml = yaml
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case path = "path"
-        case yaml = "yaml"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["path", "yaml"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        path = try container.decode(String.self, forKey: .path)
-        yaml = try container.decode(String.self, forKey: .yaml)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(path, forKey: .path)
-        try container.encode(yaml, forKey: .yaml)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct ReassignBody: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var reason: Patch<String>
-    public var reclaimFirst: Bool?
-
-    public init(profile: Patch<String> = .absent, reason: Patch<String> = .absent, reclaimFirst: Bool? = nil) {
-        self.profile = profile
-        self.reason = reason
-        self.reclaimFirst = reclaimFirst
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case reason = "reason"
-        case reclaimFirst = "reclaim_first"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["profile", "reason", "reclaim_first"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        if !container.contains(.reason) {
-            reason = .absent
-        } else if try container.decodeNil(forKey: .reason) {
-            reason = .null
-        } else {
-            reason = .value(try container.decode(String.self, forKey: .reason))
-        }
-        reclaimFirst = try container.decodeIfPresent(Bool.self, forKey: .reclaimFirst)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-        switch reason {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .reason)
-        case .value(let value): try container.encode(value, forKey: .reason)
-        }
-        try container.encodeIfPresent(reclaimFirst, forKey: .reclaimFirst)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct ReclaimBody: Codable, Sendable, Hashable {
-    public var reason: Patch<String>
-
-    public init(reason: Patch<String> = .absent) {
-        self.reason = reason
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case reason = "reason"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["reason"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.reason) {
-            reason = .absent
-        } else if try container.decodeNil(forKey: .reason) {
-            reason = .null
-        } else {
-            reason = .value(try container.decode(String.self, forKey: .reason))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch reason {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .reason)
-        case .value(let value): try container.encode(value, forKey: .reason)
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_recommended_default_model``; ``free_tier`` is only a bool for Nous and ``model`` may be ``""``.
-public struct RecommendedDefaultModelResponse: Codable, Sendable, Hashable {
-    public var freeTier: Bool?
-    public var model: String
-    public var provider: String
-
-    public init(freeTier: Bool?, model: String, provider: String) {
-        self.freeTier = freeTier
-        self.model = model
-        self.provider = provider
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case freeTier = "free_tier"
-        case model = "model"
-        case provider = "provider"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["free_tier", "model", "provider"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        freeTier = try container.decode(Optional<Bool>.self, forKey: .freeTier)
-        model = try container.decode(String.self, forKey: .model)
-        provider = try container.decode(String.self, forKey: .provider)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(freeTier, forKey: .freeTier)
-        try container.encode(model, forKey: .model)
-        try container.encode(provider, forKey: .provider)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct RenameBoardBody: Codable, Sendable, Hashable {
-    public var color: Patch<String>
-    public var defaultWorkdir: Patch<String>
-    public var description: Patch<String>
-    public var icon: Patch<String>
-    public var name: Patch<String>
-    public var projectId: Patch<String>
-
-    public init(color: Patch<String> = .absent, defaultWorkdir: Patch<String> = .absent, description: Patch<String> = .absent, icon: Patch<String> = .absent, name: Patch<String> = .absent, projectId: Patch<String> = .absent) {
-        self.color = color
-        self.defaultWorkdir = defaultWorkdir
-        self.description = description
-        self.icon = icon
-        self.name = name
-        self.projectId = projectId
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case color = "color"
-        case defaultWorkdir = "default_workdir"
-        case description = "description"
-        case icon = "icon"
-        case name = "name"
-        case projectId = "project_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["color", "default_workdir", "description", "icon", "name", "project_id"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.color) {
-            color = .absent
-        } else if try container.decodeNil(forKey: .color) {
-            color = .null
-        } else {
-            color = .value(try container.decode(String.self, forKey: .color))
-        }
-        if !container.contains(.defaultWorkdir) {
-            defaultWorkdir = .absent
-        } else if try container.decodeNil(forKey: .defaultWorkdir) {
-            defaultWorkdir = .null
-        } else {
-            defaultWorkdir = .value(try container.decode(String.self, forKey: .defaultWorkdir))
-        }
-        if !container.contains(.description) {
-            description = .absent
-        } else if try container.decodeNil(forKey: .description) {
-            description = .null
-        } else {
-            description = .value(try container.decode(String.self, forKey: .description))
-        }
-        if !container.contains(.icon) {
-            icon = .absent
-        } else if try container.decodeNil(forKey: .icon) {
-            icon = .null
-        } else {
-            icon = .value(try container.decode(String.self, forKey: .icon))
-        }
-        if !container.contains(.name) {
-            name = .absent
-        } else if try container.decodeNil(forKey: .name) {
-            name = .null
-        } else {
-            name = .value(try container.decode(String.self, forKey: .name))
-        }
-        if !container.contains(.projectId) {
-            projectId = .absent
-        } else if try container.decodeNil(forKey: .projectId) {
-            projectId = .null
-        } else {
-            projectId = .value(try container.decode(String.self, forKey: .projectId))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch color {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .color)
-        case .value(let value): try container.encode(value, forKey: .color)
-        }
-        switch defaultWorkdir {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .defaultWorkdir)
-        case .value(let value): try container.encode(value, forKey: .defaultWorkdir)
-        }
-        switch description {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .description)
-        case .value(let value): try container.encode(value, forKey: .description)
-        }
-        switch icon {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .icon)
-        case .value(let value): try container.encode(value, forKey: .icon)
-        }
-        switch name {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .name)
-        case .value(let value): try container.encode(value, forKey: .name)
-        }
-        switch projectId {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .projectId)
-        case .value(let value): try container.encode(value, forKey: .projectId)
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct RuntimeInstallBody: Codable, Sendable, Hashable {
-    public var backend: Patch<String>
-
-    public init(backend: Patch<String> = .absent) {
-        self.backend = backend
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case backend = "backend"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["backend"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.backend) {
-            backend = .absent
-        } else if try container.decodeNil(forKey: .backend) {
-            backend = .null
-        } else {
-            backend = .value(try container.decode(String.self, forKey: .backend))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch backend {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .backend)
-        case .value(let value): try container.encode(value, forKey: .backend)
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct ServerActionBody: Codable, Sendable, Hashable {
-    public var action: String
-
-    public init(action: String) {
-        self.action = action
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case action = "action"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["action"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        action = try container.decode(String.self, forKey: .action)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(action, forKey: .action)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``delete_session_endpoint``; ``already_absent`` marks the idempotent no-op.
-public struct SessionDeleteResponse: Codable, Sendable, Hashable {
-    public var alreadyAbsent: Bool?
-    public var ok: Bool
-
-    public init(alreadyAbsent: Bool? = nil, ok: Bool) {
-        self.alreadyAbsent = alreadyAbsent
-        self.ok = ok
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case alreadyAbsent = "already_absent"
-        case ok = "ok"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["already_absent", "ok"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        alreadyAbsent = try container.decodeIfPresent(Bool.self, forKey: .alreadyAbsent)
-        ok = try container.decode(Bool.self, forKey: .ok)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(alreadyAbsent, forKey: .alreadyAbsent)
-        try container.encode(ok, forKey: .ok)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``bulk_delete_sessions_endpoint`` / ``delete_empty_sessions_endpoint``.
-public struct SessionDeletedCountResponse: Codable, Sendable, Hashable {
-    public var deleted: Int
-    public var ok: Bool
-
-    public init(deleted: Int, ok: Bool) {
-        self.deleted = deleted
-        self.ok = ok
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case deleted = "deleted"
-        case ok = "ok"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["deleted", "ok"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        deleted = try container.decode(Int.self, forKey: .deleted)
-        ok = try container.decode(Bool.self, forKey: .ok)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(deleted, forKey: .deleted)
-        try container.encode(ok, forKey: .ok)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_session_detail`` — the stored row stamped with its owning profile.
-public struct SessionDetailResponse: Codable, Sendable, Hashable {
-    public var actualCostUsd: Double?
-    public var apiCallCount: Int?
-    public var archived: Int
-    public var billingBaseUrl: String?
-    public var billingMode: String?
-    public var billingProvider: String?
-    public var cacheReadTokens: Int?
-    public var cacheWriteTokens: Int?
-    public var chatId: String?
-    public var chatType: String?
-    public var compressionFailureCooldownUntil: Double?
-    public var compressionFailureError: String?
-    public var compressionFallbackStreak: Int
-    public var compressionIneffectiveCount: Int
-    public var compressionRecoveryDeadline: Double?
-    public var costSource: String?
-    public var costStatus: String?
-    public var cwd: String?
-    public var displayName: String?
-    public var endReason: String?
-    public var endedAt: Double?
-    public var estimatedCostUsd: Double?
-    public var expiryFinalized: Int?
-    public var gitBranch: String?
-    public var gitMetadataGeneration: Int
-    public var gitRepoRoot: String?
-    public var handoffError: String?
-    public var handoffPlatform: String?
-    public var handoffState: String?
-    public var hidden: Int
-    public var id: String
-    public var inputTokens: Int?
-    public var isDefaultProfile: Bool
-    public var lastActivityAt: Double?
-    public var lastActivityDescription: String?
-    public var lastActivityProvenance: String?
-    /// Read watermark; ``0`` = marked unread, null = never tracked.
-    public var lastReadAt: Double?
-    public var messageCount: Int?
-    public var model: String?
-    public var modelConfig: String?
-    public var originJson: String?
-    public var outputTokens: Int?
-    public var parentSessionId: String?
-    public var pinned: Int
-    public var pricingVersion: String?
-    public var profile: String
-    public var profileName: String?
-    public var reasoningTokens: Int?
-    public var rewindCount: Int
-    public var sessionKey: String?
-    public var source: String
-    public var startedAt: Double
-    public var systemPrompt: String?
-    public var systemPromptHash: String?
-    public var threadId: String?
-    public var title: String?
-    public var titleSource: String?
-    public var toolCallCount: Int?
-    public var toolNames: String?
-    public var transportProfile: String?
-    public var userId: String?
-    public var additionalProperties: [String: JSONValue]
-
-    public init(actualCostUsd: Double?, apiCallCount: Int?, archived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isDefaultProfile: Bool, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
-        self.actualCostUsd = actualCostUsd
-        self.apiCallCount = apiCallCount
-        self.archived = archived
-        self.billingBaseUrl = billingBaseUrl
-        self.billingMode = billingMode
-        self.billingProvider = billingProvider
-        self.cacheReadTokens = cacheReadTokens
-        self.cacheWriteTokens = cacheWriteTokens
-        self.chatId = chatId
-        self.chatType = chatType
-        self.compressionFailureCooldownUntil = compressionFailureCooldownUntil
-        self.compressionFailureError = compressionFailureError
-        self.compressionFallbackStreak = compressionFallbackStreak
-        self.compressionIneffectiveCount = compressionIneffectiveCount
-        self.compressionRecoveryDeadline = compressionRecoveryDeadline
-        self.costSource = costSource
-        self.costStatus = costStatus
-        self.cwd = cwd
-        self.displayName = displayName
-        self.endReason = endReason
-        self.endedAt = endedAt
-        self.estimatedCostUsd = estimatedCostUsd
-        self.expiryFinalized = expiryFinalized
-        self.gitBranch = gitBranch
-        self.gitMetadataGeneration = gitMetadataGeneration
-        self.gitRepoRoot = gitRepoRoot
-        self.handoffError = handoffError
-        self.handoffPlatform = handoffPlatform
-        self.handoffState = handoffState
-        self.hidden = hidden
-        self.id = id
-        self.inputTokens = inputTokens
-        self.isDefaultProfile = isDefaultProfile
-        self.lastActivityAt = lastActivityAt
-        self.lastActivityDescription = lastActivityDescription
-        self.lastActivityProvenance = lastActivityProvenance
-        self.lastReadAt = lastReadAt
-        self.messageCount = messageCount
-        self.model = model
-        self.modelConfig = modelConfig
-        self.originJson = originJson
-        self.outputTokens = outputTokens
-        self.parentSessionId = parentSessionId
-        self.pinned = pinned
-        self.pricingVersion = pricingVersion
-        self.profile = profile
-        self.profileName = profileName
-        self.reasoningTokens = reasoningTokens
-        self.rewindCount = rewindCount
-        self.sessionKey = sessionKey
-        self.source = source
-        self.startedAt = startedAt
-        self.systemPrompt = systemPrompt
-        self.systemPromptHash = systemPromptHash
-        self.threadId = threadId
-        self.title = title
-        self.titleSource = titleSource
-        self.toolCallCount = toolCallCount
-        self.toolNames = toolNames
-        self.transportProfile = transportProfile
-        self.userId = userId
-        self.additionalProperties = additionalProperties
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case actualCostUsd = "actual_cost_usd"
-        case apiCallCount = "api_call_count"
-        case archived = "archived"
-        case billingBaseUrl = "billing_base_url"
-        case billingMode = "billing_mode"
-        case billingProvider = "billing_provider"
-        case cacheReadTokens = "cache_read_tokens"
-        case cacheWriteTokens = "cache_write_tokens"
-        case chatId = "chat_id"
-        case chatType = "chat_type"
-        case compressionFailureCooldownUntil = "compression_failure_cooldown_until"
-        case compressionFailureError = "compression_failure_error"
-        case compressionFallbackStreak = "compression_fallback_streak"
-        case compressionIneffectiveCount = "compression_ineffective_count"
-        case compressionRecoveryDeadline = "compression_recovery_deadline"
-        case costSource = "cost_source"
-        case costStatus = "cost_status"
-        case cwd = "cwd"
-        case displayName = "display_name"
-        case endReason = "end_reason"
-        case endedAt = "ended_at"
-        case estimatedCostUsd = "estimated_cost_usd"
-        case expiryFinalized = "expiry_finalized"
-        case gitBranch = "git_branch"
-        case gitMetadataGeneration = "git_metadata_generation"
-        case gitRepoRoot = "git_repo_root"
-        case handoffError = "handoff_error"
-        case handoffPlatform = "handoff_platform"
-        case handoffState = "handoff_state"
-        case hidden = "hidden"
-        case id = "id"
-        case inputTokens = "input_tokens"
-        case isDefaultProfile = "is_default_profile"
-        case lastActivityAt = "last_activity_at"
-        case lastActivityDescription = "last_activity_description"
-        case lastActivityProvenance = "last_activity_provenance"
-        case lastReadAt = "last_read_at"
-        case messageCount = "message_count"
-        case model = "model"
-        case modelConfig = "model_config"
-        case originJson = "origin_json"
-        case outputTokens = "output_tokens"
-        case parentSessionId = "parent_session_id"
-        case pinned = "pinned"
-        case pricingVersion = "pricing_version"
-        case profile = "profile"
-        case profileName = "profile_name"
-        case reasoningTokens = "reasoning_tokens"
-        case rewindCount = "rewind_count"
-        case sessionKey = "session_key"
-        case source = "source"
-        case startedAt = "started_at"
-        case systemPrompt = "system_prompt"
-        case systemPromptHash = "system_prompt_hash"
-        case threadId = "thread_id"
-        case title = "title"
-        case titleSource = "title_source"
-        case toolCallCount = "tool_call_count"
-        case toolNames = "tool_names"
-        case transportProfile = "transport_profile"
-        case userId = "user_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
-        apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
-        archived = try container.decode(Int.self, forKey: .archived)
-        billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
-        billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
-        billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
-        cacheReadTokens = try container.decode(Optional<Int>.self, forKey: .cacheReadTokens)
-        cacheWriteTokens = try container.decode(Optional<Int>.self, forKey: .cacheWriteTokens)
-        chatId = try container.decode(Optional<String>.self, forKey: .chatId)
-        chatType = try container.decode(Optional<String>.self, forKey: .chatType)
-        compressionFailureCooldownUntil = try container.decode(Optional<Double>.self, forKey: .compressionFailureCooldownUntil)
-        compressionFailureError = try container.decode(Optional<String>.self, forKey: .compressionFailureError)
-        compressionFallbackStreak = try container.decode(Int.self, forKey: .compressionFallbackStreak)
-        compressionIneffectiveCount = try container.decode(Int.self, forKey: .compressionIneffectiveCount)
-        compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
-        costSource = try container.decode(Optional<String>.self, forKey: .costSource)
-        costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
-        cwd = try container.decode(Optional<String>.self, forKey: .cwd)
-        displayName = try container.decode(Optional<String>.self, forKey: .displayName)
-        endReason = try container.decode(Optional<String>.self, forKey: .endReason)
-        endedAt = try container.decode(Optional<Double>.self, forKey: .endedAt)
-        estimatedCostUsd = try container.decode(Optional<Double>.self, forKey: .estimatedCostUsd)
-        expiryFinalized = try container.decode(Optional<Int>.self, forKey: .expiryFinalized)
-        gitBranch = try container.decode(Optional<String>.self, forKey: .gitBranch)
-        gitMetadataGeneration = try container.decode(Int.self, forKey: .gitMetadataGeneration)
-        gitRepoRoot = try container.decode(Optional<String>.self, forKey: .gitRepoRoot)
-        handoffError = try container.decode(Optional<String>.self, forKey: .handoffError)
-        handoffPlatform = try container.decode(Optional<String>.self, forKey: .handoffPlatform)
-        handoffState = try container.decode(Optional<String>.self, forKey: .handoffState)
-        hidden = try container.decode(Int.self, forKey: .hidden)
-        id = try container.decode(String.self, forKey: .id)
-        inputTokens = try container.decode(Optional<Int>.self, forKey: .inputTokens)
-        isDefaultProfile = try container.decode(Bool.self, forKey: .isDefaultProfile)
-        lastActivityAt = try container.decode(Optional<Double>.self, forKey: .lastActivityAt)
-        lastActivityDescription = try container.decode(Optional<String>.self, forKey: .lastActivityDescription)
-        lastActivityProvenance = try container.decode(Optional<String>.self, forKey: .lastActivityProvenance)
-        lastReadAt = try container.decode(Optional<Double>.self, forKey: .lastReadAt)
-        messageCount = try container.decode(Optional<Int>.self, forKey: .messageCount)
-        model = try container.decode(Optional<String>.self, forKey: .model)
-        modelConfig = try container.decode(Optional<String>.self, forKey: .modelConfig)
-        originJson = try container.decode(Optional<String>.self, forKey: .originJson)
-        outputTokens = try container.decode(Optional<Int>.self, forKey: .outputTokens)
-        parentSessionId = try container.decode(Optional<String>.self, forKey: .parentSessionId)
-        pinned = try container.decode(Int.self, forKey: .pinned)
-        pricingVersion = try container.decode(Optional<String>.self, forKey: .pricingVersion)
-        profile = try container.decode(String.self, forKey: .profile)
-        profileName = try container.decode(Optional<String>.self, forKey: .profileName)
-        reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
-        rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
-        source = try container.decode(String.self, forKey: .source)
-        startedAt = try container.decode(Double.self, forKey: .startedAt)
-        systemPrompt = try container.decode(Optional<String>.self, forKey: .systemPrompt)
-        systemPromptHash = try container.decode(Optional<String>.self, forKey: .systemPromptHash)
-        threadId = try container.decode(Optional<String>.self, forKey: .threadId)
-        title = try container.decode(Optional<String>.self, forKey: .title)
-        titleSource = try container.decode(Optional<String>.self, forKey: .titleSource)
-        toolCallCount = try container.decode(Optional<Int>.self, forKey: .toolCallCount)
-        toolNames = try container.decode(Optional<String>.self, forKey: .toolNames)
-        transportProfile = try container.decode(Optional<String>.self, forKey: .transportProfile)
-        userId = try container.decode(Optional<String>.self, forKey: .userId)
-        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_default_profile", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
-        var extra: [String: JSONValue] = [:]
-        for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
-        }
-        additionalProperties = extra
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(actualCostUsd, forKey: .actualCostUsd)
-        try container.encode(apiCallCount, forKey: .apiCallCount)
-        try container.encode(archived, forKey: .archived)
-        try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
-        try container.encode(billingMode, forKey: .billingMode)
-        try container.encode(billingProvider, forKey: .billingProvider)
-        try container.encode(cacheReadTokens, forKey: .cacheReadTokens)
-        try container.encode(cacheWriteTokens, forKey: .cacheWriteTokens)
-        try container.encode(chatId, forKey: .chatId)
-        try container.encode(chatType, forKey: .chatType)
-        try container.encode(compressionFailureCooldownUntil, forKey: .compressionFailureCooldownUntil)
-        try container.encode(compressionFailureError, forKey: .compressionFailureError)
-        try container.encode(compressionFallbackStreak, forKey: .compressionFallbackStreak)
-        try container.encode(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
-        try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
-        try container.encode(costSource, forKey: .costSource)
-        try container.encode(costStatus, forKey: .costStatus)
-        try container.encode(cwd, forKey: .cwd)
-        try container.encode(displayName, forKey: .displayName)
-        try container.encode(endReason, forKey: .endReason)
-        try container.encode(endedAt, forKey: .endedAt)
-        try container.encode(estimatedCostUsd, forKey: .estimatedCostUsd)
-        try container.encode(expiryFinalized, forKey: .expiryFinalized)
-        try container.encode(gitBranch, forKey: .gitBranch)
-        try container.encode(gitMetadataGeneration, forKey: .gitMetadataGeneration)
-        try container.encode(gitRepoRoot, forKey: .gitRepoRoot)
-        try container.encode(handoffError, forKey: .handoffError)
-        try container.encode(handoffPlatform, forKey: .handoffPlatform)
-        try container.encode(handoffState, forKey: .handoffState)
-        try container.encode(hidden, forKey: .hidden)
-        try container.encode(id, forKey: .id)
-        try container.encode(inputTokens, forKey: .inputTokens)
-        try container.encode(isDefaultProfile, forKey: .isDefaultProfile)
-        try container.encode(lastActivityAt, forKey: .lastActivityAt)
-        try container.encode(lastActivityDescription, forKey: .lastActivityDescription)
-        try container.encode(lastActivityProvenance, forKey: .lastActivityProvenance)
-        try container.encode(lastReadAt, forKey: .lastReadAt)
-        try container.encode(messageCount, forKey: .messageCount)
-        try container.encode(model, forKey: .model)
-        try container.encode(modelConfig, forKey: .modelConfig)
-        try container.encode(originJson, forKey: .originJson)
-        try container.encode(outputTokens, forKey: .outputTokens)
-        try container.encode(parentSessionId, forKey: .parentSessionId)
-        try container.encode(pinned, forKey: .pinned)
-        try container.encode(pricingVersion, forKey: .pricingVersion)
-        try container.encode(profile, forKey: .profile)
-        try container.encode(profileName, forKey: .profileName)
-        try container.encode(reasoningTokens, forKey: .reasoningTokens)
-        try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encode(sessionKey, forKey: .sessionKey)
-        try container.encode(source, forKey: .source)
-        try container.encode(startedAt, forKey: .startedAt)
-        try container.encode(systemPrompt, forKey: .systemPrompt)
-        try container.encode(systemPromptHash, forKey: .systemPromptHash)
-        try container.encode(threadId, forKey: .threadId)
-        try container.encode(title, forKey: .title)
-        try container.encode(titleSource, forKey: .titleSource)
-        try container.encode(toolCallCount, forKey: .toolCallCount)
-        try container.encode(toolNames, forKey: .toolNames)
-        try container.encode(transportProfile, forKey: .transportProfile)
-        try container.encode(userId, forKey: .userId)
-        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_default_profile", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
-        for (key, value) in additionalProperties {
-            guard !known.contains(key) else {
-                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
-            }
-            try dynamic.encode(value, forKey: DynamicCodingKey(key))
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// A message after ``_project_for_display``: bridge tool-call labels, the compaction display projection and ``agent/history_commentary.py::_project_one`` keys, each only when it applies. A recovered compaction carrier drops ``display_kind`` in favour of ``display_content``.
-public struct SessionDisplayMessage: Codable, Sendable, Hashable {
-    public var compressedSummary: Bool?
-    public var active: Int
-    public var apiContent: String?
-    public var codexMessageItems: String?
-    public var codexReasoningItems: String?
-    public var compacted: Int
-    public var content: JSONValue
-    public var displayCommentary: [String]?
-    public var displayContent: JSONValue?
-    public var displayKind: String?
-    public var displayMetadata: [String: JSONValue]?
-    public var displayReasoning: String?
-    public var effectDisposition: String?
-    public var finishReason: String?
-    public var id: Int
-    public var observed: Int
-    public var platformMessageId: String?
-    public var reasoning: String?
-    public var reasoningContent: String?
-    public var reasoningDetails: String?
-    public var role: String
-    public var sessionId: String
-    public var timestamp: Double
-    public var tokenCount: Int?
-    public var toolCallId: String?
-    public var toolCallLabels: [String: [SessionToolCallLabel]]?
-    /// Decoded tool-call list (``[]`` when undecodable), or null.
-    public var toolCalls: JSONValue
-    public var toolName: String?
-    public var additionalProperties: [String: JSONValue]
-
-    public init(compressedSummary: Bool? = nil, active: Int, apiContent: String?, codexMessageItems: String?, codexReasoningItems: String?, compacted: Int, content: JSONValue, displayCommentary: [String]? = nil, displayContent: JSONValue? = nil, displayKind: String? = nil, displayMetadata: [String: JSONValue]?, displayReasoning: String? = nil, effectDisposition: String?, finishReason: String?, id: Int, observed: Int, platformMessageId: String?, reasoning: String?, reasoningContent: String?, reasoningDetails: String?, role: String, sessionId: String, timestamp: Double, tokenCount: Int?, toolCallId: String?, toolCallLabels: [String: [SessionToolCallLabel]]? = nil, toolCalls: JSONValue, toolName: String?, additionalProperties: [String: JSONValue] = [:]) {
-        self.compressedSummary = compressedSummary
-        self.active = active
-        self.apiContent = apiContent
-        self.codexMessageItems = codexMessageItems
-        self.codexReasoningItems = codexReasoningItems
-        self.compacted = compacted
-        self.content = content
-        self.displayCommentary = displayCommentary
-        self.displayContent = displayContent
-        self.displayKind = displayKind
-        self.displayMetadata = displayMetadata
-        self.displayReasoning = displayReasoning
-        self.effectDisposition = effectDisposition
-        self.finishReason = finishReason
-        self.id = id
-        self.observed = observed
-        self.platformMessageId = platformMessageId
-        self.reasoning = reasoning
-        self.reasoningContent = reasoningContent
-        self.reasoningDetails = reasoningDetails
-        self.role = role
-        self.sessionId = sessionId
-        self.timestamp = timestamp
-        self.tokenCount = tokenCount
-        self.toolCallId = toolCallId
-        self.toolCallLabels = toolCallLabels
-        self.toolCalls = toolCalls
-        self.toolName = toolName
-        self.additionalProperties = additionalProperties
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case compressedSummary = "_compressed_summary"
-        case active = "active"
-        case apiContent = "api_content"
-        case codexMessageItems = "codex_message_items"
-        case codexReasoningItems = "codex_reasoning_items"
-        case compacted = "compacted"
-        case content = "content"
-        case displayCommentary = "display_commentary"
-        case displayContent = "display_content"
-        case displayKind = "display_kind"
-        case displayMetadata = "display_metadata"
-        case displayReasoning = "display_reasoning"
-        case effectDisposition = "effect_disposition"
-        case finishReason = "finish_reason"
-        case id = "id"
-        case observed = "observed"
-        case platformMessageId = "platform_message_id"
-        case reasoning = "reasoning"
-        case reasoningContent = "reasoning_content"
-        case reasoningDetails = "reasoning_details"
-        case role = "role"
-        case sessionId = "session_id"
-        case timestamp = "timestamp"
-        case tokenCount = "token_count"
-        case toolCallId = "tool_call_id"
-        case toolCallLabels = "tool_call_labels"
-        case toolCalls = "tool_calls"
-        case toolName = "tool_name"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        compressedSummary = try container.decodeIfPresent(Bool.self, forKey: .compressedSummary)
-        active = try container.decode(Int.self, forKey: .active)
-        apiContent = try container.decode(Optional<String>.self, forKey: .apiContent)
-        codexMessageItems = try container.decode(Optional<String>.self, forKey: .codexMessageItems)
-        codexReasoningItems = try container.decode(Optional<String>.self, forKey: .codexReasoningItems)
-        compacted = try container.decode(Int.self, forKey: .compacted)
-        content = try container.decode(JSONValue.self, forKey: .content)
-        displayCommentary = try container.decodeIfPresent([String].self, forKey: .displayCommentary)
-        displayContent = try container.decodeIfPresent(JSONValue.self, forKey: .displayContent)
-        displayKind = try container.decodeIfPresent(String.self, forKey: .displayKind)
-        displayMetadata = try container.decode(Optional<[String: JSONValue]>.self, forKey: .displayMetadata)
-        displayReasoning = try container.decodeIfPresent(String.self, forKey: .displayReasoning)
-        effectDisposition = try container.decode(Optional<String>.self, forKey: .effectDisposition)
-        finishReason = try container.decode(Optional<String>.self, forKey: .finishReason)
-        id = try container.decode(Int.self, forKey: .id)
-        observed = try container.decode(Int.self, forKey: .observed)
-        platformMessageId = try container.decode(Optional<String>.self, forKey: .platformMessageId)
-        reasoning = try container.decode(Optional<String>.self, forKey: .reasoning)
-        reasoningContent = try container.decode(Optional<String>.self, forKey: .reasoningContent)
-        reasoningDetails = try container.decode(Optional<String>.self, forKey: .reasoningDetails)
-        role = try container.decode(String.self, forKey: .role)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-        timestamp = try container.decode(Double.self, forKey: .timestamp)
-        tokenCount = try container.decode(Optional<Int>.self, forKey: .tokenCount)
-        toolCallId = try container.decode(Optional<String>.self, forKey: .toolCallId)
-        toolCallLabels = try container.decodeIfPresent([String: [SessionToolCallLabel]].self, forKey: .toolCallLabels)
-        toolCalls = try container.decode(JSONValue.self, forKey: .toolCalls)
-        toolName = try container.decode(Optional<String>.self, forKey: .toolName)
-        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_commentary", "display_content", "display_kind", "display_metadata", "display_reasoning", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_call_labels", "tool_calls", "tool_name"]
-        var extra: [String: JSONValue] = [:]
-        for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
-        }
-        additionalProperties = extra
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(compressedSummary, forKey: .compressedSummary)
-        try container.encode(active, forKey: .active)
-        try container.encode(apiContent, forKey: .apiContent)
-        try container.encode(codexMessageItems, forKey: .codexMessageItems)
-        try container.encode(codexReasoningItems, forKey: .codexReasoningItems)
-        try container.encode(compacted, forKey: .compacted)
-        try container.encode(content, forKey: .content)
-        try container.encodeIfPresent(displayCommentary, forKey: .displayCommentary)
-        try container.encodeIfPresent(displayContent, forKey: .displayContent)
-        try container.encodeIfPresent(displayKind, forKey: .displayKind)
-        try container.encode(displayMetadata, forKey: .displayMetadata)
-        try container.encodeIfPresent(displayReasoning, forKey: .displayReasoning)
-        try container.encode(effectDisposition, forKey: .effectDisposition)
-        try container.encode(finishReason, forKey: .finishReason)
-        try container.encode(id, forKey: .id)
-        try container.encode(observed, forKey: .observed)
-        try container.encode(platformMessageId, forKey: .platformMessageId)
-        try container.encode(reasoning, forKey: .reasoning)
-        try container.encode(reasoningContent, forKey: .reasoningContent)
-        try container.encode(reasoningDetails, forKey: .reasoningDetails)
-        try container.encode(role, forKey: .role)
-        try container.encode(sessionId, forKey: .sessionId)
-        try container.encode(timestamp, forKey: .timestamp)
-        try container.encode(tokenCount, forKey: .tokenCount)
-        try container.encode(toolCallId, forKey: .toolCallId)
-        try container.encodeIfPresent(toolCallLabels, forKey: .toolCallLabels)
-        try container.encode(toolCalls, forKey: .toolCalls)
-        try container.encode(toolName, forKey: .toolName)
-        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_commentary", "display_content", "display_kind", "display_metadata", "display_reasoning", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_call_labels", "tool_calls", "tool_name"]
-        for (key, value) in additionalProperties {
-            guard !known.contains(key) else {
-                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
-            }
-            try dynamic.encode(value, forKey: DynamicCodingKey(key))
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``count_empty_sessions_endpoint``.
-public struct SessionEmptyCountResponse: Codable, Sendable, Hashable {
-    public var count: Int
-
-    public init(count: Int) {
-        self.count = count
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case count = "count"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["count"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        count = try container.decode(Int.self, forKey: .count)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(count, forKey: .count)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``export_session_endpoint`` streams this one JSON document: ``SessionDB.get_session`` with the session's active (``active = 1``) raw, unprojected message rows appended.
-public struct SessionExportResponse: Codable, Sendable, Hashable {
-    public var actualCostUsd: Double?
-    public var apiCallCount: Int?
-    public var archived: Int
-    public var billingBaseUrl: String?
-    public var billingMode: String?
-    public var billingProvider: String?
-    public var cacheReadTokens: Int?
-    public var cacheWriteTokens: Int?
-    public var chatId: String?
-    public var chatType: String?
-    public var compressionFailureCooldownUntil: Double?
-    public var compressionFailureError: String?
-    public var compressionFallbackStreak: Int
-    public var compressionIneffectiveCount: Int
-    public var compressionRecoveryDeadline: Double?
-    public var costSource: String?
-    public var costStatus: String?
-    public var cwd: String?
-    public var displayName: String?
-    public var endReason: String?
-    public var endedAt: Double?
-    public var estimatedCostUsd: Double?
-    public var expiryFinalized: Int?
-    public var gitBranch: String?
-    public var gitMetadataGeneration: Int
-    public var gitRepoRoot: String?
-    public var handoffError: String?
-    public var handoffPlatform: String?
-    public var handoffState: String?
-    public var hidden: Int
-    public var id: String
-    public var inputTokens: Int?
-    public var lastActivityAt: Double?
-    public var lastActivityDescription: String?
-    public var lastActivityProvenance: String?
-    /// Read watermark; ``0`` = marked unread, null = never tracked.
-    public var lastReadAt: Double?
-    public var messageCount: Int?
-    public var messages: [SessionMessage]
-    public var model: String?
-    public var modelConfig: String?
-    public var originJson: String?
-    public var outputTokens: Int?
-    public var parentSessionId: String?
-    public var pinned: Int
-    public var pricingVersion: String?
-    public var profileName: String?
-    public var reasoningTokens: Int?
-    public var rewindCount: Int
-    public var sessionKey: String?
-    public var source: String
-    public var startedAt: Double
-    public var systemPrompt: String?
-    public var systemPromptHash: String?
-    public var threadId: String?
-    public var title: String?
-    public var titleSource: String?
-    public var toolCallCount: Int?
-    public var toolNames: String?
-    public var transportProfile: String?
-    public var userId: String?
-    public var additionalProperties: [String: JSONValue]
-
-    public init(actualCostUsd: Double?, apiCallCount: Int?, archived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, messages: [SessionMessage], model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, pricingVersion: String?, profileName: String?, reasoningTokens: Int?, rewindCount: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
-        self.actualCostUsd = actualCostUsd
-        self.apiCallCount = apiCallCount
-        self.archived = archived
-        self.billingBaseUrl = billingBaseUrl
-        self.billingMode = billingMode
-        self.billingProvider = billingProvider
-        self.cacheReadTokens = cacheReadTokens
-        self.cacheWriteTokens = cacheWriteTokens
-        self.chatId = chatId
-        self.chatType = chatType
-        self.compressionFailureCooldownUntil = compressionFailureCooldownUntil
-        self.compressionFailureError = compressionFailureError
-        self.compressionFallbackStreak = compressionFallbackStreak
-        self.compressionIneffectiveCount = compressionIneffectiveCount
-        self.compressionRecoveryDeadline = compressionRecoveryDeadline
-        self.costSource = costSource
-        self.costStatus = costStatus
-        self.cwd = cwd
-        self.displayName = displayName
-        self.endReason = endReason
-        self.endedAt = endedAt
-        self.estimatedCostUsd = estimatedCostUsd
-        self.expiryFinalized = expiryFinalized
-        self.gitBranch = gitBranch
-        self.gitMetadataGeneration = gitMetadataGeneration
-        self.gitRepoRoot = gitRepoRoot
-        self.handoffError = handoffError
-        self.handoffPlatform = handoffPlatform
-        self.handoffState = handoffState
-        self.hidden = hidden
-        self.id = id
-        self.inputTokens = inputTokens
-        self.lastActivityAt = lastActivityAt
-        self.lastActivityDescription = lastActivityDescription
-        self.lastActivityProvenance = lastActivityProvenance
-        self.lastReadAt = lastReadAt
-        self.messageCount = messageCount
-        self.messages = messages
-        self.model = model
-        self.modelConfig = modelConfig
-        self.originJson = originJson
-        self.outputTokens = outputTokens
-        self.parentSessionId = parentSessionId
-        self.pinned = pinned
-        self.pricingVersion = pricingVersion
-        self.profileName = profileName
-        self.reasoningTokens = reasoningTokens
-        self.rewindCount = rewindCount
-        self.sessionKey = sessionKey
-        self.source = source
-        self.startedAt = startedAt
-        self.systemPrompt = systemPrompt
-        self.systemPromptHash = systemPromptHash
-        self.threadId = threadId
-        self.title = title
-        self.titleSource = titleSource
-        self.toolCallCount = toolCallCount
-        self.toolNames = toolNames
-        self.transportProfile = transportProfile
-        self.userId = userId
-        self.additionalProperties = additionalProperties
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case actualCostUsd = "actual_cost_usd"
-        case apiCallCount = "api_call_count"
-        case archived = "archived"
-        case billingBaseUrl = "billing_base_url"
-        case billingMode = "billing_mode"
-        case billingProvider = "billing_provider"
-        case cacheReadTokens = "cache_read_tokens"
-        case cacheWriteTokens = "cache_write_tokens"
-        case chatId = "chat_id"
-        case chatType = "chat_type"
-        case compressionFailureCooldownUntil = "compression_failure_cooldown_until"
-        case compressionFailureError = "compression_failure_error"
-        case compressionFallbackStreak = "compression_fallback_streak"
-        case compressionIneffectiveCount = "compression_ineffective_count"
-        case compressionRecoveryDeadline = "compression_recovery_deadline"
-        case costSource = "cost_source"
-        case costStatus = "cost_status"
-        case cwd = "cwd"
-        case displayName = "display_name"
-        case endReason = "end_reason"
-        case endedAt = "ended_at"
-        case estimatedCostUsd = "estimated_cost_usd"
-        case expiryFinalized = "expiry_finalized"
-        case gitBranch = "git_branch"
-        case gitMetadataGeneration = "git_metadata_generation"
-        case gitRepoRoot = "git_repo_root"
-        case handoffError = "handoff_error"
-        case handoffPlatform = "handoff_platform"
-        case handoffState = "handoff_state"
-        case hidden = "hidden"
-        case id = "id"
-        case inputTokens = "input_tokens"
-        case lastActivityAt = "last_activity_at"
-        case lastActivityDescription = "last_activity_description"
-        case lastActivityProvenance = "last_activity_provenance"
-        case lastReadAt = "last_read_at"
-        case messageCount = "message_count"
-        case messages = "messages"
-        case model = "model"
-        case modelConfig = "model_config"
-        case originJson = "origin_json"
-        case outputTokens = "output_tokens"
-        case parentSessionId = "parent_session_id"
-        case pinned = "pinned"
-        case pricingVersion = "pricing_version"
-        case profileName = "profile_name"
-        case reasoningTokens = "reasoning_tokens"
-        case rewindCount = "rewind_count"
-        case sessionKey = "session_key"
-        case source = "source"
-        case startedAt = "started_at"
-        case systemPrompt = "system_prompt"
-        case systemPromptHash = "system_prompt_hash"
-        case threadId = "thread_id"
-        case title = "title"
-        case titleSource = "title_source"
-        case toolCallCount = "tool_call_count"
-        case toolNames = "tool_names"
-        case transportProfile = "transport_profile"
-        case userId = "user_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
-        apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
-        archived = try container.decode(Int.self, forKey: .archived)
-        billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
-        billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
-        billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
-        cacheReadTokens = try container.decode(Optional<Int>.self, forKey: .cacheReadTokens)
-        cacheWriteTokens = try container.decode(Optional<Int>.self, forKey: .cacheWriteTokens)
-        chatId = try container.decode(Optional<String>.self, forKey: .chatId)
-        chatType = try container.decode(Optional<String>.self, forKey: .chatType)
-        compressionFailureCooldownUntil = try container.decode(Optional<Double>.self, forKey: .compressionFailureCooldownUntil)
-        compressionFailureError = try container.decode(Optional<String>.self, forKey: .compressionFailureError)
-        compressionFallbackStreak = try container.decode(Int.self, forKey: .compressionFallbackStreak)
-        compressionIneffectiveCount = try container.decode(Int.self, forKey: .compressionIneffectiveCount)
-        compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
-        costSource = try container.decode(Optional<String>.self, forKey: .costSource)
-        costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
-        cwd = try container.decode(Optional<String>.self, forKey: .cwd)
-        displayName = try container.decode(Optional<String>.self, forKey: .displayName)
-        endReason = try container.decode(Optional<String>.self, forKey: .endReason)
-        endedAt = try container.decode(Optional<Double>.self, forKey: .endedAt)
-        estimatedCostUsd = try container.decode(Optional<Double>.self, forKey: .estimatedCostUsd)
-        expiryFinalized = try container.decode(Optional<Int>.self, forKey: .expiryFinalized)
-        gitBranch = try container.decode(Optional<String>.self, forKey: .gitBranch)
-        gitMetadataGeneration = try container.decode(Int.self, forKey: .gitMetadataGeneration)
-        gitRepoRoot = try container.decode(Optional<String>.self, forKey: .gitRepoRoot)
-        handoffError = try container.decode(Optional<String>.self, forKey: .handoffError)
-        handoffPlatform = try container.decode(Optional<String>.self, forKey: .handoffPlatform)
-        handoffState = try container.decode(Optional<String>.self, forKey: .handoffState)
-        hidden = try container.decode(Int.self, forKey: .hidden)
-        id = try container.decode(String.self, forKey: .id)
-        inputTokens = try container.decode(Optional<Int>.self, forKey: .inputTokens)
-        lastActivityAt = try container.decode(Optional<Double>.self, forKey: .lastActivityAt)
-        lastActivityDescription = try container.decode(Optional<String>.self, forKey: .lastActivityDescription)
-        lastActivityProvenance = try container.decode(Optional<String>.self, forKey: .lastActivityProvenance)
-        lastReadAt = try container.decode(Optional<Double>.self, forKey: .lastReadAt)
-        messageCount = try container.decode(Optional<Int>.self, forKey: .messageCount)
-        messages = try container.decode([SessionMessage].self, forKey: .messages)
-        model = try container.decode(Optional<String>.self, forKey: .model)
-        modelConfig = try container.decode(Optional<String>.self, forKey: .modelConfig)
-        originJson = try container.decode(Optional<String>.self, forKey: .originJson)
-        outputTokens = try container.decode(Optional<Int>.self, forKey: .outputTokens)
-        parentSessionId = try container.decode(Optional<String>.self, forKey: .parentSessionId)
-        pinned = try container.decode(Int.self, forKey: .pinned)
-        pricingVersion = try container.decode(Optional<String>.self, forKey: .pricingVersion)
-        profileName = try container.decode(Optional<String>.self, forKey: .profileName)
-        reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
-        rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
-        source = try container.decode(String.self, forKey: .source)
-        startedAt = try container.decode(Double.self, forKey: .startedAt)
-        systemPrompt = try container.decode(Optional<String>.self, forKey: .systemPrompt)
-        systemPromptHash = try container.decode(Optional<String>.self, forKey: .systemPromptHash)
-        threadId = try container.decode(Optional<String>.self, forKey: .threadId)
-        title = try container.decode(Optional<String>.self, forKey: .title)
-        titleSource = try container.decode(Optional<String>.self, forKey: .titleSource)
-        toolCallCount = try container.decode(Optional<Int>.self, forKey: .toolCallCount)
-        toolNames = try container.decode(Optional<String>.self, forKey: .toolNames)
-        transportProfile = try container.decode(Optional<String>.self, forKey: .transportProfile)
-        userId = try container.decode(Optional<String>.self, forKey: .userId)
-        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "messages", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
-        var extra: [String: JSONValue] = [:]
-        for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
-        }
-        additionalProperties = extra
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(actualCostUsd, forKey: .actualCostUsd)
-        try container.encode(apiCallCount, forKey: .apiCallCount)
-        try container.encode(archived, forKey: .archived)
-        try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
-        try container.encode(billingMode, forKey: .billingMode)
-        try container.encode(billingProvider, forKey: .billingProvider)
-        try container.encode(cacheReadTokens, forKey: .cacheReadTokens)
-        try container.encode(cacheWriteTokens, forKey: .cacheWriteTokens)
-        try container.encode(chatId, forKey: .chatId)
-        try container.encode(chatType, forKey: .chatType)
-        try container.encode(compressionFailureCooldownUntil, forKey: .compressionFailureCooldownUntil)
-        try container.encode(compressionFailureError, forKey: .compressionFailureError)
-        try container.encode(compressionFallbackStreak, forKey: .compressionFallbackStreak)
-        try container.encode(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
-        try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
-        try container.encode(costSource, forKey: .costSource)
-        try container.encode(costStatus, forKey: .costStatus)
-        try container.encode(cwd, forKey: .cwd)
-        try container.encode(displayName, forKey: .displayName)
-        try container.encode(endReason, forKey: .endReason)
-        try container.encode(endedAt, forKey: .endedAt)
-        try container.encode(estimatedCostUsd, forKey: .estimatedCostUsd)
-        try container.encode(expiryFinalized, forKey: .expiryFinalized)
-        try container.encode(gitBranch, forKey: .gitBranch)
-        try container.encode(gitMetadataGeneration, forKey: .gitMetadataGeneration)
-        try container.encode(gitRepoRoot, forKey: .gitRepoRoot)
-        try container.encode(handoffError, forKey: .handoffError)
-        try container.encode(handoffPlatform, forKey: .handoffPlatform)
-        try container.encode(handoffState, forKey: .handoffState)
-        try container.encode(hidden, forKey: .hidden)
-        try container.encode(id, forKey: .id)
-        try container.encode(inputTokens, forKey: .inputTokens)
-        try container.encode(lastActivityAt, forKey: .lastActivityAt)
-        try container.encode(lastActivityDescription, forKey: .lastActivityDescription)
-        try container.encode(lastActivityProvenance, forKey: .lastActivityProvenance)
-        try container.encode(lastReadAt, forKey: .lastReadAt)
-        try container.encode(messageCount, forKey: .messageCount)
-        try container.encode(messages, forKey: .messages)
-        try container.encode(model, forKey: .model)
-        try container.encode(modelConfig, forKey: .modelConfig)
-        try container.encode(originJson, forKey: .originJson)
-        try container.encode(outputTokens, forKey: .outputTokens)
-        try container.encode(parentSessionId, forKey: .parentSessionId)
-        try container.encode(pinned, forKey: .pinned)
-        try container.encode(pricingVersion, forKey: .pricingVersion)
-        try container.encode(profileName, forKey: .profileName)
-        try container.encode(reasoningTokens, forKey: .reasoningTokens)
-        try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encode(sessionKey, forKey: .sessionKey)
-        try container.encode(source, forKey: .source)
-        try container.encode(startedAt, forKey: .startedAt)
-        try container.encode(systemPrompt, forKey: .systemPrompt)
-        try container.encode(systemPromptHash, forKey: .systemPromptHash)
-        try container.encode(threadId, forKey: .threadId)
-        try container.encode(title, forKey: .title)
-        try container.encode(titleSource, forKey: .titleSource)
-        try container.encode(toolCallCount, forKey: .toolCallCount)
-        try container.encode(toolNames, forKey: .toolNames)
-        try container.encode(transportProfile, forKey: .transportProfile)
-        try container.encode(userId, forKey: .userId)
-        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "messages", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "pricing_version", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
-        for (key, value) in additionalProperties {
-            guard !known.contains(key) else {
-                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
-            }
-            try dynamic.encode(value, forKey: DynamicCodingKey(key))
-        }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``hermes_cli/web_models.py::SessionImport``, streamed and validated by ``import_sessions_endpoint``: sessions as ``GET /api/sessions/{session_id}/export`` returns them.
-public struct SessionImportRequest: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var sessions: [SessionExportResponse]
-
-    public init(profile: Patch<String> = .absent, sessions: [SessionExportResponse]) {
-        self.profile = profile
-        self.sessions = sessions
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case sessions = "sessions"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["profile", "sessions"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        sessions = try container.decode([SessionExportResponse].self, forKey: .sessions)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-        try container.encode(sessions, forKey: .sessions)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``SessionDB.import_sessions`` success result (``ok: false`` is raised as a 400).
-public struct SessionImportResponse: Codable, Sendable, Hashable {
-    public var detached: Int
-    public var errors: [[String: JSONValue]]
-    public var imported: Int
-    public var importedIds: [String]
-    public var ok: Bool
-    public var skipped: Int
-    public var skippedIds: [String]
-
-    public init(detached: Int, errors: [[String: JSONValue]], imported: Int, importedIds: [String], ok: Bool, skipped: Int, skippedIds: [String]) {
-        self.detached = detached
-        self.errors = errors
-        self.imported = imported
-        self.importedIds = importedIds
-        self.ok = ok
-        self.skipped = skipped
-        self.skippedIds = skippedIds
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case detached = "detached"
-        case errors = "errors"
-        case imported = "imported"
-        case importedIds = "imported_ids"
-        case ok = "ok"
-        case skipped = "skipped"
-        case skippedIds = "skipped_ids"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["detached", "errors", "imported", "imported_ids", "ok", "skipped", "skipped_ids"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        detached = try container.decode(Int.self, forKey: .detached)
-        errors = try container.decode([[String: JSONValue]].self, forKey: .errors)
-        imported = try container.decode(Int.self, forKey: .imported)
-        importedIds = try container.decode([String].self, forKey: .importedIds)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        skipped = try container.decode(Int.self, forKey: .skipped)
-        skippedIds = try container.decode([String].self, forKey: .skippedIds)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(detached, forKey: .detached)
-        try container.encode(errors, forKey: .errors)
-        try container.encode(imported, forKey: .imported)
-        try container.encode(importedIds, forKey: .importedIds)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(skipped, forKey: .skipped)
-        try container.encode(skippedIds, forKey: .skippedIds)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_session_latest_descendant``.
-public struct SessionLatestDescendantResponse: Codable, Sendable, Hashable {
-    public var changed: Bool
-    public var path: [String]
-    public var requestedSessionId: String
-    public var sessionId: String
-
-    public init(changed: Bool, path: [String], requestedSessionId: String, sessionId: String) {
-        self.changed = changed
-        self.path = path
-        self.requestedSessionId = requestedSessionId
-        self.sessionId = sessionId
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case changed = "changed"
-        case path = "path"
-        case requestedSessionId = "requested_session_id"
-        case sessionId = "session_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["changed", "path", "requested_session_id", "session_id"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        changed = try container.decode(Bool.self, forKey: .changed)
-        path = try container.decode([String].self, forKey: .path)
-        requestedSessionId = try container.decode(String.self, forKey: .requestedSessionId)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(changed, forKey: .changed)
-        try container.encode(path, forKey: .path)
-        try container.encode(requestedSessionId, forKey: .requestedSessionId)
-        try container.encode(sessionId, forKey: .sessionId)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_sessions``. ``storage`` maps the serving profile to ``"corrupt"`` when its store is latched unreadable, else ``{}``.
-public struct SessionListResponse: Codable, Sendable, Hashable {
-    public var limit: Int
-    public var offset: Int
-    public var sessions: [RESTSessionListRow]
-    public var storage: [String: SessionListResponseStorageValue]
-    public var total: Int
-
-    public init(limit: Int, offset: Int, sessions: [RESTSessionListRow], storage: [String: SessionListResponseStorageValue], total: Int) {
-        self.limit = limit
-        self.offset = offset
-        self.sessions = sessions
-        self.storage = storage
-        self.total = total
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case limit = "limit"
-        case offset = "offset"
-        case sessions = "sessions"
-        case storage = "storage"
-        case total = "total"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["limit", "offset", "sessions", "storage", "total"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        limit = try container.decode(Int.self, forKey: .limit)
-        offset = try container.decode(Int.self, forKey: .offset)
-        sessions = try container.decode([RESTSessionListRow].self, forKey: .sessions)
-        storage = try container.decode([String: SessionListResponseStorageValue].self, forKey: .storage)
-        total = try container.decode(Int.self, forKey: .total)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(limit, forKey: .limit)
-        try container.encode(offset, forKey: .offset)
-        try container.encode(sessions, forKey: .sessions)
-        try container.encode(storage, forKey: .storage)
-        try container.encode(total, forKey: .total)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum SessionListResponseStorageValue: Codable, Sendable, Hashable, RawRepresentable {
-    case corrupt
-
-    public init?(rawValue: String) {
-        switch rawValue {
-        case "corrupt": self = .corrupt
-        default: return nil
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .corrupt: "corrupt"
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "corrupt": self = .corrupt
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``SessionDB._row_to_message_dict``: a ``messages`` row with ``content`` / ``tool_calls`` / ``display_metadata`` decoded and the display-index columns dropped. ``content`` is text or the decoded multimodal parts; the reasoning sidecars stay JSON text.
-public struct SessionMessage: Codable, Sendable, Hashable {
-    public var compressedSummary: Patch<Bool>
-    public var active: Int
-    public var apiContent: String?
-    public var codexMessageItems: String?
-    public var codexReasoningItems: String?
-    public var compacted: Int
-    public var content: JSONValue
-    public var displayKind: String?
-    public var displayMetadata: [String: JSONValue]?
-    public var effectDisposition: String?
-    public var finishReason: String?
-    public var id: Int
-    public var observed: Int
-    public var platformMessageId: String?
-    public var reasoning: String?
-    public var reasoningContent: String?
-    public var reasoningDetails: String?
-    public var role: String
-    public var sessionId: String
-    public var timestamp: Double
-    public var tokenCount: Int?
-    public var toolCallId: String?
-    /// Decoded tool-call list (``[]`` when undecodable), or null.
-    public var toolCalls: JSONValue
-    public var toolName: String?
-    public var additionalProperties: [String: JSONValue]
-
-    public init(compressedSummary: Patch<Bool> = .absent, active: Int, apiContent: String?, codexMessageItems: String?, codexReasoningItems: String?, compacted: Int, content: JSONValue, displayKind: String?, displayMetadata: [String: JSONValue]?, effectDisposition: String?, finishReason: String?, id: Int, observed: Int, platformMessageId: String?, reasoning: String?, reasoningContent: String?, reasoningDetails: String?, role: String, sessionId: String, timestamp: Double, tokenCount: Int?, toolCallId: String?, toolCalls: JSONValue, toolName: String?, additionalProperties: [String: JSONValue] = [:]) {
-        self.compressedSummary = compressedSummary
-        self.active = active
-        self.apiContent = apiContent
-        self.codexMessageItems = codexMessageItems
-        self.codexReasoningItems = codexReasoningItems
-        self.compacted = compacted
-        self.content = content
-        self.displayKind = displayKind
-        self.displayMetadata = displayMetadata
-        self.effectDisposition = effectDisposition
-        self.finishReason = finishReason
-        self.id = id
-        self.observed = observed
-        self.platformMessageId = platformMessageId
-        self.reasoning = reasoning
-        self.reasoningContent = reasoningContent
-        self.reasoningDetails = reasoningDetails
-        self.role = role
-        self.sessionId = sessionId
-        self.timestamp = timestamp
-        self.tokenCount = tokenCount
-        self.toolCallId = toolCallId
-        self.toolCalls = toolCalls
-        self.toolName = toolName
-        self.additionalProperties = additionalProperties
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case compressedSummary = "_compressed_summary"
-        case active = "active"
-        case apiContent = "api_content"
-        case codexMessageItems = "codex_message_items"
-        case codexReasoningItems = "codex_reasoning_items"
-        case compacted = "compacted"
-        case content = "content"
-        case displayKind = "display_kind"
-        case displayMetadata = "display_metadata"
-        case effectDisposition = "effect_disposition"
-        case finishReason = "finish_reason"
-        case id = "id"
-        case observed = "observed"
-        case platformMessageId = "platform_message_id"
-        case reasoning = "reasoning"
-        case reasoningContent = "reasoning_content"
-        case reasoningDetails = "reasoning_details"
-        case role = "role"
-        case sessionId = "session_id"
-        case timestamp = "timestamp"
-        case tokenCount = "token_count"
-        case toolCallId = "tool_call_id"
-        case toolCalls = "tool_calls"
-        case toolName = "tool_name"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.compressedSummary) {
-            compressedSummary = .absent
-        } else if try container.decodeNil(forKey: .compressedSummary) {
-            compressedSummary = .null
-        } else {
-            compressedSummary = .value(try container.decode(Bool.self, forKey: .compressedSummary))
-        }
-        active = try container.decode(Int.self, forKey: .active)
-        apiContent = try container.decode(Optional<String>.self, forKey: .apiContent)
-        codexMessageItems = try container.decode(Optional<String>.self, forKey: .codexMessageItems)
-        codexReasoningItems = try container.decode(Optional<String>.self, forKey: .codexReasoningItems)
-        compacted = try container.decode(Int.self, forKey: .compacted)
-        content = try container.decode(JSONValue.self, forKey: .content)
-        displayKind = try container.decode(Optional<String>.self, forKey: .displayKind)
-        displayMetadata = try container.decode(Optional<[String: JSONValue]>.self, forKey: .displayMetadata)
-        effectDisposition = try container.decode(Optional<String>.self, forKey: .effectDisposition)
-        finishReason = try container.decode(Optional<String>.self, forKey: .finishReason)
-        id = try container.decode(Int.self, forKey: .id)
-        observed = try container.decode(Int.self, forKey: .observed)
-        platformMessageId = try container.decode(Optional<String>.self, forKey: .platformMessageId)
-        reasoning = try container.decode(Optional<String>.self, forKey: .reasoning)
-        reasoningContent = try container.decode(Optional<String>.self, forKey: .reasoningContent)
-        reasoningDetails = try container.decode(Optional<String>.self, forKey: .reasoningDetails)
-        role = try container.decode(String.self, forKey: .role)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-        timestamp = try container.decode(Double.self, forKey: .timestamp)
-        tokenCount = try container.decode(Optional<Int>.self, forKey: .tokenCount)
-        toolCallId = try container.decode(Optional<String>.self, forKey: .toolCallId)
-        toolCalls = try container.decode(JSONValue.self, forKey: .toolCalls)
-        toolName = try container.decode(Optional<String>.self, forKey: .toolName)
-        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_kind", "display_metadata", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_calls", "tool_name"]
-        var extra: [String: JSONValue] = [:]
-        for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
-        }
-        additionalProperties = extra
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch compressedSummary {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .compressedSummary)
-        case .value(let value): try container.encode(value, forKey: .compressedSummary)
-        }
-        try container.encode(active, forKey: .active)
-        try container.encode(apiContent, forKey: .apiContent)
-        try container.encode(codexMessageItems, forKey: .codexMessageItems)
-        try container.encode(codexReasoningItems, forKey: .codexReasoningItems)
-        try container.encode(compacted, forKey: .compacted)
-        try container.encode(content, forKey: .content)
-        try container.encode(displayKind, forKey: .displayKind)
-        try container.encode(displayMetadata, forKey: .displayMetadata)
-        try container.encode(effectDisposition, forKey: .effectDisposition)
-        try container.encode(finishReason, forKey: .finishReason)
-        try container.encode(id, forKey: .id)
-        try container.encode(observed, forKey: .observed)
-        try container.encode(platformMessageId, forKey: .platformMessageId)
-        try container.encode(reasoning, forKey: .reasoning)
-        try container.encode(reasoningContent, forKey: .reasoningContent)
-        try container.encode(reasoningDetails, forKey: .reasoningDetails)
-        try container.encode(role, forKey: .role)
-        try container.encode(sessionId, forKey: .sessionId)
-        try container.encode(timestamp, forKey: .timestamp)
-        try container.encode(tokenCount, forKey: .tokenCount)
-        try container.encode(toolCallId, forKey: .toolCallId)
-        try container.encode(toolCalls, forKey: .toolCalls)
-        try container.encode(toolName, forKey: .toolName)
-        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_compressed_summary", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_kind", "display_metadata", "effect_disposition", "finish_reason", "id", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_calls", "tool_name"]
+        let known: Set<String> = ["_branched_from", "_lineage_ids", "_lineage_root_id", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "continuation_kind", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id"]
         for (key, value) in additionalProperties {
             guard !known.contains(key) else {
                 throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))

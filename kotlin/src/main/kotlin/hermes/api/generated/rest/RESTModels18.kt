@@ -9,6 +9,801 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. Advisory SkillEvaluator Tier 1 result (``tools/skillevaluator_scan.py::Tier1Report``). */
+@Serializable
+public data class SkillHubTier1Report(
+    @SerialName("findings")
+    public val findings: List<SkillHubTier1Finding>,
+    @SerialName("incomplete_checks")
+    public val incompleteChecks: List<String>,
+    @SerialName("passed")
+    public val passed: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillInstallRequest.Serializer::class)
+public data class SkillInstallRequest(
+    public val identifier: String,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<SkillInstallRequest> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SkillInstallRequest {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SkillInstallRequest requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SkillInstallRequest requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("identifier", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return SkillInstallRequest(
+                identifier = json.decodeFromJsonElement<String>((input["identifier"] ?: throw SerializationException("Missing identifier"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillInstallRequest) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SkillInstallRequest requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["identifier"] = json.encodeToJsonElement(value.identifier)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tools/skill_manager_tool.py::_attach_lint_findings`` row (advisory). */
+@Serializable
+public data class SkillLintWarning(
+    @SerialName("message")
+    public val message: String,
+    @SerialName("rule")
+    public val rule: String,
+    @SerialName("severity")
+    public val severity: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_skills`` row: ``tools/skills_tool.py::_find_all_skills`` (``category`` is ``null`` for a top-level skill) annotated with enabled state, usage count and provenance. */
+@Serializable
+public data class SkillListRow(
+    @SerialName("category")
+    public val category: String?,
+    @SerialName("description")
+    public val description: String,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("name")
+    public val name: String,
+    /** "external": mounted from ``skills.external_dirs`` (externally authored, not learned). */
+    @SerialName("provenance")
+    public val provenance: SkillListRowProvenance,
+    @SerialName("usage")
+    public val usage: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillListRowProvenance.Serializer::class)
+public sealed interface SkillListRowProvenance {
+    public data object Hub : SkillListRowProvenance
+    public data object Bundled : SkillListRowProvenance
+    public data object External : SkillListRowProvenance
+    public data object Agent : SkillListRowProvenance
+    public data class Unknown(public val raw: kotlin.String) : SkillListRowProvenance
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Hub -> "hub"
+            Bundled -> "bundled"
+            External -> "external"
+            Agent -> "agent"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): SkillListRowProvenance = when (raw) {
+            "hub" -> Hub
+            "bundled" -> Bundled
+            "external" -> External
+            "agent" -> Agent
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<SkillListRowProvenance> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SkillListRowProvenance", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): SkillListRowProvenance = when (val raw = decoder.decodeString()) {
+            "hub" -> Hub
+            "bundled" -> Bundled
+            "external" -> External
+            "agent" -> Agent
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected SkillListRowProvenance value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillListRowProvenance) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillToggle.Serializer::class)
+public data class SkillToggle(
+    public val enabled: Boolean,
+    public val name: String,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<SkillToggle> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SkillToggle {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SkillToggle requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SkillToggle requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("enabled", "name", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return SkillToggle(
+                enabled = json.decodeFromJsonElement<Boolean>((input["enabled"] ?: throw SerializationException("Missing enabled"))),
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillToggle) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SkillToggle requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["enabled"] = json.encodeToJsonElement(value.enabled)
+            output["name"] = json.encodeToJsonElement(value.name)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``toggle_skill``. */
+@Serializable
+public data class SkillToggleResponse(
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillUninstallRequest.Serializer::class)
+public data class SkillUninstallRequest(
+    public val name: String,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<SkillUninstallRequest> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SkillUninstallRequest {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SkillUninstallRequest requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SkillUninstallRequest requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("name", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return SkillUninstallRequest(
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillUninstallRequest) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SkillUninstallRequest requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["name"] = json.encodeToJsonElement(value.name)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_change`` — the new frontmatter description, clipped (``_description_preview``). */
+@Serializable
+public data class SkillWriteChange(
+    @SerialName("description")
+    public val description: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = SkillsUpdateRequest.Serializer::class)
+public data class SkillsUpdateRequest(
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<SkillsUpdateRequest> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SkillsUpdateRequest {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SkillsUpdateRequest requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SkillsUpdateRequest requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return SkillsUpdateRequest(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillsUpdateRequest) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SkillsUpdateRequest requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. Only the author is configurable; model + prompt come from ``auxiliary.triage_specifier`` in config.yaml, same as the CLI. */
+@Serializable(with = SpecifyBody.Serializer::class)
+public data class SpecifyBody(
+    public val author: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<SpecifyBody> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SpecifyBody {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SpecifyBody requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SpecifyBody requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("author")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return SpecifyBody(
+                author = when (val raw = input["author"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SpecifyBody) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SpecifyBody requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.author) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["author"] = JsonNull
+                is Patch.Value -> output["author"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_ssh_ownership``. */
+@Serializable
+public data class SshOwnershipResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("protocolVersion")
+    public val protocolVersion: Long,
+    @SerialName("runtimeIntact")
+    public val runtimeIntact: Boolean,
+    @SerialName("sshOwnerNonce")
+    public val sshOwnerNonce: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_config.py::_stale_aux_pins``. */
+@Serializable
+public data class StaleAuxiliaryPin(
+    @SerialName("model")
+    public val model: String,
+    @SerialName("provider")
+    public val provider: String,
+    @SerialName("task")
+    public val task: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/platforms/api_server.py::_api_server_status_payload`` — the only platform that publishes ``metrics`` today (``last_*`` are ISO timestamps). */
+@Serializable
+public data class StatusApiServerMetrics(
+    @SerialName("active_runs")
+    public val activeRuns: Long,
+    @SerialName("host")
+    public val host: String,
+    @SerialName("last_heartbeat")
+    public val lastHeartbeat: String?,
+    @SerialName("last_request_at")
+    public val lastRequestAt: String?,
+    @SerialName("metrics_today")
+    public val metricsToday: StatusApiServerMetricsToday,
+    @SerialName("port")
+    public val port: Long,
+    @SerialName("stored_runs")
+    public val storedRuns: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. UTC-day counters; ``latency_p95_ms`` is null before the first request of the day. */
+@Serializable
+public data class StatusApiServerMetricsToday(
+    @SerialName("day")
+    public val day: String,
+    @SerialName("latency_p95_ms")
+    public val latencyP95Ms: Double?,
+    @SerialName("messages")
+    public val messages: Long,
+    @SerialName("requests")
+    public val requests: Long,
+    @SerialName("tokens")
+    public val tokens: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_component_health``. */
+@Serializable
+public data class StatusComponents(
+    @SerialName("dashboard")
+    public val dashboard: StatusDashboardComponent,
+    @SerialName("gateway")
+    public val gateway: StatusGatewayComponent,
+    @SerialName("platforms")
+    public val platforms: StatusPlatformsComponent,
+    @SerialName("storage")
+    public val storage: StatusStorageComponent,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server.py::DashboardHealth.snapshot``. */
+@Serializable
+public data class StatusDashboardComponent(
+    @SerialName("last_error_at")
+    public val lastErrorAt: Double?,
+    @SerialName("recent_unhandled_errors")
+    public val recentUnhandledErrors: Long,
+    @SerialName("selftest")
+    public val selftest: StatusDashboardComponentSelftest,
+    @SerialName("status")
+    public val status: StatusDashboardComponentStatus,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusDashboardComponentSelftest.Serializer::class)
+public sealed interface StatusDashboardComponentSelftest {
+    public data object KnownUnknown : StatusDashboardComponentSelftest
+    public data object Ok : StatusDashboardComponentSelftest
+    public data object Failing : StatusDashboardComponentSelftest
+    public data class Unknown(public val raw: kotlin.String) : StatusDashboardComponentSelftest
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            KnownUnknown -> "unknown"
+            Ok -> "ok"
+            Failing -> "failing"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusDashboardComponentSelftest = when (raw) {
+            "unknown" -> KnownUnknown
+            "ok" -> Ok
+            "failing" -> Failing
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusDashboardComponentSelftest> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDashboardComponentSelftest", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusDashboardComponentSelftest = when (val raw = decoder.decodeString()) {
+            "unknown" -> KnownUnknown
+            "ok" -> Ok
+            "failing" -> Failing
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusDashboardComponentSelftest value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusDashboardComponentSelftest) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusDashboardComponentStatus.Serializer::class)
+public sealed interface StatusDashboardComponentStatus {
+    public data object Ok : StatusDashboardComponentStatus
+    public data object Degraded : StatusDashboardComponentStatus
+    public data class Unknown(public val raw: kotlin.String) : StatusDashboardComponentStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusDashboardComponentStatus = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusDashboardComponentStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDashboardComponentStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusDashboardComponentStatus = when (val raw = decoder.decodeString()) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusDashboardComponentStatus value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusDashboardComponentStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/disk_status.py::collect_disk_status``; only ``pressure`` when the collector raised. */
+@Serializable
+public data class StatusDiskPressure(
+    @SerialName("free_mb")
+    public val freeMb: Long? = null,
+    @SerialName("pressure")
+    public val pressure: StatusDiskPressurePressure,
+    @SerialName("total_mb")
+    public val totalMb: Long? = null,
+    @SerialName("used_percent")
+    public val usedPercent: Double? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusDiskPressurePressure.Serializer::class)
+public sealed interface StatusDiskPressurePressure {
+    public data object Ok : StatusDiskPressurePressure
+    public data object Elevated : StatusDiskPressurePressure
+    public data object Critical : StatusDiskPressurePressure
+    public data object KnownUnknown : StatusDiskPressurePressure
+    public data class Unknown(public val raw: kotlin.String) : StatusDiskPressurePressure
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Elevated -> "elevated"
+            Critical -> "critical"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusDiskPressurePressure = when (raw) {
+            "ok" -> Ok
+            "elevated" -> Elevated
+            "critical" -> Critical
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusDiskPressurePressure> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusDiskPressurePressure", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusDiskPressurePressure = when (val raw = decoder.decodeString()) {
+            "ok" -> Ok
+            "elevated" -> Elevated
+            "critical" -> Critical
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusDiskPressurePressure value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusDiskPressurePressure) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_state_search.py::_rebuild_status``. */
+@Serializable
+public data class StatusFtsRebuild(
+    @SerialName("indexed")
+    public val indexed: Long,
+    @SerialName("pending")
+    public val pending: Boolean,
+    @SerialName("percent")
+    public val percent: Long,
+    @SerialName("total")
+    public val total: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class StatusGatewayComponent(
+    @SerialName("state")
+    public val state: String,
+    @SerialName("status")
+    public val status: StatusGatewayComponentStatus,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusGatewayComponentStatus.Serializer::class)
+public sealed interface StatusGatewayComponentStatus {
+    public data object Ok : StatusGatewayComponentStatus
+    public data object Degraded : StatusGatewayComponentStatus
+    public data class Unknown(public val raw: kotlin.String) : StatusGatewayComponentStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusGatewayComponentStatus = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusGatewayComponentStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusGatewayComponentStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusGatewayComponentStatus = when (val raw = decoder.decodeString()) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusGatewayComponentStatus value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusGatewayComponentStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One runtime platform entry (``gateway/status.py::_prepare_runtime_status_update``) with the writer-identity stamps stripped; mirrored api_server/webhook entries of a served profile add ``ingress_url`` / ``mirrored_from`` (``shared_listener_mirror_platforms``). */
+@Serializable(with = StatusGatewayPlatform.Serializer::class)
+public data class StatusGatewayPlatform(
+    public val errorCode: String? = null,
+    public val errorMessage: String? = null,
+    public val ingressUrl: String? = null,
+    public val listenerBase: String? = null,
+    public val metrics: StatusApiServerMetrics? = null,
+    public val mirroredFrom: String? = null,
+    public val needsAttention: Boolean? = null,
+    public val retryingSince: String? = null,
+    public val state: String? = null,
+    public val updatedAt: String? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<StatusGatewayPlatform> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): StatusGatewayPlatform {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("StatusGatewayPlatform requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("StatusGatewayPlatform requires an object")
+            return StatusGatewayPlatform(
+                errorCode = input["error_code"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                errorMessage = input["error_message"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                ingressUrl = input["ingress_url"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                listenerBase = input["listener_base"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                metrics = input["metrics"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<StatusApiServerMetrics>(it) },
+                mirroredFrom = input["mirrored_from"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                needsAttention = input["needs_attention"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                retryingSince = input["retrying_since"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                state = input["state"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                updatedAt = input["updated_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("error_code", "error_message", "ingress_url", "listener_base", "metrics", "mirrored_from", "needs_attention", "retrying_since", "state", "updated_at") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusGatewayPlatform) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("StatusGatewayPlatform requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("error_code", "error_message", "ingress_url", "listener_base", "metrics", "mirrored_from", "needs_attention", "retrying_since", "state", "updated_at")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            value.errorCode?.let { output["error_code"] = json.encodeToJsonElement(it) }
+            value.errorMessage?.let { output["error_message"] = json.encodeToJsonElement(it) }
+            value.ingressUrl?.let { output["ingress_url"] = json.encodeToJsonElement(it) }
+            value.listenerBase?.let { output["listener_base"] = json.encodeToJsonElement(it) }
+            value.metrics?.let { output["metrics"] = json.encodeToJsonElement(it) }
+            value.mirroredFrom?.let { output["mirrored_from"] = json.encodeToJsonElement(it) }
+            value.needsAttention?.let { output["needs_attention"] = json.encodeToJsonElement(it) }
+            value.retryingSince?.let { output["retrying_since"] = json.encodeToJsonElement(it) }
+            value.state?.let { output["state"] = json.encodeToJsonElement(it) }
+            value.updatedAt?.let { output["updated_at"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One live gateway from ``hermes_cli/web_server_gateway.py::_collect_profile_gateway_topology``. */
+@Serializable
+public data class StatusGatewayTopologyEntry(
+    @SerialName("ports")
+    public val ports: Map<String, Long>,
+    @SerialName("profile")
+    public val profile: String,
+    @SerialName("served_profiles")
+    public val servedProfiles: List<String>? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/memory_status.py::collect_memory_status``; only ``pressure`` when the collector raised. */
+@Serializable
+public data class StatusMemoryPressure(
+    @SerialName("boot_id")
+    public val bootId: String? = null,
+    @SerialName("gateway_rss_mb")
+    public val gatewayRssMb: Long? = null,
+    @SerialName("last_boot_suspected_oom")
+    public val lastBootSuspectedOom: Boolean? = null,
+    @SerialName("last_boot_unclean")
+    public val lastBootUnclean: Boolean? = null,
+    @SerialName("pressure")
+    public val pressure: StatusMemoryPressurePressure,
+    @SerialName("sampled_at")
+    public val sampledAt: String? = null,
+    @SerialName("swap_used_mb")
+    public val swapUsedMb: Long? = null,
+    @SerialName("system_available_mb")
+    public val systemAvailableMb: Long? = null,
+    @SerialName("system_total_mb")
+    public val systemTotalMb: Long? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusMemoryPressurePressure.Serializer::class)
+public sealed interface StatusMemoryPressurePressure {
+    public data object Ok : StatusMemoryPressurePressure
+    public data object Elevated : StatusMemoryPressurePressure
+    public data object Critical : StatusMemoryPressurePressure
+    public data object KnownUnknown : StatusMemoryPressurePressure
+    public data class Unknown(public val raw: kotlin.String) : StatusMemoryPressurePressure
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Elevated -> "elevated"
+            Critical -> "critical"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusMemoryPressurePressure = when (raw) {
+            "ok" -> Ok
+            "elevated" -> Elevated
+            "critical" -> Critical
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusMemoryPressurePressure> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusMemoryPressurePressure", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusMemoryPressurePressure = when (val raw = decoder.decodeString()) {
+            "ok" -> Ok
+            "elevated" -> Elevated
+            "critical" -> Critical
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusMemoryPressurePressure value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusMemoryPressurePressure) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class StatusPlatformsComponent(
+    @SerialName("configured")
+    public val configured: Long,
+    @SerialName("connected")
+    public val connected: Long,
+    @SerialName("status")
+    public val status: StatusPlatformsComponentStatus,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusPlatformsComponentStatus.Serializer::class)
+public sealed interface StatusPlatformsComponentStatus {
+    public data object Ok : StatusPlatformsComponentStatus
+    public data object Degraded : StatusPlatformsComponentStatus
+    public data class Unknown(public val raw: kotlin.String) : StatusPlatformsComponentStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusPlatformsComponentStatus = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusPlatformsComponentStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusPlatformsComponentStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusPlatformsComponentStatus = when (val raw = decoder.decodeString()) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusPlatformsComponentStatus value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusPlatformsComponentStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``get_status`` — the public liveness probe. The host-recon keys (``hermes_home`` … ``gateways``) are present only when the auth gate is off; ``install_id`` only when it could be persisted; ``fts_rebuild`` only while a deferred FTS rebuild is pending. */
 @Serializable
 public data class StatusResponse(
@@ -85,6 +880,8 @@ public data class StatusResponse(
     public val releaseDate: String,
     @SerialName("restart_drain_timeout")
     public val restartDrainTimeout: Double,
+    @SerialName("shared_profile_warning")
+    public val sharedProfileWarning: Boolean,
     @SerialName("version")
     public val version: String,
 )
@@ -257,748 +1054,6 @@ public sealed interface StatusResponseOverall {
 
         override fun serialize(encoder: Encoder, value: StatusResponseOverall) {
             encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/readiness.py::_probe_state_db`` reduced to its status enum. */
-@Serializable
-public data class StatusStorageComponent(
-    @SerialName("reason")
-    public val reason: StatusStorageComponentReason? = null,
-    @SerialName("status")
-    public val status: StatusStorageComponentStatus,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusStorageComponentReason.Serializer::class)
-public sealed interface StatusStorageComponentReason {
-    public data object Corrupt : StatusStorageComponentReason
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Corrupt -> "corrupt"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): StatusStorageComponentReason? = when (raw) {
-            "corrupt" -> Corrupt
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<StatusStorageComponentReason> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusStorageComponentReason", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusStorageComponentReason = when (val raw = decoder.decodeString()) {
-            "corrupt" -> Corrupt
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusStorageComponentReason) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusStorageComponentStatus.Serializer::class)
-public sealed interface StatusStorageComponentStatus {
-    public data object Ok : StatusStorageComponentStatus
-    public data object Degraded : StatusStorageComponentStatus
-    public data class Unknown(public val raw: kotlin.String) : StatusStorageComponentStatus
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Ok -> "ok"
-            Degraded -> "degraded"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusStorageComponentStatus = when (raw) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusStorageComponentStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusStorageComponentStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusStorageComponentStatus = when (val raw = decoder.decodeString()) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusStorageComponentStatus value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusStorageComponentStatus) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class SystemStatsDisk(
-    @SerialName("free")
-    public val free: Long,
-    @SerialName("percent")
-    public val percent: Double,
-    @SerialName("total")
-    public val total: Long,
-    @SerialName("used")
-    public val used: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class SystemStatsMemory(
-    @SerialName("available")
-    public val available: Long,
-    @SerialName("percent")
-    public val percent: Double,
-    @SerialName("total")
-    public val total: Long,
-    @SerialName("used")
-    public val used: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class SystemStatsProcess(
-    @SerialName("create_time")
-    public val createTime: Long,
-    @SerialName("num_threads")
-    public val numThreads: Long,
-    @SerialName("pid")
-    public val pid: Long,
-    @SerialName("rss")
-    public val rss: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_system_stats``; every psutil-derived key is absent when psutil (or that probe) is unavailable. */
-@Serializable
-public data class SystemStatsResponse(
-    @SerialName("arch")
-    public val arch: String,
-    @SerialName("cpu_count")
-    public val cpuCount: Long?,
-    @SerialName("cpu_percent")
-    public val cpuPercent: Double? = null,
-    @SerialName("disk")
-    public val disk: SystemStatsDisk? = null,
-    @SerialName("hermes_version")
-    public val hermesVersion: String,
-    @SerialName("hostname")
-    public val hostname: String,
-    @SerialName("load_avg")
-    public val loadAvg: List<Double>? = null,
-    @SerialName("memory")
-    public val memory: SystemStatsMemory? = null,
-    @SerialName("os")
-    public val os: String,
-    @SerialName("os_release")
-    public val osRelease: String,
-    @SerialName("os_version")
-    public val osVersion: String,
-    @SerialName("platform")
-    public val platform: String,
-    @SerialName("process")
-    public val process: SystemStatsProcess? = null,
-    @SerialName("psutil")
-    public val psutil: Boolean,
-    @SerialName("python_impl")
-    public val pythonImpl: String,
-    @SerialName("python_version")
-    public val pythonVersion: String,
-    @SerialName("uptime_seconds")
-    public val uptimeSeconds: Long? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. POST /api/audio/tts-lease: ``lease`` names the toggle/surface holding the lease (``desktop:read-aloud``, ``desktop:conversation``); ``active`` True acquires + warms, False releases. */
-@Serializable
-public data class TTSLeaseRequest(
-    @SerialName("active")
-    public val active: Boolean? = null,
-    @SerialName("lease")
-    public val lease: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class TTSSpeakRequest(
-    @SerialName("text")
-    public val text: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = TelegramOnboardingApply.Serializer::class)
-public data class TelegramOnboardingApply(
-    public val allowedUserIds: List<String>,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<TelegramOnboardingApply> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): TelegramOnboardingApply {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("TelegramOnboardingApply requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("TelegramOnboardingApply requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("allowed_user_ids", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return TelegramOnboardingApply(
-                allowedUserIds = json.decodeFromJsonElement<List<String>>((input["allowed_user_ids"] ?: throw SerializationException("Missing allowed_user_ids"))),
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: TelegramOnboardingApply) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("TelegramOnboardingApply requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["allowed_user_ids"] = json.encodeToJsonElement(value.allowedUserIds)
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``apply_telegram_onboarding``. */
-@Serializable
-public data class TelegramOnboardingApplyResponse(
-    @SerialName("bot_username")
-    public val botUsername: String?,
-    @SerialName("needs_restart")
-    public val needsRestart: Boolean,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("platform")
-    public val platform: TelegramOnboardingApplyResponsePlatform,
-    @SerialName("restart_action")
-    public val restartAction: TelegramOnboardingApplyResponseRestartAction? = null,
-    @SerialName("restart_error")
-    public val restartError: String? = null,
-    @SerialName("restart_pid")
-    public val restartPid: Long? = null,
-    @SerialName("restart_started")
-    public val restartStarted: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = TelegramOnboardingApplyResponsePlatform.Serializer::class)
-public sealed interface TelegramOnboardingApplyResponsePlatform {
-    public data object Telegram : TelegramOnboardingApplyResponsePlatform
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Telegram -> "telegram"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): TelegramOnboardingApplyResponsePlatform? = when (raw) {
-            "telegram" -> Telegram
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<TelegramOnboardingApplyResponsePlatform> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TelegramOnboardingApplyResponsePlatform", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): TelegramOnboardingApplyResponsePlatform = when (val raw = decoder.decodeString()) {
-            "telegram" -> Telegram
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: TelegramOnboardingApplyResponsePlatform) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = TelegramOnboardingApplyResponseRestartAction.Serializer::class)
-public sealed interface TelegramOnboardingApplyResponseRestartAction {
-    public data object GatewayRestart : TelegramOnboardingApplyResponseRestartAction
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            GatewayRestart -> "gateway-restart"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): TelegramOnboardingApplyResponseRestartAction? = when (raw) {
-            "gateway-restart" -> GatewayRestart
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<TelegramOnboardingApplyResponseRestartAction> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TelegramOnboardingApplyResponseRestartAction", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): TelegramOnboardingApplyResponseRestartAction = when (val raw = decoder.decodeString()) {
-            "gateway-restart" -> GatewayRestart
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: TelegramOnboardingApplyResponseRestartAction) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = TelegramOnboardingStart.Serializer::class)
-public data class TelegramOnboardingStart(
-    public val botName: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<TelegramOnboardingStart> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): TelegramOnboardingStart {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("TelegramOnboardingStart requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("TelegramOnboardingStart requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("bot_name")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return TelegramOnboardingStart(
-                botName = when (val raw = input["bot_name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: TelegramOnboardingStart) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("TelegramOnboardingStart requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.botName) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["bot_name"] = JsonNull
-                is Patch.Value -> output["bot_name"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``start_telegram_onboarding`` — the setup service's pairing, trimmed to strings. */
-@Serializable
-public data class TelegramOnboardingStartResponse(
-    @SerialName("deep_link")
-    public val deepLink: String,
-    @SerialName("expires_at")
-    public val expiresAt: String,
-    @SerialName("pairing_id")
-    public val pairingId: String,
-    @SerialName("qr_payload")
-    public val qrPayload: String,
-    @SerialName("suggested_username")
-    public val suggestedUsername: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_telegram_onboarding_status``: ``waiting`` carries only ``expires_at``; ``ready`` is ``_telegram_ready_payload``. Terminal statuses are 410s. */
-@Serializable
-public data class TelegramOnboardingStatusResponse(
-    @SerialName("bot_username")
-    public val botUsername: String? = null,
-    @SerialName("expires_at")
-    public val expiresAt: String,
-    @SerialName("owner_user_id")
-    public val ownerUserId: String? = null,
-    @SerialName("status")
-    public val status: TelegramOnboardingStatusResponseStatus,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = TelegramOnboardingStatusResponseStatus.Serializer::class)
-public sealed interface TelegramOnboardingStatusResponseStatus {
-    public data object Waiting : TelegramOnboardingStatusResponseStatus
-    public data object Ready : TelegramOnboardingStatusResponseStatus
-    public data class Unknown(public val raw: kotlin.String) : TelegramOnboardingStatusResponseStatus
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Waiting -> "waiting"
-            Ready -> "ready"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): TelegramOnboardingStatusResponseStatus = when (raw) {
-            "waiting" -> Waiting
-            "ready" -> Ready
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<TelegramOnboardingStatusResponseStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TelegramOnboardingStatusResponseStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): TelegramOnboardingStatusResponseStatus = when (val raw = decoder.decodeString()) {
-            "waiting" -> Waiting
-            "ready" -> Ready
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected TelegramOnboardingStatusResponseStatus value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: TelegramOnboardingStatusResponseStatus) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A built-in (``hermes_cli/web_server_profiles.py::_TERMINAL_BACKENDS``) or plugin backend with its health probe. */
-@Serializable
-public data class TerminalBackendRow(
-    @SerialName("active")
-    public val active: Boolean,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("detail")
-    public val detail: String,
-    @SerialName("label")
-    public val label: String,
-    @SerialName("name")
-    public val name: String,
-    /** "ready", "needs_setup" or "unavailable" (plugin backends supply their own probe). */
-    @SerialName("status")
-    public val status: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = TerminalBackendSelect.Serializer::class)
-public data class TerminalBackendSelect(
-    public val backend: String,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<TerminalBackendSelect> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): TerminalBackendSelect {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("TerminalBackendSelect requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("TerminalBackendSelect requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("backend", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return TerminalBackendSelect(
-                backend = json.decodeFromJsonElement<String>((input["backend"] ?: throw SerializationException("Missing backend"))),
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: TerminalBackendSelect) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("TerminalBackendSelect requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["backend"] = json.encodeToJsonElement(value.backend)
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``select_terminal_backend``. */
-@Serializable
-public data class TerminalBackendSelectResponse(
-    @SerialName("backend")
-    public val backend: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_terminal_backends``. */
-@Serializable
-public data class TerminalBackendsResponse(
-    @SerialName("active")
-    public val active: String,
-    @SerialName("backends")
-    public val backends: List<TerminalBackendRow>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = TerminateRunBody.Serializer::class)
-public data class TerminateRunBody(
-    public val reason: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<TerminateRunBody> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): TerminateRunBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("TerminateRunBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("TerminateRunBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("reason")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return TerminateRunBody(
-                reason = when (val raw = input["reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: TerminateRunBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("TerminateRunBody requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.reason) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["reason"] = JsonNull
-                is Patch.Value -> output["reason"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ThemeSetBody(
-    @SerialName("name")
-    public val name: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A provider row's ``env_vars`` entry annotated with ``is_set`` (never the value). */
-@Serializable
-public data class ToolsetConfigEnvVar(
-    @SerialName("default")
-    public val default: String?,
-    @SerialName("is_set")
-    public val isSet: Boolean,
-    @SerialName("key")
-    public val key: String,
-    @SerialName("prompt")
-    public val prompt: String,
-    @SerialName("url")
-    public val url: String?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One provider picker row (``hermes_cli/tools_config_providers.py::_visible_providers``: ``TOOL_CATEGORIES`` rows, then plugin rows). */
-@Serializable
-public data class ToolsetConfigProvider(
-    @SerialName("badge")
-    public val badge: String,
-    /** ``web`` rows only: ``web_provider_capabilities(web_backend)``. */
-    @SerialName("capabilities")
-    public val capabilities: List<ToolsetConfigProviderCapabilitiesItem>? = null,
-    @SerialName("env_vars")
-    public val envVars: List<ToolsetConfigEnvVar>,
-    @SerialName("is_active")
-    public val isActive: Boolean,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("post_setup")
-    public val postSetup: String?,
-    @SerialName("requires_nous_auth")
-    public val requiresNousAuth: Boolean,
-    /** ``hermes_cli/tools_config_providers.py::provider_readiness_status``. */
-    @SerialName("status")
-    public val status: ToolsetConfigProviderStatus,
-    @SerialName("tag")
-    public val tag: String,
-    /** ``tts`` rows only: the ``tts.provider`` value. */
-    @SerialName("tts_provider")
-    public val ttsProvider: String? = null,
-    /** ``web`` rows with a backend key only. */
-    @SerialName("web_backend")
-    public val webBackend: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ToolsetConfigProviderCapabilitiesItem.Serializer::class)
-public sealed interface ToolsetConfigProviderCapabilitiesItem {
-    public data object Search : ToolsetConfigProviderCapabilitiesItem
-    public data object Extract : ToolsetConfigProviderCapabilitiesItem
-    public data class Unknown(public val raw: kotlin.String) : ToolsetConfigProviderCapabilitiesItem
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Search -> "search"
-            Extract -> "extract"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ToolsetConfigProviderCapabilitiesItem = when (raw) {
-            "search" -> Search
-            "extract" -> Extract
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ToolsetConfigProviderCapabilitiesItem> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetConfigProviderCapabilitiesItem", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ToolsetConfigProviderCapabilitiesItem = when (val raw = decoder.decodeString()) {
-            "search" -> Search
-            "extract" -> Extract
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ToolsetConfigProviderCapabilitiesItem value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ToolsetConfigProviderCapabilitiesItem) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ToolsetConfigProviderStatus.Serializer::class)
-public sealed interface ToolsetConfigProviderStatus {
-    public data object Ready : ToolsetConfigProviderStatus
-    public data object NeedsKeys : ToolsetConfigProviderStatus
-    public data object NeedsAuth : ToolsetConfigProviderStatus
-    public data object NeedsSetup : ToolsetConfigProviderStatus
-    public data class Unknown(public val raw: kotlin.String) : ToolsetConfigProviderStatus
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Ready -> "ready"
-            NeedsKeys -> "needs_keys"
-            NeedsAuth -> "needs_auth"
-            NeedsSetup -> "needs_setup"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ToolsetConfigProviderStatus = when (raw) {
-            "ready" -> Ready
-            "needs_keys" -> NeedsKeys
-            "needs_auth" -> NeedsAuth
-            "needs_setup" -> NeedsSetup
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ToolsetConfigProviderStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetConfigProviderStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ToolsetConfigProviderStatus = when (val raw = decoder.decodeString()) {
-            "ready" -> Ready
-            "needs_keys" -> NeedsKeys
-            "needs_auth" -> NeedsAuth
-            "needs_setup" -> NeedsSetup
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ToolsetConfigProviderStatus value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ToolsetConfigProviderStatus) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_toolset_config`` — ``has_category: false`` (empty ``providers``) for toolsets without a provider category; the active backends are resolved only for ``web``. */
-@Serializable
-public data class ToolsetConfigResponse(
-    @SerialName("active_extract_backend")
-    public val activeExtractBackend: String? = null,
-    @SerialName("active_provider")
-    public val activeProvider: String?,
-    @SerialName("active_search_backend")
-    public val activeSearchBackend: String? = null,
-    @SerialName("has_category")
-    public val hasCategory: Boolean,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("providers")
-    public val providers: List<ToolsetConfigProvider>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``save_toolset_env``. */
-@Serializable
-public data class ToolsetEnvSaveResponse(
-    /** Every env var the toolset's providers declare -> set? */
-    @SerialName("is_set")
-    public val isSet: Map<String, Boolean>,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("saved")
-    public val saved: List<String>,
-    /** Keys submitted blank (left unchanged). */
-    @SerialName("skipped")
-    public val skipped: List<String>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ToolsetEnvUpdate.Serializer::class)
-public data class ToolsetEnvUpdate(
-    public val env: Map<String, String>,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ToolsetEnvUpdate> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ToolsetEnvUpdate {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ToolsetEnvUpdate requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ToolsetEnvUpdate requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("env", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return ToolsetEnvUpdate(
-                env = json.decodeFromJsonElement<Map<String, String>>((input["env"] ?: throw SerializationException("Missing env"))),
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ToolsetEnvUpdate) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ToolsetEnvUpdate requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["env"] = json.encodeToJsonElement(value.env)
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }

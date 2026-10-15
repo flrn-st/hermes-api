@@ -1,10 +1,30 @@
-# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
-# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+# Hand-reviewed against the tagged handlers: corrections the response contracts get wrong for the tag
+# (undeclared request bodies, media types, values Hermes copies unchecked). These win over
+# spec/overlay/rest/contracts/.
 components:
   SessionDetailResponse:
     additionalProperties: true
-    description: '``get_session_detail`` — the stored row stamped with its owning profile.'
+    description: '``get_session_detail`` — the stored row stamped with its owning profile. A cron run also
+
+      carries ``scheduler_owned`` (``cron.cron_run_scheduler_owned``): its liveness is scheduler
+
+      ownership, not the activity window.
+
+
+      The sessions table''s counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count``
+      and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows
+      can hold null.'
     properties:
+      _branched_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /branch fork.'
+      _reset_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /new sibling.'
       actual_cost_usd:
         anyOf:
         - type: number
@@ -14,6 +34,9 @@ components:
         - type: integer
         - type: 'null'
       archived:
+        type: integer
+      auto_archived:
+        description: 'SQLite 0/1: archived by the idle sweep, not by hand.'
         type: integer
       billing_base_url:
         anyOf:
@@ -67,6 +90,11 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      created_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: The source the row was created under; null on rows that predate it.
       cwd:
         anyOf:
         - type: string
@@ -182,6 +210,16 @@ components:
         - type: 'null'
       rewind_count:
         type: integer
+      runtime_generation:
+        description: Execution generation a turn-affecting mutation must quote.
+        type: integer
+      runtime_revision:
+        description: 'Mutation fence: bumped by every committed session mutation.'
+        type: integer
+      scheduler_owned:
+        anyOf:
+        - type: boolean
+        - type: 'null'
       session_key:
         anyOf:
         - type: string
@@ -228,7 +266,10 @@ components:
         - type: 'null'
     required:
     - id
+    - runtime_revision
+    - runtime_generation
     - source
+    - created_source
     - user_id
     - session_key
     - chat_id
@@ -277,6 +318,7 @@ components:
     - profile_name
     - transport_profile
     - rewind_count
+    - auto_archived
     - hidden
     - last_read_at
     - tool_names
@@ -293,8 +335,23 @@ components:
     additionalProperties: true
     description: '``export_session_endpoint`` streams this one JSON document: ``SessionDB.get_session`` with
 
-      the session''s active (``active = 1``) raw, unprojected message rows appended.'
+      every raw (unprojected) message appended.
+
+
+      The sessions table''s counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count``
+      and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows
+      can hold null.'
     properties:
+      _branched_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /branch fork.'
+      _reset_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /new sibling.'
       actual_cost_usd:
         anyOf:
         - type: number
@@ -304,6 +361,9 @@ components:
         - type: integer
         - type: 'null'
       archived:
+        type: integer
+      auto_archived:
+        description: 'SQLite 0/1: archived by the idle sweep, not by hand.'
         type: integer
       billing_base_url:
         anyOf:
@@ -357,6 +417,11 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      created_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: The source the row was created under; null on rows that predate it.
       cwd:
         anyOf:
         - type: string
@@ -472,6 +537,12 @@ components:
         - type: 'null'
       rewind_count:
         type: integer
+      runtime_generation:
+        description: Execution generation a turn-affecting mutation must quote.
+        type: integer
+      runtime_revision:
+        description: 'Mutation fence: bumped by every committed session mutation.'
+        type: integer
       session_key:
         anyOf:
         - type: string
@@ -518,7 +589,10 @@ components:
         - type: 'null'
     required:
     - id
+    - runtime_revision
+    - runtime_generation
     - source
+    - created_source
     - user_id
     - session_key
     - chat_id
@@ -567,6 +641,7 @@ components:
     - profile_name
     - transport_profile
     - rewind_count
+    - auto_archived
     - hidden
     - last_read_at
     - tool_names
@@ -584,8 +659,18 @@ components:
     required:
     - sessions
     description: '``hermes_cli/web_models.py::SessionImport``, streamed and validated by ``import_sessions_endpoint``:
-      sessions as ``GET /api/sessions/{session_id}/export`` returns them.'
+      sessions as ``GET /api/sessions/{session_id}/export`` returns them, fenced like every session mutation (``request_id``,
+      ``expected_revision``).'
     properties:
+      request_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      expected_revision:
+        anyOf:
+        - type: integer
+          minimum: 0
+        - type: 'null'
       sessions:
         type: array
         items:
@@ -594,42 +679,26 @@ components:
         anyOf:
         - type: string
         - type: 'null'
-  SessionListResponse:
-    additionalProperties: false
-    description: '``get_sessions``. ``storage`` maps the serving profile to ``"corrupt"`` when its store is
-
-      latched unreadable, else ``{}``.'
-    properties:
-      limit:
-        type: integer
-      offset:
-        type: integer
-      sessions:
-        items:
-          $ref: '#/components/schemas/SessionListRow'
-        type: array
-      storage:
-        additionalProperties:
-          const: corrupt
-          type: string
-        type: object
-      total:
-        type: integer
-    required:
-    - sessions
-    - total
-    - limit
-    - offset
-    - storage
-    type: object
   SessionListRow:
     additionalProperties: true
     description: 'One ``SessionDB.list_sessions_rich`` row as the list endpoints stamp it (``is_active``,
 
       ``profile``, boolean ``archived`` / ``pinned``). The prompt-storage columns ride only with
 
-      ``full=1``; the ``_lineage_*`` keys only on a compression root projected onto its live tip.'
+      ``full=1``; the ``_lineage_*`` keys and ``continuation_kind`` only on a compression root projected
+
+      onto its live tip.
+
+
+      The sessions table''s counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count``
+      and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows
+      can hold null.'
     properties:
+      _branched_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /branch fork.'
       _lineage_ids:
         anyOf:
         - items:
@@ -640,6 +709,11 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      _reset_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /new sibling.'
       actual_cost_usd:
         anyOf:
         - type: number
@@ -650,6 +724,9 @@ components:
         - type: 'null'
       archived:
         type: boolean
+      auto_archived:
+        description: 'SQLite 0/1: archived by the idle sweep, not by hand.'
+        type: integer
       billing_base_url:
         anyOf:
         - type: string
@@ -694,6 +771,12 @@ components:
         anyOf:
         - type: number
         - type: 'null'
+      continuation_kind:
+        anyOf:
+        - const: compression
+          type: string
+        - type: 'null'
+        description: Only on a compression root projected onto its live tip.
       cost_source:
         anyOf:
         - type: string
@@ -702,6 +785,11 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      created_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: The source the row was created under; null on rows that predate it.
       cwd:
         anyOf:
         - type: string
@@ -825,6 +913,12 @@ components:
         - type: 'null'
       rewind_count:
         type: integer
+      runtime_generation:
+        description: Execution generation a turn-affecting mutation must quote.
+        type: integer
+      runtime_revision:
+        description: 'Mutation fence: bumped by every committed session mutation.'
+        type: integer
       session_key:
         anyOf:
         - type: string
@@ -873,7 +967,10 @@ components:
         - type: 'null'
     required:
     - id
+    - runtime_revision
+    - runtime_generation
     - source
+    - created_source
     - user_id
     - session_key
     - chat_id
@@ -922,6 +1019,7 @@ components:
     - profile_name
     - transport_profile
     - rewind_count
+    - auto_archived
     - hidden
     - last_read_at
     - tool_names
@@ -934,138 +1032,13 @@ components:
     - profile
     - is_default_profile
     type: object
-  SessionMessage:
-    additionalProperties: true
-    description: '``SessionDB._row_to_message_dict``: a ``messages`` row with ``content`` / ``tool_calls`` /
-
-      ``display_metadata`` decoded and the display-index columns dropped. ``content`` is text or the
-
-      decoded multimodal parts; the reasoning sidecars stay JSON text.'
-    properties:
-      _compressed_summary:
-        anyOf:
-        - type: boolean
-        - type: 'null'
-      active:
-        type: integer
-      api_content:
-        anyOf:
-        - type: string
-        - type: 'null'
-      codex_message_items:
-        anyOf:
-        - type: string
-        - type: 'null'
-      codex_reasoning_items:
-        anyOf:
-        - type: string
-        - type: 'null'
-      compacted:
-        type: integer
-      content: {}
-      display_kind:
-        anyOf:
-        - type: string
-        - type: 'null'
-      display_metadata:
-        anyOf:
-        - additionalProperties: true
-          type: object
-        - type: 'null'
-      effect_disposition:
-        anyOf:
-        - type: string
-        - type: 'null'
-      finish_reason:
-        anyOf:
-        - type: string
-        - type: 'null'
-      id:
-        type: integer
-      observed:
-        type: integer
-      platform_message_id:
-        anyOf:
-        - type: string
-        - type: 'null'
-      reasoning:
-        anyOf:
-        - type: string
-        - type: 'null'
-      reasoning_content:
-        anyOf:
-        - type: string
-        - type: 'null'
-      reasoning_details:
-        anyOf:
-        - type: string
-        - type: 'null'
-      role:
-        type: string
-      session_id:
-        type: string
-      timestamp:
-        type: number
-      token_count:
-        anyOf:
-        - type: integer
-        - type: 'null'
-      tool_call_id:
-        anyOf:
-        - type: string
-        - type: 'null'
-      tool_calls:
-        description: Decoded tool-call list (``[]`` when undecodable), or null.
-      tool_name:
-        anyOf:
-        - type: string
-        - type: 'null'
-    required:
-    - id
-    - session_id
-    - role
-    - content
-    - tool_call_id
-    - tool_calls
-    - tool_name
-    - effect_disposition
-    - timestamp
-    - token_count
-    - finish_reason
-    - reasoning
-    - reasoning_content
-    - reasoning_details
-    - codex_reasoning_items
-    - codex_message_items
-    - platform_message_id
-    - observed
-    - active
-    - compacted
-    - api_content
-    - display_kind
-    - display_metadata
-    type: object
 operations:
-- method: GET
-  path: /api/sessions
-  x-source: hermes_cli/web_routers/sessions.py:167
-  x-handler-hash: 6abf8739442ed8c5bbfcf5b51c0aca9b6b8a60a27b38e3b84709276fdc1a577b
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: SessionListResponse
-  responses:
-    '200':
-      description: Successful Response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SessionListResponse'
 - method: POST
   path: /api/sessions/import
-  x-source: hermes_cli/web_routers/sessions.py:432
-  x-handler-hash: 70eef2119abcea3b483b0a1e95c6ebfb89ceb9a81cfeba5d3932831aa005330b
+  x-source: hermes_cli/web_routers/sessions.py:492
+  x-handler-hash: fac3d866550233cdd26ac036c2c322ec1357ac4c2cb96bb9b6e1b121b52935f9
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionImportResponse
   responses:
     '200':
@@ -1078,17 +1051,3 @@ operations:
     required: true
     schema:
       $ref: '#/components/schemas/SessionImportRequest'
-- method: GET
-  path: /api/sessions/{session_id}/export
-  x-source: hermes_cli/web_routers/sessions.py:787
-  x-handler-hash: 2836907e606ebf7854ba2cbaf37c3d24d6327d40250cc1d8091db2e82f4ec78b
-  x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: SessionExportResponse
-  responses:
-    '200':
-      description: Successful Response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SessionExportResponse'

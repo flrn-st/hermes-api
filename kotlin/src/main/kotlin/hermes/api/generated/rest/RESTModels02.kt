@@ -9,6 +9,57 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = ConfigSchemaFieldType.Serializer::class)
+public sealed interface ConfigSchemaFieldType {
+    public data object Boolean : ConfigSchemaFieldType
+    public data object Number : ConfigSchemaFieldType
+    public data object List : ConfigSchemaFieldType
+    public data object String : ConfigSchemaFieldType
+    public data object Select : ConfigSchemaFieldType
+    public data class Unknown(public val raw: kotlin.String) : ConfigSchemaFieldType
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Boolean -> "boolean"
+            Number -> "number"
+            List -> "list"
+            String -> "string"
+            Select -> "select"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConfigSchemaFieldType = when (raw) {
+            "boolean" -> Boolean
+            "number" -> Number
+            "list" -> List
+            "string" -> String
+            "select" -> Select
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<ConfigSchemaFieldType> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConfigSchemaFieldType", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): ConfigSchemaFieldType = when (val raw = decoder.decodeString()) {
+            "boolean" -> Boolean
+            "number" -> Number
+            "list" -> List
+            "string" -> String
+            "select" -> Select
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ConfigSchemaFieldType value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: ConfigSchemaFieldType) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``get_schema`` — ``_schema_with_dynamic_provider_options`` keyed by dotted config path. */
 @Serializable
 public data class ConfigSchemaResponse(
@@ -59,6 +110,15 @@ public data class ConfigUpdate(
         }
     }
 }
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class ConsentAnswer(
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("send")
+    public val send: Boolean? = null,
+)
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = CreateBoardBody.Serializer::class)
@@ -390,7 +450,7 @@ public data class CredentialPoolRemoveResponse(
     public val provider: String,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``cron/blueprint_catalog.py::blueprint_catalog_entry``. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``cron/blueprint_catalog.py::blueprint_catalog_entry``: built-ins, plus the profile's plugin blueprints (``key`` is ``<plugin>:<key>``). */
 @Serializable
 public data class CronBlueprint(
     /** ``hermes://blueprint/...`` deep link. */
@@ -407,11 +467,16 @@ public data class CronBlueprint(
     public val fields: List<CronBlueprintField>,
     @SerialName("key")
     public val key: String,
+    /** The registering plugin; null for a built-in. */
+    @SerialName("plugin")
+    public val plugin: String?,
     /** Cron expression template with ``{slot}`` placeholders. */
     @SerialName("schedule")
     public val schedule: String,
     @SerialName("scheduleHuman")
     public val scheduleHuman: String,
+    @SerialName("source")
+    public val source: CronBlueprintSource,
     @SerialName("tags")
     public val tags: List<String>,
     @SerialName("title")
@@ -487,6 +552,45 @@ public sealed interface CronBlueprintFieldType {
     }
 }
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = CronBlueprintSource.Serializer::class)
+public sealed interface CronBlueprintSource {
+    public data object Builtin : CronBlueprintSource
+    public data object Plugin : CronBlueprintSource
+    public data class Unknown(public val raw: kotlin.String) : CronBlueprintSource
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Builtin -> "builtin"
+            Plugin -> "plugin"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CronBlueprintSource = when (raw) {
+            "builtin" -> Builtin
+            "plugin" -> Plugin
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<CronBlueprintSource> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronBlueprintSource", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): CronBlueprintSource = when (val raw = decoder.decodeString()) {
+            "builtin" -> Builtin
+            "plugin" -> Plugin
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CronBlueprintSource value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: CronBlueprintSource) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``list_cron_blueprints``. */
 @Serializable
 public data class CronBlueprintsResponse(
@@ -540,6 +644,8 @@ public data class CronFireResponse(
 public data class CronJob(
     public val attachToSession: Boolean? = null,
     public val baseUrl: String? = null,
+    /** Execution ids whose completion is already recorded (``mark_job_run``); a replay is a no-op. */
+    public val canonicalCompletions: List<String>? = null,
     public val contextFrom: List<String>? = null,
     public val createdAt: String? = null,
     public val deliver: String? = null,
@@ -549,11 +655,15 @@ public data class CronJob(
     public val failureStreak: Long? = null,
     public val hermesHome: String,
     public val id: String,
+    /** Python for a ``.py`` script/monitor_script. */
+    public val interpreter: String? = null,
     public val isDefaultProfile: Boolean,
     public val lastDeliveryError: String? = null,
     /** ``platform:chat_id`` targets acked without delivery evidence. */
     public val lastDeliveryUnverified: List<String>? = null,
     public val lastError: String? = null,
+    /** The latest failed run (cleared by a success); kept apart from ``last_status``. */
+    public val lastFailure: CronJobFireError? = null,
     public val lastFireError: CronJobFireError? = null,
     public val lastRunAt: String? = null,
     public val lastStatus: String? = null,
@@ -603,6 +713,7 @@ public data class CronJob(
             return CronJob(
                 attachToSession = input["attach_to_session"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 baseUrl = input["base_url"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                canonicalCompletions = input["canonical_completions"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 contextFrom = input["context_from"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 createdAt = input["created_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 deliver = input["deliver"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
@@ -612,10 +723,12 @@ public data class CronJob(
                 failureStreak = input["failure_streak"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 hermesHome = json.decodeFromJsonElement<String>((input["hermes_home"] ?: throw SerializationException("Missing hermes_home"))),
                 id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
+                interpreter = input["interpreter"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 isDefaultProfile = json.decodeFromJsonElement<Boolean>((input["is_default_profile"] ?: throw SerializationException("Missing is_default_profile"))),
                 lastDeliveryError = input["last_delivery_error"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 lastDeliveryUnverified = input["last_delivery_unverified"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 lastError = input["last_error"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                lastFailure = input["last_failure"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<CronJobFireError>(it) },
                 lastFireError = input["last_fire_error"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<CronJobFireError>(it) },
                 lastRunAt = input["last_run_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 lastStatus = input["last_status"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
@@ -646,7 +759,7 @@ public data class CronJob(
                 skills = json.decodeFromJsonElement<List<String>>((input["skills"] ?: throw SerializationException("Missing skills"))),
                 state = json.decodeFromJsonElement<String>((input["state"] ?: throw SerializationException("Missing state"))),
                 workdir = input["workdir"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("attach_to_session", "base_url", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir") },
+                additionalProperties = input.filterKeys { it !in setOf("attach_to_session", "base_url", "canonical_completions", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "interpreter", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_failure", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir") },
             )
         }
 
@@ -655,13 +768,14 @@ public data class CronJob(
                 ?: throw SerializationException("CronJob requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("attach_to_session", "base_url", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir")
+            val known = setOf("attach_to_session", "base_url", "canonical_completions", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "interpreter", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_failure", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir")
             if (value.additionalProperties.keys.any { it in known }) {
                 throw SerializationException("Additional property conflicts with a known field")
             }
             output.putAll(value.additionalProperties)
             value.attachToSession?.let { output["attach_to_session"] = json.encodeToJsonElement(it) }
             value.baseUrl?.let { output["base_url"] = json.encodeToJsonElement(it) }
+            value.canonicalCompletions?.let { output["canonical_completions"] = json.encodeToJsonElement(it) }
             value.contextFrom?.let { output["context_from"] = json.encodeToJsonElement(it) }
             value.createdAt?.let { output["created_at"] = json.encodeToJsonElement(it) }
             value.deliver?.let { output["deliver"] = json.encodeToJsonElement(it) }
@@ -671,10 +785,12 @@ public data class CronJob(
             value.failureStreak?.let { output["failure_streak"] = json.encodeToJsonElement(it) }
             output["hermes_home"] = json.encodeToJsonElement(value.hermesHome)
             output["id"] = json.encodeToJsonElement(value.id)
+            value.interpreter?.let { output["interpreter"] = json.encodeToJsonElement(it) }
             output["is_default_profile"] = json.encodeToJsonElement(value.isDefaultProfile)
             value.lastDeliveryError?.let { output["last_delivery_error"] = json.encodeToJsonElement(it) }
             value.lastDeliveryUnverified?.let { output["last_delivery_unverified"] = json.encodeToJsonElement(it) }
             value.lastError?.let { output["last_error"] = json.encodeToJsonElement(it) }
+            value.lastFailure?.let { output["last_failure"] = json.encodeToJsonElement(it) }
             value.lastFireError?.let { output["last_fire_error"] = json.encodeToJsonElement(it) }
             value.lastRunAt?.let { output["last_run_at"] = json.encodeToJsonElement(it) }
             value.lastStatus?.let { output["last_status"] = json.encodeToJsonElement(it) }
@@ -724,6 +840,7 @@ public data class CronJobCreate(
     public val pausedReason: Patch<String> = Patch.Absent,
     public val prompt: String? = null,
     public val provider: Patch<String> = Patch.Absent,
+    public val repeat: Patch<CronJobCreateRepeat> = Patch.Absent,
     public val schedule: String,
     public val script: Patch<String> = Patch.Absent,
     public val skills: Patch<List<String>> = Patch.Absent,
@@ -740,7 +857,7 @@ public data class CronJobCreate(
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CronJobCreate requires an object")
             if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "schedule", "script", "skills", "workdir")
+                val known = setOf<String>("base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "repeat", "schedule", "script", "skills", "workdir")
                 input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
             }
             return CronJobCreate(
@@ -755,6 +872,7 @@ public data class CronJobCreate(
                 pausedReason = when (val raw = input["paused_reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 prompt = input["prompt"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 provider = when (val raw = input["provider"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                repeat = when (val raw = input["repeat"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<CronJobCreateRepeat>(raw)) },
                 schedule = json.decodeFromJsonElement<String>((input["schedule"] ?: throw SerializationException("Missing schedule"))),
                 script = when (val raw = input["script"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 skills = when (val raw = input["skills"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<List<String>>(raw)) },
@@ -802,6 +920,11 @@ public data class CronJobCreate(
                 Patch.Null -> output["provider"] = JsonNull
                 is Patch.Value -> output["provider"] = json.encodeToJsonElement(patch.value)
             }
+            when (val patch = value.repeat) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["repeat"] = JsonNull
+                is Patch.Value -> output["repeat"] = json.encodeToJsonElement(patch.value)
+            }
             output["schedule"] = json.encodeToJsonElement(value.schedule)
             when (val patch = value.script) {
                 Patch.Absent -> Unit
@@ -819,6 +942,46 @@ public data class CronJobCreate(
                 is Patch.Value -> output["workdir"] = json.encodeToJsonElement(patch.value)
             }
             jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = CronJobCreateRepeat.Serializer::class)
+public sealed interface CronJobCreateRepeat {
+    public data class LongValue(public val value: Long) : CronJobCreateRepeat
+    public data class StringValue(public val value: String) : CronJobCreateRepeat
+
+    public object Serializer : KSerializer<CronJobCreateRepeat> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): CronJobCreateRepeat {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CronJobCreateRepeat requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return LongValue(json.decodeFromJsonElement<Long>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No CronJobCreateRepeat variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: CronJobCreateRepeat) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CronJobCreateRepeat requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is LongValue -> json.encodeToJsonElement(value.value)
+                is StringValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
         }
     }
 }
@@ -848,6 +1011,9 @@ public data class CronJobExecution(
     public val processId: String,
     @SerialName("process_started_at")
     public val processStartedAt: Long?,
+    /** Last liveness stamp of a running attempt; staleness counts from it. */
+    @SerialName("progress_at")
+    public val progressAt: String?,
     @SerialName("scheduled_instant")
     public val scheduledInstant: String?,
     @SerialName("source")
@@ -927,6 +1093,115 @@ public data class CronJobMonitorState(
     public val lastOutputHash: String,
 )
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_cron_output_run_row``: an execution with no session (a script-only fire, or one whose session is gone), built from its output doc, the execution ledger or ``last_run_at``. Omits `cwd`, `model`, which Hermes always sends as null. */
+@Serializable(with = CronJobOutputRun.Serializer::class)
+public data class CronJobOutputRun(
+    public val archived: Boolean,
+    public val endedAt: Double,
+    /** "cron_output:<job>:<doc stem>", "…:exec:<n>" or "…:latest". */
+    public val id: String,
+    public val inputTokens: Long,
+    public val isActive: Boolean,
+    public val lastActive: Double,
+    public val messageCount: Long,
+    public val outputTokens: Long,
+    public val preview: String?,
+    public val source: CronJobOutputRunSource,
+    public val startedAt: Double,
+    public val title: String,
+    public val toolCallCount: Long,
+)
+{
+    public object Serializer : KSerializer<CronJobOutputRun> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): CronJobOutputRun {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CronJobOutputRun requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("CronJobOutputRun requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("archived", "ended_at", "id", "input_tokens", "is_active", "last_active", "message_count", "output_tokens", "preview", "source", "started_at", "title", "tool_call_count", "cwd", "model")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+                if (input["cwd"] !is JsonNull) throw SerializationException("Field cwd must be present and null")
+                if (input["model"] !is JsonNull) throw SerializationException("Field model must be present and null")
+            }
+            return CronJobOutputRun(
+                archived = json.decodeFromJsonElement<Boolean>((input["archived"] ?: throw SerializationException("Missing archived"))),
+                endedAt = json.decodeFromJsonElement<Double>((input["ended_at"] ?: throw SerializationException("Missing ended_at"))),
+                id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
+                inputTokens = json.decodeFromJsonElement<Long>((input["input_tokens"] ?: throw SerializationException("Missing input_tokens"))),
+                isActive = json.decodeFromJsonElement<Boolean>((input["is_active"] ?: throw SerializationException("Missing is_active"))),
+                lastActive = json.decodeFromJsonElement<Double>((input["last_active"] ?: throw SerializationException("Missing last_active"))),
+                messageCount = json.decodeFromJsonElement<Long>((input["message_count"] ?: throw SerializationException("Missing message_count"))),
+                outputTokens = json.decodeFromJsonElement<Long>((input["output_tokens"] ?: throw SerializationException("Missing output_tokens"))),
+                preview = if ((input["preview"] ?: throw SerializationException("Missing preview")) is JsonNull) null else json.decodeFromJsonElement<String>((input["preview"] ?: throw SerializationException("Missing preview"))),
+                source = json.decodeFromJsonElement<CronJobOutputRunSource>((input["source"] ?: throw SerializationException("Missing source"))),
+                startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
+                title = json.decodeFromJsonElement<String>((input["title"] ?: throw SerializationException("Missing title"))),
+                toolCallCount = json.decodeFromJsonElement<Long>((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: CronJobOutputRun) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CronJobOutputRun requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["archived"] = json.encodeToJsonElement(value.archived)
+            output["ended_at"] = json.encodeToJsonElement(value.endedAt)
+            output["id"] = json.encodeToJsonElement(value.id)
+            output["input_tokens"] = json.encodeToJsonElement(value.inputTokens)
+            output["is_active"] = json.encodeToJsonElement(value.isActive)
+            output["last_active"] = json.encodeToJsonElement(value.lastActive)
+            output["message_count"] = json.encodeToJsonElement(value.messageCount)
+            output["output_tokens"] = json.encodeToJsonElement(value.outputTokens)
+            output["preview"] = json.encodeToJsonElement(value.preview)
+            output["source"] = json.encodeToJsonElement(value.source)
+            output["started_at"] = json.encodeToJsonElement(value.startedAt)
+            output["title"] = json.encodeToJsonElement(value.title)
+            output["tool_call_count"] = json.encodeToJsonElement(value.toolCallCount)
+            output["cwd"] = JsonNull
+            output["model"] = JsonNull
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = CronJobOutputRunSource.Serializer::class)
+public sealed interface CronJobOutputRunSource {
+    public data object CronOutput : CronJobOutputRunSource
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            CronOutput -> "cron_output"
+        }
+
+    public companion object {
+        /** The case for [raw], or `null` for a value this release does not list. */
+        public fun fromRawValue(raw: kotlin.String): CronJobOutputRunSource? = when (raw) {
+            "cron_output" -> CronOutput
+            else -> null
+        }
+    }
+
+    public object Serializer : KSerializer<CronJobOutputRunSource> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronJobOutputRunSource", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): CronJobOutputRunSource = when (val raw = decoder.decodeString()) {
+            "cron_output" -> CronOutput
+            else -> throw SerializationException("Unexpected const value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: CronJobOutputRunSource) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable
 public data class CronJobRepeat(
@@ -937,74 +1212,88 @@ public data class CronJobRepeat(
     public val times: Long?,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1. A script-only fire with no session is a ``_cron_output_run_row`` (``source`` ``cron_output``, id ``cron_output:<job>:<stem>``) and carries only the required fields. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1. The sessions table's counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count`` and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows can hold null. */
 @Serializable(with = CronJobRunSession.Serializer::class)
 public data class CronJobRunSession(
-    public val actualCostUsd: Double? = null,
-    public val apiCallCount: Long? = null,
+    /** Lifted from ``model_config`` when set: a /branch fork. */
+    public val branchedFrom: String? = null,
+    /** Lifted from ``model_config`` when set: a /new sibling. */
+    public val resetFrom: String? = null,
+    public val actualCostUsd: Double?,
+    public val apiCallCount: Long?,
     public val archived: Boolean,
-    public val billingBaseUrl: String? = null,
-    public val billingMode: String? = null,
-    public val billingProvider: String? = null,
-    public val cacheReadTokens: Long? = null,
-    public val cacheWriteTokens: Long? = null,
-    public val chatId: String? = null,
-    public val chatType: String? = null,
-    public val compressionFailureCooldownUntil: Double? = null,
-    public val compressionFailureError: String? = null,
-    public val compressionFallbackStreak: Long? = null,
-    public val compressionIneffectiveCount: Long? = null,
-    public val compressionRecoveryDeadline: Double? = null,
-    public val costSource: String? = null,
-    public val costStatus: String? = null,
+    /** SQLite 0/1: archived by the idle sweep, not by hand. */
+    public val autoArchived: Long,
+    public val billingBaseUrl: String?,
+    public val billingMode: String?,
+    public val billingProvider: String?,
+    public val cacheReadTokens: Long?,
+    public val cacheWriteTokens: Long?,
+    public val chatId: String?,
+    public val chatType: String?,
+    public val compressionFailureCooldownUntil: Double?,
+    public val compressionFailureError: String?,
+    public val compressionFallbackStreak: Long,
+    public val compressionIneffectiveCount: Long,
+    public val compressionRecoveryDeadline: Double?,
+    public val costSource: String?,
+    public val costStatus: String?,
+    /** The source the row was created under; null on rows that predate it. */
+    public val createdSource: String?,
     public val cwd: String?,
-    public val displayName: String? = null,
-    public val endReason: String? = null,
+    public val displayName: String?,
+    public val endReason: String?,
     public val endedAt: Double?,
-    public val estimatedCostUsd: Double? = null,
-    public val expiryFinalized: Long? = null,
-    public val gitBranch: String? = null,
-    public val gitMetadataGeneration: Long? = null,
-    public val gitRepoRoot: String? = null,
-    public val handoffError: String? = null,
-    public val handoffPlatform: String? = null,
-    public val handoffState: String? = null,
-    public val hidden: Long? = null,
+    public val estimatedCostUsd: Double?,
+    public val expiryFinalized: Long?,
+    public val gitBranch: String?,
+    public val gitMetadataGeneration: Long,
+    public val gitRepoRoot: String?,
+    public val handoffError: String?,
+    public val handoffPlatform: String?,
+    public val handoffState: String?,
+    public val hidden: Long,
     public val id: String,
     public val inputTokens: Long?,
     public val isActive: Boolean,
     public val lastActive: Double,
-    public val lastActivityAt: Double? = null,
-    public val lastActivityDescription: String? = null,
-    public val lastActivityProvenance: String? = null,
+    public val lastActivityAt: Double?,
+    public val lastActivityDescription: String?,
+    public val lastActivityProvenance: String?,
     /** Read watermark; ``0`` = marked unread, null = never tracked. */
-    public val lastReadAt: Double? = null,
+    public val lastReadAt: Double?,
     public val messageCount: Long?,
     public val model: String?,
-    public val modelConfig: String? = null,
-    public val originJson: String? = null,
+    public val modelConfig: String?,
+    public val originJson: String?,
     public val outputTokens: Long?,
-    public val parentSessionId: String? = null,
-    public val pinned: Long? = null,
-    public val preview: String?,
-    public val pricingVersion: String? = null,
+    public val parentSessionId: String?,
+    public val pinned: Long,
+    public val preview: String,
+    public val pricingVersion: String?,
     /** Absent when no profile holds the job. */
     public val profile: String? = null,
-    public val profileName: String? = null,
-    public val reasoningTokens: Long? = null,
-    public val rewindCount: Long? = null,
-    public val sessionKey: String? = null,
+    public val profileName: String?,
+    public val reasoningTokens: Long?,
+    public val rewindCount: Long,
+    /** Execution generation a turn-affecting mutation must quote. */
+    public val runtimeGeneration: Long,
+    /** Mutation fence: bumped by every committed session mutation. */
+    public val runtimeRevision: Long,
+    /** The scheduler still owns this run (``_run_owned_by``): live even past the activity window. */
+    public val schedulerOwned: Boolean,
+    public val sessionKey: String?,
     public val source: String,
     public val startedAt: Double,
-    public val systemPrompt: String? = null,
-    public val systemPromptHash: String? = null,
-    public val threadId: String? = null,
+    public val systemPrompt: String?,
+    public val systemPromptHash: String?,
+    public val threadId: String?,
     public val title: String?,
-    public val titleSource: String? = null,
+    public val titleSource: String?,
     public val toolCallCount: Long?,
-    public val toolNames: String? = null,
-    public val transportProfile: String? = null,
-    public val userId: String? = null,
+    public val toolNames: String?,
+    public val transportProfile: String?,
+    public val userId: String?,
     public val additionalProperties: Map<String, JsonElement> = emptyMap(),
 )
 {
@@ -1018,70 +1307,77 @@ public data class CronJobRunSession(
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("CronJobRunSession requires an object")
             return CronJobRunSession(
-                actualCostUsd = input["actual_cost_usd"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
-                apiCallCount = input["api_call_count"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                branchedFrom = input["_branched_from"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                resetFrom = input["_reset_from"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
+                apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
                 archived = json.decodeFromJsonElement<Boolean>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                billingBaseUrl = input["billing_base_url"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                billingMode = input["billing_mode"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                billingProvider = input["billing_provider"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                cacheReadTokens = input["cache_read_tokens"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                cacheWriteTokens = input["cache_write_tokens"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                chatId = input["chat_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                chatType = input["chat_type"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                compressionFailureCooldownUntil = input["compression_failure_cooldown_until"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
-                compressionFailureError = input["compression_failure_error"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                compressionFallbackStreak = input["compression_fallback_streak"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                compressionIneffectiveCount = input["compression_ineffective_count"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                compressionRecoveryDeadline = input["compression_recovery_deadline"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
-                costSource = input["cost_source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                costStatus = input["cost_status"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                autoArchived = json.decodeFromJsonElement<Long>((input["auto_archived"] ?: throw SerializationException("Missing auto_archived"))),
+                billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
+                billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
+                billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
+                cacheReadTokens = if ((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_read_tokens"] ?: throw SerializationException("Missing cache_read_tokens"))),
+                cacheWriteTokens = if ((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["cache_write_tokens"] ?: throw SerializationException("Missing cache_write_tokens"))),
+                chatId = if ((input["chat_id"] ?: throw SerializationException("Missing chat_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_id"] ?: throw SerializationException("Missing chat_id"))),
+                chatType = if ((input["chat_type"] ?: throw SerializationException("Missing chat_type")) is JsonNull) null else json.decodeFromJsonElement<String>((input["chat_type"] ?: throw SerializationException("Missing chat_type"))),
+                compressionFailureCooldownUntil = if ((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_failure_cooldown_until"] ?: throw SerializationException("Missing compression_failure_cooldown_until"))),
+                compressionFailureError = if ((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["compression_failure_error"] ?: throw SerializationException("Missing compression_failure_error"))),
+                compressionFallbackStreak = json.decodeFromJsonElement<Long>((input["compression_fallback_streak"] ?: throw SerializationException("Missing compression_fallback_streak"))),
+                compressionIneffectiveCount = json.decodeFromJsonElement<Long>((input["compression_ineffective_count"] ?: throw SerializationException("Missing compression_ineffective_count"))),
+                compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
+                costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
+                costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
+                createdSource = if ((input["created_source"] ?: throw SerializationException("Missing created_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["created_source"] ?: throw SerializationException("Missing created_source"))),
                 cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
-                displayName = input["display_name"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                endReason = input["end_reason"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
+                endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
                 endedAt = if ((input["ended_at"] ?: throw SerializationException("Missing ended_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["ended_at"] ?: throw SerializationException("Missing ended_at"))),
-                estimatedCostUsd = input["estimated_cost_usd"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
-                expiryFinalized = input["expiry_finalized"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                gitBranch = input["git_branch"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                gitMetadataGeneration = input["git_metadata_generation"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                gitRepoRoot = input["git_repo_root"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                handoffError = input["handoff_error"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                handoffPlatform = input["handoff_platform"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                handoffState = input["handoff_state"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                hidden = input["hidden"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                estimatedCostUsd = if ((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["estimated_cost_usd"] ?: throw SerializationException("Missing estimated_cost_usd"))),
+                expiryFinalized = if ((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["expiry_finalized"] ?: throw SerializationException("Missing expiry_finalized"))),
+                gitBranch = if ((input["git_branch"] ?: throw SerializationException("Missing git_branch")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_branch"] ?: throw SerializationException("Missing git_branch"))),
+                gitMetadataGeneration = json.decodeFromJsonElement<Long>((input["git_metadata_generation"] ?: throw SerializationException("Missing git_metadata_generation"))),
+                gitRepoRoot = if ((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root")) is JsonNull) null else json.decodeFromJsonElement<String>((input["git_repo_root"] ?: throw SerializationException("Missing git_repo_root"))),
+                handoffError = if ((input["handoff_error"] ?: throw SerializationException("Missing handoff_error")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_error"] ?: throw SerializationException("Missing handoff_error"))),
+                handoffPlatform = if ((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_platform"] ?: throw SerializationException("Missing handoff_platform"))),
+                handoffState = if ((input["handoff_state"] ?: throw SerializationException("Missing handoff_state")) is JsonNull) null else json.decodeFromJsonElement<String>((input["handoff_state"] ?: throw SerializationException("Missing handoff_state"))),
+                hidden = json.decodeFromJsonElement<Long>((input["hidden"] ?: throw SerializationException("Missing hidden"))),
                 id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
                 inputTokens = if ((input["input_tokens"] ?: throw SerializationException("Missing input_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["input_tokens"] ?: throw SerializationException("Missing input_tokens"))),
                 isActive = json.decodeFromJsonElement<Boolean>((input["is_active"] ?: throw SerializationException("Missing is_active"))),
                 lastActive = json.decodeFromJsonElement<Double>((input["last_active"] ?: throw SerializationException("Missing last_active"))),
-                lastActivityAt = input["last_activity_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
-                lastActivityDescription = input["last_activity_description"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                lastActivityProvenance = input["last_activity_provenance"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                lastReadAt = input["last_read_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Double>(it) },
+                lastActivityAt = if ((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_activity_at"] ?: throw SerializationException("Missing last_activity_at"))),
+                lastActivityDescription = if ((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_description"] ?: throw SerializationException("Missing last_activity_description"))),
+                lastActivityProvenance = if ((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance")) is JsonNull) null else json.decodeFromJsonElement<String>((input["last_activity_provenance"] ?: throw SerializationException("Missing last_activity_provenance"))),
+                lastReadAt = if ((input["last_read_at"] ?: throw SerializationException("Missing last_read_at")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["last_read_at"] ?: throw SerializationException("Missing last_read_at"))),
                 messageCount = if ((input["message_count"] ?: throw SerializationException("Missing message_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["message_count"] ?: throw SerializationException("Missing message_count"))),
                 model = if ((input["model"] ?: throw SerializationException("Missing model")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model"] ?: throw SerializationException("Missing model"))),
-                modelConfig = input["model_config"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                originJson = input["origin_json"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                modelConfig = if ((input["model_config"] ?: throw SerializationException("Missing model_config")) is JsonNull) null else json.decodeFromJsonElement<String>((input["model_config"] ?: throw SerializationException("Missing model_config"))),
+                originJson = if ((input["origin_json"] ?: throw SerializationException("Missing origin_json")) is JsonNull) null else json.decodeFromJsonElement<String>((input["origin_json"] ?: throw SerializationException("Missing origin_json"))),
                 outputTokens = if ((input["output_tokens"] ?: throw SerializationException("Missing output_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["output_tokens"] ?: throw SerializationException("Missing output_tokens"))),
-                parentSessionId = input["parent_session_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                pinned = input["pinned"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                preview = if ((input["preview"] ?: throw SerializationException("Missing preview")) is JsonNull) null else json.decodeFromJsonElement<String>((input["preview"] ?: throw SerializationException("Missing preview"))),
-                pricingVersion = input["pricing_version"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                parentSessionId = if ((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["parent_session_id"] ?: throw SerializationException("Missing parent_session_id"))),
+                pinned = json.decodeFromJsonElement<Long>((input["pinned"] ?: throw SerializationException("Missing pinned"))),
+                preview = json.decodeFromJsonElement<String>((input["preview"] ?: throw SerializationException("Missing preview"))),
+                pricingVersion = if ((input["pricing_version"] ?: throw SerializationException("Missing pricing_version")) is JsonNull) null else json.decodeFromJsonElement<String>((input["pricing_version"] ?: throw SerializationException("Missing pricing_version"))),
                 profile = input["profile"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                profileName = input["profile_name"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                reasoningTokens = input["reasoning_tokens"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                rewindCount = input["rewind_count"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                sessionKey = input["session_key"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
+                reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
+                rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
+                runtimeGeneration = json.decodeFromJsonElement<Long>((input["runtime_generation"] ?: throw SerializationException("Missing runtime_generation"))),
+                runtimeRevision = json.decodeFromJsonElement<Long>((input["runtime_revision"] ?: throw SerializationException("Missing runtime_revision"))),
+                schedulerOwned = json.decodeFromJsonElement<Boolean>((input["scheduler_owned"] ?: throw SerializationException("Missing scheduler_owned"))),
+                sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
                 source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
                 startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
-                systemPrompt = input["system_prompt"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                systemPromptHash = input["system_prompt_hash"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                threadId = input["thread_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                systemPrompt = if ((input["system_prompt"] ?: throw SerializationException("Missing system_prompt")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt"] ?: throw SerializationException("Missing system_prompt"))),
+                systemPromptHash = if ((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash")) is JsonNull) null else json.decodeFromJsonElement<String>((input["system_prompt_hash"] ?: throw SerializationException("Missing system_prompt_hash"))),
+                threadId = if ((input["thread_id"] ?: throw SerializationException("Missing thread_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["thread_id"] ?: throw SerializationException("Missing thread_id"))),
                 title = if ((input["title"] ?: throw SerializationException("Missing title")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title"] ?: throw SerializationException("Missing title"))),
-                titleSource = input["title_source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                titleSource = if ((input["title_source"] ?: throw SerializationException("Missing title_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["title_source"] ?: throw SerializationException("Missing title_source"))),
                 toolCallCount = if ((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["tool_call_count"] ?: throw SerializationException("Missing tool_call_count"))),
-                toolNames = input["tool_names"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                transportProfile = input["transport_profile"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                userId = input["user_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id") },
+                toolNames = if ((input["tool_names"] ?: throw SerializationException("Missing tool_names")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_names"] ?: throw SerializationException("Missing tool_names"))),
+                transportProfile = if ((input["transport_profile"] ?: throw SerializationException("Missing transport_profile")) is JsonNull) null else json.decodeFromJsonElement<String>((input["transport_profile"] ?: throw SerializationException("Missing transport_profile"))),
+                userId = if ((input["user_id"] ?: throw SerializationException("Missing user_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["user_id"] ?: throw SerializationException("Missing user_id"))),
+                additionalProperties = input.filterKeys { it !in setOf("_branched_from", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "scheduler_owned", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id") },
             )
         }
 
@@ -1090,87 +1386,134 @@ public data class CronJobRunSession(
                 ?: throw SerializationException("CronJobRunSession requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id")
+            val known = setOf("_branched_from", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "scheduler_owned", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id")
             if (value.additionalProperties.keys.any { it in known }) {
                 throw SerializationException("Additional property conflicts with a known field")
             }
             output.putAll(value.additionalProperties)
-            value.actualCostUsd?.let { output["actual_cost_usd"] = json.encodeToJsonElement(it) }
-            value.apiCallCount?.let { output["api_call_count"] = json.encodeToJsonElement(it) }
+            value.branchedFrom?.let { output["_branched_from"] = json.encodeToJsonElement(it) }
+            value.resetFrom?.let { output["_reset_from"] = json.encodeToJsonElement(it) }
+            output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
+            output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
             output["archived"] = json.encodeToJsonElement(value.archived)
-            value.billingBaseUrl?.let { output["billing_base_url"] = json.encodeToJsonElement(it) }
-            value.billingMode?.let { output["billing_mode"] = json.encodeToJsonElement(it) }
-            value.billingProvider?.let { output["billing_provider"] = json.encodeToJsonElement(it) }
-            value.cacheReadTokens?.let { output["cache_read_tokens"] = json.encodeToJsonElement(it) }
-            value.cacheWriteTokens?.let { output["cache_write_tokens"] = json.encodeToJsonElement(it) }
-            value.chatId?.let { output["chat_id"] = json.encodeToJsonElement(it) }
-            value.chatType?.let { output["chat_type"] = json.encodeToJsonElement(it) }
-            value.compressionFailureCooldownUntil?.let { output["compression_failure_cooldown_until"] = json.encodeToJsonElement(it) }
-            value.compressionFailureError?.let { output["compression_failure_error"] = json.encodeToJsonElement(it) }
-            value.compressionFallbackStreak?.let { output["compression_fallback_streak"] = json.encodeToJsonElement(it) }
-            value.compressionIneffectiveCount?.let { output["compression_ineffective_count"] = json.encodeToJsonElement(it) }
-            value.compressionRecoveryDeadline?.let { output["compression_recovery_deadline"] = json.encodeToJsonElement(it) }
-            value.costSource?.let { output["cost_source"] = json.encodeToJsonElement(it) }
-            value.costStatus?.let { output["cost_status"] = json.encodeToJsonElement(it) }
+            output["auto_archived"] = json.encodeToJsonElement(value.autoArchived)
+            output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
+            output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
+            output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
+            output["cache_read_tokens"] = json.encodeToJsonElement(value.cacheReadTokens)
+            output["cache_write_tokens"] = json.encodeToJsonElement(value.cacheWriteTokens)
+            output["chat_id"] = json.encodeToJsonElement(value.chatId)
+            output["chat_type"] = json.encodeToJsonElement(value.chatType)
+            output["compression_failure_cooldown_until"] = json.encodeToJsonElement(value.compressionFailureCooldownUntil)
+            output["compression_failure_error"] = json.encodeToJsonElement(value.compressionFailureError)
+            output["compression_fallback_streak"] = json.encodeToJsonElement(value.compressionFallbackStreak)
+            output["compression_ineffective_count"] = json.encodeToJsonElement(value.compressionIneffectiveCount)
+            output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
+            output["cost_source"] = json.encodeToJsonElement(value.costSource)
+            output["cost_status"] = json.encodeToJsonElement(value.costStatus)
+            output["created_source"] = json.encodeToJsonElement(value.createdSource)
             output["cwd"] = json.encodeToJsonElement(value.cwd)
-            value.displayName?.let { output["display_name"] = json.encodeToJsonElement(it) }
-            value.endReason?.let { output["end_reason"] = json.encodeToJsonElement(it) }
+            output["display_name"] = json.encodeToJsonElement(value.displayName)
+            output["end_reason"] = json.encodeToJsonElement(value.endReason)
             output["ended_at"] = json.encodeToJsonElement(value.endedAt)
-            value.estimatedCostUsd?.let { output["estimated_cost_usd"] = json.encodeToJsonElement(it) }
-            value.expiryFinalized?.let { output["expiry_finalized"] = json.encodeToJsonElement(it) }
-            value.gitBranch?.let { output["git_branch"] = json.encodeToJsonElement(it) }
-            value.gitMetadataGeneration?.let { output["git_metadata_generation"] = json.encodeToJsonElement(it) }
-            value.gitRepoRoot?.let { output["git_repo_root"] = json.encodeToJsonElement(it) }
-            value.handoffError?.let { output["handoff_error"] = json.encodeToJsonElement(it) }
-            value.handoffPlatform?.let { output["handoff_platform"] = json.encodeToJsonElement(it) }
-            value.handoffState?.let { output["handoff_state"] = json.encodeToJsonElement(it) }
-            value.hidden?.let { output["hidden"] = json.encodeToJsonElement(it) }
+            output["estimated_cost_usd"] = json.encodeToJsonElement(value.estimatedCostUsd)
+            output["expiry_finalized"] = json.encodeToJsonElement(value.expiryFinalized)
+            output["git_branch"] = json.encodeToJsonElement(value.gitBranch)
+            output["git_metadata_generation"] = json.encodeToJsonElement(value.gitMetadataGeneration)
+            output["git_repo_root"] = json.encodeToJsonElement(value.gitRepoRoot)
+            output["handoff_error"] = json.encodeToJsonElement(value.handoffError)
+            output["handoff_platform"] = json.encodeToJsonElement(value.handoffPlatform)
+            output["handoff_state"] = json.encodeToJsonElement(value.handoffState)
+            output["hidden"] = json.encodeToJsonElement(value.hidden)
             output["id"] = json.encodeToJsonElement(value.id)
             output["input_tokens"] = json.encodeToJsonElement(value.inputTokens)
             output["is_active"] = json.encodeToJsonElement(value.isActive)
             output["last_active"] = json.encodeToJsonElement(value.lastActive)
-            value.lastActivityAt?.let { output["last_activity_at"] = json.encodeToJsonElement(it) }
-            value.lastActivityDescription?.let { output["last_activity_description"] = json.encodeToJsonElement(it) }
-            value.lastActivityProvenance?.let { output["last_activity_provenance"] = json.encodeToJsonElement(it) }
-            value.lastReadAt?.let { output["last_read_at"] = json.encodeToJsonElement(it) }
+            output["last_activity_at"] = json.encodeToJsonElement(value.lastActivityAt)
+            output["last_activity_description"] = json.encodeToJsonElement(value.lastActivityDescription)
+            output["last_activity_provenance"] = json.encodeToJsonElement(value.lastActivityProvenance)
+            output["last_read_at"] = json.encodeToJsonElement(value.lastReadAt)
             output["message_count"] = json.encodeToJsonElement(value.messageCount)
             output["model"] = json.encodeToJsonElement(value.model)
-            value.modelConfig?.let { output["model_config"] = json.encodeToJsonElement(it) }
-            value.originJson?.let { output["origin_json"] = json.encodeToJsonElement(it) }
+            output["model_config"] = json.encodeToJsonElement(value.modelConfig)
+            output["origin_json"] = json.encodeToJsonElement(value.originJson)
             output["output_tokens"] = json.encodeToJsonElement(value.outputTokens)
-            value.parentSessionId?.let { output["parent_session_id"] = json.encodeToJsonElement(it) }
-            value.pinned?.let { output["pinned"] = json.encodeToJsonElement(it) }
+            output["parent_session_id"] = json.encodeToJsonElement(value.parentSessionId)
+            output["pinned"] = json.encodeToJsonElement(value.pinned)
             output["preview"] = json.encodeToJsonElement(value.preview)
-            value.pricingVersion?.let { output["pricing_version"] = json.encodeToJsonElement(it) }
+            output["pricing_version"] = json.encodeToJsonElement(value.pricingVersion)
             value.profile?.let { output["profile"] = json.encodeToJsonElement(it) }
-            value.profileName?.let { output["profile_name"] = json.encodeToJsonElement(it) }
-            value.reasoningTokens?.let { output["reasoning_tokens"] = json.encodeToJsonElement(it) }
-            value.rewindCount?.let { output["rewind_count"] = json.encodeToJsonElement(it) }
-            value.sessionKey?.let { output["session_key"] = json.encodeToJsonElement(it) }
+            output["profile_name"] = json.encodeToJsonElement(value.profileName)
+            output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
+            output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
+            output["runtime_generation"] = json.encodeToJsonElement(value.runtimeGeneration)
+            output["runtime_revision"] = json.encodeToJsonElement(value.runtimeRevision)
+            output["scheduler_owned"] = json.encodeToJsonElement(value.schedulerOwned)
+            output["session_key"] = json.encodeToJsonElement(value.sessionKey)
             output["source"] = json.encodeToJsonElement(value.source)
             output["started_at"] = json.encodeToJsonElement(value.startedAt)
-            value.systemPrompt?.let { output["system_prompt"] = json.encodeToJsonElement(it) }
-            value.systemPromptHash?.let { output["system_prompt_hash"] = json.encodeToJsonElement(it) }
-            value.threadId?.let { output["thread_id"] = json.encodeToJsonElement(it) }
+            output["system_prompt"] = json.encodeToJsonElement(value.systemPrompt)
+            output["system_prompt_hash"] = json.encodeToJsonElement(value.systemPromptHash)
+            output["thread_id"] = json.encodeToJsonElement(value.threadId)
             output["title"] = json.encodeToJsonElement(value.title)
-            value.titleSource?.let { output["title_source"] = json.encodeToJsonElement(it) }
+            output["title_source"] = json.encodeToJsonElement(value.titleSource)
             output["tool_call_count"] = json.encodeToJsonElement(value.toolCallCount)
-            value.toolNames?.let { output["tool_names"] = json.encodeToJsonElement(it) }
-            value.transportProfile?.let { output["transport_profile"] = json.encodeToJsonElement(it) }
-            value.userId?.let { output["user_id"] = json.encodeToJsonElement(it) }
+            output["tool_names"] = json.encodeToJsonElement(value.toolNames)
+            output["transport_profile"] = json.encodeToJsonElement(value.transportProfile)
+            output["user_id"] = json.encodeToJsonElement(value.userId)
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_list_cron_job_runs_sync`` — the job's run sessions (``SessionDB.list_cron_job_runs``), newest first, annotated with ``is_active``/``archived`` and ``profile`` when a profile holds the job. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_list_cron_job_runs_sync`` — run sessions merged with output-doc rows for executions no session represents (``_reconcile_cron_runs``), newest first. */
 @Serializable
 public data class CronJobRunsResponse(
     @SerialName("limit")
     public val limit: Long,
     @SerialName("runs")
-    public val runs: List<CronJobRunSession>,
+    public val runs: List<CronJobRunsResponseRunsItem>,
 )
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = CronJobRunsResponseRunsItem.Serializer::class)
+public sealed interface CronJobRunsResponseRunsItem {
+    public data class CronJobRunSessionValue(public val value: CronJobRunSession) : CronJobRunsResponseRunsItem
+    public data class CronJobOutputRunValue(public val value: CronJobOutputRun) : CronJobRunsResponseRunsItem
+
+    public object Serializer : KSerializer<CronJobRunsResponseRunsItem> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): CronJobRunsResponseRunsItem {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CronJobRunsResponseRunsItem requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return CronJobRunSessionValue(json.decodeFromJsonElement<CronJobRunSession>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return CronJobOutputRunValue(json.decodeFromJsonElement<CronJobOutputRun>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No CronJobRunsResponseRunsItem variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: CronJobRunsResponseRunsItem) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CronJobRunsResponseRunsItem requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is CronJobRunSessionValue -> json.encodeToJsonElement(value.value)
+                is CronJobOutputRunValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``cron/jobs.py::parse_schedule``; open because hand-edited/legacy records may carry other keys (``_schedule_display_for_job`` still reads a legacy ``value``). */
 @Serializable(with = CronJobSchedule.Serializer::class)
@@ -1221,110 +1564,3 @@ public data class CronJobSchedule(
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = CronJobScheduleKind.Serializer::class)
-public sealed interface CronJobScheduleKind {
-    public data object Once : CronJobScheduleKind
-    public data object Interval : CronJobScheduleKind
-    public data object Cron : CronJobScheduleKind
-    public data class Unknown(public val raw: kotlin.String) : CronJobScheduleKind
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Once -> "once"
-            Interval -> "interval"
-            Cron -> "cron"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): CronJobScheduleKind = when (raw) {
-            "once" -> Once
-            "interval" -> Interval
-            "cron" -> Cron
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<CronJobScheduleKind> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronJobScheduleKind", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): CronJobScheduleKind = when (val raw = decoder.decodeString()) {
-            "once" -> Once
-            "interval" -> Interval
-            "cron" -> Cron
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CronJobScheduleKind value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: CronJobScheduleKind) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class CronJobUpdate(
-    @SerialName("updates")
-    public val updates: Map<String, JsonElement>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class CuratorPause(
-    @SerialName("paused")
-    public val paused: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_curator_paused``. */
-@Serializable
-public data class CuratorPausedResponse(
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("paused")
-    public val paused: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_curator_status``; a getter that raised reads as ``null``. */
-@Serializable
-public data class CuratorStatusResponse(
-    @SerialName("archive_after_days")
-    public val archiveAfterDays: Long?,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("interval_hours")
-    public val intervalHours: Long?,
-    @SerialName("last_run_at")
-    public val lastRunAt: String?,
-    @SerialName("min_idle_hours")
-    public val minIdleHours: Double?,
-    @SerialName("paused")
-    public val paused: Boolean,
-    @SerialName("stale_after_days")
-    public val staleAfterDays: Long?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``activate_custom_endpoint``. */
-@Serializable
-public data class CustomEndpointActivateResponse(
-    @SerialName("model")
-    public val model: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("provider")
-    public val provider: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class CustomEndpointCurrentModel(
-    @SerialName("base_url")
-    public val baseUrl: String,
-    @SerialName("model")
-    public val model: String,
-    @SerialName("provider")
-    public val provider: String,
-)

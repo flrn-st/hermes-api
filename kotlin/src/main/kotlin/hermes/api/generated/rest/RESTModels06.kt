@@ -9,6 +9,148 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git._classify``. */
+@Serializable
+public data class GitStatusFile(
+    @SerialName("conflicted")
+    public val conflicted: Boolean,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("staged")
+    public val staged: Boolean,
+    @SerialName("unstaged")
+    public val unstaged: Boolean,
+    @SerialName("untracked")
+    public val untracked: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = GitWorktreeAddBody.Serializer::class)
+public data class GitWorktreeAddBody(
+    public val base: Patch<String> = Patch.Absent,
+    public val branch: Patch<String> = Patch.Absent,
+    public val existingBranch: Patch<String> = Patch.Absent,
+    public val name: Patch<String> = Patch.Absent,
+    public val path: String,
+)
+{
+    public object Serializer : KSerializer<GitWorktreeAddBody> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): GitWorktreeAddBody {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("GitWorktreeAddBody requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("GitWorktreeAddBody requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("base", "branch", "existingBranch", "name", "path")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return GitWorktreeAddBody(
+                base = when (val raw = input["base"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                branch = when (val raw = input["branch"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                existingBranch = when (val raw = input["existingBranch"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                path = json.decodeFromJsonElement<String>((input["path"] ?: throw SerializationException("Missing path"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: GitWorktreeAddBody) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("GitWorktreeAddBody requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.base) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["base"] = JsonNull
+                is Patch.Value -> output["base"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.branch) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["branch"] = JsonNull
+                is Patch.Value -> output["branch"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.existingBranch) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["existingBranch"] = JsonNull
+                is Patch.Value -> output["existingBranch"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.name) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["name"] = JsonNull
+                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
+            }
+            output["path"] = json.encodeToJsonElement(value.path)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.worktree_add`` / ``web_git._worktree_for_existing``. */
+@Serializable
+public data class GitWorktreeAddResponse(
+    @SerialName("branch")
+    public val branch: String,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("repoRoot")
+    public val repoRoot: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class GitWorktreeRemoveBody(
+    @SerialName("force")
+    public val force: Boolean? = null,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("worktreePath")
+    public val worktreePath: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.worktree_remove``. */
+@Serializable
+public data class GitWorktreeRemoveResponse(
+    @SerialName("removed")
+    public val removed: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``web_git.worktree_list`` row; the main tree comes first. */
+@Serializable
+public data class GitWorktreeRow(
+    @SerialName("branch")
+    public val branch: String?,
+    @SerialName("detached")
+    public val detached: Boolean,
+    @SerialName("isMain")
+    public val isMain: Boolean,
+    @SerialName("locked")
+    public val locked: Boolean,
+    @SerialName("path")
+    public val path: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``git_worktrees_route``. */
+@Serializable
+public data class GitWorktreesResponse(
+    @SerialName("worktrees")
+    public val worktrees: List<GitWorktreeRow>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_health_idle`` — ``{"ok": true}`` plus ``hermes_cli/web_server_idle_proof.py::idle_proof``. ``idle: null`` means a ledger was unreadable (treat as busy). */
+@Serializable
+public data class HealthIdleResponse(
+    @SerialName("detail")
+    public val detail: String? = null,
+    @SerialName("idle")
+    public val idle: Boolean?,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("reason")
+    public val reason: HealthIdleResponseReason?,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = HealthIdleResponseReason.Serializer::class)
 public sealed interface HealthIdleResponseReason {
@@ -56,11 +198,15 @@ public sealed interface HealthIdleResponseReason {
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_health``. ``version`` is ``hermes_cli.__version__``. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_health``. ``commit`` is the code the process booted from (``VersionInfo.commit``; ``null`` when the install cannot name one). */
 @Serializable
 public data class HealthResponse(
     @SerialName("auth_required")
     public val authRequired: Boolean,
+    @SerialName("commit")
+    public val commit: String?,
+    @SerialName("displayVersion")
+    public val displayVersion: String,
     @SerialName("ok")
     public val ok: Boolean,
     @SerialName("version")
@@ -130,13 +276,17 @@ public data class HealthRetirementResponse(
     public val token: String? = null,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``check_hermes_update``. ``behind``: commits behind, ``0`` up to date, ``-1`` behind by an unknown count, ``null`` when the check could not run or does not apply. ``install_method`` is ``detect_install_method``'s value, or ``"managed-runtime"`` (with ``update_command: "managed outside dashboard"``) when the dashboard's local updater is managed externally. ``commits`` only when an update is available. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``check_hermes_update``. ``behind``: commits behind, ``0`` up to date, ``-1`` behind by an unknown count, ``null`` when the check could not run or does not apply. ``commits`` only when an update is available, together with ``channel`` / ``branch`` / ``source_version`` (the release channel and release that pick its notes source; each null when the source check names none); ``rollback_to`` only when that "update" is a stable release older than this build. */
 @Serializable
 public data class HermesUpdateCheckResponse(
     @SerialName("behind")
     public val behind: Long?,
+    @SerialName("branch")
+    public val branch: String? = null,
     @SerialName("can_apply")
     public val canApply: Boolean,
+    @SerialName("channel")
+    public val channel: String? = null,
     @SerialName("commits")
     public val commits: List<HermesUpdateCommit>? = null,
     @SerialName("current_version")
@@ -145,13 +295,17 @@ public data class HermesUpdateCheckResponse(
     public val installMethod: String,
     @SerialName("message")
     public val message: String?,
+    @SerialName("rollback_to")
+    public val rollbackTo: String? = null,
+    @SerialName("source_version")
+    public val sourceVersion: String? = null,
     @SerialName("update_available")
     public val updateAvailable: Boolean,
     @SerialName("update_command")
     public val updateCommand: String,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/banner.py::upstream_commits_behind`` row (GitHub compare, newest first, at most 20): ``sha`` shortened to 7 chars, ``summary`` the first message line, ``at`` the committer date in epoch seconds (``0`` when unparseable); the list is ``[]`` when the compare is unavailable. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/source_check.py::_commits`` row, reshaped by ``check_hermes_update``: ``sha`` shortened to 7 chars, ``at`` in epoch seconds. */
 @Serializable
 public data class HermesUpdateCommit(
     @SerialName("at")
@@ -164,7 +318,7 @@ public data class HermesUpdateCommit(
     public val summary: String,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``update_hermes``: a refusal (``ok: false``, ``pid: null`` + ``error``/``message``/``update_command``, via ``_update_refused``; the managed-runtime refusal carries ``update_command: "managed outside dashboard"``), the already-running update (``already_running: true``, ``action_id`` when recorded), or the freshly spawned one (with ``action_id``). */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``update_hermes``: a refusal (``ok: false`` + ``error``/``message``/``update_command``, via ``_update_refused``), the already-running update, or the freshly spawned one. */
 @Serializable
 public data class HermesUpdateStartResponse(
     @SerialName("action_id")
@@ -317,6 +471,13 @@ public data class ImportRequest(
     public val archive: String,
     @SerialName("force")
     public val force: Boolean? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class JobIdBody(
+    @SerialName("job_id")
+    public val jobId: String,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``list_active_workers`` SQL row (open run with a ``worker_pid`` on a running task). */
@@ -520,14 +681,16 @@ public data class KanbanBoardCard(
     @SerialName("consecutive_failures")
     public val consecutiveFailures: Long,
     @SerialName("created_at")
-    public val createdAt: Long,
+    public val createdAt: Long?,
     @SerialName("created_by")
     public val createdBy: String?,
     @SerialName("current_run_id")
     public val currentRunId: Long?,
+    /** Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start). */
+    @SerialName("current_run_started_at")
+    public val currentRunStartedAt: Long?,
     @SerialName("current_step_key")
     public val currentStepKey: String?,
-    /** Present only when the task has active diagnostics (never empty, never null). */
     @SerialName("diagnostics")
     public val diagnostics: List<KanbanDiagnostic>? = null,
     @SerialName("goal_max_turns")
@@ -671,254 +834,4 @@ public data class KanbanBoardCreateResponse(
     public val board: KanbanBoard,
     @SerialName("current")
     public val current: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = KanbanBoardDefaultWorkspaceKind.Serializer::class)
-public sealed interface KanbanBoardDefaultWorkspaceKind {
-    public data object Scratch : KanbanBoardDefaultWorkspaceKind
-    public data object Worktree : KanbanBoardDefaultWorkspaceKind
-    public data object Dir : KanbanBoardDefaultWorkspaceKind
-    public data class Unknown(public val raw: kotlin.String) : KanbanBoardDefaultWorkspaceKind
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Scratch -> "scratch"
-            Worktree -> "worktree"
-            Dir -> "dir"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): KanbanBoardDefaultWorkspaceKind = when (raw) {
-            "scratch" -> Scratch
-            "worktree" -> Worktree
-            "dir" -> Dir
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<KanbanBoardDefaultWorkspaceKind> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardDefaultWorkspaceKind", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): KanbanBoardDefaultWorkspaceKind = when (val raw = decoder.decodeString()) {
-            "scratch" -> Scratch
-            "worktree" -> Worktree
-            "dir" -> Dir
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanBoardDefaultWorkspaceKind value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: KanbanBoardDefaultWorkspaceKind) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.delete_board``. */
-@Serializable
-public data class KanbanBoardDeleteResponse(
-    @SerialName("current")
-    public val current: String,
-    @SerialName("result")
-    public val result: KanbanBoardRemoval,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``kanban_transfer.export_board``; ``counts`` = per-table rows + ``attachment_files`` / ``log_files``. */
-@Serializable
-public data class KanbanBoardExportResponse(
-    @SerialName("archive")
-    public val archive: String,
-    @SerialName("board")
-    public val board: String,
-    @SerialName("counts")
-    public val counts: Map<String, Long>,
-    @SerialName("size")
-    public val size: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``kanban_transfer.import_board`` plus the active board slug. */
-@Serializable
-public data class KanbanBoardImportResponse(
-    @SerialName("activated")
-    public val activated: Boolean,
-    @SerialName("attachments_restored")
-    public val attachmentsRestored: Long,
-    @SerialName("board")
-    public val board: String,
-    @SerialName("counts")
-    public val counts: Map<String, Long>,
-    @SerialName("current")
-    public val current: String,
-    @SerialName("db_path")
-    public val dbPath: String,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("renamed")
-    public val renamed: Boolean,
-    @SerialName("requested_board")
-    public val requestedBoard: String,
-    @SerialName("source")
-    public val source: KanbanBoardImportSource,
-    @SerialName("tasks_parked")
-    public val tasksParked: Long,
-    @SerialName("warnings")
-    public val warnings: List<String>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. Read from the archive's ``manifest.json``; absent keys come back ``null``. */
-@Serializable
-public data class KanbanBoardImportSource(
-    @SerialName("board")
-    public val board: String?,
-    @SerialName("exported_at")
-    public val exportedAt: Long?,
-    @SerialName("hermes_version")
-    public val hermesVersion: String?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_boards``. */
-@Serializable
-public data class KanbanBoardListResponse(
-    @SerialName("boards")
-    public val boards: List<KanbanBoardListRow>,
-    @SerialName("current")
-    public val current: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``list_boards`` row; ``counts`` is ``{status: n}`` incl. archived, ``total`` excludes it. */
-@Serializable(with = KanbanBoardListRow.Serializer::class)
-public data class KanbanBoardListRow(
-    public val archived: Boolean,
-    public val color: String,
-    public val counts: Map<String, Long>,
-    public val createdAt: Long?,
-    public val dbPath: String,
-    public val defaultWorkdir: String?,
-    public val defaultWorkspaceKind: KanbanBoardListRowDefaultWorkspaceKind,
-    public val description: String,
-    public val icon: String,
-    public val isCurrent: Boolean,
-    public val name: String,
-    public val projectId: String?,
-    public val projectName: String?,
-    public val slug: String,
-    public val total: Long,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<KanbanBoardListRow> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): KanbanBoardListRow {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("KanbanBoardListRow requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("KanbanBoardListRow requires an object")
-            return KanbanBoardListRow(
-                archived = json.decodeFromJsonElement<Boolean>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                color = json.decodeFromJsonElement<String>((input["color"] ?: throw SerializationException("Missing color"))),
-                counts = json.decodeFromJsonElement<Map<String, Long>>((input["counts"] ?: throw SerializationException("Missing counts"))),
-                createdAt = if ((input["created_at"] ?: throw SerializationException("Missing created_at")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["created_at"] ?: throw SerializationException("Missing created_at"))),
-                dbPath = json.decodeFromJsonElement<String>((input["db_path"] ?: throw SerializationException("Missing db_path"))),
-                defaultWorkdir = if ((input["default_workdir"] ?: throw SerializationException("Missing default_workdir")) is JsonNull) null else json.decodeFromJsonElement<String>((input["default_workdir"] ?: throw SerializationException("Missing default_workdir"))),
-                defaultWorkspaceKind = json.decodeFromJsonElement<KanbanBoardListRowDefaultWorkspaceKind>((input["default_workspace_kind"] ?: throw SerializationException("Missing default_workspace_kind"))),
-                description = json.decodeFromJsonElement<String>((input["description"] ?: throw SerializationException("Missing description"))),
-                icon = json.decodeFromJsonElement<String>((input["icon"] ?: throw SerializationException("Missing icon"))),
-                isCurrent = json.decodeFromJsonElement<Boolean>((input["is_current"] ?: throw SerializationException("Missing is_current"))),
-                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
-                projectId = if ((input["project_id"] ?: throw SerializationException("Missing project_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["project_id"] ?: throw SerializationException("Missing project_id"))),
-                projectName = if ((input["project_name"] ?: throw SerializationException("Missing project_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["project_name"] ?: throw SerializationException("Missing project_name"))),
-                slug = json.decodeFromJsonElement<String>((input["slug"] ?: throw SerializationException("Missing slug"))),
-                total = json.decodeFromJsonElement<Long>((input["total"] ?: throw SerializationException("Missing total"))),
-                additionalProperties = input.filterKeys { it !in setOf("archived", "color", "counts", "created_at", "db_path", "default_workdir", "default_workspace_kind", "description", "icon", "is_current", "name", "project_id", "project_name", "slug", "total") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: KanbanBoardListRow) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("KanbanBoardListRow requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("archived", "color", "counts", "created_at", "db_path", "default_workdir", "default_workspace_kind", "description", "icon", "is_current", "name", "project_id", "project_name", "slug", "total")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            output["archived"] = json.encodeToJsonElement(value.archived)
-            output["color"] = json.encodeToJsonElement(value.color)
-            output["counts"] = json.encodeToJsonElement(value.counts)
-            output["created_at"] = json.encodeToJsonElement(value.createdAt)
-            output["db_path"] = json.encodeToJsonElement(value.dbPath)
-            output["default_workdir"] = json.encodeToJsonElement(value.defaultWorkdir)
-            output["default_workspace_kind"] = json.encodeToJsonElement(value.defaultWorkspaceKind)
-            output["description"] = json.encodeToJsonElement(value.description)
-            output["icon"] = json.encodeToJsonElement(value.icon)
-            output["is_current"] = json.encodeToJsonElement(value.isCurrent)
-            output["name"] = json.encodeToJsonElement(value.name)
-            output["project_id"] = json.encodeToJsonElement(value.projectId)
-            output["project_name"] = json.encodeToJsonElement(value.projectName)
-            output["slug"] = json.encodeToJsonElement(value.slug)
-            output["total"] = json.encodeToJsonElement(value.total)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = KanbanBoardListRowDefaultWorkspaceKind.Serializer::class)
-public sealed interface KanbanBoardListRowDefaultWorkspaceKind {
-    public data object Scratch : KanbanBoardListRowDefaultWorkspaceKind
-    public data object Worktree : KanbanBoardListRowDefaultWorkspaceKind
-    public data object Dir : KanbanBoardListRowDefaultWorkspaceKind
-    public data class Unknown(public val raw: kotlin.String) : KanbanBoardListRowDefaultWorkspaceKind
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Scratch -> "scratch"
-            Worktree -> "worktree"
-            Dir -> "dir"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): KanbanBoardListRowDefaultWorkspaceKind = when (raw) {
-            "scratch" -> Scratch
-            "worktree" -> Worktree
-            "dir" -> Dir
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<KanbanBoardListRowDefaultWorkspaceKind> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("KanbanBoardListRowDefaultWorkspaceKind", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): KanbanBoardListRowDefaultWorkspaceKind = when (val raw = decoder.decodeString()) {
-            "scratch" -> Scratch
-            "worktree" -> Worktree
-            "dir" -> Dir
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected KanbanBoardListRowDefaultWorkspaceKind value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: KanbanBoardListRowDefaultWorkspaceKind) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``kanban_db.remove_board``; ``new_path`` is ``""`` for a hard delete. */
-@Serializable
-public data class KanbanBoardRemoval(
-    @SerialName("action")
-    public val action: KanbanBoardRemovalAction,
-    @SerialName("new_path")
-    public val newPath: String,
-    @SerialName("slug")
-    public val slug: String,
 )

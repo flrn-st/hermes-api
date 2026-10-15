@@ -156,8 +156,14 @@ components:
     additionalProperties: false
     description: '``hermes_cli/web_server_files.py::_managed_file_entry``; ``size``/``mime_type`` are null
 
-      for directories.'
+      for directories. A dangling symlink is a placeholder: ``broken_link: true`` with ``size``,
+
+      ``mtime`` and ``mime_type`` null.'
     properties:
+      broken_link:
+        anyOf:
+        - type: boolean
+        - type: 'null'
       is_directory:
         type: boolean
       mime_type:
@@ -165,7 +171,9 @@ components:
         - type: string
         - type: 'null'
       mtime:
-        type: number
+        anyOf:
+        - type: number
+        - type: 'null'
       name:
         type: string
       path:
@@ -278,7 +286,9 @@ components:
     type: object
   MediaDataUrlResponse:
     additionalProperties: false
-    description: '``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL.'
+    description: '``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL;
+
+      ``proxy_remote_media``: an image fetched from an allowlisted remote CDN, in the same shape.'
     properties:
       data_url:
         type: string
@@ -288,10 +298,10 @@ components:
 operations:
 - method: DELETE
   path: /api/files
-  x-source: hermes_cli/web_routers/files.py:586
+  x-source: hermes_cli/web_routers/files.py:732
   x-handler-hash: b4ece9ba0cc0ca48c8bbdb8a8e4b303ffb3db5aa7f13ffa588d4a3859efcb7a2
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ManagedFileDeleteResponse
   responses:
     '200':
@@ -302,10 +312,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/files
-  x-source: hermes_cli/web_routers/files.py:367
-  x-handler-hash: 41a325c9eeefd33497b9210f8329d3b6fe939f065d3174930a32a330aa5f3af5
+  x-source: hermes_cli/web_routers/files.py:508
+  x-handler-hash: 8a649c18fc5d581fbe966a2f99939903f85edeea2271ca7c6eb907ed2467afc5
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ManagedFileListResponse
   responses:
     '200':
@@ -316,10 +326,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/files/read
-  x-source: hermes_cli/web_routers/files.py:416
+  x-source: hermes_cli/web_routers/files.py:561
   x-handler-hash: cd9b110ff0a5f0a5b1598a0a8e48a1b8ce420205008764a33556a7f1f407f55c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ManagedFileReadResponse
   responses:
     '200':
@@ -330,10 +340,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/files/stream
-  x-source: hermes_cli/web_routers/files.py:473
-  x-handler-hash: 0d876328c99838373b188850c6f5f070f92692d764a96e6841bcb1b5ae138642
+  x-source: hermes_cli/web_routers/files.py:619
+  x-handler-hash: 1766c0f28a073ab0a3b4f2cf9fdd85ee1451fe666d9025b95e0ab79edc8a3c43
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 200 application/octet-stream, 200 audio/*, 200 video/*
   responses:
     '200':
@@ -354,10 +364,10 @@ operations:
         MIME type, ``application/octet-stream`` when unknown.
 - method: GET
   path: /api/fs/default-cwd
-  x-source: hermes_cli/web_routers/files.py:757
-  x-handler-hash: 6ee97da04434c3986188b2b607a64d0e1747a45a5b03f12cc996eff6e1fa7045
+  x-source: hermes_cli/web_routers/files.py:982
+  x-handler-hash: 19c00763f8d210ee9b9eb38eeab4f96dc1b92789247eaf35b7d70cdb2983ffe9
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: FsDefaultCwdResponse
   responses:
     '200':
@@ -368,10 +378,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/fs/git-root
-  x-source: hermes_cli/web_routers/files.py:746
-  x-handler-hash: cc772e1c3a3fd8832beff2f68794fae1df05f024a12d34f50025718181a13242
+  x-source: hermes_cli/web_routers/files.py:965
+  x-handler-hash: 738da5e5d086db569d33bc1ef8307452be7820f837d0a396d460beaa47490f12
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: FsGitRootResponse
   responses:
     '200':
@@ -382,10 +392,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/fs/list
-  x-source: hermes_cli/web_routers/files.py:617
-  x-handler-hash: 3924edb584a79d01139811fd11282e5fb5d1631d70b3e3e91aea2e74fa9add00
+  x-source: hermes_cli/web_routers/files.py:763
+  x-handler-hash: 48399a2d7e290196fd7fac4bb40fbac65a1c6d90107e0562f21661876ad83787
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: FsListResponse
   responses:
     '200':
@@ -396,10 +406,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/fs/read-data-url
-  x-source: hermes_cli/web_routers/files.py:719
-  x-handler-hash: 5efb0c022762ffee9d471009f1dabf7af8adcda035a54b36bd3932f6948725a7
+  x-source: hermes_cli/web_routers/files.py:908
+  x-handler-hash: cd8ec65fa40da7c7fce2968e33420a0e8edc740a2339560adfc2a84070dec2f2
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: FsDataUrlResponse
   responses:
     '200':
@@ -410,10 +420,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/fs/read-text
-  x-source: hermes_cli/web_routers/files.py:640
-  x-handler-hash: 3b25d065684e17480c859f381b7b18bbb3cdacddfdeef0b28ecd0de12e78aeb9
+  x-source: hermes_cli/web_routers/files.py:793
+  x-handler-hash: b7c63ed78ecba163e024af3aecded0b5534013bcd9aaf11d177e29b26dee5b30
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: FsReadTextResponse
   responses:
     '200':
@@ -424,10 +434,24 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/media
-  x-source: hermes_cli/web_routers/files.py:251
+  x-source: hermes_cli/web_routers/files.py:329
   x-handler-hash: 1fb78a58e27d32f603b30c55189b6cbf549cc57814115fede53607f823759124
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: MediaDataUrlResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MediaDataUrlResponse'
+      description: Successful Response
+- method: GET
+  path: /api/media/proxy
+  x-source: hermes_cli/web_routers/files.py:373
+  x-handler-hash: 0dff07d4a3fe95307c9e57a87a313365eb66d2f788214c25bf31a92057d41803
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MediaDataUrlResponse
   responses:
     '200':
@@ -438,10 +462,10 @@ operations:
       description: Successful Response
 - method: HEAD
   path: /api/files/stream
-  x-source: hermes_cli/web_routers/files.py:473
-  x-handler-hash: 0d876328c99838373b188850c6f5f070f92692d764a96e6841bcb1b5ae138642
+  x-source: hermes_cli/web_routers/files.py:619
+  x-handler-hash: 1766c0f28a073ab0a3b4f2cf9fdd85ee1451fe666d9025b95e0ab79edc8a3c43
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 200 application/octet-stream, 200 audio/*, 200 video/*
   responses:
     '200':
@@ -462,10 +486,10 @@ operations:
         MIME type, ``application/octet-stream`` when unknown.
 - method: POST
   path: /api/chat/image-upload
-  x-source: hermes_cli/web_routers/files.py:330
-  x-handler-hash: 3e96c11b75e06412c0ac465a747a496662a698034d45c2c63d84955b46c94bac
+  x-source: hermes_cli/web_routers/files.py:470
+  x-handler-hash: 9ff242c3daee47cd3c086939a210056e83bd4fed92c83658c2816a9367bd9607
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ChatImageUploadResponse
   responses:
     '200':
@@ -476,10 +500,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/files/mkdir
-  x-source: hermes_cli/web_routers/files.py:576
+  x-source: hermes_cli/web_routers/files.py:722
   x-handler-hash: 91d0a999747dde2d4d529fb1aa99b2ebb566ee1ec4bd6a29a65596d416356994
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ManagedFileWriteResponse
   responses:
     '200':
@@ -490,10 +514,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/files/upload
-  x-source: hermes_cli/web_routers/files.py:501
+  x-source: hermes_cli/web_routers/files.py:647
   x-handler-hash: ea51fcad11d2d5c9da292d53e22dbbea92145a69a008349ad1b731b18516a36e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ManagedFileWriteResponse
   responses:
     '200':
@@ -504,10 +528,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/files/upload-stream
-  x-source: hermes_cli/web_routers/files.py:555
+  x-source: hermes_cli/web_routers/files.py:701
   x-handler-hash: b7dbc2f2bfe00b24ccef624bd9a934a386c7be03d7f22500c20e49402aabe80f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ManagedFileWriteResponse
   responses:
     '200':
@@ -518,10 +542,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/fs/write-text
-  x-source: hermes_cli/web_routers/files.py:659
-  x-handler-hash: 5bfe416b66338c1cccd076d45ea0e87d571f5eafa4621eefb64fc5f5789c0235
+  x-source: hermes_cli/web_routers/files.py:835
+  x-handler-hash: d84ea15d5c50f954fe14fc080f44fd966d9384f0d8d59c7f7fba5fca89e32741
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: FsWriteTextResponse
   responses:
     '200':

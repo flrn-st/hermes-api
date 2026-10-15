@@ -222,6 +222,223 @@ components:
     - default_workspace_kind
     - project_name
     type: object
+  KanbanBoardCard:
+    additionalProperties: false
+    description: 'A ``/board`` card: the task plus the per-board rollups ``get_board`` joins in.'
+    properties:
+      age:
+        $ref: '#/components/schemas/KanbanTaskAge'
+      assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_recurrences:
+        type: integer
+      body:
+        anyOf:
+        - type: string
+        - type: 'null'
+      branch_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      comment_count:
+        type: integer
+      completed_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      completion_contract:
+        anyOf:
+        - type: string
+        - type: 'null'
+      consecutive_failures:
+        type: integer
+      created_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      created_by:
+        anyOf:
+        - type: string
+        - type: 'null'
+      current_run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      current_run_started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        description: Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start).
+      current_step_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      diagnostics:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/KanbanDiagnostic'
+          type: array
+        - type: 'null'
+      goal_max_turns:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      goal_mode:
+        type: boolean
+      id:
+        type: string
+      idempotency_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      link_counts:
+        $ref: '#/components/schemas/KanbanLinkCounts'
+      max_retries:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      priority:
+        type: integer
+      progress:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanChildProgress'
+        - type: 'null'
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skills:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      status:
+        type: string
+      tenant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        type: string
+      warnings:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanWarningsSummary'
+        - type: 'null'
+      worker_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      workflow_template_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      workspace_kind:
+        type: string
+      workspace_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - title
+    - body
+    - assignee
+    - status
+    - priority
+    - created_by
+    - created_at
+    - started_at
+    - completed_at
+    - workspace_kind
+    - workspace_path
+    - claim_lock
+    - claim_expires
+    - tenant
+    - branch_name
+    - project_id
+    - result
+    - idempotency_key
+    - consecutive_failures
+    - worker_pid
+    - last_failure_error
+    - max_runtime_seconds
+    - last_heartbeat_at
+    - current_run_id
+    - workflow_template_id
+    - current_step_key
+    - skills
+    - model_override
+    - provider_override
+    - reasoning_effort
+    - max_retries
+    - goal_mode
+    - goal_max_turns
+    - session_id
+    - block_kind
+    - block_recurrences
+    - completion_contract
+    - age
+    - latest_summary
+    - current_run_started_at
+    - link_counts
+    - comment_count
+    - progress
+    type: object
   KanbanBoardColumn:
     additionalProperties: false
     properties:
@@ -540,6 +757,51 @@ components:
     - done
     - total
     type: object
+  KanbanChildResult:
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      status:
+        type: string
+      title:
+        type: string
+    required:
+    - id
+    - title
+    - status
+    - latest_summary
+    - result
+    type: object
+  KanbanComment:
+    additionalProperties: false
+    description: '``asdict(kanban_db.Comment)``.'
+    properties:
+      author:
+        type: string
+      body:
+        type: string
+      created_at:
+        type: integer
+      id:
+        type: integer
+      task_id:
+        type: string
+    required:
+    - id
+    - task_id
+    - author
+    - body
+    - created_at
+    type: object
   KanbanDashboardConfigResponse:
     additionalProperties: false
     description: '``plugin_api.get_config`` — the ``dashboard.kanban`` config section with defaults.'
@@ -802,6 +1064,35 @@ components:
     required:
     - ok
     type: object
+  KanbanEvent:
+    additionalProperties: false
+    description: '``asdict(kanban_db.Event)``; ``payload`` is per-``kind``.'
+    properties:
+      created_at:
+        type: integer
+      id:
+        type: integer
+      kind:
+        type: string
+      payload:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      task_id:
+        type: string
+    required:
+    - id
+    - task_id
+    - kind
+    - payload
+    - created_at
+    - run_id
+    type: object
   KanbanHomeChannel:
     additionalProperties: false
     description: '``plugin_api._configured_home_channels`` row; ``thread_id`` is ``""`` when unset.'
@@ -888,6 +1179,21 @@ components:
     required:
     - parents
     - children
+    type: object
+  KanbanLinkedTask:
+    additionalProperties: false
+    description: '``plugin_api._link_tasks`` row.'
+    properties:
+      id:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    required:
+    - id
+    - title
+    - status
     type: object
   KanbanModelOptionProvider:
     additionalProperties: false
@@ -1279,6 +1585,204 @@ components:
     - oldest_ready_age_seconds
     - now
     type: object
+  KanbanTask:
+    additionalProperties: false
+    description: '``plugin_api._task_dict``: ``asdict(kanban_db.Task)`` plus the derived ``age`` and the
+
+      newest run ``latest_summary`` (a 200-char preview on ``/board``, the full text elsewhere).'
+    properties:
+      age:
+        $ref: '#/components/schemas/KanbanTaskAge'
+      assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_recurrences:
+        type: integer
+      body:
+        anyOf:
+        - type: string
+        - type: 'null'
+      branch_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      completed_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      completion_contract:
+        anyOf:
+        - type: string
+        - type: 'null'
+      consecutive_failures:
+        type: integer
+      created_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      created_by:
+        anyOf:
+        - type: string
+        - type: 'null'
+      current_run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      current_run_started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        description: Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start).
+      current_step_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      goal_max_turns:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      goal_mode:
+        type: boolean
+      id:
+        type: string
+      idempotency_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      max_retries:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      priority:
+        type: integer
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skills:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      status:
+        type: string
+      tenant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        type: string
+      worker_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      workflow_template_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      workspace_kind:
+        type: string
+      workspace_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - title
+    - body
+    - assignee
+    - status
+    - priority
+    - created_by
+    - created_at
+    - started_at
+    - completed_at
+    - workspace_kind
+    - workspace_path
+    - claim_lock
+    - claim_expires
+    - tenant
+    - branch_name
+    - project_id
+    - result
+    - idempotency_key
+    - consecutive_failures
+    - worker_pid
+    - last_failure_error
+    - max_runtime_seconds
+    - last_heartbeat_at
+    - current_run_id
+    - workflow_template_id
+    - current_step_key
+    - skills
+    - model_override
+    - provider_override
+    - reasoning_effort
+    - max_retries
+    - goal_mode
+    - goal_max_turns
+    - session_id
+    - block_kind
+    - block_recurrences
+    - completion_contract
+    - age
+    - latest_summary
+    - current_run_started_at
+    type: object
   KanbanTaskAckResponse:
     additionalProperties: false
     description: '``plugin_api.reclaim_task_endpoint``.'
@@ -1312,6 +1816,21 @@ components:
     - started_age_seconds
     - time_to_complete_seconds
     type: object
+  KanbanTaskCreateResponse:
+    additionalProperties: false
+    description: '``plugin_api.create_task``; ``warning`` when a ready+assigned task has no dispatcher.'
+    properties:
+      task:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanTask'
+        - type: 'null'
+      warning:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - task
+    type: object
   KanbanTaskDeleteResponse:
     additionalProperties: false
     description: '``plugin_api.delete_task``.'
@@ -1323,6 +1842,48 @@ components:
     required:
     - deleted
     - task_id
+    type: object
+  KanbanTaskDetailResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_task`` — the drawer payload.'
+    properties:
+      attachments:
+        items:
+          $ref: '#/components/schemas/KanbanAttachment'
+        type: array
+      child_results:
+        items:
+          $ref: '#/components/schemas/KanbanChildResult'
+        type: array
+      comments:
+        items:
+          $ref: '#/components/schemas/KanbanComment'
+        type: array
+      events:
+        items:
+          $ref: '#/components/schemas/KanbanEvent'
+        type: array
+      link_tasks:
+        items:
+          $ref: '#/components/schemas/KanbanLinkedTask'
+        type: array
+      links:
+        $ref: '#/components/schemas/KanbanTaskLinks'
+      runs:
+        items:
+          $ref: '#/components/schemas/KanbanRun'
+        type: array
+      task:
+        $ref: '#/components/schemas/KanbanTaskWithDiagnostics'
+    required:
+    - task
+    - comments
+    - events
+    - attachments
+    - links
+    - link_tasks
+    - child_results
+    - runs
     type: object
   KanbanTaskDiagnostics:
     additionalProperties: false
@@ -1353,6 +1914,22 @@ components:
     - task_assignee
     - diagnostics
     type: object
+  KanbanTaskLinks:
+    additionalProperties: false
+    description: '``plugin_api._links_for``.'
+    properties:
+      children:
+        items:
+          type: string
+        type: array
+      parents:
+        items:
+          type: string
+        type: array
+    required:
+    - parents
+    - children
+    type: object
   KanbanTaskLogResponse:
     additionalProperties: false
     description: '``plugin_api.get_task_log``; ``content`` is ``""`` when the log does not exist.'
@@ -1376,6 +1953,223 @@ components:
     - size_bytes
     - content
     - truncated
+    type: object
+  KanbanTaskUpdateResponse:
+    additionalProperties: false
+    description: '``plugin_api.update_task``.'
+    properties:
+      task:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanTask'
+        - type: 'null'
+    required:
+    - task
+    type: object
+  KanbanTaskWithDiagnostics:
+    additionalProperties: false
+    description: '``_task_dict`` after ``_attach_diagnostics``: both keys only when the task has diagnostics.'
+    properties:
+      age:
+        $ref: '#/components/schemas/KanbanTaskAge'
+      assignee:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      block_recurrences:
+        type: integer
+      body:
+        anyOf:
+        - type: string
+        - type: 'null'
+      branch_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+      claim_expires:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      claim_lock:
+        anyOf:
+        - type: string
+        - type: 'null'
+      completed_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      completion_contract:
+        anyOf:
+        - type: string
+        - type: 'null'
+      consecutive_failures:
+        type: integer
+      created_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      created_by:
+        anyOf:
+        - type: string
+        - type: 'null'
+      current_run_id:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      current_run_started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        description: Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start).
+      current_step_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      diagnostics:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/KanbanDiagnostic'
+          type: array
+        - type: 'null'
+      goal_max_turns:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      goal_mode:
+        type: boolean
+      id:
+        type: string
+      idempotency_key:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_failure_error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_heartbeat_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      latest_summary:
+        anyOf:
+        - type: string
+        - type: 'null'
+      max_retries:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      max_runtime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      model_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      priority:
+        type: integer
+      project_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      provider_override:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_effort:
+        anyOf:
+        - type: string
+        - type: 'null'
+      result:
+        anyOf:
+        - type: string
+        - type: 'null'
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      skills:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      status:
+        type: string
+      tenant:
+        anyOf:
+        - type: string
+        - type: 'null'
+      title:
+        type: string
+      warnings:
+        anyOf:
+        - $ref: '#/components/schemas/KanbanWarningsSummary'
+        - type: 'null'
+      worker_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      workflow_template_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      workspace_kind:
+        type: string
+      workspace_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - title
+    - body
+    - assignee
+    - status
+    - priority
+    - created_by
+    - created_at
+    - started_at
+    - completed_at
+    - workspace_kind
+    - workspace_path
+    - claim_lock
+    - claim_expires
+    - tenant
+    - branch_name
+    - project_id
+    - result
+    - idempotency_key
+    - consecutive_failures
+    - worker_pid
+    - last_failure_error
+    - max_runtime_seconds
+    - last_heartbeat_at
+    - current_run_id
+    - workflow_template_id
+    - current_step_key
+    - skills
+    - model_override
+    - provider_override
+    - reasoning_effort
+    - max_retries
+    - goal_mode
+    - goal_max_turns
+    - session_id
+    - block_kind
+    - block_recurrences
+    - completion_contract
+    - age
+    - latest_summary
+    - current_run_started_at
     type: object
   KanbanWarningsSummary:
     additionalProperties: false
@@ -1403,13 +2197,55 @@ components:
     - latest_at
     - highest_severity
     type: object
+  KanbanWorkflowColumn:
+    additionalProperties: false
+    description: 'One ``kanban_workflow.Column``: board order is list order.'
+    properties:
+      drag_target:
+        type: boolean
+      icon:
+        type: string
+      key:
+        type: string
+      label:
+        type: string
+    required:
+    - key
+    - label
+    - icon
+    - drag_target
+    type: object
+  KanbanWorkflowResponse:
+    additionalProperties: false
+    description: '``plugin_api.get_workflow``: ``kanban_workflow.Workflow.to_dict()`` of the default workflow.
+
+      ``manual`` maps a source column key (or ``archived``) to the column keys a human may move to.'
+    properties:
+      archived:
+        const: archived
+        type: string
+      columns:
+        items:
+          $ref: '#/components/schemas/KanbanWorkflowColumn'
+        type: array
+      manual:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+    required:
+    - columns
+    - manual
+    - archived
+    type: object
 operations:
 - method: DELETE
   path: /api/plugins/kanban/attachments/{attachment_id}
-  x-source: plugins/kanban/dashboard/plugin_api.py:499
+  x-source: plugins/kanban/dashboard/plugin_api.py:523
   x-handler-hash: aa2f32a7fc70223ff88b35393f70e9613a228d2d4df42126819002f19477c5d3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanAttachmentDeleteResponse
   responses:
     '200':
@@ -1420,10 +2256,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/plugins/kanban/boards/{slug}
-  x-source: plugins/kanban/dashboard/plugin_api.py:1454
+  x-source: plugins/kanban/dashboard/plugin_api.py:1480
   x-handler-hash: 9ddf8f3bbd9522de4b58e55d638ea56c59afce0be18948452d912d18d1fb830c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardDeleteResponse
   responses:
     '200':
@@ -1434,10 +2270,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/plugins/kanban/links
-  x-source: plugins/kanban/dashboard/plugin_api.py:798
+  x-source: plugins/kanban/dashboard/plugin_api.py:824
   x-handler-hash: 520dd8f460247eb8211552e8aa7d6ebd7adb230f53e296c9250f87257b77e7e7
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -1448,10 +2284,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/plugins/kanban/tasks/{task_id}
-  x-source: plugins/kanban/dashboard/plugin_api.py:693
+  x-source: plugins/kanban/dashboard/plugin_api.py:719
   x-handler-hash: 2a38d8e8840afae95e392866f2b532ef4b8a5045a6b27f7db0831b15ca2ba129
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanTaskDeleteResponse
   responses:
     '200':
@@ -1462,10 +2298,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}
-  x-source: plugins/kanban/dashboard/plugin_api.py:1202
+  x-source: plugins/kanban/dashboard/plugin_api.py:1228
   x-handler-hash: 324831d5a1e83303a234dc5ba3bec044dbea6eb24362f08e0283ebddaeca8471
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanHomeSubscriptionResponse
   responses:
     '200':
@@ -1476,10 +2312,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/assignees
-  x-source: plugins/kanban/dashboard/plugin_api.py:1221
+  x-source: plugins/kanban/dashboard/plugin_api.py:1247
   x-handler-hash: 3471a25e9813fcc61b188d3546aaf233c3d26e866dce367a0ed6b6aea61c6c9f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanAssigneesResponse
   responses:
     '200':
@@ -1490,10 +2326,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/board
-  x-source: plugins/kanban/dashboard/plugin_api.py:339
+  x-source: plugins/kanban/dashboard/plugin_api.py:359
   x-handler-hash: b3537dcfa99e960765141f06130ba4b2983b3bd5168aeb74eed7cc68baed3537
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardResponse
   responses:
     '200':
@@ -1504,10 +2340,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/boards
-  x-source: plugins/kanban/dashboard/plugin_api.py:1385
+  x-source: plugins/kanban/dashboard/plugin_api.py:1411
   x-handler-hash: 3e3505eda245cbe38e74f20920a488cd69adad3f6ddbd7ea7a2db0d1b61f2a4e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardListResponse
   responses:
     '200':
@@ -1518,10 +2354,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/config
-  x-source: plugins/kanban/dashboard/plugin_api.py:1123
+  x-source: plugins/kanban/dashboard/plugin_api.py:1149
   x-handler-hash: ecb5394e9d5cc00536b7ccd4a1d3a893758055308bcefadcc58f02d38cb28c16
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanDashboardConfigResponse
   responses:
     '200':
@@ -1532,10 +2368,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/diagnostics
-  x-source: plugins/kanban/dashboard/plugin_api.py:856
+  x-source: plugins/kanban/dashboard/plugin_api.py:882
   x-handler-hash: a2e860d0f9180390e43c09b626b84f09f099dc396a9434a9be28020e26562874
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanDiagnosticsResponse
   responses:
     '200':
@@ -1546,10 +2382,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/home-channels
-  x-source: plugins/kanban/dashboard/plugin_api.py:1170
+  x-source: plugins/kanban/dashboard/plugin_api.py:1196
   x-handler-hash: 8be5020ee792e29a4aaf8f3106939639734ed25bdda3e13cb1383ff30cee4dd5
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanHomeChannelsResponse
   responses:
     '200':
@@ -1560,10 +2396,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/model-options
-  x-source: plugins/kanban/dashboard/plugin_api.py:1254
+  x-source: plugins/kanban/dashboard/plugin_api.py:1280
   x-handler-hash: 74bff6f4f004660249963099539412233ecf115e87d2263d795a756c087323d2
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanModelOptionsResponse
   responses:
     '200':
@@ -1574,10 +2410,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/orchestration
-  x-source: plugins/kanban/dashboard/plugin_api.py:1599
+  x-source: plugins/kanban/dashboard/plugin_api.py:1633
   x-handler-hash: 5c81fb7535a003fb559d7aa838496b79db5a4d8b95690906f48f192870bfba4c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanOrchestrationResponse
   responses:
     '200':
@@ -1588,10 +2424,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/profiles
-  x-source: plugins/kanban/dashboard/plugin_api.py:1527
+  x-source: plugins/kanban/dashboard/plugin_api.py:1553
   x-handler-hash: 07817e3fad521b8ab114ab328bb6daafec1a78e1591afd901a917e643d9501d6
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanProfilesResponse
   responses:
     '200':
@@ -1602,10 +2438,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/projects
-  x-source: plugins/kanban/dashboard/plugin_api.py:1372
+  x-source: plugins/kanban/dashboard/plugin_api.py:1398
   x-handler-hash: 9ae0248c4500291202cbe10cf23ca41ef036737cf6418858f4c46b7b9ec1f65f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanProjectsResponse
   responses:
     '200':
@@ -1616,10 +2452,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/runs/{run_id}
-  x-source: plugins/kanban/dashboard/plugin_api.py:910
+  x-source: plugins/kanban/dashboard/plugin_api.py:936
   x-handler-hash: 112fbc84eb17d4dc9c7184aadd2b0243a72e365bb432e4887c0ce30f519837b5
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanRunResponse
   responses:
     '200':
@@ -1630,10 +2466,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/runs/{run_id}/inspect
-  x-source: plugins/kanban/dashboard/plugin_api.py:917
+  x-source: plugins/kanban/dashboard/plugin_api.py:943
   x-handler-hash: 1f38e98558f03a3784aa68f90bbd9ca9b9846683eea9ebb9cc2d480ac06a57f0
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanRunInspectResponse
   responses:
     '200':
@@ -1644,10 +2480,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/stats
-  x-source: plugins/kanban/dashboard/plugin_api.py:1214
+  x-source: plugins/kanban/dashboard/plugin_api.py:1240
   x-handler-hash: 6895c3730fd924f1d5eb66aa6ab3a3ef21115fb9e0a30d9b20842137b5790080
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanStatsResponse
   responses:
     '200':
@@ -1657,11 +2493,25 @@ operations:
             $ref: '#/components/schemas/KanbanStatsResponse'
       description: Successful Response
 - method: GET
+  path: /api/plugins/kanban/tasks/{task_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:379
+  x-handler-hash: 280ffddf1935a00cd9607ec103f7d5c68ae7757b71d937e8e6191e7bf9dc9e73
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: KanbanTaskDetailResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskDetailResponse'
+      description: Successful Response
+- method: GET
   path: /api/plugins/kanban/tasks/{task_id}/attachments
-  x-source: plugins/kanban/dashboard/plugin_api.py:440
+  x-source: plugins/kanban/dashboard/plugin_api.py:464
   x-handler-hash: 5e99061722a7473721a8632b673074ea87e199162cc12a8abf2aacc11853580a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanAttachmentListResponse
   responses:
     '200':
@@ -1672,10 +2522,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/tasks/{task_id}/log
-  x-source: plugins/kanban/dashboard/plugin_api.py:1229
+  x-source: plugins/kanban/dashboard/plugin_api.py:1255
   x-handler-hash: 1eee6be87742315fd412c7080aa6864f688ac26641e5a3b03fb19dbe1b8f096a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanTaskLogResponse
   responses:
     '200':
@@ -1686,10 +2536,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/kanban/workers/active
-  x-source: plugins/kanban/dashboard/plugin_api.py:894
+  x-source: plugins/kanban/dashboard/plugin_api.py:920
   x-handler-hash: 8e9b515acfd35430091453369d193c9f8c3b0f5939e9b7cbcd8fc10a52861b50
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanActiveWorkersResponse
   responses:
     '200':
@@ -1698,12 +2548,26 @@ operations:
           schema:
             $ref: '#/components/schemas/KanbanActiveWorkersResponse'
       description: Successful Response
+- method: GET
+  path: /api/plugins/kanban/workflow
+  x-source: plugins/kanban/dashboard/plugin_api.py:1625
+  x-handler-hash: 8fe89225a045474bafb8df5e0475dc74e540de883dedf44cd1a283e2beec9e1b
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: KanbanWorkflowResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanWorkflowResponse'
+      description: Successful Response
 - method: PATCH
   path: /api/plugins/kanban/boards/{slug}
-  x-source: plugins/kanban/dashboard/plugin_api.py:1431
+  x-source: plugins/kanban/dashboard/plugin_api.py:1457
   x-handler-hash: 2be3d2f2d50a82bef4ecbb3cb764372a6a50b03d65405dedefcf765c50273a0b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardUpdateResponse
   responses:
     '200':
@@ -1714,10 +2578,10 @@ operations:
       description: Successful Response
 - method: PATCH
   path: /api/plugins/kanban/profiles/{profile_name}
-  x-source: plugins/kanban/dashboard/plugin_api.py:1541
+  x-source: plugins/kanban/dashboard/plugin_api.py:1567
   x-handler-hash: bc869c469ba46f644b73e3ffc49f8e111f7979b1ac805dd97621986a50d455b0
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanProfileDescriptionResponse
   responses:
     '200':
@@ -1726,12 +2590,26 @@ operations:
           schema:
             $ref: '#/components/schemas/KanbanProfileDescriptionResponse'
       description: Successful Response
+- method: PATCH
+  path: /api/plugins/kanban/tasks/{task_id}
+  x-source: plugins/kanban/dashboard/plugin_api.py:692
+  x-handler-hash: abf4eae16c3b87a215ebbfdb48997192e293be23355cb8d147189502be413180
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: KanbanTaskUpdateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskUpdateResponse'
+      description: Successful Response
 - method: POST
   path: /api/plugins/kanban/boards
-  x-source: plugins/kanban/dashboard/plugin_api.py:1414
+  x-source: plugins/kanban/dashboard/plugin_api.py:1440
   x-handler-hash: 643c1c7e4b08ebe01cb3c3f9bce64c8abd49738b1a010c70d8195bb45b90159c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardCreateResponse
   responses:
     '200':
@@ -1742,10 +2620,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/boards/import
-  x-source: plugins/kanban/dashboard/plugin_api.py:1494
+  x-source: plugins/kanban/dashboard/plugin_api.py:1520
   x-handler-hash: 82d09abcd5783f0639b3df724f944b61976de245062a45a06396cc0c47db5b83
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardImportResponse
   responses:
     '200':
@@ -1756,10 +2634,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/boards/{slug}/export
-  x-source: plugins/kanban/dashboard/plugin_api.py:1476
+  x-source: plugins/kanban/dashboard/plugin_api.py:1502
   x-handler-hash: 52e6686266e68897453897d937cbfdf594608166b1ae4dd6a67085493ae25f31
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardExportResponse
   responses:
     '200':
@@ -1770,10 +2648,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/boards/{slug}/switch
-  x-source: plugins/kanban/dashboard/plugin_api.py:1508
+  x-source: plugins/kanban/dashboard/plugin_api.py:1534
   x-handler-hash: e0071dc16137b5cc6c1ce8e0320124cc4c64734756e9db377bd6720af00b834b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBoardSwitchResponse
   responses:
     '200':
@@ -1784,10 +2662,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/dispatch
-  x-source: plugins/kanban/dashboard/plugin_api.py:1243
+  x-source: plugins/kanban/dashboard/plugin_api.py:1269
   x-handler-hash: 2e9ff9399027e3722539dae7ee4b4de32f10dc2cf2987b67ae7fa138ae75c522
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanDispatchResponse
   responses:
     '200':
@@ -1798,10 +2676,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/estimate
-  x-source: plugins/kanban/dashboard/plugin_api.py:1045
+  x-source: plugins/kanban/dashboard/plugin_api.py:1071
   x-handler-hash: 964ef6a58c50b2aae57c1bbbedc7ed4deadd28a1309e4ba4b3506e85462d3735
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanEstimateResponse
   responses:
     '200':
@@ -1812,10 +2690,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/links
-  x-source: plugins/kanban/dashboard/plugin_api.py:791
+  x-source: plugins/kanban/dashboard/plugin_api.py:817
   x-handler-hash: 409ff1f6d963fc0cfe268753e2aad9d1775139f5e8c0152657c5ee8f65b927ee
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanLinkAddResponse
   responses:
     '200':
@@ -1826,10 +2704,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/profiles/{profile_name}/describe-auto
-  x-source: plugins/kanban/dashboard/plugin_api.py:1560
+  x-source: plugins/kanban/dashboard/plugin_api.py:1586
   x-handler-hash: 82531b0dc7c831f8e5ae22b96141822a74c3153e678b3beef79baa6fbb603f94
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanProfileAutoDescribeResponse
   responses:
     '200':
@@ -1840,10 +2718,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/runs/{run_id}/terminate
-  x-source: plugins/kanban/dashboard/plugin_api.py:959
+  x-source: plugins/kanban/dashboard/plugin_api.py:985
   x-handler-hash: 7f3c75912ee963a63ca0b9b153578a652d1f32d34da651d411914e478c716c82
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanRunTerminateResponse
   responses:
     '200':
@@ -1853,11 +2731,25 @@ operations:
             $ref: '#/components/schemas/KanbanRunTerminateResponse'
       description: Successful Response
 - method: POST
+  path: /api/plugins/kanban/tasks
+  x-source: plugins/kanban/dashboard/plugin_api.py:435
+  x-handler-hash: 800fcb65e9f38a8a1e8bc8f25b68d6b0ff79d0219c155bfa5b01c7167e84aa5d
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: KanbanTaskCreateResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KanbanTaskCreateResponse'
+      description: Successful Response
+- method: POST
   path: /api/plugins/kanban/tasks/bulk
-  x-source: plugins/kanban/dashboard/plugin_api.py:832
+  x-source: plugins/kanban/dashboard/plugin_api.py:858
   x-handler-hash: 7e7f35c662cfc9e944076bcd347f624e94e68a32736b5b1c7a990b9e5641f092
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanBulkUpdateResponse
   responses:
     '200':
@@ -1868,10 +2760,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/attachments
-  x-source: plugins/kanban/dashboard/plugin_api.py:447
-  x-handler-hash: 8fe796ce330ffa0d727a2575632221d528f7d551171b705897911b5721fa41a2
+  x-source: plugins/kanban/dashboard/plugin_api.py:471
+  x-handler-hash: b30cfe5f3aaf541351d28213c2055e966f960b9567af87c65b89ed9605f7ba25
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanAttachmentUploadResponse
   responses:
     '200':
@@ -1882,10 +2774,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/comments
-  x-source: plugins/kanban/dashboard/plugin_api.py:776
+  x-source: plugins/kanban/dashboard/plugin_api.py:802
   x-handler-hash: 192f21eb4cb717dc768934690802894334647f1d8c1cb3ea1b4ed051196b27f1
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -1896,10 +2788,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/decompose
-  x-source: plugins/kanban/dashboard/plugin_api.py:1576
+  x-source: plugins/kanban/dashboard/plugin_api.py:1602
   x-handler-hash: 97803f7bee2775b2a54394c7d7b98f92ede61e4893d6eaa6b7d418cb03c29d6a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanDecomposeResponse
   responses:
     '200':
@@ -1910,10 +2802,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/estimate
-  x-source: plugins/kanban/dashboard/plugin_api.py:1051
+  x-source: plugins/kanban/dashboard/plugin_api.py:1077
   x-handler-hash: accd27a886e0febb2957617f977fa36250e80b59f9d43f93748899fac46de9a3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanEstimateResponse
   responses:
     '200':
@@ -1924,10 +2816,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}
-  x-source: plugins/kanban/dashboard/plugin_api.py:1185
+  x-source: plugins/kanban/dashboard/plugin_api.py:1211
   x-handler-hash: 7ff4f4189b3b64ccf62bf765bb6d9bc1924141ffbfe27b3113dde086048cd3e0
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanHomeSubscriptionResponse
   responses:
     '200':
@@ -1938,10 +2830,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/reassign
-  x-source: plugins/kanban/dashboard/plugin_api.py:1013
+  x-source: plugins/kanban/dashboard/plugin_api.py:1039
   x-handler-hash: 193e34abfd98a12ec988edb88440d4eb28a7fefb17b1394a3780253ab0765a6b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanReassignResponse
   responses:
     '200':
@@ -1952,10 +2844,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/reclaim
-  x-source: plugins/kanban/dashboard/plugin_api.py:982
+  x-source: plugins/kanban/dashboard/plugin_api.py:1008
   x-handler-hash: 546dccc4df5b668f707da54cb9c2c75d89a370eab3f7e542f0027b3a0b3365ff
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanTaskAckResponse
   responses:
     '200':
@@ -1966,10 +2858,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/kanban/tasks/{task_id}/specify
-  x-source: plugins/kanban/dashboard/plugin_api.py:999
+  x-source: plugins/kanban/dashboard/plugin_api.py:1025
   x-handler-hash: 0db9ee30fec6bbf1970571728cbe9aa38cc14a079fbb89a6f4a17f999bdeac7c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanSpecifyResponse
   responses:
     '200':
@@ -1980,10 +2872,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/plugins/kanban/orchestration
-  x-source: plugins/kanban/dashboard/plugin_api.py:1641
+  x-source: plugins/kanban/dashboard/plugin_api.py:1675
   x-handler-hash: 657f550d34c26b4918f8110f8712071f85c0a12dc52118684cfa7a6280567738
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: KanbanOrchestrationResponse
   responses:
     '200':

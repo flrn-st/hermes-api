@@ -30,7 +30,11 @@ components:
     type: object
   DashboardAuthMeResponse:
     additionalProperties: false
-    description: '``api_auth_me``: the verified ``request.state.session`` minus its tokens.'
+    description: '``api_auth_me``: the verified ``request.state.session`` minus its tokens. With the auth gate
+
+      off it reports the loopback identity instead (``user_id: "local"``, ``provider: "loopback"``,
+
+      ``expires_at: 0``).'
     properties:
       display_name:
         type: string
@@ -106,10 +110,10 @@ components:
 operations:
 - method: GET
   path: /api/auth/me
-  x-source: hermes_cli/dashboard_auth/routes.py:449
-  x-handler-hash: 882db0a77e20ab724d3d1245f2ae839615801ec1754b812a328f03346ad80eae
+  x-source: hermes_cli/dashboard_auth/routes.py:524
+  x-handler-hash: 27c07e9ddc84f52cfb6a4dce1ccd47150ce49c71dba9f6c61c0feaf62abc507d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardAuthMeResponse
   responses:
     '200':
@@ -120,10 +124,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/auth/providers
-  x-source: hermes_cli/dashboard_auth/routes.py:183
+  x-source: hermes_cli/dashboard_auth/routes.py:203
   x-handler-hash: 905d5aa69ff08dd6257f943bf4f97429d40bb21d29efc886dc1b5d6e993f4111
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardAuthProvidersResponse
   responses:
     '200':
@@ -134,10 +138,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /auth/callback
-  x-source: hermes_cli/dashboard_auth/routes.py:290
+  x-source: hermes_cli/dashboard_auth/routes.py:338
   x-handler-hash: 092c50406c093f66b910953fa6324264801fc353e627c671c5f75c07709fcf9f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 302 redirect
   responses:
     '302':
@@ -150,10 +154,10 @@ operations:
             type: string
 - method: GET
   path: /auth/login
-  x-source: hermes_cli/dashboard_auth/routes.py:197
+  x-source: hermes_cli/dashboard_auth/routes.py:217
   x-handler-hash: 40b81e3fdc679ca68c221e83bd2946c17c12cbeae210a7cbf3c702bcada684ab
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 302 redirect
   responses:
     '302':
@@ -166,10 +170,10 @@ operations:
             type: string
 - method: GET
   path: /auth/native/authorize
-  x-source: hermes_cli/dashboard_auth/routes.py:242
-  x-handler-hash: e3e81ad4c61e2cd16379464550a0432335f42fb3751d7792e0493bd8a14088bc
+  x-source: hermes_cli/dashboard_auth/routes.py:289
+  x-handler-hash: 24914a3311caa8927f7ad38465e8ce876229fe6e5f78b9400c9ea3c5ac3c173e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 200 text/html, 302 redirect
   responses:
     '200':
@@ -189,10 +193,10 @@ operations:
             type: string
 - method: GET
   path: /login
-  x-source: hermes_cli/dashboard_auth/routes.py:176
-  x-handler-hash: 9303c279d03595b796261af0b4eda5775cd865c189d9d9d8e55b0a97110573de
+  x-source: hermes_cli/dashboard_auth/routes.py:195
+  x-handler-hash: cac2bf8825c9d9a3194c1956f81c79773daf42997ecd4e5a55d1cbb7927b51d8
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 200 text/html
   responses:
     '200':
@@ -203,10 +207,10 @@ operations:
       description: The server-rendered login page (``no-store``).
 - method: POST
   path: /api/auth/ws-ticket
-  x-source: hermes_cli/dashboard_auth/routes.py:458
-  x-handler-hash: ca9ea418c9194f0473fc3466b0b93cebb456e3f7822e66a86b7834ab50010d56
+  x-source: hermes_cli/dashboard_auth/routes.py:556
+  x-handler-hash: c2191871b6416dada8e2e12c5f4e8718a26a855f90b129b6da8523ee876bfa7d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardAuthWsTicketResponse
   responses:
     '200':
@@ -217,10 +221,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /auth/logout
-  x-source: hermes_cli/dashboard_auth/routes.py:421
-  x-handler-hash: 1792c05dbeeb4659be68fd84b878405fe4c03293494718c793e5f9b041316af9
+  x-source: hermes_cli/dashboard_auth/routes.py:496
+  x-handler-hash: 654b6a55812af4d7fffbe5bc1bf89ff94d0cd0cc8ab9b5d142f18323f064146a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 302 redirect
   responses:
     '302':
@@ -232,10 +236,10 @@ operations:
             type: string
 - method: POST
   path: /auth/native/refresh
-  x-source: hermes_cli/dashboard_auth/routes.py:496
+  x-source: hermes_cli/dashboard_auth/routes.py:594
   x-handler-hash: 070f76ace7d16b28f40739785013cb0519e2c823802f08c85c4095e5deba29a3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardAuthBearerTokenResponse
   responses:
     '200':
@@ -246,10 +250,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /auth/native/token
-  x-source: hermes_cli/dashboard_auth/routes.py:476
+  x-source: hermes_cli/dashboard_auth/routes.py:574
   x-handler-hash: b4f6d4f578d6badbb82d6c1f71679facc7931e8880e2c374f1b3ebee97c5edd1
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardAuthBearerTokenResponse
   responses:
     '200':
@@ -260,10 +264,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /auth/password-login
-  x-source: hermes_cli/dashboard_auth/routes.py:372
+  x-source: hermes_cli/dashboard_auth/routes.py:447
   x-handler-hash: bdf87f90cffd43bbbd3876c2fd23cf0f6f2ca5d4e22ddeab799529ea4b3ac7ff
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardAuthPasswordLoginResponse
   responses:
     '200':

@@ -98,7 +98,11 @@ components:
     type: object
   MessagingPlatformEnvVar:
     additionalProperties: false
-    description: One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose).
+    description: 'One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose).
+
+      ``is_list`` marks an allowlist key (comma-separated IDs, never a password): only those carry
+
+      the saved ``value``, which is ``null`` on every other row.'
     properties:
       advanced:
         type: boolean
@@ -106,6 +110,8 @@ components:
         type: string
       help:
         type: string
+      is_list:
+        type: boolean
       is_password:
         type: boolean
       is_set:
@@ -124,22 +130,41 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      value:
+        anyOf:
+        - type: string
+        - type: 'null'
     required:
     - key
     - required
     - is_set
     - redacted_value
+    - value
     - description
     - prompt
     - help
     - url
     - is_password
+    - is_list
     - advanced
     type: object
   MessagingPlatformTestResponse:
     additionalProperties: false
-    description: '``test_messaging_platform`` — a verdict over the same payload as the platform list.'
+    description: '``test_messaging_platform`` — a verdict over the same payload as the platform list. A
+
+      connected platform with a per-user authorization surface also carries ``auth_posture``
+
+      (``_messaging_platform_posture``); ``ok`` stays true and ``message`` says what to configure.'
     properties:
+      auth_posture:
+        anyOf:
+        - enum:
+          - open
+          - allowlist
+          - pairing
+          - deny_all
+          type: string
+        - type: 'null'
       message:
         type: string
       ok:
@@ -378,10 +403,10 @@ components:
 operations:
 - method: DELETE
   path: /api/messaging/telegram/onboarding/{pairing_id}
-  x-source: hermes_cli/web_routers/messaging.py:785
+  x-source: hermes_cli/web_routers/messaging.py:815
   x-handler-hash: 6dffdab7eac99ceda6144e9ca5f22c60b4f9e92ca0ed41776e676f3701154653
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -392,10 +417,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/messaging/whatsapp/onboarding/{pairing_id}
-  x-source: hermes_cli/web_routers/messaging.py:626
+  x-source: hermes_cli/web_routers/messaging.py:656
   x-handler-hash: 9bddd478179b532e4c08f8c5ec0c87536e386e7aba052d740d6f08cef92fd0bb
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -406,10 +431,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/messaging/platforms
-  x-source: hermes_cli/web_routers/messaging.py:795
+  x-source: hermes_cli/web_routers/messaging.py:825
   x-handler-hash: 8ffcd0c6f82ec30dc81f25ce07e29443cb74d1183495b1d5c85c9cff852ebd6c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MessagingPlatformsResponse
   responses:
     '200':
@@ -420,10 +445,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/messaging/telegram/onboarding/{pairing_id}
-  x-source: hermes_cli/web_routers/messaging.py:706
+  x-source: hermes_cli/web_routers/messaging.py:736
   x-handler-hash: d557cec9bdb6baf725b429ecaacb36d0c808e903ef89949d0d5e650e4e70cd12
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: TelegramOnboardingStatusResponse
   responses:
     '200':
@@ -434,10 +459,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/messaging/whatsapp/onboarding/{pairing_id}
-  x-source: hermes_cli/web_routers/messaging.py:586
+  x-source: hermes_cli/web_routers/messaging.py:616
   x-handler-hash: 287f112fcdaaf7278bdb58db603b8f59928ddb7d742e33c163dbadd70adcbf6e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: WhatsAppOnboardingResponse
   responses:
     '200':
@@ -448,10 +473,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/messaging/platforms/{platform_id}/test
-  x-source: hermes_cli/web_routers/messaging.py:928
-  x-handler-hash: cfe0f8a371e5d761270b8b5b9f470fe4560c2ab90a3ccd56bef841406e339ff5
+  x-source: hermes_cli/web_routers/messaging.py:1083
+  x-handler-hash: a7e849e81d327ad0760c776cc6a0889f27c1781058ab1b32f137f89a21660101
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MessagingPlatformTestResponse
   responses:
     '200':
@@ -462,10 +487,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/messaging/telegram/onboarding/start
-  x-source: hermes_cli/web_routers/messaging.py:683
+  x-source: hermes_cli/web_routers/messaging.py:713
   x-handler-hash: 6b5ee6849be6b703b0cae65c99fe9c6173eadcaff339aa4db6d05db893371445
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: TelegramOnboardingStartResponse
   responses:
     '200':
@@ -476,10 +501,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/messaging/telegram/onboarding/{pairing_id}/apply
-  x-source: hermes_cli/web_routers/messaging.py:745
+  x-source: hermes_cli/web_routers/messaging.py:775
   x-handler-hash: 22c6e7796d113323f5bb3ac81b0ccdd09e2d391ab6debcc4d4380e9ed904f2ba
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: TelegramOnboardingApplyResponse
   responses:
     '200':
@@ -490,10 +515,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/messaging/whatsapp/onboarding/start
-  x-source: hermes_cli/web_routers/messaging.py:552
-  x-handler-hash: 16d578fddd338451238d159dd29ad8504f1367dd8af29f486c4c47b02573d5be
+  x-source: hermes_cli/web_routers/messaging.py:582
+  x-handler-hash: 895946f163f2168ba13c5083d5e710df225afc4432ef6489867dd800f375da1c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: WhatsAppOnboardingResponse
   responses:
     '200':
@@ -504,10 +529,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/messaging/whatsapp/onboarding/{pairing_id}/apply
-  x-source: hermes_cli/web_routers/messaging.py:595
+  x-source: hermes_cli/web_routers/messaging.py:625
   x-handler-hash: db8e0f55b9477e08cc1d888331fbf80364a9db975e2ce67b016ce3015fb86d1c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: WhatsAppOnboardingApplyResponse
   responses:
     '200':
@@ -518,10 +543,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/messaging/platforms/{platform_id}
-  x-source: hermes_cli/web_routers/messaging.py:854
-  x-handler-hash: 9e93234214a027ee8d350a8e4cf6c73de2de69ae643f84b4e40ed2296ab4cc47
+  x-source: hermes_cli/web_routers/messaging.py:884
+  x-handler-hash: 889ce572e64ad5aa128fa82c9736a6485641aed4f211069e336de51d94beebea
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MessagingPlatformUpdateResponse
   responses:
     '200':

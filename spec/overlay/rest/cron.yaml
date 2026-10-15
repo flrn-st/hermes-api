@@ -1,5 +1,6 @@
-# Hand-reviewed against the tagged handlers: operations whose handler changed after the tag, and
-# components whose producer drifted. These win over spec/overlay/rest/contracts/.
+# Hand-reviewed against the tagged handlers: corrections the response contracts get wrong for the tag
+# (undeclared request bodies, media types, values Hermes copies unchecked). These win over
+# spec/overlay/rest/contracts/.
 components:
   CronFireRequest:
     type: object
@@ -17,10 +18,23 @@ components:
 
       lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool,
 
-      ``pinned`` stays SQLite 0/1. A script-only fire with no session is a ``_cron_output_run_row``
+      ``pinned`` stays SQLite 0/1.
 
-      (``source`` ``cron_output``, id ``cron_output:<job>:<stem>``) and carries only the required fields.'
+
+      The sessions table''s counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count``
+      and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows
+      can hold null.'
     properties:
+      _branched_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /branch fork.'
+      _reset_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: 'Lifted from ``model_config`` when set: a /new sibling.'
       actual_cost_usd:
         anyOf:
         - type: number
@@ -31,6 +45,9 @@ components:
         - type: 'null'
       archived:
         type: boolean
+      auto_archived:
+        description: 'SQLite 0/1: archived by the idle sweep, not by hand.'
+        type: integer
       billing_base_url:
         anyOf:
         - type: string
@@ -83,6 +100,11 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      created_source:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: The source the row was created under; null on rows that predate it.
       cwd:
         anyOf:
         - type: string
@@ -185,9 +207,7 @@ components:
       pinned:
         type: integer
       preview:
-        anyOf:
-        - type: string
-        - type: 'null'
+        type: string
       pricing_version:
         anyOf:
         - type: string
@@ -207,6 +227,15 @@ components:
         - type: 'null'
       rewind_count:
         type: integer
+      runtime_generation:
+        description: Execution generation a turn-affecting mutation must quote.
+        type: integer
+      runtime_revision:
+        description: 'Mutation fence: bumped by every committed session mutation.'
+        type: integer
+      scheduler_owned:
+        description: 'The scheduler still owns this run (``_run_owned_by``): live even past the activity window.'
+        type: boolean
       session_key:
         anyOf:
         - type: string
@@ -253,43 +282,80 @@ components:
         - type: 'null'
     required:
     - id
+    - runtime_revision
+    - runtime_generation
     - source
-    - title
-    - preview
+    - created_source
+    - user_id
+    - session_key
+    - chat_id
+    - chat_type
+    - thread_id
+    - display_name
+    - origin_json
+    - expiry_finalized
+    - model
+    - parent_session_id
     - started_at
-    - last_active
     - ended_at
+    - end_reason
     - message_count
     - tool_call_count
     - input_tokens
     - output_tokens
-    - model
+    - cache_read_tokens
+    - cache_write_tokens
+    - reasoning_tokens
     - cwd
+    - git_branch
+    - git_repo_root
+    - billing_provider
+    - billing_base_url
+    - billing_mode
+    - estimated_cost_usd
+    - actual_cost_usd
+    - cost_status
+    - cost_source
+    - pricing_version
+    - title
+    - title_source
+    - last_activity_at
+    - last_activity_description
+    - last_activity_provenance
+    - api_call_count
+    - handoff_state
+    - handoff_platform
+    - handoff_error
+    - compression_failure_cooldown_until
+    - compression_failure_error
+    - compression_fallback_streak
+    - compression_ineffective_count
+    - compression_recovery_deadline
+    - profile_name
+    - transport_profile
+    - rewind_count
+    - auto_archived
+    - hidden
+    - last_read_at
+    - tool_names
     - archived
+    - pinned
+    - preview
+    - last_active
     - is_active
-    type: object
-  CronJobRunsResponse:
-    additionalProperties: false
-    description: '``_list_cron_job_runs_sync`` — the job''s run sessions (``SessionDB.list_cron_job_runs``), newest
-      first, annotated with ``is_active``/``archived`` and ``profile`` when a profile holds the job.'
-    properties:
-      limit:
-        type: integer
-      runs:
-        items:
-          $ref: '#/components/schemas/CronJobRunSession'
-        type: array
-    required:
-    - runs
-    - limit
+    - scheduler_owned
+    - model_config
+    - system_prompt
+    - system_prompt_hash
+    - git_metadata_generation
     type: object
 operations:
 - method: POST
   path: /api/cron/fire
-  x-source: hermes_cli/web_routers/cron.py:302
+  x-source: hermes_cli/web_routers/cron.py:739
   x-handler-hash: b222191afbb175e46b4fa0df17fd519e4167c18b8c7c490adf6becd34dbc54a4
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronFireResponse, CronFireResponse
   responses:
     '200':

@@ -65,6 +65,11 @@ components:
         type: boolean
       gateway_reloaded:
         type: boolean
+      known_issues:
+        description: The catalog entry's known issues; empty for a non-catalog install.
+        items:
+          type: string
+        type: array
       missing_env:
         items:
           type: string
@@ -93,6 +98,7 @@ components:
     - gateway_reloaded
     - activation
     - restart_required
+    - known_issues
     type: object
   AgentPluginLiveNow:
     additionalProperties: false
@@ -604,6 +610,10 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      known_issues:
+        items:
+          type: string
+        type: array
       maintainer:
         type: string
       name:
@@ -668,6 +678,7 @@ components:
     - title
     - onboarding
     - capabilities
+    - known_issues
     - sha_short
     - capability_summary
     - installed
@@ -729,13 +740,56 @@ components:
     - name
     - hidden
     type: object
+  PluginsHubProviders:
+    additionalProperties: false
+    description: '``memory_provider`` is ``""`` for the built-in provider; ``context_engine`` defaults to
+
+      ``"compressor"``.'
+    properties:
+      context_engine:
+        type: string
+      context_options:
+        items:
+          $ref: '#/components/schemas/PluginsHubContextOption'
+        type: array
+      memory_options:
+        items:
+          $ref: '#/components/schemas/MemoryProviderStatusRow'
+        type: array
+      memory_provider:
+        type: string
+    required:
+    - memory_provider
+    - memory_options
+    - context_engine
+    - context_options
+    type: object
+  PluginsHubResponse:
+    additionalProperties: false
+    description: '``hermes_cli/web_server_dashboard.py::_merged_plugins_hub``.'
+    properties:
+      orphan_dashboard_plugins:
+        items:
+          $ref: '#/components/schemas/DashboardPluginManifest'
+        type: array
+      plugins:
+        items:
+          $ref: '#/components/schemas/PluginsHubPluginRow'
+        type: array
+      providers:
+        $ref: '#/components/schemas/PluginsHubProviders'
+    required:
+    - plugins
+    - orphan_dashboard_plugins
+    - providers
+    type: object
 operations:
 - method: DELETE
   path: /api/dashboard/agent-plugins/{name}
-  x-source: hermes_cli/web_routers/dashboard_ui.py:284
+  x-source: hermes_cli/web_routers/dashboard_ui.py:286
   x-handler-hash: a27818f4b058e244b3a34cd65d37476935a8ec95ef88c560659a72ed74444627
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AgentPluginRemoveResponse
   responses:
     '200':
@@ -749,7 +803,7 @@ operations:
   x-source: hermes_cli/web_routers/dashboard_ui.py:90
   x-handler-hash: 068c52940cf0cf46ae4d6693a546826e03cbb4ce33035b0ea0f1a369b2138f8f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardFontResponse
   responses:
     '200':
@@ -763,7 +817,7 @@ operations:
   x-source: hermes_cli/web_routers/dashboard_ui.py:131
   x-handler-hash: 6868acd296476f7cd5d3af20fd83a942c164643f0e43646f4df4d8c67cd1dc85
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: '{"items": {"$ref": "#/components/schemas/DashboardPluginManifest"}, "type": "array"}'
   responses:
     '200':
@@ -776,10 +830,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/dashboard/plugins/catalog
-  x-source: hermes_cli/web_routers/dashboard_ui.py:181
+  x-source: hermes_cli/web_routers/dashboard_ui.py:183
   x-handler-hash: deeb40c20c9a1407a18fa4ac44b668fb0bda2dda147304594512b65ad4b0af19
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: PluginCatalogResponse
   responses:
     '200':
@@ -789,11 +843,25 @@ operations:
             $ref: '#/components/schemas/PluginCatalogResponse'
       description: Successful Response
 - method: GET
+  path: /api/dashboard/plugins/hub
+  x-source: hermes_cli/web_routers/dashboard_ui.py:156
+  x-handler-hash: 85989fd1dc90620108ec9452e440099cd989851cbbed293789670fcf9c563ff7
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: PluginsHubResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PluginsHubResponse'
+      description: Successful Response
+- method: GET
   path: /api/dashboard/plugins/rescan
   x-source: hermes_cli/web_routers/dashboard_ui.py:149
   x-handler-hash: 06d64b2163cddae642c985580f0ad75ee2d6e2905ecdba235e66c236bc5c3dd9
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardPluginsRescanResponse
   responses:
     '200':
@@ -807,7 +875,7 @@ operations:
   x-source: hermes_cli/web_routers/dashboard_ui.py:51
   x-handler-hash: d7af1d0834431d64394f8b2aa1401ab70108999f55be165136c7c52616ef181a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardThemesResponse
   responses:
     '200':
@@ -818,10 +886,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /dashboard-plugins/{plugin_name}/{file_path}
-  x-source: hermes_cli/web_routers/dashboard_ui.py:383
+  x-source: hermes_cli/web_routers/dashboard_ui.py:385
   x-handler-hash: c5256c157f423f829b9d81ba6005fcf04dd0f3c2f68762c7b1a89b221c118ea1
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: '200 application/javascript, {"format": "binary", "type": "string"}, 200 font/otf, 200 font/ttf, 200
       font/woff, 200 font/woff2, 200 image/gif, 200 image/jpeg, 200 image/png, 200 image/svg+xml, 200 image/webp,
       200 image/x-icon, 200 text/css, 200 text/html'
@@ -887,10 +955,10 @@ operations:
       description: A static file from the plugin's ``dashboard/`` directory.
 - method: POST
   path: /api/dashboard/agent-plugins/install
-  x-source: hermes_cli/web_routers/dashboard_ui.py:222
+  x-source: hermes_cli/web_routers/dashboard_ui.py:224
   x-handler-hash: e0d1759056ffbcc0dcba64751fd9150339e4c7496a74c008f7ed919788e87aa6
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AgentPluginInstallResponse
   responses:
     '200':
@@ -901,10 +969,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/dashboard/agent-plugins/{name}/disable
-  x-source: hermes_cli/web_routers/dashboard_ui.py:262
+  x-source: hermes_cli/web_routers/dashboard_ui.py:264
   x-handler-hash: 5add31cf5bcb68785fb0f50c569f0ed4dfee3937b3b67d846e886f5e66620b9c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AgentPluginToggleResponse
   responses:
     '200':
@@ -915,10 +983,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/dashboard/agent-plugins/{name}/enable
-  x-source: hermes_cli/web_routers/dashboard_ui.py:255
+  x-source: hermes_cli/web_routers/dashboard_ui.py:257
   x-handler-hash: 8a5a3b45eeea81d08099bfa53fa416e0606d918c68ce8ac737400405b8b96a45
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AgentPluginToggleResponse
   responses:
     '200':
@@ -929,10 +997,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/dashboard/plugins/{name}/visibility
-  x-source: hermes_cli/web_routers/dashboard_ui.py:345
+  x-source: hermes_cli/web_routers/dashboard_ui.py:347
   x-handler-hash: 62a90b77bf7b0cd2b3914674c7567254230ee9940609d0853a597e013c41db97
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: PluginVisibilityResponse
   responses:
     '200':
@@ -946,7 +1014,7 @@ operations:
   x-source: hermes_cli/web_routers/dashboard_ui.py:100
   x-handler-hash: ac55ca2aed02a0ad4318da01dfb8e6aa0dc30de6ea22768b380ddb366f74d667
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardFontSetResponse
   responses:
     '200':
@@ -957,10 +1025,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/dashboard/plugin-providers
-  x-source: hermes_cli/web_routers/dashboard_ui.py:317
+  x-source: hermes_cli/web_routers/dashboard_ui.py:319
   x-handler-hash: 0a44efe083bd7f47c16b41e49bc99909c71651e735ed7184f10f780fa44e08de
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -974,7 +1042,7 @@ operations:
   x-source: hermes_cli/web_routers/dashboard_ui.py:71
   x-handler-hash: aa187b52aacec6a66f37620410a4b1173d31544ee7c81f8834f0dcc1cde1fe25
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DashboardThemeSetResponse
   responses:
     '200':

@@ -9,7 +9,305 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose). */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``setup_memory_provider`` → ``_install_memory_provider_setup``; ``status`` is ``None`` when discovery no longer lists the provider. */
+@Serializable
+public data class MemoryProviderSetupResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("provider")
+    public val provider: String,
+    @SerialName("results")
+    public val results: List<MemoryProviderSetupStepResult>,
+    @SerialName("status")
+    public val status: MemoryProviderStatusRow?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_command_result``; ``returncode`` is ``None`` when no process ran. */
+@Serializable
+public data class MemoryProviderSetupStepResult(
+    @SerialName("command")
+    public val command: String,
+    @SerialName("kind")
+    public val kind: MemoryProviderSetupStepResultKind,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("returncode")
+    public val returncode: Long?,
+    @SerialName("status")
+    public val status: String,
+    @SerialName("stderr")
+    public val stderr: String,
+    @SerialName("stdout")
+    public val stdout: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MemoryProviderSetupStepResultKind.Serializer::class)
+public sealed interface MemoryProviderSetupStepResultKind {
+    public data object Pip : MemoryProviderSetupStepResultKind
+    public data object Setup : MemoryProviderSetupStepResultKind
+    public data object ExternalCheck : MemoryProviderSetupStepResultKind
+    public data object ExternalInstall : MemoryProviderSetupStepResultKind
+    public data class Unknown(public val raw: kotlin.String) : MemoryProviderSetupStepResultKind
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Pip -> "pip"
+            Setup -> "setup"
+            ExternalCheck -> "external_check"
+            ExternalInstall -> "external_install"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryProviderSetupStepResultKind = when (raw) {
+            "pip" -> Pip
+            "setup" -> Setup
+            "external_check" -> ExternalCheck
+            "external_install" -> ExternalInstall
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<MemoryProviderSetupStepResultKind> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderSetupStepResultKind", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): MemoryProviderSetupStepResultKind = when (val raw = decoder.decodeString()) {
+            "pip" -> Pip
+            "setup" -> Setup
+            "external_check" -> ExternalCheck
+            "external_install" -> ExternalInstall
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryProviderSetupStepResultKind value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: MemoryProviderSetupStepResultKind) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``hermes_cli/web_server_memory.py::_discover_memory_provider_statuses`` row. */
+@Serializable
+public data class MemoryProviderStatusRow(
+    @SerialName("available")
+    public val available: Boolean,
+    @SerialName("configured")
+    public val configured: Boolean,
+    @SerialName("description")
+    public val description: String,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("setup")
+    public val setup: MemoryProviderSetupInfo,
+    @SerialName("status")
+    public val status: MemoryProviderStatusRowStatus,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MemoryProviderStatusRowStatus.Serializer::class)
+public sealed interface MemoryProviderStatusRowStatus {
+    public data object Missing : MemoryProviderStatusRowStatus
+    public data object Unavailable : MemoryProviderStatusRowStatus
+    public data object NeedsConfig : MemoryProviderStatusRowStatus
+    public data object Ready : MemoryProviderStatusRowStatus
+    public data class Unknown(public val raw: kotlin.String) : MemoryProviderStatusRowStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Missing -> "missing"
+            Unavailable -> "unavailable"
+            NeedsConfig -> "needs_config"
+            Ready -> "ready"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MemoryProviderStatusRowStatus = when (raw) {
+            "missing" -> Missing
+            "unavailable" -> Unavailable
+            "needs_config" -> NeedsConfig
+            "ready" -> Ready
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<MemoryProviderStatusRowStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderStatusRowStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): MemoryProviderStatusRowStatus = when (val raw = decoder.decodeString()) {
+            "missing" -> Missing
+            "unavailable" -> Unavailable
+            "needs_config" -> NeedsConfig
+            "ready" -> Ready
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryProviderStatusRowStatus value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: MemoryProviderStatusRowStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MemoryProvidersConfigResponse.Serializer::class)
+public sealed interface MemoryProvidersConfigResponse {
+    public data class MemoryProviderDeclaredConfigResponseValue(public val value: MemoryProviderDeclaredConfigResponse) : MemoryProvidersConfigResponse
+    public data class MemoryProviderLegacyConfigResponseValue(public val value: MemoryProviderLegacyConfigResponse) : MemoryProvidersConfigResponse
+
+    public object Serializer : KSerializer<MemoryProvidersConfigResponse> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): MemoryProvidersConfigResponse {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("MemoryProvidersConfigResponse requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return MemoryProviderDeclaredConfigResponseValue(json.decodeFromJsonElement<MemoryProviderDeclaredConfigResponse>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return MemoryProviderLegacyConfigResponseValue(json.decodeFromJsonElement<MemoryProviderLegacyConfigResponse>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No MemoryProvidersConfigResponse variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: MemoryProvidersConfigResponse) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("MemoryProvidersConfigResponse requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is MemoryProviderDeclaredConfigResponseValue -> json.encodeToJsonElement(value.value)
+                is MemoryProviderLegacyConfigResponseValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class MemoryReset(
+    @SerialName("target")
+    public val target: String? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``reset_memory`` — the file names actually deleted. */
+@Serializable
+public data class MemoryResetResponse(
+    @SerialName("deleted")
+    public val deleted: List<String>,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_memory_status``; ``active`` is ``""`` for the built-in provider. */
+@Serializable
+public data class MemoryStatusResponse(
+    @SerialName("active")
+    public val active: String,
+    @SerialName("builtin_files")
+    public val builtinFiles: MemoryBuiltinFileSizes,
+    @SerialName("providers")
+    public val providers: List<MemoryProviderStatusRow>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/config.py::HomeChannel.to_dict``; profile-scoped reads pass the config.yaml ``platforms.<id>.home_channel`` mapping through as written. */
+@Serializable(with = MessagingHomeChannel.Serializer::class)
+public data class MessagingHomeChannel(
+    public val chatId: String? = null,
+    public val name: String? = null,
+    public val platform: String? = null,
+    public val scopeId: String? = null,
+    public val threadId: String? = null,
+    public val userId: String? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<MessagingHomeChannel> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): MessagingHomeChannel {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("MessagingHomeChannel requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("MessagingHomeChannel requires an object")
+            return MessagingHomeChannel(
+                chatId = input["chat_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                name = input["name"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                platform = input["platform"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                scopeId = input["scope_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                threadId = input["thread_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                userId = input["user_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("chat_id", "name", "platform", "scope_id", "thread_id", "user_id") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: MessagingHomeChannel) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("MessagingHomeChannel requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("chat_id", "name", "platform", "scope_id", "thread_id", "user_id")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            value.chatId?.let { output["chat_id"] = json.encodeToJsonElement(it) }
+            value.name?.let { output["name"] = json.encodeToJsonElement(it) }
+            value.platform?.let { output["platform"] = json.encodeToJsonElement(it) }
+            value.scopeId?.let { output["scope_id"] = json.encodeToJsonElement(it) }
+            value.threadId?.let { output["thread_id"] = json.encodeToJsonElement(it) }
+            value.userId?.let { output["user_id"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_messaging_platform_payload`` for one ``_messaging_platform_catalog`` entry. */
+@Serializable
+public data class MessagingPlatform(
+    @SerialName("configured")
+    public val configured: Boolean,
+    @SerialName("description")
+    public val description: String,
+    @SerialName("docs_url")
+    public val docsUrl: String,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("env_vars")
+    public val envVars: List<MessagingPlatformEnvVar>,
+    @SerialName("error_code")
+    public val errorCode: String?,
+    @SerialName("error_message")
+    public val errorMessage: String?,
+    @SerialName("gateway_running")
+    public val gatewayRunning: Boolean,
+    @SerialName("home_channel")
+    public val homeChannel: MessagingHomeChannel?,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("ingress_url")
+    public val ingressUrl: String?,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("state")
+    public val state: String,
+    @SerialName("updated_at")
+    public val updatedAt: String?,
+    @SerialName("whatsapp_setup")
+    public val whatsappSetup: MessagingWhatsAppSetup? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``env_vars`` row of ``_messaging_platform_payload`` (``_messaging_env_info`` prose). ``is_list`` marks an allowlist key (comma-separated IDs, never a password): only those carry the saved ``value``, which is ``null`` on every other row. */
 @Serializable
 public data class MessagingPlatformEnvVar(
     @SerialName("advanced")
@@ -18,6 +316,8 @@ public data class MessagingPlatformEnvVar(
     public val description: String,
     @SerialName("help")
     public val help: String,
+    @SerialName("is_list")
+    public val isList: Boolean,
     @SerialName("is_password")
     public val isPassword: Boolean,
     @SerialName("is_set")
@@ -32,11 +332,15 @@ public data class MessagingPlatformEnvVar(
     public val required: Boolean,
     @SerialName("url")
     public val url: String?,
+    @SerialName("value")
+    public val value: String?,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``test_messaging_platform`` — a verdict over the same payload as the platform list. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``test_messaging_platform`` — a verdict over the same payload as the platform list. A connected platform with a per-user authorization surface also carries ``auth_posture`` (``_messaging_platform_posture``); ``ok`` stays true and ``message`` says what to configure. */
 @Serializable
 public data class MessagingPlatformTestResponse(
+    @SerialName("auth_posture")
+    public val authPosture: MessagingPlatformTestResponseAuthPosture? = null,
     @SerialName("message")
     public val message: String,
     @SerialName("ok")
@@ -44,6 +348,53 @@ public data class MessagingPlatformTestResponse(
     @SerialName("state")
     public val state: String,
 )
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = MessagingPlatformTestResponseAuthPosture.Serializer::class)
+public sealed interface MessagingPlatformTestResponseAuthPosture {
+    public data object Open : MessagingPlatformTestResponseAuthPosture
+    public data object Allowlist : MessagingPlatformTestResponseAuthPosture
+    public data object Pairing : MessagingPlatformTestResponseAuthPosture
+    public data object DenyAll : MessagingPlatformTestResponseAuthPosture
+    public data class Unknown(public val raw: kotlin.String) : MessagingPlatformTestResponseAuthPosture
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Open -> "open"
+            Allowlist -> "allowlist"
+            Pairing -> "pairing"
+            DenyAll -> "deny_all"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): MessagingPlatformTestResponseAuthPosture = when (raw) {
+            "open" -> Open
+            "allowlist" -> Allowlist
+            "pairing" -> Pairing
+            "deny_all" -> DenyAll
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<MessagingPlatformTestResponseAuthPosture> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MessagingPlatformTestResponseAuthPosture", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): MessagingPlatformTestResponseAuthPosture = when (val raw = decoder.decodeString()) {
+            "open" -> Open
+            "allowlist" -> Allowlist
+            "pairing" -> Pairing
+            "deny_all" -> DenyAll
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MessagingPlatformTestResponseAuthPosture value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: MessagingPlatformTestResponseAuthPosture) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = MessagingPlatformUpdate.Serializer::class)
@@ -829,311 +1180,6 @@ public data class ModelAssignment(
             output["scope"] = json.encodeToJsonElement(value.scope)
             value.task?.let { output["task"] = json.encodeToJsonElement(it) }
             jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_model_assignment``: the expensive-model confirmation prompt (``ok: false``, ``confirm_required``), a main-slot assignment, an auxiliary assignment or the auxiliary ``__reset__`` — the union of ``_apply_main_assignment_sync`` and ``_apply_aux_assignment_sync``. */
-@Serializable
-public data class ModelAssignmentResponse(
-    @SerialName("base_url")
-    public val baseUrl: String? = null,
-    @SerialName("confirm_message")
-    public val confirmMessage: String? = null,
-    @SerialName("confirm_required")
-    public val confirmRequired: Boolean? = null,
-    @SerialName("gateway_tools")
-    public val gatewayTools: List<String>? = null,
-    @SerialName("model")
-    public val model: String? = null,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("provider")
-    public val provider: String? = null,
-    @SerialName("reasoning_effort")
-    public val reasoningEffort: String? = null,
-    @SerialName("reset")
-    public val reset: Boolean? = null,
-    @SerialName("scope")
-    public val scope: ModelAssignmentResponseScope,
-    @SerialName("stale_aux")
-    public val staleAux: List<StaleAuxiliaryPin>? = null,
-    @SerialName("tasks")
-    public val tasks: List<String>? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = ModelAssignmentResponseScope.Serializer::class)
-public sealed interface ModelAssignmentResponseScope {
-    public data object Main : ModelAssignmentResponseScope
-    public data object Auxiliary : ModelAssignmentResponseScope
-    public data class Unknown(public val raw: kotlin.String) : ModelAssignmentResponseScope
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Main -> "main"
-            Auxiliary -> "auxiliary"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ModelAssignmentResponseScope = when (raw) {
-            "main" -> Main
-            "auxiliary" -> Auxiliary
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ModelAssignmentResponseScope> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ModelAssignmentResponseScope", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ModelAssignmentResponseScope = when (val raw = decoder.decodeString()) {
-            "main" -> Main
-            "auxiliary" -> Auxiliary
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ModelAssignmentResponseScope value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ModelAssignmentResponseScope) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ModelDownloadBody(
-    @SerialName("model_id")
-    public val modelId: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class ModelEjectBody(
-    @SerialName("model_id")
-    public val modelId: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_model_info``. */
-@Serializable
-public data class ModelInfoResponse(
-    @SerialName("auto_context_length")
-    public val autoContextLength: Long,
-    @SerialName("capabilities")
-    public val capabilities: ModelsDevCapabilities,
-    @SerialName("config_context_length")
-    public val configContextLength: Long,
-    @SerialName("effective_context_length")
-    public val effectiveContextLength: Long,
-    @SerialName("model")
-    public val model: String,
-    @SerialName("provider")
-    public val provider: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/inventory.py::_apply_capabilities``. */
-@Serializable
-public data class ModelOptionCapabilities(
-    @SerialName("can_disable_reasoning")
-    public val canDisableReasoning: Boolean? = null,
-    @SerialName("fast")
-    public val fast: Boolean,
-    @SerialName("reasoning")
-    public val reasoning: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/inventory.py::_apply_pricing`` — formatted $/Mtok strings (``""`` unknown, ``"free"``); the sale fields are Nous Portal-only. */
-@Serializable
-public data class ModelOptionPricing(
-    @SerialName("cache")
-    public val cache: String? = null,
-    @SerialName("discount_percent")
-    public val discountPercent: Long? = null,
-    @SerialName("free")
-    public val free: Boolean,
-    @SerialName("input")
-    public val input: String,
-    @SerialName("output")
-    public val output: String,
-    @SerialName("was_input")
-    public val wasInput: String? = null,
-    @SerialName("was_output")
-    public val wasOutput: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``hermes_cli/inventory.py::build_models_payload`` provider row (the union of every field the builder sets). Same row as the ``model.options`` JSON-RPC result (``tui_gateway/contracts/config_free_tier_control.py::ModelOptionProvider``). */
-@Serializable(with = ModelOptionProviderRow.Serializer::class)
-public data class ModelOptionProviderRow(
-    public val aliases: List<String>? = null,
-    public val apiUrl: String? = null,
-    public val authType: String? = null,
-    public val authenticated: Boolean? = null,
-    public val capabilities: Map<String, ModelOptionCapabilities>? = null,
-    public val featuredModels: List<String>? = null,
-    public val freeTier: Boolean? = null,
-    public val freeTierPending: Boolean? = null,
-    public val freeTierRow: Boolean? = null,
-    public val isCurrent: Boolean? = null,
-    public val isUserDefined: Boolean? = null,
-    public val keyEnv: String? = null,
-    public val models: List<String>? = null,
-    public val name: String,
-    public val pricing: Map<String, ModelOptionPricing>? = null,
-    public val pricingPending: Boolean? = null,
-    public val slug: String,
-    public val source: String? = null,
-    public val totalModels: Long? = null,
-    public val unavailableModels: List<String>? = null,
-    public val warning: String? = null,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<ModelOptionProviderRow> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ModelOptionProviderRow {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ModelOptionProviderRow requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ModelOptionProviderRow requires an object")
-            return ModelOptionProviderRow(
-                aliases = input["aliases"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                apiUrl = input["api_url"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                authType = input["auth_type"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                authenticated = input["authenticated"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                capabilities = input["capabilities"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, ModelOptionCapabilities>>(it) },
-                featuredModels = input["featured_models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                freeTier = input["free_tier"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                freeTierPending = input["free_tier_pending"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                freeTierRow = input["free_tier_row"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                isCurrent = input["is_current"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                isUserDefined = input["is_user_defined"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                keyEnv = input["key_env"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                models = input["models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
-                pricing = input["pricing"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, ModelOptionPricing>>(it) },
-                pricingPending = input["pricing_pending"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                slug = json.decodeFromJsonElement<String>((input["slug"] ?: throw SerializationException("Missing slug"))),
-                source = input["source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                totalModels = input["total_models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                unavailableModels = input["unavailable_models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                warning = input["warning"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "models", "name", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "warning") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ModelOptionProviderRow) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ModelOptionProviderRow requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "models", "name", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "warning")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            value.aliases?.let { output["aliases"] = json.encodeToJsonElement(it) }
-            value.apiUrl?.let { output["api_url"] = json.encodeToJsonElement(it) }
-            value.authType?.let { output["auth_type"] = json.encodeToJsonElement(it) }
-            value.authenticated?.let { output["authenticated"] = json.encodeToJsonElement(it) }
-            value.capabilities?.let { output["capabilities"] = json.encodeToJsonElement(it) }
-            value.featuredModels?.let { output["featured_models"] = json.encodeToJsonElement(it) }
-            value.freeTier?.let { output["free_tier"] = json.encodeToJsonElement(it) }
-            value.freeTierPending?.let { output["free_tier_pending"] = json.encodeToJsonElement(it) }
-            value.freeTierRow?.let { output["free_tier_row"] = json.encodeToJsonElement(it) }
-            value.isCurrent?.let { output["is_current"] = json.encodeToJsonElement(it) }
-            value.isUserDefined?.let { output["is_user_defined"] = json.encodeToJsonElement(it) }
-            value.keyEnv?.let { output["key_env"] = json.encodeToJsonElement(it) }
-            value.models?.let { output["models"] = json.encodeToJsonElement(it) }
-            output["name"] = json.encodeToJsonElement(value.name)
-            value.pricing?.let { output["pricing"] = json.encodeToJsonElement(it) }
-            value.pricingPending?.let { output["pricing_pending"] = json.encodeToJsonElement(it) }
-            output["slug"] = json.encodeToJsonElement(value.slug)
-            value.source?.let { output["source"] = json.encodeToJsonElement(it) }
-            value.totalModels?.let { output["total_models"] = json.encodeToJsonElement(it) }
-            value.unavailableModels?.let { output["unavailable_models"] = json.encodeToJsonElement(it) }
-            value.warning?.let { output["warning"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/inventory.py::build_model_options_payload`` — the REST twin of the ``model.options`` JSON-RPC result. */
-@Serializable
-public data class ModelOptionsResponse(
-    @SerialName("model")
-    public val model: String? = null,
-    @SerialName("provider")
-    public val provider: String? = null,
-    @SerialName("providers")
-    public val providers: List<ModelOptionProviderRow>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``agent/models_dev.py::ModelCapabilities``; ``{}`` when models.dev has no row. */
-@Serializable
-public data class ModelsDevCapabilities(
-    @SerialName("context_window")
-    public val contextWindow: Long? = null,
-    @SerialName("max_output_tokens")
-    public val maxOutputTokens: Long? = null,
-    @SerialName("model_family")
-    public val modelFamily: String? = null,
-    @SerialName("supports_reasoning")
-    public val supportsReasoning: Boolean? = null,
-    @SerialName("supports_tools")
-    public val supportsTools: Boolean? = null,
-    @SerialName("supports_vision")
-    public val supportsVision: Boolean? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``start_oauth_login`` — the per-provider ``_start_*_device_code`` display fields. */
-@Serializable
-public data class OAuthDeviceCodeStartResponse(
-    @SerialName("expires_in")
-    public val expiresIn: Long,
-    @SerialName("flow")
-    public val flow: OAuthDeviceCodeStartResponseFlow,
-    @SerialName("poll_interval")
-    public val pollInterval: Long,
-    @SerialName("session_id")
-    public val sessionId: String,
-    @SerialName("user_code")
-    public val userCode: String,
-    @SerialName("verification_url")
-    public val verificationUrl: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = OAuthDeviceCodeStartResponseFlow.Serializer::class)
-public sealed interface OAuthDeviceCodeStartResponseFlow {
-    public data object DeviceCode : OAuthDeviceCodeStartResponseFlow
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            DeviceCode -> "device_code"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): OAuthDeviceCodeStartResponseFlow? = when (raw) {
-            "device_code" -> DeviceCode
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<OAuthDeviceCodeStartResponseFlow> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OAuthDeviceCodeStartResponseFlow", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): OAuthDeviceCodeStartResponseFlow = when (val raw = decoder.decodeString()) {
-            "device_code" -> DeviceCode
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: OAuthDeviceCodeStartResponseFlow) {
-            encoder.encodeString(value.rawValue)
         }
     }
 }

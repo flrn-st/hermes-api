@@ -9,788 +9,1168 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``create_voice_live_session`` — ``{"ok": true}`` merged over the vendor's ``POST /v1/live/sessions`` response (``tools/voice_live.py::create_webrtc_session``), which the vendor owns; the session id and SDP answer are the fields the renderer reads. */
-@Serializable(with = VoiceLiveSessionResponse.Serializer::class)
-public data class VoiceLiveSessionResponse(
-    public val ok: Boolean,
-    public val session: VoiceLiveSessionInfo? = null,
-    public val transport: VoiceLiveTransport? = null,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = ToolsetModelSelect.Serializer::class)
+public data class ToolsetModelSelect(
+    public val model: String,
+    public val profile: Patch<String> = Patch.Absent,
+    public val provider: Patch<String> = Patch.Absent,
 )
 {
-    public object Serializer : KSerializer<VoiceLiveSessionResponse> {
+    public object Serializer : KSerializer<ToolsetModelSelect> {
         override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): VoiceLiveSessionResponse {
+        override fun deserialize(decoder: Decoder): ToolsetModelSelect {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("VoiceLiveSessionResponse requires JSON")
+                ?: throw SerializationException("ToolsetModelSelect requires JSON")
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("VoiceLiveSessionResponse requires an object")
-            return VoiceLiveSessionResponse(
-                ok = json.decodeFromJsonElement<Boolean>((input["ok"] ?: throw SerializationException("Missing ok"))),
-                session = input["session"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<VoiceLiveSessionInfo>(it) },
-                transport = input["transport"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<VoiceLiveTransport>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("ok", "session", "transport") },
+                ?: throw SerializationException("ToolsetModelSelect requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("model", "profile", "provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return ToolsetModelSelect(
+                model = json.decodeFromJsonElement<String>((input["model"] ?: throw SerializationException("Missing model"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                provider = when (val raw = input["provider"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
         }
 
-        override fun serialize(encoder: Encoder, value: VoiceLiveSessionResponse) {
+        override fun serialize(encoder: Encoder, value: ToolsetModelSelect) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("VoiceLiveSessionResponse requires JSON")
+                ?: throw SerializationException("ToolsetModelSelect requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("ok", "session", "transport")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
+            output["model"] = json.encodeToJsonElement(value.model)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
             }
-            output.putAll(value.additionalProperties)
-            output["ok"] = json.encodeToJsonElement(value.ok)
-            value.session?.let { output["session"] = json.encodeToJsonElement(it) }
-            value.transport?.let { output["transport"] = json.encodeToJsonElement(it) }
+            when (val patch = value.provider) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["provider"] = JsonNull
+                is Patch.Value -> output["provider"] = json.encodeToJsonElement(patch.value)
+            }
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_voice_live_status`` — ``tools/voice_live.py::resolve_gpt_live_status``. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``select_toolset_model``. */
 @Serializable
-public data class VoiceLiveStatusResponse(
-    @SerialName("available")
-    public val available: Boolean,
-    @SerialName("mode")
-    public val mode: VoiceLiveStatusResponseMode,
+public data class ToolsetModelSelectResponse(
     @SerialName("model")
     public val model: String,
+    @SerialName("name")
+    public val name: String,
     @SerialName("ok")
     public val ok: Boolean,
-    @SerialName("reason")
-    public val reason: String?,
-    @SerialName("voice")
-    public val voice: String,
+    @SerialName("plugin")
+    public val plugin: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_toolset_models`` — ``_no_models`` (``has_models: false``, no ``provider``/``plugin``) when the toolset has no catalog or no model-capable backend resolves. */
+@Serializable
+public data class ToolsetModelsResponse(
+    @SerialName("current")
+    public val current: String?,
+    @SerialName("default")
+    public val default: String?,
+    @SerialName("has_models")
+    public val hasModels: Boolean,
+    @SerialName("models")
+    public val models: List<ToolsetModelOption>,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("plugin")
+    public val plugin: String? = null,
+    @SerialName("provider")
+    public val provider: String? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = VoiceLiveStatusResponseMode.Serializer::class)
-public sealed interface VoiceLiveStatusResponseMode {
-    public data object Chained : VoiceLiveStatusResponseMode
-    public data object GptLive : VoiceLiveStatusResponseMode
-    public data class Unknown(public val raw: kotlin.String) : VoiceLiveStatusResponseMode
+@Serializable(with = ToolsetPostSetup.Serializer::class)
+public data class ToolsetPostSetup(
+    public val key: String,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ToolsetPostSetup> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ToolsetPostSetup {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ToolsetPostSetup requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ToolsetPostSetup requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("key", "profile")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return ToolsetPostSetup(
+                key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ToolsetPostSetup) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ToolsetPostSetup requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["key"] = json.encodeToJsonElement(value.key)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``run_toolset_post_setup`` — ``hermes_cli/web_routers/_common.py::spawn_profile_action`` plus the post-setup ``key``; tail via ``GET /api/actions/tools-post-setup/status``. */
+@Serializable
+public data class ToolsetPostSetupResponse(
+    @SerialName("key")
+    public val key: String,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("pid")
+    public val pid: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = ToolsetProviderSelect.Serializer::class)
+public data class ToolsetProviderSelect(
+    public val capability: Patch<String> = Patch.Absent,
+    public val profile: Patch<String> = Patch.Absent,
+    public val provider: String,
+)
+{
+    public object Serializer : KSerializer<ToolsetProviderSelect> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ToolsetProviderSelect {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ToolsetProviderSelect requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ToolsetProviderSelect requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("capability", "profile", "provider")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return ToolsetProviderSelect(
+                capability = when (val raw = input["capability"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                provider = json.decodeFromJsonElement<String>((input["provider"] ?: throw SerializationException("Missing provider"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ToolsetProviderSelect) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ToolsetProviderSelect requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.capability) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["capability"] = JsonNull
+                is Patch.Value -> output["capability"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            output["provider"] = json.encodeToJsonElement(value.provider)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``select_toolset_provider`` — ``needs_nous_auth`` + ``feature`` only for a managed Nous row the account is not entitled to. */
+@Serializable
+public data class ToolsetProviderSelectResponse(
+    @SerialName("capability")
+    public val capability: ToolsetProviderSelectResponseCapability? = null,
+    @SerialName("feature")
+    public val feature: String? = null,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("needs_nous_auth")
+    public val needsNousAuth: Boolean? = null,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("provider")
+    public val provider: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = ToolsetProviderSelectResponseCapability.Serializer::class)
+public sealed interface ToolsetProviderSelectResponseCapability {
+    public data object Search : ToolsetProviderSelectResponseCapability
+    public data object Extract : ToolsetProviderSelectResponseCapability
+    public data class Unknown(public val raw: kotlin.String) : ToolsetProviderSelectResponseCapability
 
     /** The value on the wire. */
     public val rawValue: kotlin.String
         get() = when (this) {
-            Chained -> "chained"
-            GptLive -> "gpt-live"
+            Search -> "search"
+            Extract -> "extract"
             is Unknown -> raw
         }
 
     public companion object {
         /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): VoiceLiveStatusResponseMode = when (raw) {
-            "chained" -> Chained
-            "gpt-live" -> GptLive
+        public fun fromRawValue(raw: kotlin.String): ToolsetProviderSelectResponseCapability = when (raw) {
+            "search" -> Search
+            "extract" -> Extract
             else -> Unknown(raw)
         }
     }
 
-    public object Serializer : KSerializer<VoiceLiveStatusResponseMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceLiveStatusResponseMode", PrimitiveKind.STRING)
+    public object Serializer : KSerializer<ToolsetProviderSelectResponseCapability> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsetProviderSelectResponseCapability", PrimitiveKind.STRING)
 
-        override fun deserialize(decoder: Decoder): VoiceLiveStatusResponseMode = when (val raw = decoder.decodeString()) {
-            "chained" -> Chained
-            "gpt-live" -> GptLive
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceLiveStatusResponseMode value: $raw")
+        override fun deserialize(decoder: Decoder): ToolsetProviderSelectResponseCapability = when (val raw = decoder.decodeString()) {
+            "search" -> Search
+            "extract" -> Extract
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected ToolsetProviderSelectResponseCapability value: $raw")
         }
 
-        override fun serialize(encoder: Encoder, value: VoiceLiveStatusResponseMode) {
+        override fun serialize(encoder: Encoder, value: ToolsetProviderSelectResponseCapability) {
             encoder.encodeString(value.rawValue)
         }
     }
 }
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = VoiceLiveTransport.Serializer::class)
-public data class VoiceLiveTransport(
-    public val sdp: String? = null,
-    public val type: String? = null,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+@Serializable(with = ToolsetToggle.Serializer::class)
+public data class ToolsetToggle(
+    public val enabled: Boolean,
+    public val profile: Patch<String> = Patch.Absent,
 )
 {
-    public object Serializer : KSerializer<VoiceLiveTransport> {
+    public object Serializer : KSerializer<ToolsetToggle> {
         override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): VoiceLiveTransport {
+        override fun deserialize(decoder: Decoder): ToolsetToggle {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("VoiceLiveTransport requires JSON")
+                ?: throw SerializationException("ToolsetToggle requires JSON")
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("VoiceLiveTransport requires an object")
-            return VoiceLiveTransport(
-                sdp = input["sdp"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                type = input["type"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("sdp", "type") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: VoiceLiveTransport) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("VoiceLiveTransport requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("sdp", "type")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            value.sdp?.let { output["sdp"] = json.encodeToJsonElement(it) }
-            value.type?.let { output["type"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = WebhookCreate.Serializer::class)
-public data class WebhookCreate(
-    public val deliver: String? = null,
-    public val deliverChatId: Patch<String> = Patch.Absent,
-    public val deliverOnly: Boolean? = null,
-    public val description: Patch<String> = Patch.Absent,
-    public val events: List<String>? = null,
-    public val name: String,
-    public val prompt: Patch<String> = Patch.Absent,
-    public val script: Patch<String> = Patch.Absent,
-    public val secret: Patch<String> = Patch.Absent,
-    public val skills: List<String>? = null,
-)
-{
-    public object Serializer : KSerializer<WebhookCreate> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): WebhookCreate {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("WebhookCreate requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("WebhookCreate requires an object")
+                ?: throw SerializationException("ToolsetToggle requires an object")
             if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("deliver", "deliver_chat_id", "deliver_only", "description", "events", "name", "prompt", "script", "secret", "skills")
+                val known = setOf<String>("enabled", "profile")
                 input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
             }
-            return WebhookCreate(
-                deliver = input["deliver"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                deliverChatId = when (val raw = input["deliver_chat_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                deliverOnly = input["deliver_only"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                description = when (val raw = input["description"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                events = input["events"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
-                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
-                prompt = when (val raw = input["prompt"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                script = when (val raw = input["script"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                secret = when (val raw = input["secret"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                skills = input["skills"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
+            return ToolsetToggle(
+                enabled = json.decodeFromJsonElement<Boolean>((input["enabled"] ?: throw SerializationException("Missing enabled"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
             )
         }
 
-        override fun serialize(encoder: Encoder, value: WebhookCreate) {
+        override fun serialize(encoder: Encoder, value: ToolsetToggle) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("WebhookCreate requires JSON")
+                ?: throw SerializationException("ToolsetToggle requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            value.deliver?.let { output["deliver"] = json.encodeToJsonElement(it) }
-            when (val patch = value.deliverChatId) {
+            output["enabled"] = json.encodeToJsonElement(value.enabled)
+            when (val patch = value.profile) {
                 Patch.Absent -> Unit
-                Patch.Null -> output["deliver_chat_id"] = JsonNull
-                is Patch.Value -> output["deliver_chat_id"] = json.encodeToJsonElement(patch.value)
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
             }
-            value.deliverOnly?.let { output["deliver_only"] = json.encodeToJsonElement(it) }
-            when (val patch = value.description) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["description"] = JsonNull
-                is Patch.Value -> output["description"] = json.encodeToJsonElement(patch.value)
-            }
-            value.events?.let { output["events"] = json.encodeToJsonElement(it) }
-            output["name"] = json.encodeToJsonElement(value.name)
-            when (val patch = value.prompt) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["prompt"] = JsonNull
-                is Patch.Value -> output["prompt"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.script) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["script"] = JsonNull
-                is Patch.Value -> output["script"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.secret) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["secret"] = JsonNull
-                is Patch.Value -> output["secret"] = json.encodeToJsonElement(patch.value)
-            }
-            value.skills?.let { output["skills"] = json.encodeToJsonElement(it) }
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``create_webhook`` — the summary plus the HMAC secret, surfaced only here. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``toggle_toolset``. */
 @Serializable
-public data class WebhookCreateResponse(
-    @SerialName("created_at")
-    public val createdAt: String?,
-    @SerialName("deliver")
-    public val deliver: String,
-    @SerialName("deliver_only")
-    public val deliverOnly: Boolean,
-    @SerialName("description")
-    public val description: String,
+public data class ToolsetToggleResponse(
     @SerialName("enabled")
     public val enabled: Boolean,
-    @SerialName("events")
-    public val events: List<String>,
     @SerialName("name")
     public val name: String,
-    @SerialName("prompt")
-    public val prompt: String,
-    @SerialName("script")
-    public val script: String,
-    @SerialName("secret")
-    public val secret: String,
-    @SerialName("secret_set")
-    public val secretSet: Boolean,
-    @SerialName("skills")
-    public val skills: List<String>,
-    @SerialName("url")
-    public val url: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``enable_webhooks`` — spreads ``hermes_cli/web_server_gateway.py::_restart_gateway_after``: ``restart_action``/``restart_pid`` when the restart spawned, ``restart_error`` when it failed. */
-@Serializable
-public data class WebhookEnableResponse(
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("needs_restart")
-    public val needsRestart: Boolean,
     @SerialName("ok")
     public val ok: Boolean,
     @SerialName("platform")
     public val platform: String,
-    @SerialName("restart_action")
-    public val restartAction: String? = null,
-    @SerialName("restart_error")
-    public val restartError: String? = null,
-    @SerialName("restart_pid")
-    public val restartPid: Long? = null,
-    @SerialName("restart_started")
-    public val restartStarted: Boolean,
+    /** Post-setup key whose background install this enable started, else ``null``. */
+    @SerialName("post_setup_started")
+    public val postSetupStarted: String?,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tts_lease`` — the request's ``lease`` / ``active`` plus ``tools/tts_tool_lifecycle.py::acquire_tts_lease`` (warm-up result) or ``release_tts_lease`` (``released``). A lifecycle exception is reported in the body (``action: "error"``, ``leases: null``), never as an HTTP error. */
 @Serializable
-public data class WebhookEnabledToggle(
-    @SerialName("enabled")
-    public val enabled: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_webhook_enabled``. */
-@Serializable
-public data class WebhookEnabledToggleResponse(
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_webhooks``. */
-@Serializable
-public data class WebhookListResponse(
-    @SerialName("base_url")
-    public val baseUrl: String,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("subscriptions")
-    public val subscriptions: List<WebhookSubscription>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_webhook_route_summary``; ``created_at`` is ``None`` for a hand-written route without one. */
-@Serializable
-public data class WebhookSubscription(
-    @SerialName("created_at")
-    public val createdAt: String?,
-    @SerialName("deliver")
-    public val deliver: String,
-    @SerialName("deliver_only")
-    public val deliverOnly: Boolean,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("events")
-    public val events: List<String>,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("prompt")
-    public val prompt: String,
-    @SerialName("script")
-    public val script: String,
-    @SerialName("secret_set")
-    public val secretSet: Boolean,
-    @SerialName("skills")
-    public val skills: List<String>,
-    @SerialName("url")
-    public val url: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = WhatsAppOnboardingApply.Serializer::class)
-public data class WhatsAppOnboardingApply(
-    public val allowedUsers: Patch<String> = Patch.Absent,
-    public val mode: Patch<String> = Patch.Absent,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<WhatsAppOnboardingApply> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): WhatsAppOnboardingApply {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("WhatsAppOnboardingApply requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("WhatsAppOnboardingApply requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("allowed_users", "mode", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return WhatsAppOnboardingApply(
-                allowedUsers = when (val raw = input["allowed_users"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                mode = when (val raw = input["mode"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: WhatsAppOnboardingApply) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("WhatsAppOnboardingApply requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.allowedUsers) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["allowed_users"] = JsonNull
-                is Patch.Value -> output["allowed_users"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.mode) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["mode"] = JsonNull
-                is Patch.Value -> output["mode"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``apply_whatsapp_onboarding``. */
-@Serializable
-public data class WhatsAppOnboardingApplyResponse(
-    @SerialName("needs_restart")
-    public val needsRestart: Boolean,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("platform")
-    public val platform: WhatsAppOnboardingApplyResponsePlatform,
-    @SerialName("restart_action")
-    public val restartAction: WhatsAppOnboardingApplyResponseRestartAction? = null,
-    @SerialName("restart_error")
-    public val restartError: String? = null,
-    @SerialName("restart_pid")
-    public val restartPid: Long? = null,
-    @SerialName("restart_started")
-    public val restartStarted: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = WhatsAppOnboardingApplyResponsePlatform.Serializer::class)
-public sealed interface WhatsAppOnboardingApplyResponsePlatform {
-    public data object Whatsapp : WhatsAppOnboardingApplyResponsePlatform
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Whatsapp -> "whatsapp"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingApplyResponsePlatform? = when (raw) {
-            "whatsapp" -> Whatsapp
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<WhatsAppOnboardingApplyResponsePlatform> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingApplyResponsePlatform", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): WhatsAppOnboardingApplyResponsePlatform = when (val raw = decoder.decodeString()) {
-            "whatsapp" -> Whatsapp
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: WhatsAppOnboardingApplyResponsePlatform) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = WhatsAppOnboardingApplyResponseRestartAction.Serializer::class)
-public sealed interface WhatsAppOnboardingApplyResponseRestartAction {
-    public data object GatewayRestart : WhatsAppOnboardingApplyResponseRestartAction
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            GatewayRestart -> "gateway-restart"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingApplyResponseRestartAction? = when (raw) {
-            "gateway-restart" -> GatewayRestart
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<WhatsAppOnboardingApplyResponseRestartAction> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingApplyResponseRestartAction", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): WhatsAppOnboardingApplyResponseRestartAction = when (val raw = decoder.decodeString()) {
-            "gateway-restart" -> GatewayRestart
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: WhatsAppOnboardingApplyResponseRestartAction) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_messaging.py::_whatsapp_onboarding_payload`` — the ``_WhatsAppOnboardingSession`` fields in ``_WHATSAPP_PAYLOAD_FIELDS``. */
-@Serializable
-public data class WhatsAppOnboardingResponse(
-    @SerialName("account_id")
-    public val accountId: String?,
-    @SerialName("account_name")
-    public val accountName: String?,
-    @SerialName("account_phone")
-    public val accountPhone: String?,
-    @SerialName("allowed_users")
-    public val allowedUsers: String,
+public data class TtsLeaseResponse(
+    @SerialName("action")
+    public val action: TtsLeaseResponseAction? = null,
+    @SerialName("active")
+    public val active: Boolean,
+    @SerialName("elapsed_ms")
+    public val elapsedMs: Long? = null,
     @SerialName("error")
-    public val error: String?,
-    @SerialName("expires_at")
-    public val expiresAt: String,
-    @SerialName("mode")
-    public val mode: WhatsAppOnboardingResponseMode,
-    @SerialName("pairing_id")
-    public val pairingId: String,
-    @SerialName("qr_payload")
-    public val qrPayload: String?,
-    @SerialName("status")
-    public val status: WhatsAppOnboardingResponseStatus,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = WhatsAppOnboardingResponseMode.Serializer::class)
-public sealed interface WhatsAppOnboardingResponseMode {
-    public data object Bot : WhatsAppOnboardingResponseMode
-    public data object SelfChat : WhatsAppOnboardingResponseMode
-    public data class Unknown(public val raw: kotlin.String) : WhatsAppOnboardingResponseMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Bot -> "bot"
-            SelfChat -> "self-chat"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingResponseMode = when (raw) {
-            "bot" -> Bot
-            "self-chat" -> SelfChat
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<WhatsAppOnboardingResponseMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingResponseMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): WhatsAppOnboardingResponseMode = when (val raw = decoder.decodeString()) {
-            "bot" -> Bot
-            "self-chat" -> SelfChat
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected WhatsAppOnboardingResponseMode value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: WhatsAppOnboardingResponseMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = WhatsAppOnboardingResponseStatus.Serializer::class)
-public sealed interface WhatsAppOnboardingResponseStatus {
-    public data object Starting : WhatsAppOnboardingResponseStatus
-    public data object Installing : WhatsAppOnboardingResponseStatus
-    public data object Waiting : WhatsAppOnboardingResponseStatus
-    public data object Connected : WhatsAppOnboardingResponseStatus
-    public data object Error : WhatsAppOnboardingResponseStatus
-    public data object Expired : WhatsAppOnboardingResponseStatus
-    public data object Cancelled : WhatsAppOnboardingResponseStatus
-    public data class Unknown(public val raw: kotlin.String) : WhatsAppOnboardingResponseStatus
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Starting -> "starting"
-            Installing -> "installing"
-            Waiting -> "waiting"
-            Connected -> "connected"
-            Error -> "error"
-            Expired -> "expired"
-            Cancelled -> "cancelled"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): WhatsAppOnboardingResponseStatus = when (raw) {
-            "starting" -> Starting
-            "installing" -> Installing
-            "waiting" -> Waiting
-            "connected" -> Connected
-            "error" -> Error
-            "expired" -> Expired
-            "cancelled" -> Cancelled
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<WhatsAppOnboardingResponseStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WhatsAppOnboardingResponseStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): WhatsAppOnboardingResponseStatus = when (val raw = decoder.decodeString()) {
-            "starting" -> Starting
-            "installing" -> Installing
-            "waiting" -> Waiting
-            "connected" -> Connected
-            "error" -> Error
-            "expired" -> Expired
-            "cancelled" -> Cancelled
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected WhatsAppOnboardingResponseStatus value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: WhatsAppOnboardingResponseStatus) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = WhatsAppOnboardingStart.Serializer::class)
-public data class WhatsAppOnboardingStart(
-    public val allowedUsers: Patch<String> = Patch.Absent,
-    public val mode: Patch<String> = Patch.Absent,
-    public val profile: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<WhatsAppOnboardingStart> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): WhatsAppOnboardingStart {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("WhatsAppOnboardingStart requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("WhatsAppOnboardingStart requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("allowed_users", "mode", "profile")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return WhatsAppOnboardingStart(
-                allowedUsers = when (val raw = input["allowed_users"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                mode = when (val raw = input["mode"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: WhatsAppOnboardingStart) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("WhatsAppOnboardingStart requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.allowedUsers) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["allowed_users"] = JsonNull
-                is Patch.Value -> output["allowed_users"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.mode) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["mode"] = JsonNull
-                is Patch.Value -> output["mode"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = _AgentPluginInstallBody.Serializer::class)
-public data class _AgentPluginInstallBody(
-    public val catalogName: Patch<String> = Patch.Absent,
-    public val enable: Boolean? = null,
-    public val force: Boolean? = null,
-    public val identifier: String,
-    public val ref: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<_AgentPluginInstallBody> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): _AgentPluginInstallBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("_AgentPluginInstallBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("_AgentPluginInstallBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("catalog_name", "enable", "force", "identifier", "ref")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return _AgentPluginInstallBody(
-                catalogName = when (val raw = input["catalog_name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                enable = input["enable"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                force = input["force"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                identifier = json.decodeFromJsonElement<String>((input["identifier"] ?: throw SerializationException("Missing identifier"))),
-                ref = when (val raw = input["ref"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: _AgentPluginInstallBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("_AgentPluginInstallBody requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.catalogName) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["catalog_name"] = JsonNull
-                is Patch.Value -> output["catalog_name"] = json.encodeToJsonElement(patch.value)
-            }
-            value.enable?.let { output["enable"] = json.encodeToJsonElement(it) }
-            value.force?.let { output["force"] = json.encodeToJsonElement(it) }
-            output["identifier"] = json.encodeToJsonElement(value.identifier)
-            when (val patch = value.ref) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["ref"] = JsonNull
-                is Patch.Value -> output["ref"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class _NativeRefreshBody(
+    public val error: String? = null,
+    @SerialName("lease")
+    public val lease: String,
+    @SerialName("leases")
+    public val leases: Long?,
+    @SerialName("ok")
+    public val ok: Boolean,
     @SerialName("provider")
     public val provider: String? = null,
-    @SerialName("refresh_token")
-    public val refreshToken: String,
+    @SerialName("released")
+    public val released: Long? = null,
+    @SerialName("warmed")
+    public val warmed: Boolean? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = TtsLeaseResponseAction.Serializer::class)
+public sealed interface TtsLeaseResponseAction {
+    public data object Noop : TtsLeaseResponseAction
+    public data object Loaded : TtsLeaseResponseAction
+    public data object Cached : TtsLeaseResponseAction
+    public data object Warmed : TtsLeaseResponseAction
+    public data object Installed : TtsLeaseResponseAction
+    public data object Error : TtsLeaseResponseAction
+    public data class Unknown(public val raw: kotlin.String) : TtsLeaseResponseAction
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Noop -> "noop"
+            Loaded -> "loaded"
+            Cached -> "cached"
+            Warmed -> "warmed"
+            Installed -> "installed"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): TtsLeaseResponseAction = when (raw) {
+            "noop" -> Noop
+            "loaded" -> Loaded
+            "cached" -> Cached
+            "warmed" -> Warmed
+            "installed" -> Installed
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<TtsLeaseResponseAction> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("TtsLeaseResponseAction", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): TtsLeaseResponseAction = when (val raw = decoder.decodeString()) {
+            "noop" -> Noop
+            "loaded" -> Loaded
+            "cached" -> Cached
+            "warmed" -> Warmed
+            "installed" -> Installed
+            "error" -> Error
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected TtsLeaseResponseAction value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: TtsLeaseResponseAction) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. A post-commit step a committed update still owes (``update_receipt`` follow-up). */
 @Serializable
-public data class _NativeTokenBody(
-    @SerialName("code")
-    public val code: String,
-    @SerialName("code_verifier")
-    public val codeVerifier: String,
+public data class UpdateFollowup(
+    @SerialName("reason")
+    public val reason: String,
+    @SerialName("step")
+    public val step: String,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class _PasswordLoginBody(
-    @SerialName("next")
-    public val next: String? = null,
-    @SerialName("password")
-    public val password: String,
-    @SerialName("provider")
-    public val provider: String,
-    @SerialName("username")
-    public val username: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = _PluginProvidersPutBody.Serializer::class)
-public data class _PluginProvidersPutBody(
-    public val contextEngine: Patch<String> = Patch.Absent,
-    public val memoryProvider: Patch<String> = Patch.Absent,
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``latest.json`` as ``hermes_cli/update_receipt.py`` wrote it, returned verbatim. The file outlives the code that wrote it, so every key may be absent; ``finalize_update_receipt`` also embeds ``pm_*`` sync sections, ``update_cmd_fleet`` adds ``runtime_outcomes``. */
+@Serializable(with = UpdateReceiptRecord.Serializer::class)
+public data class UpdateReceiptRecord(
+    public val argv: List<String>? = null,
+    public val exitCode: Long? = null,
+    public val finishedAt: String? = null,
+    public val fleet: List<Map<String, JsonElement>>? = null,
+    public val gatewayRestart: Map<String, JsonElement>? = null,
+    public val outcome: String? = null,
+    public val pendingManualServes: List<Map<String, JsonElement>>? = null,
+    public val pid: Long? = null,
+    public val plan: Map<String, JsonElement>? = null,
+    public val postUpdate: Map<String, JsonElement>? = null,
+    public val preUpdate: Map<String, JsonElement>? = null,
+    public val schema: Long? = null,
+    public val skips: List<UpdateReceiptSkip>? = null,
+    public val startedAt: String? = null,
+    public val steps: List<UpdateReceiptStep>? = null,
+    public val stopReason: String? = null,
+    public val updateId: String? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
 )
 {
-    public object Serializer : KSerializer<_PluginProvidersPutBody> {
+    public object Serializer : KSerializer<UpdateReceiptRecord> {
         override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): _PluginProvidersPutBody {
+        override fun deserialize(decoder: Decoder): UpdateReceiptRecord {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("_PluginProvidersPutBody requires JSON")
+                ?: throw SerializationException("UpdateReceiptRecord requires JSON")
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("_PluginProvidersPutBody requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("context_engine", "memory_provider")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return _PluginProvidersPutBody(
-                contextEngine = when (val raw = input["context_engine"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                memoryProvider = when (val raw = input["memory_provider"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                ?: throw SerializationException("UpdateReceiptRecord requires an object")
+            return UpdateReceiptRecord(
+                argv = input["argv"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
+                exitCode = input["exit_code"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                finishedAt = input["finished_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                fleet = input["fleet"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<Map<String, JsonElement>>>(it) },
+                gatewayRestart = input["gateway_restart"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, JsonElement>>(it) },
+                outcome = input["outcome"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                pendingManualServes = input["pending_manual_serves"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<Map<String, JsonElement>>>(it) },
+                pid = input["pid"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                plan = input["plan"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, JsonElement>>(it) },
+                postUpdate = input["post_update"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, JsonElement>>(it) },
+                preUpdate = input["pre_update"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, JsonElement>>(it) },
+                schema = input["schema"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                skips = input["skips"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<UpdateReceiptSkip>>(it) },
+                startedAt = input["started_at"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                steps = input["steps"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<UpdateReceiptStep>>(it) },
+                stopReason = input["stop_reason"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                updateId = input["update_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("argv", "exit_code", "finished_at", "fleet", "gateway_restart", "outcome", "pending_manual_serves", "pid", "plan", "post_update", "pre_update", "schema", "skips", "started_at", "steps", "stop_reason", "update_id") },
             )
         }
 
-        override fun serialize(encoder: Encoder, value: _PluginProvidersPutBody) {
+        override fun serialize(encoder: Encoder, value: UpdateReceiptRecord) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("_PluginProvidersPutBody requires JSON")
+                ?: throw SerializationException("UpdateReceiptRecord requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.contextEngine) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["context_engine"] = JsonNull
-                is Patch.Value -> output["context_engine"] = json.encodeToJsonElement(patch.value)
+            val known = setOf("argv", "exit_code", "finished_at", "fleet", "gateway_restart", "outcome", "pending_manual_serves", "pid", "plan", "post_update", "pre_update", "schema", "skips", "started_at", "steps", "stop_reason", "update_id")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
             }
-            when (val patch = value.memoryProvider) {
+            output.putAll(value.additionalProperties)
+            value.argv?.let { output["argv"] = json.encodeToJsonElement(it) }
+            value.exitCode?.let { output["exit_code"] = json.encodeToJsonElement(it) }
+            value.finishedAt?.let { output["finished_at"] = json.encodeToJsonElement(it) }
+            value.fleet?.let { output["fleet"] = json.encodeToJsonElement(it) }
+            value.gatewayRestart?.let { output["gateway_restart"] = json.encodeToJsonElement(it) }
+            value.outcome?.let { output["outcome"] = json.encodeToJsonElement(it) }
+            value.pendingManualServes?.let { output["pending_manual_serves"] = json.encodeToJsonElement(it) }
+            value.pid?.let { output["pid"] = json.encodeToJsonElement(it) }
+            value.plan?.let { output["plan"] = json.encodeToJsonElement(it) }
+            value.postUpdate?.let { output["post_update"] = json.encodeToJsonElement(it) }
+            value.preUpdate?.let { output["pre_update"] = json.encodeToJsonElement(it) }
+            value.schema?.let { output["schema"] = json.encodeToJsonElement(it) }
+            value.skips?.let { output["skips"] = json.encodeToJsonElement(it) }
+            value.startedAt?.let { output["started_at"] = json.encodeToJsonElement(it) }
+            value.steps?.let { output["steps"] = json.encodeToJsonElement(it) }
+            value.stopReason?.let { output["stop_reason"] = json.encodeToJsonElement(it) }
+            value.updateId?.let { output["update_id"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_update_receipt``: the full latest receipt plus its compact summary. */
+@Serializable
+public data class UpdateReceiptResponse(
+    @SerialName("receipt")
+    public val receipt: UpdateReceiptRecord,
+    @SerialName("summary")
+    public val summary: UpdateReceiptSummary?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/update_receipt.py::UpdateReceipt.skip``. */
+@Serializable(with = UpdateReceiptSkip.Serializer::class)
+public data class UpdateReceiptSkip(
+    public val at: String,
+    public val name: String,
+    public val reason: String,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<UpdateReceiptSkip> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): UpdateReceiptSkip {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("UpdateReceiptSkip requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("UpdateReceiptSkip requires an object")
+            return UpdateReceiptSkip(
+                at = json.decodeFromJsonElement<String>((input["at"] ?: throw SerializationException("Missing at"))),
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                reason = json.decodeFromJsonElement<String>((input["reason"] ?: throw SerializationException("Missing reason"))),
+                additionalProperties = input.filterKeys { it !in setOf("at", "name", "reason") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: UpdateReceiptSkip) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("UpdateReceiptSkip requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("at", "name", "reason")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            output["at"] = json.encodeToJsonElement(value.at)
+            output["name"] = json.encodeToJsonElement(value.name)
+            output["reason"] = json.encodeToJsonElement(value.reason)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/update_receipt.py::UpdateReceipt.step``. */
+@Serializable(with = UpdateReceiptStep.Serializer::class)
+public data class UpdateReceiptStep(
+    public val at: String,
+    public val detail: String,
+    public val name: String,
+    public val ok: Boolean,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<UpdateReceiptStep> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): UpdateReceiptStep {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("UpdateReceiptStep requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("UpdateReceiptStep requires an object")
+            return UpdateReceiptStep(
+                at = json.decodeFromJsonElement<String>((input["at"] ?: throw SerializationException("Missing at"))),
+                detail = json.decodeFromJsonElement<String>((input["detail"] ?: throw SerializationException("Missing detail"))),
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                ok = json.decodeFromJsonElement<Boolean>((input["ok"] ?: throw SerializationException("Missing ok"))),
+                additionalProperties = input.filterKeys { it !in setOf("at", "detail", "name", "ok") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: UpdateReceiptStep) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("UpdateReceiptStep requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("at", "detail", "name", "ok")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            output["at"] = json.encodeToJsonElement(value.at)
+            output["detail"] = json.encodeToJsonElement(value.detail)
+            output["name"] = json.encodeToJsonElement(value.name)
+            output["ok"] = json.encodeToJsonElement(value.ok)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_latest_update_receipt_summary``; values are copied out of the receipt file, so any may be ``null`` when that receipt lacks them. ``action_id`` names the run the receipt belongs to. */
+@Serializable
+public data class UpdateReceiptSummary(
+    @SerialName("action_id")
+    public val actionId: String?,
+    @SerialName("finished_at")
+    public val finishedAt: String?,
+    @SerialName("fleet_states")
+    public val fleetStates: List<String>,
+    @SerialName("followups")
+    public val followups: List<UpdateFollowup>,
+    @SerialName("outcome")
+    public val outcome: String?,
+    @SerialName("post_sha")
+    public val postSha: String?,
+    @SerialName("post_version")
+    public val postVersion: String?,
+    @SerialName("pre_sha")
+    public val preSha: String?,
+    @SerialName("started_at")
+    public val startedAt: String?,
+    @SerialName("user_action")
+    public val userAction: UpdateUserAction?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = UpdateTaskBody.Serializer::class)
+public data class UpdateTaskBody(
+    public val assignee: Patch<String> = Patch.Absent,
+    public val blockReason: Patch<String> = Patch.Absent,
+    public val body: Patch<String> = Patch.Absent,
+    public val clearModelOverride: Boolean? = null,
+    public val clearReasoningEffort: Boolean? = null,
+    public val metadata: Patch<Map<String, JsonElement>> = Patch.Absent,
+    public val modelOverride: Patch<String> = Patch.Absent,
+    public val priority: Patch<Long> = Patch.Absent,
+    public val providerOverride: Patch<String> = Patch.Absent,
+    public val reasoningEffort: Patch<String> = Patch.Absent,
+    public val result: Patch<String> = Patch.Absent,
+    public val status: Patch<String> = Patch.Absent,
+    public val summary: Patch<String> = Patch.Absent,
+    public val title: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<UpdateTaskBody> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): UpdateTaskBody {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("UpdateTaskBody requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("UpdateTaskBody requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("assignee", "block_reason", "body", "clear_model_override", "clear_reasoning_effort", "metadata", "model_override", "priority", "provider_override", "reasoning_effort", "result", "status", "summary", "title")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return UpdateTaskBody(
+                assignee = when (val raw = input["assignee"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                blockReason = when (val raw = input["block_reason"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                body = when (val raw = input["body"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                clearModelOverride = input["clear_model_override"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                clearReasoningEffort = input["clear_reasoning_effort"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                metadata = when (val raw = input["metadata"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Map<String, JsonElement>>(raw)) },
+                modelOverride = when (val raw = input["model_override"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                priority = when (val raw = input["priority"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Long>(raw)) },
+                providerOverride = when (val raw = input["provider_override"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                reasoningEffort = when (val raw = input["reasoning_effort"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                result = when (val raw = input["result"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                status = when (val raw = input["status"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                summary = when (val raw = input["summary"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                title = when (val raw = input["title"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: UpdateTaskBody) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("UpdateTaskBody requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.assignee) {
                 Patch.Absent -> Unit
-                Patch.Null -> output["memory_provider"] = JsonNull
-                is Patch.Value -> output["memory_provider"] = json.encodeToJsonElement(patch.value)
+                Patch.Null -> output["assignee"] = JsonNull
+                is Patch.Value -> output["assignee"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.blockReason) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["block_reason"] = JsonNull
+                is Patch.Value -> output["block_reason"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.body) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["body"] = JsonNull
+                is Patch.Value -> output["body"] = json.encodeToJsonElement(patch.value)
+            }
+            value.clearModelOverride?.let { output["clear_model_override"] = json.encodeToJsonElement(it) }
+            value.clearReasoningEffort?.let { output["clear_reasoning_effort"] = json.encodeToJsonElement(it) }
+            when (val patch = value.metadata) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["metadata"] = JsonNull
+                is Patch.Value -> output["metadata"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.modelOverride) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["model_override"] = JsonNull
+                is Patch.Value -> output["model_override"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.priority) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["priority"] = JsonNull
+                is Patch.Value -> output["priority"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.providerOverride) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["provider_override"] = JsonNull
+                is Patch.Value -> output["provider_override"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.reasoningEffort) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["reasoning_effort"] = JsonNull
+                is Patch.Value -> output["reasoning_effort"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.result) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["result"] = JsonNull
+                is Patch.Value -> output["result"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.status) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["status"] = JsonNull
+                is Patch.Value -> output["status"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.summary) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["summary"] = JsonNull
+                is Patch.Value -> output["summary"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.title) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["title"] = JsonNull
+                is Patch.Value -> output["title"] = json.encodeToJsonElement(patch.value)
             }
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class _PluginVisibilityBody(
-    @SerialName("hidden")
-    public val hidden: Boolean,
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``update_receipt.record_user_action``: something only the user can do is still owed; copied from the receipt file as stored. */
+@Serializable(with = UpdateUserAction.Serializer::class)
+public data class UpdateUserAction(
+    public val reason: String,
+    public val step: String,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
 )
+{
+    public object Serializer : KSerializer<UpdateUserAction> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): UpdateUserAction {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("UpdateUserAction requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("UpdateUserAction requires an object")
+            return UpdateUserAction(
+                reason = json.decodeFromJsonElement<String>((input["reason"] ?: throw SerializationException("Missing reason"))),
+                step = json.decodeFromJsonElement<String>((input["step"] ?: throw SerializationException("Missing step"))),
+                additionalProperties = input.filterKeys { it !in setOf("reason", "step") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: UpdateUserAction) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("UpdateUserAction requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("reason", "step")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            output["reason"] = json.encodeToJsonElement(value.reason)
+            output["step"] = json.encodeToJsonElement(value.step)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``approve_pairing``. */
+@Serializable
+public data class UserPairingApproveResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("user")
+    public val user: UserPairingApprovedUser,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``PairingStore.list_approved`` — the stored ``{user_name, approved_at}`` record spread over ``platform``/``user_id``; ``approved_at`` is epoch seconds. */
+@Serializable(with = UserPairingApprovedRow.Serializer::class)
+public data class UserPairingApprovedRow(
+    public val approvedAt: Double,
+    public val platform: String,
+    public val userId: String,
+    public val userName: String,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<UserPairingApprovedRow> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): UserPairingApprovedRow {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("UserPairingApprovedRow requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("UserPairingApprovedRow requires an object")
+            return UserPairingApprovedRow(
+                approvedAt = json.decodeFromJsonElement<Double>((input["approved_at"] ?: throw SerializationException("Missing approved_at"))),
+                platform = json.decodeFromJsonElement<String>((input["platform"] ?: throw SerializationException("Missing platform"))),
+                userId = json.decodeFromJsonElement<String>((input["user_id"] ?: throw SerializationException("Missing user_id"))),
+                userName = json.decodeFromJsonElement<String>((input["user_name"] ?: throw SerializationException("Missing user_name"))),
+                additionalProperties = input.filterKeys { it !in setOf("approved_at", "platform", "user_id", "user_name") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: UserPairingApprovedRow) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("UserPairingApprovedRow requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("approved_at", "platform", "user_id", "user_name")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            output["approved_at"] = json.encodeToJsonElement(value.approvedAt)
+            output["platform"] = json.encodeToJsonElement(value.platform)
+            output["user_id"] = json.encodeToJsonElement(value.userId)
+            output["user_name"] = json.encodeToJsonElement(value.userName)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``PairingStore._finish_approval``. */
+@Serializable
+public data class UserPairingApprovedUser(
+    @SerialName("user_id")
+    public val userId: String,
+    @SerialName("user_name")
+    public val userName: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``clear_pending_pairing`` — ``cleared`` counts the removed pending requests. */
+@Serializable
+public data class UserPairingClearResponse(
+    @SerialName("cleared")
+    public val cleared: Long,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_pairing``. */
+@Serializable
+public data class UserPairingListResponse(
+    @SerialName("approved")
+    public val approved: List<UserPairingApprovedRow>,
+    @SerialName("pending")
+    public val pending: List<UserPairingPendingRow>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``PairingStore.list_pending``; ``request_id`` is ``""`` for legacy pre-hash entries (never the code itself). */
+@Serializable
+public data class UserPairingPendingRow(
+    @SerialName("age_minutes")
+    public val ageMinutes: Long,
+    @SerialName("platform")
+    public val platform: String,
+    @SerialName("request_id")
+    public val requestId: String,
+    @SerialName("user_id")
+    public val userId: String,
+    @SerialName("user_name")
+    public val userName: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_client_voice_config`` — ``tools/voice_client_config.py::resolve_client_voice_config``. */
+@Serializable
+public data class VoiceClientConfigResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("stt")
+    public val stt: VoiceClientSttConfig,
+    @SerialName("tts")
+    public val tts: VoiceClientTtsConfig,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tools/voice_client_config.py::_resolve_stt_client_config``. ``mode: "relay"`` carries only ``reason``; ``"direct"`` carries the provider wire, credentials and ``hallucination_filter``. ``streaming`` (live dictation over ``/api/audio/transcribe-stream``) is stamped on either verdict by ``resolve_client_voice_config``; absent when that probe fails or on the route's own fallback. */
+@Serializable
+public data class VoiceClientSttConfig(
+    @SerialName("api_key")
+    public val apiKey: String? = null,
+    @SerialName("base_url")
+    public val baseUrl: String? = null,
+    @SerialName("hallucination_filter")
+    public val hallucinationFilter: SttHallucinationFilter? = null,
+    @SerialName("language")
+    public val language: String? = null,
+    @SerialName("mode")
+    public val mode: VoiceClientSttConfigMode,
+    @SerialName("model")
+    public val model: String? = null,
+    @SerialName("provider")
+    public val provider: String? = null,
+    @SerialName("reason")
+    public val reason: String? = null,
+    @SerialName("streaming")
+    public val streaming: Boolean? = null,
+    @SerialName("timeout_s")
+    public val timeoutS: Double? = null,
+    @SerialName("wire")
+    public val wire: VoiceClientSttConfigWire? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = VoiceClientSttConfigMode.Serializer::class)
+public sealed interface VoiceClientSttConfigMode {
+    public data object Relay : VoiceClientSttConfigMode
+    public data object Direct : VoiceClientSttConfigMode
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientSttConfigMode
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Relay -> "relay"
+            Direct -> "direct"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientSttConfigMode = when (raw) {
+            "relay" -> Relay
+            "direct" -> Direct
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<VoiceClientSttConfigMode> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientSttConfigMode", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): VoiceClientSttConfigMode = when (val raw = decoder.decodeString()) {
+            "relay" -> Relay
+            "direct" -> Direct
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientSttConfigMode value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceClientSttConfigMode) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = VoiceClientSttConfigWire.Serializer::class)
+public sealed interface VoiceClientSttConfigWire {
+    public data object OpenaiMultipart : VoiceClientSttConfigWire
+    public data object XaiStt : VoiceClientSttConfigWire
+    public data object ElevenlabsStt : VoiceClientSttConfigWire
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientSttConfigWire
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            OpenaiMultipart -> "openai-multipart"
+            XaiStt -> "xai-stt"
+            ElevenlabsStt -> "elevenlabs-stt"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientSttConfigWire = when (raw) {
+            "openai-multipart" -> OpenaiMultipart
+            "xai-stt" -> XaiStt
+            "elevenlabs-stt" -> ElevenlabsStt
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<VoiceClientSttConfigWire> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientSttConfigWire", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): VoiceClientSttConfigWire = when (val raw = decoder.decodeString()) {
+            "openai-multipart" -> OpenaiMultipart
+            "xai-stt" -> XaiStt
+            "elevenlabs-stt" -> ElevenlabsStt
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientSttConfigWire value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceClientSttConfigWire) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tools/voice_client_config.py::_resolve_tts_client_config`` (same relay/direct split as STT). ``speed`` is ``null`` for providers that take none; ``extra_body`` is OpenAI-only. */
+@Serializable
+public data class VoiceClientTtsConfig(
+    @SerialName("api_key")
+    public val apiKey: String? = null,
+    @SerialName("base_url")
+    public val baseUrl: String? = null,
+    /** Optional ``lang_code`` / ``consent_attestation`` from ``tts.openai``. */
+    @SerialName("extra_body")
+    public val extraBody: Map<String, JsonElement>? = null,
+    @SerialName("min_len")
+    public val minLen: Long? = null,
+    @SerialName("mode")
+    public val mode: VoiceClientTtsConfigMode,
+    @SerialName("model")
+    public val model: String? = null,
+    @SerialName("provider")
+    public val provider: String? = null,
+    @SerialName("reason")
+    public val reason: String? = null,
+    @SerialName("speed")
+    public val speed: Double? = null,
+    @SerialName("voice")
+    public val voice: String? = null,
+    @SerialName("wire")
+    public val wire: VoiceClientTtsConfigWire? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = VoiceClientTtsConfigMode.Serializer::class)
+public sealed interface VoiceClientTtsConfigMode {
+    public data object Relay : VoiceClientTtsConfigMode
+    public data object Direct : VoiceClientTtsConfigMode
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientTtsConfigMode
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Relay -> "relay"
+            Direct -> "direct"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientTtsConfigMode = when (raw) {
+            "relay" -> Relay
+            "direct" -> Direct
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<VoiceClientTtsConfigMode> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientTtsConfigMode", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): VoiceClientTtsConfigMode = when (val raw = decoder.decodeString()) {
+            "relay" -> Relay
+            "direct" -> Direct
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientTtsConfigMode value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceClientTtsConfigMode) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = VoiceClientTtsConfigWire.Serializer::class)
+public sealed interface VoiceClientTtsConfigWire {
+    public data object OpenaiSpeech : VoiceClientTtsConfigWire
+    public data object ElevenlabsTts : VoiceClientTtsConfigWire
+    public data class Unknown(public val raw: kotlin.String) : VoiceClientTtsConfigWire
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            OpenaiSpeech -> "openai-speech"
+            ElevenlabsTts -> "elevenlabs-tts"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): VoiceClientTtsConfigWire = when (raw) {
+            "openai-speech" -> OpenaiSpeech
+            "elevenlabs-tts" -> ElevenlabsTts
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<VoiceClientTtsConfigWire> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("VoiceClientTtsConfigWire", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): VoiceClientTtsConfigWire = when (val raw = decoder.decodeString()) {
+            "openai-speech" -> OpenaiSpeech
+            "elevenlabs-tts" -> ElevenlabsTts
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected VoiceClientTtsConfigWire value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceClientTtsConfigWire) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = VoiceLiveSessionInfo.Serializer::class)
+public data class VoiceLiveSessionInfo(
+    public val id: String? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<VoiceLiveSessionInfo> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): VoiceLiveSessionInfo {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("VoiceLiveSessionInfo requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("VoiceLiveSessionInfo requires an object")
+            return VoiceLiveSessionInfo(
+                id = input["id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("id") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceLiveSessionInfo) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("VoiceLiveSessionInfo requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("id")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            value.id?.let { output["id"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. POST /api/audio/voice-live/session: the renderer's WebRTC SDP offer plus optional prior text turns (``{"type":"message","role":..,"content":[..]}``) to seed the live voice model. */
+@Serializable(with = VoiceLiveSessionRequest.Serializer::class)
+public data class VoiceLiveSessionRequest(
+    public val history: Patch<List<Map<String, JsonElement>>> = Patch.Absent,
+    public val sdp: String,
+)
+{
+    public object Serializer : KSerializer<VoiceLiveSessionRequest> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): VoiceLiveSessionRequest {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("VoiceLiveSessionRequest requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("VoiceLiveSessionRequest requires an object")
+            if (!decoder.decodesTolerantly) {
+                val known = setOf<String>("history", "sdp")
+                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
+            }
+            return VoiceLiveSessionRequest(
+                history = when (val raw = input["history"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<List<Map<String, JsonElement>>>(raw)) },
+                sdp = json.decodeFromJsonElement<String>((input["sdp"] ?: throw SerializationException("Missing sdp"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: VoiceLiveSessionRequest) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("VoiceLiveSessionRequest requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.history) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["history"] = JsonNull
+                is Patch.Value -> output["history"] = json.encodeToJsonElement(patch.value)
+            }
+            output["sdp"] = json.encodeToJsonElement(value.sdp)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}

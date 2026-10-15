@@ -410,10 +410,10 @@ components:
 operations:
 - method: GET
   path: /api/plugins/hermes-achievements/achievements
-  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:843
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:846
   x-handler-hash: b9bff06c4c0e2b14e6cf6325b1d68a2af715a3a1b23132161dc8ff16f9f2844c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AchievementsResponse
   responses:
     '200':
@@ -424,10 +424,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/hermes-achievements/recent-unlocks
-  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:857
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:860
   x-handler-hash: 40bf1e183867aa87a3346791046216734860506db18be52f849e9c2d4e9770be
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: '{"items": {"$ref": "#/components/schemas/AchievementItem"}, "type": "array"}'
   responses:
     '200':
@@ -440,10 +440,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/hermes-achievements/scan-status
-  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:852
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:855
   x-handler-hash: 666ca4a4b6f551381f6bde08b8458107a021d64ccead44a639be28aec568be9c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AchievementScanStatus
   responses:
     '200':
@@ -454,10 +454,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/plugins/hermes-achievements/sessions/{session_id}/badges
-  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:863
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:866
   x-handler-hash: ed899ecef1af957e8a252fe3966d14fad731855ade01e9b235125fd00052d5e7
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AchievementSessionBadgesResponse
   responses:
     '200':
@@ -468,10 +468,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/hermes-achievements/rescan
-  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:874
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:877
   x-handler-hash: 7155556e376df9ac0193a8a6297755394b3d6f493f7effa678c247722e8a1c00
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AchievementRescanResponse
   responses:
     '200':
@@ -482,10 +482,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/plugins/hermes-achievements/reset-state
-  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:879
+  x-source: plugins/hermes-achievements/dashboard/plugin_api.py:882
   x-handler-hash: 971fb19e2621f8799482d12d4eb915375507d0fc5d9500b67fde24444f202294
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AchievementResetResponse
   responses:
     '200':

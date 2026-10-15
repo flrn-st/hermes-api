@@ -3,7 +3,9 @@
 components:
   CronBlueprint:
     additionalProperties: false
-    description: '``cron/blueprint_catalog.py::blueprint_catalog_entry``.'
+    description: '``cron/blueprint_catalog.py::blueprint_catalog_entry``: built-ins, plus the profile''s plugin
+
+      blueprints (``key`` is ``<plugin>:<key>``).'
     properties:
       appUrl:
         description: '``hermes://blueprint/...`` deep link.'
@@ -21,10 +23,20 @@ components:
         type: array
       key:
         type: string
+      plugin:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: The registering plugin; null for a built-in.
       schedule:
         description: Cron expression template with ``{slot}`` placeholders.
         type: string
       scheduleHuman:
+        type: string
+      source:
+        enum:
+        - builtin
+        - plugin
         type: string
       tags:
         items:
@@ -34,6 +46,8 @@ components:
         type: string
     required:
     - key
+    - source
+    - plugin
     - title
     - description
     - category
@@ -176,6 +190,13 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      canonical_completions:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+        description: Execution ids whose completion is already recorded (``mark_job_run``); a replay is a no-op.
       context_from:
         anyOf:
         - items:
@@ -210,6 +231,11 @@ components:
         type: string
       id:
         type: string
+      interpreter:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Python for a ``.py`` script/monitor_script.
       is_default_profile:
         type: boolean
       last_delivery_error:
@@ -227,6 +253,11 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      last_failure:
+        anyOf:
+        - $ref: '#/components/schemas/CronJobFireError'
+        - type: 'null'
+        description: The latest failed run (cleared by a success); kept apart from ``last_status``.
       last_fire_error:
         anyOf:
         - $ref: '#/components/schemas/CronJobFireError'
@@ -388,6 +419,11 @@ components:
         anyOf:
         - type: integer
         - type: 'null'
+      progress_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Last liveness stamp of a running attempt; staleness counts from it.
       scheduled_instant:
         anyOf:
         - type: string
@@ -417,6 +453,7 @@ components:
     - handoff_pending
     - handoff_started_at
     - claimed_at
+    - progress_at
     - started_at
     - finished_at
     - error
@@ -447,6 +484,63 @@ components:
     - last_output_hash
     - last_changed_at
     type: object
+  CronJobOutputRun:
+    additionalProperties: false
+    description: '``_cron_output_run_row``: an execution with no session (a script-only fire, or one whose
+
+      session is gone), built from its output doc, the execution ledger or ``last_run_at``.'
+    properties:
+      archived:
+        type: boolean
+      cwd:
+        type: 'null'
+      ended_at:
+        type: number
+      id:
+        description: '"cron_output:<job>:<doc stem>", "…:exec:<n>" or "…:latest".'
+        type: string
+      input_tokens:
+        type: integer
+      is_active:
+        type: boolean
+      last_active:
+        type: number
+      message_count:
+        type: integer
+      model:
+        type: 'null'
+      output_tokens:
+        type: integer
+      preview:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source:
+        const: cron_output
+        type: string
+      started_at:
+        type: number
+      title:
+        type: string
+      tool_call_count:
+        type: integer
+    required:
+    - id
+    - title
+    - preview
+    - source
+    - started_at
+    - last_active
+    - ended_at
+    - input_tokens
+    - output_tokens
+    - message_count
+    - tool_call_count
+    - model
+    - cwd
+    - archived
+    - is_active
+    type: object
   CronJobRepeat:
     additionalProperties: false
     properties:
@@ -460,6 +554,24 @@ components:
     required:
     - times
     - completed
+    type: object
+  CronJobRunsResponse:
+    additionalProperties: false
+    description: '``_list_cron_job_runs_sync`` — run sessions merged with output-doc rows for executions no
+
+      session represents (``_reconcile_cron_runs``), newest first.'
+    properties:
+      limit:
+        type: integer
+      runs:
+        items:
+          anyOf:
+          - $ref: '#/components/schemas/CronJobRunSession'
+          - $ref: '#/components/schemas/CronJobOutputRun'
+        type: array
+    required:
+    - runs
+    - limit
     type: object
   CronJobSchedule:
     additionalProperties: true
@@ -495,10 +607,10 @@ components:
 operations:
 - method: DELETE
   path: /api/cron/jobs/{job_id}
-  x-source: hermes_cli/web_routers/cron.py:297
+  x-source: hermes_cli/web_routers/cron.py:734
   x-handler-hash: 89403ea7244d2f1fa9488d6bbdc3d21a1d1b0e820b112ee8e9359b0739691c33
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -509,10 +621,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/cron/blueprints
-  x-source: hermes_cli/web_routers/cron.py:393
-  x-handler-hash: 693fe2615e2d6542f62e61555fe653df572516ca6ca95128a5bb1814bcf68c21
+  x-source: hermes_cli/web_routers/cron.py:858
+  x-handler-hash: f1cf0e7afe02a104bc534467000d65803b49798340b69562f3540d67cc4828ca
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronBlueprintsResponse
   responses:
     '200':
@@ -523,10 +635,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/cron/delivery-targets
-  x-source: hermes_cli/web_routers/cron.py:253
-  x-handler-hash: 7be3b632f992418eacd3f54ec94c23fc90ac5118d0f96dd4d7bd8e7ec8c9374f
+  x-source: hermes_cli/web_routers/cron.py:688
+  x-handler-hash: 0c8ac3e35f777d6b1f8b4123578aa4b217b11ab3c44fd4a8224cf6ac4125226b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronDeliveryTargetsResponse
   responses:
     '200':
@@ -537,10 +649,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/cron/jobs
-  x-source: hermes_cli/web_routers/cron.py:233
+  x-source: hermes_cli/web_routers/cron.py:668
   x-handler-hash: 7f6c0fc87fd91b05b1a09b23b5448b51afe8da96dab7a80d196cffb6c7e90813
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: '{"items": {"$ref": "#/components/schemas/CronJob"}, "type": "array"}'
   responses:
     '200':
@@ -553,10 +665,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/cron/jobs/{job_id}
-  x-source: hermes_cli/web_routers/cron.py:238
+  x-source: hermes_cli/web_routers/cron.py:673
   x-handler-hash: 00532fe91749c44b1588471ad874ab1c8c3b5b155af8aa4ea4d5d2412cf0a6ed
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJob
   responses:
     '200':
@@ -567,10 +679,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/cron/jobs/{job_id}/runs
-  x-source: hermes_cli/web_routers/cron.py:243
+  x-source: hermes_cli/web_routers/cron.py:678
   x-handler-hash: 9d8373548f189891c2309a5cdc73089f4e3af724f39461f7ff49985239644766
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJobRunsResponse
   responses:
     '200':
@@ -581,10 +693,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/cron/blueprints/instantiate
-  x-source: hermes_cli/web_routers/cron.py:424
-  x-handler-hash: e350c8be285731cde2dffa844b3ad40961b7d2011ca754328dbe8cb036c8c357
+  x-source: hermes_cli/web_routers/cron.py:877
+  x-handler-hash: 980086b2e66afb776ccfccca9c30176b7ae0da28afa27498670985a4a2d4cf17
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJob
   responses:
     '200':
@@ -595,10 +707,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/cron/jobs
-  x-source: hermes_cli/web_routers/cron.py:248
+  x-source: hermes_cli/web_routers/cron.py:683
   x-handler-hash: b9e36c32818fb251f255ab7090d63d0dee154b76b17b9de63267bdf2bd30f7b1
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJob
   responses:
     '200':
@@ -609,10 +721,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/cron/jobs/{job_id}/pause
-  x-source: hermes_cli/web_routers/cron.py:282
+  x-source: hermes_cli/web_routers/cron.py:719
   x-handler-hash: d01f80b4e9e8ddd419b6ba8ea877b0224bc734da6e652ce5c686f622267d02e6
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJob
   responses:
     '200':
@@ -623,10 +735,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/cron/jobs/{job_id}/resume
-  x-source: hermes_cli/web_routers/cron.py:287
+  x-source: hermes_cli/web_routers/cron.py:724
   x-handler-hash: 32a9838ceef5e1c1b58db7ecbfc2943eb532b83b8642194f363f9269104f24dc
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJob
   responses:
     '200':
@@ -637,10 +749,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/cron/jobs/{job_id}/trigger
-  x-source: hermes_cli/web_routers/cron.py:292
+  x-source: hermes_cli/web_routers/cron.py:729
   x-handler-hash: 55b5134b1aaf9d12f8b9f60062ba01c0e8fb12a27f8404bc0fec6930d9488820
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJob
   responses:
     '200':
@@ -651,10 +763,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/cron/jobs/{job_id}
-  x-source: hermes_cli/web_routers/cron.py:277
+  x-source: hermes_cli/web_routers/cron.py:714
   x-handler-hash: 97093fe341ae3b7ceb5aca947ef572203823521f0b8d63de53f70151d9d8ef26
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CronJob
   responses:
     '200':

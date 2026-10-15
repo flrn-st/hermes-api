@@ -196,6 +196,128 @@ its handler can reach, into `authority` in `spec/out/<ref>/gateway-errors.json`;
 by name, `self`, and the receivers named in `RECEIVERS` (`tools/_render_gateway_errors.py`), so shared helpers
 make them generous and calls the analysis cannot resolve can hide a reason.
 
+## Unified runtime: legacy calls on an authority
+
+Hermes v0.22.1, its canaries and `main` add a *session authority*: the gateway's own listener serves a
+canonical protocol (`hermes-gateway-v1`) in which sessions are revision-fenced, turns are durable
+admissions and prompts are events. A standalone dashboard (`hermes dashboard`, the usual `:9119`), v0.21.x
+and v0.22.2 keep the legacy dispatcher. Both runtimes speak to either: they detect the authority per
+connection and translate the generated legacy calls, so apps keep calling `session.create`,
+`prompt.submit` and the rest and decode the same result types.
+
+### Detection
+
+The first frame on every socket is `gateway.ready`; only an authority socket sets
+`session_authority: true` in it. The runtime then calls `runtime.describe {}` once per connection for the
+create sources and parameters. Without the flag, or when `runtime.describe` answers `-32601`, the
+connection is legacy and every frame goes out exactly as before. `HermesGateway.sessionAuthority`
+(Kotlin: `sessionAuthority`) reports which one the current connection is.
+
+### State the runtime keeps
+
+Per `(profile, session_id)` (profile `default` when the call names none): the `revision`, the
+`execution_generation` (never moving backwards), the `replay_epoch` and the last delivered sequence, the
+socket's `subscription_id`, the open prompts by `prompt_id`, and the retained mutations. Snapshots
+(`session.create` / `session.resume`), `session.info` and `session.updated` events, event frames
+(`execution_generation`) and mutation receipts update it, following Desktop's
+`apps/desktop/src/api/canonical-protocol.ts`. A session is *attached* once this socket holds its
+subscription; a call that needs one (`prompt.submit`, `approval.respond`, `clarify.respond`,
+`session.interrupt`, `image.attach_bytes`, and any call that needs a revision or generation the runtime
+does not know yet) resumes the session first.
+
+### What is translated
+
+| App calls | Authority receives |
+|---|---|
+| `session.create` | `source: "gui"`; `reasoning_effort` → `reasoning`; `fast` → `service_tier` (`priority` / `normal`); keys outside `runtime.describe`'s `session_create.parameters` (`cols`, `close_on_disconnect`, …) dropped; a `request_id` kept per identical create until it is answered, so a retry is deduplicated |
+| `session.create` with `messages` / `parent_session_id` (fork) | The parent is attached, the seed's last message is matched to its stored row, then `session.mutate branch {through_message_id, title?}` on the parent and `session.resume` of the child, answered as the child's create result. Model and reasoning picks of the fork are not applied (the child inherits the parent's policy) |
+| `session.resume` | `lazy` and `close_on_disconnect` dropped, keys outside the canonical resume contract dropped |
+| `session.activate` (also the reconnect rebind) | `session.resume {session_id, profile}` |
+| `session.close` | `session.detach {session_id, subscription_id}`; `closed` is `detached` |
+| `session.title` | `session.mutate rename {title}` |
+| `session.cwd.set` | `session.mutate workspace {cwd}` |
+| `session.workspace.move` | `session.mutate workspace {cwd}` on `session_key` |
+| `session.compress` | `session.mutate compress {focus?}`, then `session.resume` for the compacted `messages` and `info` |
+| `session.undo` | `session.mutate rewind {target_message_id}` on the last user row; `removed` is `rewound_count` |
+| `session.branch` | `session.mutate branch {title?}`, then the child is resumed; `count` cannot be expressed and is refused |
+| `config.set key: model` (`"<model> --provider <id> [--session]"`) | `session.mutate model {model, provider}`; a guarded target answers `confirm_required` + `confirm_message`, and the resend with `confirm_expensive_model: true` carries the authority's token under the same `request_id` |
+| `config.set` with `scope` on any key but `reasoning`, or `yolo` with a scope other than `global` | `scope` dropped |
+| `slash.exec` `/model <m>`, `/branch [title]`, `/compress [focus]` | The same `session.mutate`, answered `{type: "exec", output}` |
+| `session.usage` | `session.stats`, mapped onto the legacy counters (no cost or credit lines) |
+| `session.interrupt`, `session.redirect`, `session.steer` | `execution_generation` added |
+| `prompt.submit` | `submission_id` added (one per call, kept across resends of the same frame); keys outside the canonical submit contract dropped; `status: started` reads as `streaming` |
+| `prompt.submit` with `truncate_before_row_id` (edit, rewind) | `session.mutate rewind {target_message_id}`, then the plain submit |
+| `approval.respond {request_id, choice}` | `{prompt_id, choice, execution_generation}`; `resolved` is 1 for `resolved`, 0 for `already_resolved` |
+| `clarify.lock {request_id, answer}` and `request.answer {id, result: {answer}}` for a prompt this socket was shown | `clarify.respond {prompt_id, answer, execution_generation}`; `status` is `ok` or `expired` |
+| `session.events.since` | `replay_epoch` and `last_sequence` added |
+| `session.list` | `limit` clamped to 1…200, unknown keys dropped |
+| `commands.catalog` | `session_id` dropped |
+| `reload.mcp` | `confirm: true` added |
+
+Mutations follow Desktop's retry rules: one `request_id` per intent, kept with its `expected_revision` and
+`expected_generation` while its outcome is unknown, so a retry after a lost reply is an exact retry; a
+mutation on another subject retires the retained ones; an acknowledged revision retires older
+value-setting edits (`rename`, `archive`, `model`, `reasoning`, `workspace`); `revision_conflict` (and
+`session_busy` on `rewind` / `workspace`) retires the refused one, and the runtime then re-reads the
+revision before the next mutation of that session. `prompt.submit` retires every retained mutation of its
+session.
+
+Results are given back in the legacy shapes the generated types decode: a `CanonicalSnapshot` becomes a
+create / resume / activate result (`session_id`, `stored_session_id`, `messages`, `message_count`,
+`running`, `info` with `running` and `stored_session_id`, `pending_approval` from the open approval). A
+legacy field the authority has no equivalent for (`resumed`, `session_key`, `open_requests`, `todo_state`,
+`user_row_id`, `survivor_*`, cost lines, `desktop_contract`) stays absent.
+
+### Prompts and events
+
+`approval.request` and `clarify.request` events reach the server request handler as `ServerRequest.approval`
+(`request_id` = `prompt_id`, `choices` as offered) and `ServerRequest.clarify` (one `question` per
+prompt). The handler's answer is sent as `approval.respond` / `clarify.respond`; `approval.settled`,
+`clarify.settled` and a later answer cancel the handler's task like `request.cancel`. Open prompts in a
+snapshot are delivered the same way, as `open_requests` were. A handler that throws leaves the prompt open
+(the authority has no "declined" answer). `sudo` and `secret` remain server requests and are answered as
+before. `session.updated` with `operation: rename` is followed by a legacy `session.title` event. Every
+event is still delivered under its own type.
+
+Replay is per session epoch: the watermark belongs to `(session_id, replay_epoch)` and restarts when an
+event or snapshot names a new epoch. Reconnect rebinds through `session.resume`, then replays with
+`session.events.since {replay_epoch, last_sequence}`; `snapshot_required` or `truncated` is reported as
+`.replayTruncated`. `session.replay_gap` (the authority dropped this socket's subscription) is answered by
+resuming the session and replaying from the watermark. A session the authority no longer finds is reported
+`.unavailable`; the runtime never retries a resume answered `not_found`.
+
+### Refusals
+
+The authority refuses with `4001 {reason, field?, detail?, fields?}`. `HermesGatewayError.refusal`
+(Kotlin: `HermesGatewayException.RPC.refusal`) is a `GatewayRefusal(reason, field, detail, fields)` whenever
+`error.data.reason` is present. `known` and `kind` read the reason:
+
+| `reason` | `known` | `kind` |
+|---|---|---|
+| `session_busy` | `.sessionBusy` | `busy` |
+| `not_found` | `.sessionNotFound` | `notFound` |
+| `invalid_params` | `.invalidParams` | `invalidRequest` |
+| `profile_mismatch` | `.profileNotFound` | `notFound` |
+| `storage_unavailable` | `.storageUnavailable` | `unavailable` |
+| `unknown_method` | `.unknownMethod` | `unsupported` |
+| `stale_generation`, `revision_conflict`, `snapshot_required`, `admission_conflict`, `stale_epoch` | — | `conflict` |
+| `permission_denied` | — | `forbidden` |
+| `runtime_draining`, `runtime_retired` | — | `unavailable` |
+| `unsupported_*`, `use_session_mutation_model`, `unsupported_on_authority` | — | `unsupported` |
+
+A call the runtime cannot express on the authority fails before it is sent with `-32601` and reason
+`unsupported_on_authority` (`detail` says why): `pdf.attach` and `image.detach` (the sidecar never finds
+an authority session), a fork whose seed does not match the parent's stored rows, `session.branch` with
+`count`, `session.undo` without a user turn.
+
+### Not translated
+
+`process.stop` needs a `session_id` the legacy call may lack; `session.history` is gone (use the
+snapshot's `messages` or REST); `clarify.lock` / `request.answer` for a prompt this socket never saw go to
+the legacy sidecar unchanged; `session.list` lists only live (or `scope: stored` gui/cli/tui) sessions;
+legacy `ios` / `cadu` rows answer `not_found` on resume and are readable over REST only. REST session
+mutations (`PATCH` / `DELETE /api/sessions/{id}`) are not covered here.
+
 ## How it is tested
 
 Unit tests drive both runtimes through a fake Hermes: a scripted transport,

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from tools.naming import camel, pascal
-from tools.schema_audit import audit_contract
+from tools.schema_audit import CANONICAL_METHODS, audit_contract
 
 
 @dataclass(frozen=True)
@@ -85,8 +85,8 @@ class SchemaGraph:
         self.contract = contract
         self._setup(contract["components"]["schemas"], strict=False, rename={})
         roots: list[dict[str, Any]] = []
-        for section in ("methods", "x-server-requests"):
-            for method in self.contract[section]:
+        for section in ("methods", CANONICAL_METHODS, "x-server-requests"):
+            for method in self.contract.get(section, []):
                 roots.extend(item["schema"] for item in method.get("params", []))
         self.param_reachable = self._reachable(roots)
         for name, schema in self.schemas.items():

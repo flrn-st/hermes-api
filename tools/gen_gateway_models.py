@@ -45,6 +45,16 @@ def _swift(name: str) -> str:
     return f"`{name}`" if name in SWIFT_RESERVED else name
 
 
+# Locals the generated Swift ``init(from:)`` and ``encode(to:)`` declare (swift_object.j2). A field with one of
+# these names is referred to through ``self`` there, or the local would shadow it.
+SWIFT_CODING_LOCALS = {"container", "dynamic", "extra", "keys", "known", "nulls"}
+
+
+def _swift_member(name: str) -> str:
+    """A field as the coding methods refer to it."""
+    return f"self.{name}" if name in SWIFT_CODING_LOCALS else _swift(name)
+
+
 def _kotlin(name: str) -> str:
     return f"`{name}`" if name in KOTLIN_RESERVED else name
 
@@ -89,8 +99,9 @@ def _field_view(field: Field) -> dict[str, object]:
     if field.const is not None and not field.patch:
         doc = f"Always `{field.const}`; decoding any other value fails."
         optional = field.type.nullable or not field.required
+        member = _swift_member(field.name)
         check = {
-            "swift": f"{_swift(field.name)} == {'nil || ' + _swift(field.name) + ' == ' if optional else ''}{field.const}",
+            "swift": f"{member} == {'nil || ' + member + ' == ' if optional else ''}{field.const}",
             "kotlin": f"{name} == {'null || ' + name + ' == ' if optional else ''}{field.const}L",
             "message": f"{field.wire_name} must be {field.const}",
         }
@@ -98,6 +109,7 @@ def _field_view(field: Field) -> dict[str, object]:
         "doc": doc,
         "check": check,
         "swift_name": _swift(field.name),
+        "swift_member": _swift_member(field.name),
         "kotlin_name": name,
         "wire_literal": wire,
         "swift_type": swift_type,

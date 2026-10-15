@@ -55,18 +55,18 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
 {% for field in model.fields %}
 {% if field.patch %}
         if !container.contains(.{{ field.swift_name }}) {
-            {{ field.swift_name }} = .absent
+            {{ field.swift_member }} = .absent
         } else if try container.decodeNil(forKey: .{{ field.swift_name }}) {
-            {{ field.swift_name }} = .null
+            {{ field.swift_member }} = .null
         } else {
-            {{ field.swift_name }} = .value(try container.decode({{ field.base_swift }}.self, forKey: .{{ field.swift_name }}))
+            {{ field.swift_member }} = .value(try container.decode({{ field.base_swift }}.self, forKey: .{{ field.swift_name }}))
         }
 {% elif field.required and field.nullable %}
-        {{ field.swift_name }} = try container.decode(Optional<{{ field.base_swift }}>.self, forKey: .{{ field.swift_name }})
+        {{ field.swift_member }} = try container.decode(Optional<{{ field.base_swift }}>.self, forKey: .{{ field.swift_name }})
 {% elif field.required %}
-        {{ field.swift_name }} = try container.decode({{ field.base_swift }}.self, forKey: .{{ field.swift_name }})
+        {{ field.swift_member }} = try container.decode({{ field.base_swift }}.self, forKey: .{{ field.swift_name }})
 {% else %}
-        {{ field.swift_name }} = try container.decodeIfPresent({{ field.base_swift }}.self, forKey: .{{ field.swift_name }})
+        {{ field.swift_member }} = try container.decodeIfPresent({{ field.base_swift }}.self, forKey: .{{ field.swift_name }})
 {% endif %}
 {% endfor %}
 {% for check in model.checks %}
@@ -92,15 +92,15 @@ public struct {{ model.name }}: Codable, Sendable, Hashable {
 {% endif %}
 {% for field in model.fields %}
 {% if field.patch %}
-        switch {{ field.swift_name }} {
+        switch {{ field.swift_member }} {
         case .absent: break
         case .null: try container.encodeNil(forKey: .{{ field.swift_name }})
         case .value(let value): try container.encode(value, forKey: .{{ field.swift_name }})
         }
 {% elif field.required %}
-        try container.encode({{ field.swift_name }}, forKey: .{{ field.swift_name }})
+        try container.encode({{ field.swift_member }}, forKey: .{{ field.swift_name }})
 {% else %}
-        try container.encodeIfPresent({{ field.swift_name }}, forKey: .{{ field.swift_name }})
+        try container.encodeIfPresent({{ field.swift_member }}, forKey: .{{ field.swift_name }})
 {% endif %}
 {% endfor %}
 {% if model.required_null %}

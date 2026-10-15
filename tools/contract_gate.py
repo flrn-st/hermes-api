@@ -16,6 +16,7 @@ import tempfile
 from collections import defaultdict
 from pathlib import Path
 
+from tools.extract_openapi import tag_python
 from tools.fetch_spec import ROOT
 from tools.ref_policy import require_release
 
@@ -60,7 +61,7 @@ def run(ref: str, tests: list[str] | None, extra: list[str]) -> dict:
     repo = ROOT / "spec" / ".upstream-rest" / ref
     venv = ROOT / "spec" / ".upstream-rest" / f"{ref}-gate-venv"
     env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(venv)}
-    subprocess.run(["uv", "sync", "--frozen", "--extra", "web", "--extra", "dev", "--python", "3.12"],
+    subprocess.run(["uv", "sync", "--frozen", "--extra", "web", "--extra", "dev", "--python", tag_python(repo)],
                    cwd=repo, env=env, check=True, capture_output=True)
     openapi = ROOT / "spec" / "out" / ref / "openapi.json"
     with tempfile.TemporaryDirectory(prefix="hermes-contract-gate-") as scratch:

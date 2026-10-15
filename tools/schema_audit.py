@@ -19,6 +19,11 @@ _TYPES = {"string", "integer", "number", "boolean", "null", "array", "object"}
 _STRING_CONSTRAINTS = {"pattern", "minLength", "maxLength"}
 _ARRAY_CONSTRAINTS = {"minItems", "maxItems"}
 
+# The unified gateway runtime's strict methods ("hermes-gateway-v1"), which only the session authority serves
+# (gateway/session_controls.py AuthorityConnection). Hermes' OpenRPC lists them beside ``methods``; they share
+# its components.
+CANONICAL_METHODS = "x-canonical-methods"
+
 
 def _check_counts(schema: dict[str, Any], names: set[str], path: str, counts: Counter[str]) -> None:
     for name in sorted(names & set(schema)):
@@ -144,8 +149,9 @@ def audit_contract(contract: dict[str, Any]) -> dict[str, int]:
 
     for name, schema in schemas.items():
         visit(schema, f"components/schemas/{name}")
-    for section in ("methods", "x-server-requests", "x-notifications"):
-        for item in contract[section]:
+    for section in ("methods", CANONICAL_METHODS, "x-server-requests", "x-notifications"):
+        # Only releases with the unified gateway runtime (v0.22.1 on) carry canonical methods.
+        for item in contract.get(section, []) if section == CANONICAL_METHODS else contract[section]:
             for position, param in enumerate(item.get("params", [])):
                 visit(param["schema"], f"{section}/{item['name']}/params/{position}")
             if "result" in item:

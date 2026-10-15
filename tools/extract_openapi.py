@@ -39,8 +39,19 @@ def prepare(ref: str, source_repo: Path | None = None) -> tuple[Path, Path, str]
     if _run(["git", "status", "--porcelain", "--untracked-files=no"], repo):
         raise ValueError("Tagged Hermes checkout has modified tracked files")
 
-    _run(["uv", "sync", "--frozen", "--extra", "web", "--no-dev", "--python", "3.12"], repo)
+    _run(["uv", "sync", "--frozen", "--extra", "web", "--no-dev", "--python", tag_python(repo)], repo)
     return repo, repo / ".venv" / "bin" / "python", commit
+
+
+def tag_python(repo: Path) -> str:
+    """The Python to sync the tagged checkout with: 3.12, or the newer one its ``.python-version`` pins.
+
+    Releases up to v0.21.5 pin 3.11 and were always extracted on 3.12; v0.22.x locks only Python 3.14.
+    """
+    pinned = repo / ".python-version"
+    version = pinned.read_text(encoding="utf-8").strip() if pinned.is_file() else ""
+    parts = tuple(int(part) for part in version.split(".")[:2]) if version.replace(".", "").isdigit() else ()
+    return version if parts > (3, 12) else "3.12"
 
 
 def extract(ref: str, source_repo: Path | None = None) -> dict[str, object]:

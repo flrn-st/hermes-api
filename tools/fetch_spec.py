@@ -76,6 +76,8 @@ def extract(ref: str, source_repo: Path, output_dir: Path, tag: str) -> dict[str
     for key in ("methods", "x-server-requests", "x-notifications"):
         if not isinstance(contract.get(key), list):
             raise TypeError(f"Missing OpenRPC section: {key}")
+    if not isinstance(contract.get("x-canonical-methods", []), list):
+        raise TypeError("Invalid OpenRPC section: x-canonical-methods")
     schemas = contract.get("components", {}).get("schemas")
     if not isinstance(schemas, dict):
         raise TypeError("Missing OpenRPC component schemas")
@@ -99,6 +101,7 @@ def extract(ref: str, source_repo: Path, output_dir: Path, tag: str) -> dict[str
         "method_count": len(contract["methods"]),
         "server_request_count": len(contract["x-server-requests"]),
         "notification_count": len(contract["x-notifications"]),
+        "canonical_method_count": len(contract.get("x-canonical-methods", [])),
         "schema_count": len(schemas),
     }
 

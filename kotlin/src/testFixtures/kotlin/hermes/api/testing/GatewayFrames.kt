@@ -20,6 +20,39 @@ public object GatewayFrames {
         return """{"jsonrpc":"2.0","method":"event","params":{${params.joinToString(",")}}}"""
     }
 
+    /** The first frame of a socket. [sessionAuthority] marks the Hermes session authority (v0.22.1 and later). */
+    public fun gatewayReady(sessionAuthority: Boolean = false, replayEpoch: String = "process-epoch"): String {
+        val authority = if (sessionAuthority) ""","session_authority":true""" else ""
+        return """{"jsonrpc":"2.0","method":"event","params":{"type":"gateway.ready","payload":""" +
+            """{"skin":{},"change_events":true,"heartbeat":true,"replay_epoch":${quoted(replayEpoch)}$authority}}}"""
+    }
+
+    /** A session authority event: numbered by [seq] within the session's own [replayEpoch], and stamped with
+     *  the turn's [generation] when it belongs to one. */
+    public fun authorityEvent(type: String, session: String, seq: Long, replayEpoch: String, payload: String = "{}",
+                              generation: Long? = null): String {
+        val stamp = generation?.let { ""","execution_generation":$it""" } ?: ""
+        return """{"jsonrpc":"2.0","method":"event","params":{"type":${quoted(type)},"session_id":${quoted(session)},""" +
+            """"payload":$payload,"replay_epoch":${quoted(replayEpoch)},"seq":$seq$stamp}}"""
+    }
+
+    /** A `CanonicalSnapshot` as `session.create` and `session.resume` answer on the session authority. */
+    public fun authoritySnapshot(session: String, revision: Long = 0, generation: Long = 0, replayEpoch: String = "epoch-1",
+                                 lastSequence: Long = 0, subscription: String = "subscription-1", prompts: String = "[]",
+                                 messages: String = "[]", running: Boolean = false): String =
+        """{"session_id":${quoted(session)},"stored_session_id":${quoted(session)},"messages":$messages,""" +
+            """"message_count":0,"running":$running,"authority_epoch":1,"replay_epoch":${quoted(replayEpoch)},""" +
+            """"last_sequence":$lastSequence,"subscription_id":${quoted(subscription)},"revision":$revision,""" +
+            """"execution_generation":$generation,"pending":[],"prompts":$prompts,""" +
+            """"info":{"desktop_protocol":"hermes-gateway-v1","source":"gui","model":"test-model","profile_name":"default"}}"""
+
+    /** `runtime.describe` of a Hermes v0.22.1 session authority. */
+    public const val RUNTIME_DESCRIPTION: String = """{"instance_id":"instance-1","profile_id":"/home/hermes","authority_epoch":1,""" +
+        """"capabilities":["durable-admission-v1","event-replay-v1"],"session_create":{"sources":["acp","cli","gui","oneshot","tool","tui"],""" +
+        """"parameters":["accept_hooks","api_key","base_url","checkpoints","cwd","cwd_explicit","editor","follow_profile_config",""" +
+        """"ignore_rules","ignore_user_config","max_turns","model","pass_session_id","provider","reasoning","request_id","row_cwd",""" +
+        """"run_budget","safe_mode","service_tier","skills","source","title","toolsets","verbose","yolo"]},"skin":null}"""
+
     /** The response to call [id]; [json] is the result. */
     public fun result(id: Int, json: String): String = """{"jsonrpc":"2.0","id":$id,"result":$json}"""
 

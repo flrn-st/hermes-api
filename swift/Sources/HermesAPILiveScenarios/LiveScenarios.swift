@@ -108,7 +108,8 @@ public enum LiveScenarios {
         await gateway.setServerRequestHandler { request in
             switch request {
             case .clarify(let params):
-                guard case .value(let questions) = params.questions, questions.count == 1 else {
+                let questions = params.questions
+                guard questions.count == 1 else {
                     throw LiveScenarioError("Unexpected clarification request")
                 }
                 if questions[0].question == Fixture.withdrawnQuestion {
@@ -324,10 +325,10 @@ public enum LiveScenarios {
             heartbeatInterval: .seconds(1), heartbeatDeadline: .seconds(4)))
         let clarifications = Counter()
         await gateway.setServerRequestHandler { request in
-            guard case .clarify(let params) = request,
-                  case .value(let questions) = params.questions, questions.count == 1 else {
+            guard case .clarify(let params) = request, params.questions.count == 1 else {
                 throw LiveScenarioError("Unexpected server request during reconnect")
             }
+            let questions = params.questions
             if await clarifications.increment() == 1 {
                 // Drop the socket while the question is open; the rebind must re-deliver it.
                 try await faults.drop(holdMilliseconds: 1_000)
@@ -503,7 +504,7 @@ public enum LiveScenarios {
                     turn.toolResult = payload.result
                 case .messageDelta(let payload):
                     let first = turn.streamed.isEmpty
-                    turn.streamed += payload.text
+                    turn.streamed += payload.text ?? ""
                     if first, let onFirstDelta { try await onFirstDelta() }
                 case .messageComplete(let payload):
                     if case .string(let text)? = payload.text { turn.reply = text }

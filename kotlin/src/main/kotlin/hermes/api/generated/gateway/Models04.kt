@@ -9,866 +9,184 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyAllowBody(
-    @SerialName("mode")
-    public val mode: ConnectorPolicyAllowBodyMode,
-    @SerialName("connectors")
-    public val connectors: List<String>,
-    @SerialName("tools")
-    public val tools: Map<String, List<String>>,
-    @SerialName("tags")
-    public val tags: ConnectorPolicyTags? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyAllowBodyMode.Serializer::class)
-public sealed interface ConnectorPolicyAllowBodyMode {
-    public data object Allow : ConnectorPolicyAllowBodyMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Allow -> "allow"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyAllowBodyMode? = when (raw) {
-            "allow" -> Allow
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyAllowBodyMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyAllowBodyMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyAllowBodyMode = when (val raw = decoder.decodeString()) {
-            "allow" -> Allow
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyAllowBodyMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyDenyAllBody(
-    @SerialName("mode")
-    public val mode: ConnectorPolicyDenyAllBodyMode,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyDenyAllBodyMode.Serializer::class)
-public sealed interface ConnectorPolicyDenyAllBodyMode {
-    public data object DenyAll : ConnectorPolicyDenyAllBodyMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            DenyAll -> "deny-all"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyDenyAllBodyMode? = when (raw) {
-            "deny-all" -> DenyAll
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyDenyAllBodyMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyDenyAllBodyMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyDenyAllBodyMode = when (val raw = decoder.decodeString()) {
-            "deny-all" -> DenyAll
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyDenyAllBodyMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyDenyBody(
-    @SerialName("mode")
-    public val mode: ConnectorPolicyDenyBodyMode,
-    @SerialName("disabled_connectors")
-    public val disabledConnectors: List<String>,
-    @SerialName("tools")
-    public val tools: Map<String, List<String>>,
-    @SerialName("tags")
-    public val tags: ConnectorPolicyTags? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyDenyBodyMode.Serializer::class)
-public sealed interface ConnectorPolicyDenyBodyMode {
-    public data object Deny : ConnectorPolicyDenyBodyMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Deny -> "deny"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyDenyBodyMode? = when (raw) {
-            "deny" -> Deny
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyDenyBodyMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyDenyBodyMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyDenyBodyMode = when (val raw = decoder.decodeString()) {
-            "deny" -> Deny
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyDenyBodyMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyEffectiveAllow(
-    /** Always `1`; decoding any other value fails. */
-    @SerialName("version")
-    public val version: Long = 1,
-    @SerialName("revision")
-    public val revision: String,
-    @SerialName("issued_at_ms")
-    public val issuedAtMs: Long,
-    @SerialName("mode")
-    public val mode: ConnectorPolicyEffectiveAllowMode,
-    @SerialName("connectors")
-    public val connectors: List<String>,
-    @SerialName("tools")
-    public val tools: Map<String, List<String>>,
-    @SerialName("tags")
-    public val tags: ConnectorPolicyTags? = null,
-)
-{
-    init {
-        require(version == 1L) { "version must be 1" }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyEffectiveAllowMode.Serializer::class)
-public sealed interface ConnectorPolicyEffectiveAllowMode {
-    public data object Allow : ConnectorPolicyEffectiveAllowMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Allow -> "allow"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveAllowMode? = when (raw) {
-            "allow" -> Allow
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyEffectiveAllowMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveAllowMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyEffectiveAllowMode = when (val raw = decoder.decodeString()) {
-            "allow" -> Allow
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveAllowMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyEffectiveDeny(
-    /** Always `1`; decoding any other value fails. */
-    @SerialName("version")
-    public val version: Long = 1,
-    @SerialName("revision")
-    public val revision: String,
-    @SerialName("issued_at_ms")
-    public val issuedAtMs: Long,
-    @SerialName("mode")
-    public val mode: ConnectorPolicyEffectiveDenyMode,
-    @SerialName("disabled_connectors")
-    public val disabledConnectors: List<String>,
-    @SerialName("tools")
-    public val tools: Map<String, List<String>>,
-    @SerialName("tags")
-    public val tags: ConnectorPolicyTags? = null,
-)
-{
-    init {
-        require(version == 1L) { "version must be 1" }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyEffectiveDenyAll(
-    /** Always `1`; decoding any other value fails. */
-    @SerialName("version")
-    public val version: Long = 1,
-    @SerialName("revision")
-    public val revision: String,
-    @SerialName("issued_at_ms")
-    public val issuedAtMs: Long,
-    @SerialName("mode")
-    public val mode: ConnectorPolicyEffectiveDenyAllMode,
-)
-{
-    init {
-        require(version == 1L) { "version must be 1" }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyEffectiveDenyAllMode.Serializer::class)
-public sealed interface ConnectorPolicyEffectiveDenyAllMode {
-    public data object DenyAll : ConnectorPolicyEffectiveDenyAllMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            DenyAll -> "deny-all"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveDenyAllMode? = when (raw) {
-            "deny-all" -> DenyAll
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyEffectiveDenyAllMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveDenyAllMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyEffectiveDenyAllMode = when (val raw = decoder.decodeString()) {
-            "deny-all" -> DenyAll
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveDenyAllMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyEffectiveDenyMode.Serializer::class)
-public sealed interface ConnectorPolicyEffectiveDenyMode {
-    public data object Deny : ConnectorPolicyEffectiveDenyMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Deny -> "deny"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveDenyMode? = when (raw) {
-            "deny" -> Deny
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyEffectiveDenyMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveDenyMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyEffectiveDenyMode = when (val raw = decoder.decodeString()) {
-            "deny" -> Deny
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveDenyMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyEffectiveUnrestricted(
-    /** Always `1`; decoding any other value fails. */
-    @SerialName("version")
-    public val version: Long = 1,
-    @SerialName("revision")
-    public val revision: String,
-    @SerialName("issued_at_ms")
-    public val issuedAtMs: Long,
-    @SerialName("mode")
-    public val mode: ConnectorPolicyEffectiveUnrestrictedMode,
-)
-{
-    init {
-        require(version == 1L) { "version must be 1" }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyEffectiveUnrestrictedMode.Serializer::class)
-public sealed interface ConnectorPolicyEffectiveUnrestrictedMode {
-    public data object Unrestricted : ConnectorPolicyEffectiveUnrestrictedMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Unrestricted -> "unrestricted"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyEffectiveUnrestrictedMode? = when (raw) {
-            "unrestricted" -> Unrestricted
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyEffectiveUnrestrictedMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyEffectiveUnrestrictedMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyEffectiveUnrestrictedMode = when (val raw = decoder.decodeString()) {
-            "unrestricted" -> Unrestricted
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyEffectiveUnrestrictedMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyGetResult(
-    @SerialName("layers")
-    public val layers: List<ConnectorPolicyLayer>,
-    @SerialName("effective")
-    public val effective: ConnectorPolicyGetResultEffective,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyGetResultEffective.Serializer::class)
-public sealed interface ConnectorPolicyGetResultEffective {
-    public data class ConnectorPolicyEffectiveUnrestrictedValue(public val value: ConnectorPolicyEffectiveUnrestricted) : ConnectorPolicyGetResultEffective
-    public data class ConnectorPolicyEffectiveDenyAllValue(public val value: ConnectorPolicyEffectiveDenyAll) : ConnectorPolicyGetResultEffective
-    public data class ConnectorPolicyEffectiveAllowValue(public val value: ConnectorPolicyEffectiveAllow) : ConnectorPolicyGetResultEffective
-    public data class ConnectorPolicyEffectiveDenyValue(public val value: ConnectorPolicyEffectiveDeny) : ConnectorPolicyGetResultEffective
-
-    public object Serializer : KSerializer<ConnectorPolicyGetResultEffective> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyGetResultEffective {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectorPolicyGetResultEffective requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            val objectValue = input as? JsonObject
-                ?: throw SerializationException("ConnectorPolicyGetResultEffective requires an object")
-            val tag = (objectValue["mode"] as? JsonPrimitive)?.content
-                ?: throw SerializationException("Missing mode discriminator")
-            return when (tag) {
-                "allow" -> ConnectorPolicyEffectiveAllowValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveAllow>(input))
-                "deny" -> ConnectorPolicyEffectiveDenyValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveDeny>(input))
-                "deny-all" -> ConnectorPolicyEffectiveDenyAllValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveDenyAll>(input))
-                "unrestricted" -> ConnectorPolicyEffectiveUnrestrictedValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveUnrestricted>(input))
-                else -> throw SerializationException("Unknown mode discriminator: $tag")
-            }
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyGetResultEffective) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectorPolicyGetResultEffective requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is ConnectorPolicyEffectiveUnrestrictedValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyEffectiveDenyAllValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyEffectiveAllowValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyEffectiveDenyValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyLayer(
-    @SerialName("kind")
-    public val kind: ConnectorPolicyLayerKind,
-    @SerialName("revision")
-    public val revision: String,
-    @SerialName("body")
-    public val body: ConnectorPolicyLayerBody,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyLayerBody.Serializer::class)
-public sealed interface ConnectorPolicyLayerBody {
-    public data class ConnectorPolicyUnrestrictedBodyValue(public val value: ConnectorPolicyUnrestrictedBody) : ConnectorPolicyLayerBody
-    public data class ConnectorPolicyDenyAllBodyValue(public val value: ConnectorPolicyDenyAllBody) : ConnectorPolicyLayerBody
-    public data class ConnectorPolicyAllowBodyValue(public val value: ConnectorPolicyAllowBody) : ConnectorPolicyLayerBody
-    public data class ConnectorPolicyDenyBodyValue(public val value: ConnectorPolicyDenyBody) : ConnectorPolicyLayerBody
-
-    public object Serializer : KSerializer<ConnectorPolicyLayerBody> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyLayerBody {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectorPolicyLayerBody requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            val objectValue = input as? JsonObject
-                ?: throw SerializationException("ConnectorPolicyLayerBody requires an object")
-            val tag = (objectValue["mode"] as? JsonPrimitive)?.content
-                ?: throw SerializationException("Missing mode discriminator")
-            return when (tag) {
-                "allow" -> ConnectorPolicyAllowBodyValue(json.decodeFromJsonElement<ConnectorPolicyAllowBody>(input))
-                "deny" -> ConnectorPolicyDenyBodyValue(json.decodeFromJsonElement<ConnectorPolicyDenyBody>(input))
-                "deny-all" -> ConnectorPolicyDenyAllBodyValue(json.decodeFromJsonElement<ConnectorPolicyDenyAllBody>(input))
-                "unrestricted" -> ConnectorPolicyUnrestrictedBodyValue(json.decodeFromJsonElement<ConnectorPolicyUnrestrictedBody>(input))
-                else -> throw SerializationException("Unknown mode discriminator: $tag")
-            }
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyLayerBody) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectorPolicyLayerBody requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is ConnectorPolicyUnrestrictedBodyValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyDenyAllBodyValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyAllowBodyValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyDenyBodyValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyLayerKind.Serializer::class)
-public sealed interface ConnectorPolicyLayerKind {
-    public data object Org : ConnectorPolicyLayerKind
-    public data object Role : ConnectorPolicyLayerKind
-    public data object Member : ConnectorPolicyLayerKind
-    public data class Unknown(public val raw: kotlin.String) : ConnectorPolicyLayerKind
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Org -> "org"
-            Role -> "role"
-            Member -> "member"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyLayerKind = when (raw) {
-            "org" -> Org
-            "role" -> Role
-            "member" -> Member
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyLayerKind> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyLayerKind", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyLayerKind = when (val raw = decoder.decodeString()) {
-            "org" -> Org
-            "role" -> Role
-            "member" -> Member
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyLayerKind) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicySetParams.Serializer::class)
-public data class ConnectorPolicySetParams(
+@Serializable(with = CliExecParams.Serializer::class)
+public data class CliExecParams(
+    public val argv: List<String>,
+    public val timeout: Patch<Long> = Patch.Absent,
     public val profile: Patch<String> = Patch.Absent,
-    public val change: ConnectorPolicySetParamsChange,
-    /** Must match `^[0-7][0-9A-HJKMNP-TV-Z]{25}$`. */
-    public val expectedRevision: String,
 )
 {
-    public object Serializer : KSerializer<ConnectorPolicySetParams> {
+    public object Serializer : KSerializer<CliExecParams> {
         override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): ConnectorPolicySetParams {
+        override fun deserialize(decoder: Decoder): CliExecParams {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectorPolicySetParams requires JSON")
+                ?: throw SerializationException("CliExecParams requires JSON")
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ConnectorPolicySetParams requires an object")
-            return ConnectorPolicySetParams(
+                ?: throw SerializationException("CliExecParams requires an object")
+            return CliExecParams(
+                argv = json.decodeFromJsonElement<List<String>>((input["argv"] ?: throw SerializationException("Missing argv"))),
+                timeout = when (val raw = input["timeout"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Long>(raw)) },
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                change = json.decodeFromJsonElement<ConnectorPolicySetParamsChange>((input["change"] ?: throw SerializationException("Missing change"))),
-                expectedRevision = json.decodeFromJsonElement<String>((input["expected_revision"] ?: throw SerializationException("Missing expected_revision"))),
             )
         }
 
-        override fun serialize(encoder: Encoder, value: ConnectorPolicySetParams) {
+        override fun serialize(encoder: Encoder, value: CliExecParams) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectorPolicySetParams requires JSON")
+                ?: throw SerializationException("CliExecParams requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
+            output["argv"] = json.encodeToJsonElement(value.argv)
+            when (val patch = value.timeout) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["timeout"] = JsonNull
+                is Patch.Value -> output["timeout"] = json.encodeToJsonElement(patch.value)
+            }
             when (val patch = value.profile) {
                 Patch.Absent -> Unit
                 Patch.Null -> output["profile"] = JsonNull
                 is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
             }
-            output["change"] = json.encodeToJsonElement(value.change)
-            output["expected_revision"] = json.encodeToJsonElement(value.expectedRevision)
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }
 
 /** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicySetParamsChange.Serializer::class)
-public sealed interface ConnectorPolicySetParamsChange {
-    public data class ToolsChangeValue(public val value: ToolsChange) : ConnectorPolicySetParamsChange
-    public data class ConnectorChangeValue(public val value: ConnectorChange) : ConnectorPolicySetParamsChange
+@Serializable
+public data class CliExecResult(
+    @SerialName("blocked")
+    public val blocked: Boolean,
+    @SerialName("code")
+    public val code: Long,
+    @SerialName("output")
+    public val output: String,
+    @SerialName("hint")
+    public val hint: String? = null,
+)
 
-    public object Serializer : KSerializer<ConnectorPolicySetParamsChange> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ClientCapabilitiesParams(
+    @SerialName("server_requests")
+    public val serverRequests: Boolean? = null,
+)
 
-        override fun deserialize(decoder: Decoder): ConnectorPolicySetParamsChange {
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ClientCapabilitiesResult(
+    @SerialName("server_requests")
+    public val serverRequests: List<String>,
+    @SerialName("declines_not_shown")
+    public val declinesNotShown: Boolean? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ClipboardPasteParams.Serializer::class)
+public data class ClipboardPasteParams(
+    public val sessionId: String,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ClipboardPasteParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ClipboardPasteParams {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectorPolicySetParamsChange requires JSON")
+                ?: throw SerializationException("ClipboardPasteParams requires JSON")
             val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            val objectValue = input as? JsonObject
-                ?: throw SerializationException("ConnectorPolicySetParamsChange requires an object")
-            val tag = (objectValue["type"] as? JsonPrimitive)?.content
-                ?: throw SerializationException("Missing type discriminator")
-            return when (tag) {
-                "connector" -> ConnectorChangeValue(json.decodeFromJsonElement<ConnectorChange>(input))
-                "tools" -> ToolsChangeValue(json.decodeFromJsonElement<ToolsChange>(input))
-                else -> throw SerializationException("Unknown type discriminator: $tag")
-            }
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ClipboardPasteParams requires an object")
+            return ClipboardPasteParams(
+                sessionId = json.decodeFromJsonElement<String>((input["session_id"] ?: throw SerializationException("Missing session_id"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
         }
 
-        override fun serialize(encoder: Encoder, value: ConnectorPolicySetParamsChange) {
+        override fun serialize(encoder: Encoder, value: ClipboardPasteParams) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectorPolicySetParamsChange requires JSON")
+                ?: throw SerializationException("ClipboardPasteParams requires JSON")
             val json = jsonEncoder.json
-            val element = when (value) {
-                is ToolsChangeValue -> json.encodeToJsonElement(value.value)
-                is ConnectorChangeValue -> json.encodeToJsonElement(value.value)
+            val output = mutableMapOf<String, JsonElement>()
+            output["session_id"] = json.encodeToJsonElement(value.sessionId)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
             }
-            jsonEncoder.encodeJsonElement(element)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
-public data class ConnectorPolicySetResult(
-    @SerialName("revision")
-    public val revision: String,
-    @SerialName("effective")
-    public val effective: ConnectorPolicySetResultEffective,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicySetResultEffective.Serializer::class)
-public sealed interface ConnectorPolicySetResultEffective {
-    public data class ConnectorPolicyEffectiveUnrestrictedValue(public val value: ConnectorPolicyEffectiveUnrestricted) : ConnectorPolicySetResultEffective
-    public data class ConnectorPolicyEffectiveDenyAllValue(public val value: ConnectorPolicyEffectiveDenyAll) : ConnectorPolicySetResultEffective
-    public data class ConnectorPolicyEffectiveAllowValue(public val value: ConnectorPolicyEffectiveAllow) : ConnectorPolicySetResultEffective
-    public data class ConnectorPolicyEffectiveDenyValue(public val value: ConnectorPolicyEffectiveDeny) : ConnectorPolicySetResultEffective
-
-    public object Serializer : KSerializer<ConnectorPolicySetResultEffective> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicySetResultEffective {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectorPolicySetResultEffective requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            val objectValue = input as? JsonObject
-                ?: throw SerializationException("ConnectorPolicySetResultEffective requires an object")
-            val tag = (objectValue["mode"] as? JsonPrimitive)?.content
-                ?: throw SerializationException("Missing mode discriminator")
-            return when (tag) {
-                "allow" -> ConnectorPolicyEffectiveAllowValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveAllow>(input))
-                "deny" -> ConnectorPolicyEffectiveDenyValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveDeny>(input))
-                "deny-all" -> ConnectorPolicyEffectiveDenyAllValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveDenyAll>(input))
-                "unrestricted" -> ConnectorPolicyEffectiveUnrestrictedValue(json.decodeFromJsonElement<ConnectorPolicyEffectiveUnrestricted>(input))
-                else -> throw SerializationException("Unknown mode discriminator: $tag")
-            }
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicySetResultEffective) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectorPolicySetResultEffective requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is ConnectorPolicyEffectiveUnrestrictedValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyEffectiveDenyAllValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyEffectiveAllowValue -> json.encodeToJsonElement(value.value)
-                is ConnectorPolicyEffectiveDenyValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyTags(
-    @SerialName("enable")
-    public val enable: List<String>? = null,
-    @SerialName("disable")
-    public val disable: List<String>? = null,
+public data class CommandCatalogMeta(
+    @SerialName("argument_mode")
+    public val argumentMode: ArgumentMode? = null,
+    @SerialName("desktop")
+    public val desktop: String? = null,
+    @SerialName("desktop_subcommands")
+    public val desktopSubcommands: List<String>? = null,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
-public data class ConnectorPolicyUnrestrictedBody(
-    @SerialName("mode")
-    public val mode: ConnectorPolicyUnrestrictedBodyMode,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorPolicyUnrestrictedBodyMode.Serializer::class)
-public sealed interface ConnectorPolicyUnrestrictedBodyMode {
-    public data object Unrestricted : ConnectorPolicyUnrestrictedBodyMode
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Unrestricted -> "unrestricted"
-        }
-
-    public companion object {
-        /** The case for [raw], or `null` for a value this release does not list. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorPolicyUnrestrictedBodyMode? = when (raw) {
-            "unrestricted" -> Unrestricted
-            else -> null
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorPolicyUnrestrictedBodyMode> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorPolicyUnrestrictedBodyMode", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorPolicyUnrestrictedBodyMode = when (val raw = decoder.decodeString()) {
-            "unrestricted" -> Unrestricted
-            else -> throw SerializationException("Unexpected const value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorPolicyUnrestrictedBodyMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorRow(
-    @SerialName("connector")
-    public val connector: String,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("connected")
-    public val connected: Boolean,
-    @SerialName("connection_status")
-    public val connectionStatus: ConnectorRowConnectionStatus?,
-    @SerialName("status_reason")
-    public val statusReason: String?,
-    @SerialName("gateway_disabled_tools")
-    public val gatewayDisabledTools: List<String>,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorRowConnectionStatus.Serializer::class)
-public sealed interface ConnectorRowConnectionStatus {
-    public data object Pending : ConnectorRowConnectionStatus
-    public data object Active : ConnectorRowConnectionStatus
-    public data object Failed : ConnectorRowConnectionStatus
-    public data object Expired : ConnectorRowConnectionStatus
-    public data object Revoked : ConnectorRowConnectionStatus
-    public data object Inactive : ConnectorRowConnectionStatus
-    public data class Unknown(public val raw: kotlin.String) : ConnectorRowConnectionStatus
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Pending -> "pending"
-            Active -> "active"
-            Failed -> "failed"
-            Expired -> "expired"
-            Revoked -> "revoked"
-            Inactive -> "inactive"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorRowConnectionStatus = when (raw) {
-            "pending" -> Pending
-            "active" -> Active
-            "failed" -> Failed
-            "expired" -> Expired
-            "revoked" -> Revoked
-            "inactive" -> Inactive
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorRowConnectionStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorRowConnectionStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorRowConnectionStatus = when (val raw = decoder.decodeString()) {
-            "pending" -> Pending
-            "active" -> Active
-            "failed" -> Failed
-            "expired" -> Expired
-            "revoked" -> Revoked
-            "inactive" -> Inactive
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorRowConnectionStatus) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorToolFacet.Serializer::class)
-public sealed interface ConnectorToolFacet {
-    public data object Read : ConnectorToolFacet
-    public data object Write : ConnectorToolFacet
-    public data object Destructive : ConnectorToolFacet
-    public data object Unclassified : ConnectorToolFacet
-    public data class Unknown(public val raw: kotlin.String) : ConnectorToolFacet
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Read -> "read"
-            Write -> "write"
-            Destructive -> "destructive"
-            Unclassified -> "unclassified"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorToolFacet = when (raw) {
-            "read" -> Read
-            "write" -> Write
-            "destructive" -> Destructive
-            "unclassified" -> Unclassified
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorToolFacet> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorToolFacet", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorToolFacet = when (val raw = decoder.decodeString()) {
-            "read" -> Read
-            "write" -> Write
-            "destructive" -> Destructive
-            "unclassified" -> Unclassified
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorToolFacet) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorToolRow(
-    @SerialName("slug")
-    public val slug: String,
+public data class CommandCategory(
     @SerialName("name")
     public val name: String,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("facet")
-    public val facet: ConnectorToolFacet,
-    @SerialName("hints")
-    public val hints: List<String>,
-    @SerialName("categories")
-    public val categories: List<String>,
-    @SerialName("no_auth")
-    public val noAuth: Boolean,
-    @SerialName("deprecated")
-    public val deprecated: Boolean,
+    @SerialName("pairs")
+    public val pairs: List<List<String>>? = null,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorToolsParams.Serializer::class)
-public data class ConnectorToolsParams(
+@Serializable(with = CommandDispatchParams.Serializer::class)
+public data class CommandDispatchParams(
+    public val name: String,
+    public val arg: Patch<String> = Patch.Absent,
+    public val sessionId: Patch<String> = Patch.Absent,
     public val profile: Patch<String> = Patch.Absent,
-    public val slug: String,
-    public val refresh: Boolean? = null,
 )
 {
-    public object Serializer : KSerializer<ConnectorToolsParams> {
+    public object Serializer : KSerializer<CommandDispatchParams> {
         override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): ConnectorToolsParams {
+        override fun deserialize(decoder: Decoder): CommandDispatchParams {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectorToolsParams requires JSON")
+                ?: throw SerializationException("CommandDispatchParams requires JSON")
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ConnectorToolsParams requires an object")
-            return ConnectorToolsParams(
+                ?: throw SerializationException("CommandDispatchParams requires an object")
+            return CommandDispatchParams(
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                arg = when (val raw = input["arg"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                sessionId = when (val raw = input["session_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                slug = json.decodeFromJsonElement<String>((input["slug"] ?: throw SerializationException("Missing slug"))),
-                refresh = input["refresh"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
             )
         }
 
-        override fun serialize(encoder: Encoder, value: ConnectorToolsParams) {
+        override fun serialize(encoder: Encoder, value: CommandDispatchParams) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectorToolsParams requires JSON")
+                ?: throw SerializationException("CommandDispatchParams requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
+            output["name"] = json.encodeToJsonElement(value.name)
+            when (val patch = value.arg) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["arg"] = JsonNull
+                is Patch.Value -> output["arg"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.sessionId) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["session_id"] = JsonNull
+                is Patch.Value -> output["session_id"] = json.encodeToJsonElement(patch.value)
+            }
             when (val patch = value.profile) {
                 Patch.Absent -> Unit
                 Patch.Null -> output["profile"] = JsonNull
                 is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
             }
-            output["slug"] = json.encodeToJsonElement(value.slug)
-            value.refresh?.let { output["refresh"] = json.encodeToJsonElement(it) }
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
@@ -876,103 +194,879 @@ public data class ConnectorToolsParams(
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
-public data class ConnectorToolsResult(
-    @SerialName("connector")
-    public val connector: String,
-    @SerialName("toolkit_version")
-    public val toolkitVersion: String,
-    @SerialName("etag")
-    public val etag: String,
-    @SerialName("fetched_at")
-    public val fetchedAt: Double,
-    @SerialName("source")
-    public val source: ConnectorToolsSource,
-    @SerialName("stale")
-    public val stale: Boolean,
-    @SerialName("tools")
-    public val tools: List<ConnectorToolRow>,
+public data class CommandDispatchResult(
+    @SerialName("type")
+    public val type: DispatchType,
+    @SerialName("output")
+    public val output: String? = null,
+    @SerialName("target")
+    public val target: String? = null,
+    @SerialName("message")
+    public val message: String? = null,
+    @SerialName("notice")
+    public val notice: String? = null,
+    @SerialName("display")
+    public val display: String? = null,
+    @SerialName("name")
+    public val name: String? = null,
+    @SerialName("status")
+    public val status: String? = null,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorToolsSource.Serializer::class)
-public sealed interface ConnectorToolsSource {
-    public data object Cache : ConnectorToolsSource
-    public data object Network : ConnectorToolsSource
-    public data object Revalidated : ConnectorToolsSource
-    public data class Unknown(public val raw: kotlin.String) : ConnectorToolsSource
+@Serializable(with = CommandResolveParams.Serializer::class)
+public data class CommandResolveParams(
+    public val name: Patch<String> = Patch.Absent,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<CommandResolveParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Cache -> "cache"
-            Network -> "network"
-            Revalidated -> "revalidated"
-            is Unknown -> raw
+        override fun deserialize(decoder: Decoder): CommandResolveParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CommandResolveParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("CommandResolveParams requires an object")
+            return CommandResolveParams(
+                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
         }
 
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ConnectorToolsSource = when (raw) {
-            "cache" -> Cache
-            "network" -> Network
-            "revalidated" -> Revalidated
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ConnectorToolsSource> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectorToolsSource", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ConnectorToolsSource = when (val raw = decoder.decodeString()) {
-            "cache" -> Cache
-            "network" -> Network
-            "revalidated" -> Revalidated
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectorToolsSource) {
-            encoder.encodeString(value.rawValue)
+        override fun serialize(encoder: Encoder, value: CommandResolveParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CommandResolveParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.name) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["name"] = JsonNull
+                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
-public data class ConnectorsCatalogResult(
-    @SerialName("connectors")
-    public val connectors: List<ConnectorCatalogRow>,
+public data class CommandResolveResult(
+    @SerialName("canonical")
+    public val canonical: String,
+    @SerialName("description")
+    public val description: String,
+    @SerialName("category")
+    public val category: String,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectorsConnectParams.Serializer::class)
-public data class ConnectorsConnectParams(
+@Serializable(with = CommandsCatalogParams.Serializer::class)
+public data class CommandsCatalogParams(
+    public val sessionId: Patch<String> = Patch.Absent,
     public val profile: Patch<String> = Patch.Absent,
-    public val owner: ConnectorsConnectParamsOwner,
-    /** Must have at least 1 item. Each value must match `^[a-z0-9][a-z0-9_-]*$`. */
-    public val connectors: List<String>,
-    public val reconnect: Boolean? = null,
 )
 {
-    public object Serializer : KSerializer<ConnectorsConnectParams> {
+    public object Serializer : KSerializer<CommandsCatalogParams> {
         override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): ConnectorsConnectParams {
+        override fun deserialize(decoder: Decoder): CommandsCatalogParams {
             val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectorsConnectParams requires JSON")
+                ?: throw SerializationException("CommandsCatalogParams requires JSON")
             val json = jsonDecoder.json
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ConnectorsConnectParams requires an object")
-            return ConnectorsConnectParams(
+                ?: throw SerializationException("CommandsCatalogParams requires an object")
+            return CommandsCatalogParams(
+                sessionId = when (val raw = input["session_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                owner = json.decodeFromJsonElement<ConnectorsConnectParamsOwner>((input["owner"] ?: throw SerializationException("Missing owner"))),
-                connectors = json.decodeFromJsonElement<List<String>>((input["connectors"] ?: throw SerializationException("Missing connectors"))),
-                reconnect = input["reconnect"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
             )
         }
 
-        override fun serialize(encoder: Encoder, value: ConnectorsConnectParams) {
+        override fun serialize(encoder: Encoder, value: CommandsCatalogParams) {
             val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectorsConnectParams requires JSON")
+                ?: throw SerializationException("CommandsCatalogParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.sessionId) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["session_id"] = JsonNull
+                is Patch.Value -> output["session_id"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class CommandsCatalogResult(
+    @SerialName("pairs")
+    public val pairs: List<List<String>>? = null,
+    @SerialName("sub")
+    public val sub: Map<String, List<String>>? = null,
+    @SerialName("canon")
+    public val canon: Map<String, String>? = null,
+    @SerialName("commands")
+    public val commands: Map<String, CommandCatalogMeta>? = null,
+    @SerialName("categories")
+    public val categories: List<CommandCategory>? = null,
+    @SerialName("skills")
+    public val skills: Map<String, SkillCatalogEntry>? = null,
+    @SerialName("skill_count")
+    public val skillCount: Long? = null,
+    @SerialName("warning")
+    public val warning: String? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = CompletePathParams.Serializer::class)
+public data class CompletePathParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val word: Patch<String> = Patch.Absent,
+    public val cwd: Patch<String> = Patch.Absent,
+    public val sessionId: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<CompletePathParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): CompletePathParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CompletePathParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("CompletePathParams requires an object")
+            return CompletePathParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                word = when (val raw = input["word"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                cwd = when (val raw = input["cwd"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                sessionId = when (val raw = input["session_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: CompletePathParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CompletePathParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.word) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["word"] = JsonNull
+                is Patch.Value -> output["word"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.cwd) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["cwd"] = JsonNull
+                is Patch.Value -> output["cwd"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.sessionId) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["session_id"] = JsonNull
+                is Patch.Value -> output["session_id"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = CompleteSlashParams.Serializer::class)
+public data class CompleteSlashParams(
+    public val text: Patch<String> = Patch.Absent,
+    public val sessionId: Patch<String> = Patch.Absent,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<CompleteSlashParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): CompleteSlashParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CompleteSlashParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("CompleteSlashParams requires an object")
+            return CompleteSlashParams(
+                text = when (val raw = input["text"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                sessionId = when (val raw = input["session_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: CompleteSlashParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CompleteSlashParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.text) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["text"] = JsonNull
+                is Patch.Value -> output["text"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.sessionId) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["session_id"] = JsonNull
+                is Patch.Value -> output["session_id"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class CompleteSlashResult(
+    @SerialName("items")
+    public val items: List<CompletionItem>? = null,
+    @SerialName("replace_from")
+    public val replaceFrom: Long? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class CompletionItem(
+    @SerialName("text")
+    public val text: String,
+    @SerialName("display")
+    public val display: String? = null,
+    @SerialName("meta")
+    public val meta: String? = null,
+    @SerialName("kind")
+    public val kind: String? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class CompletionItemsResult(
+    @SerialName("items")
+    public val items: List<CompletionItem>? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = CompressionSummary.Serializer::class)
+public data class CompressionSummary(
+    public val noop: Boolean? = null,
+    public val aborted: Boolean? = null,
+    public val refusedWouldGrow: Boolean? = null,
+    public val fallbackUsed: Boolean? = null,
+    public val headline: String? = null,
+    public val tokenLine: String? = null,
+    public val note: String? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<CompressionSummary> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): CompressionSummary {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CompressionSummary requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("CompressionSummary requires an object")
+            return CompressionSummary(
+                noop = input["noop"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                aborted = input["aborted"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                refusedWouldGrow = input["refused_would_grow"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                fallbackUsed = input["fallback_used"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                headline = input["headline"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                tokenLine = input["token_line"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                note = input["note"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("noop", "aborted", "refused_would_grow", "fallback_used", "headline", "token_line", "note") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: CompressionSummary) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CompressionSummary requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("noop", "aborted", "refused_would_grow", "fallback_used", "headline", "token_line", "note")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            value.noop?.let { output["noop"] = json.encodeToJsonElement(it) }
+            value.aborted?.let { output["aborted"] = json.encodeToJsonElement(it) }
+            value.refusedWouldGrow?.let { output["refused_would_grow"] = json.encodeToJsonElement(it) }
+            value.fallbackUsed?.let { output["fallback_used"] = json.encodeToJsonElement(it) }
+            value.headline?.let { output["headline"] = json.encodeToJsonElement(it) }
+            value.tokenLine?.let { output["token_line"] = json.encodeToJsonElement(it) }
+            value.note?.let { output["note"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConfigGetParams.Serializer::class)
+public data class ConfigGetParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val key: String,
+    public val cwd: Patch<String> = Patch.Absent,
+    public val sessionId: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ConfigGetParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConfigGetParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConfigGetParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConfigGetParams requires an object")
+            return ConfigGetParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
+                cwd = when (val raw = input["cwd"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                sessionId = when (val raw = input["session_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConfigGetParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConfigGetParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            output["key"] = json.encodeToJsonElement(value.key)
+            when (val patch = value.cwd) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["cwd"] = JsonNull
+                is Patch.Value -> output["cwd"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.sessionId) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["session_id"] = JsonNull
+                is Patch.Value -> output["session_id"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ConfigGetResult(
+    @SerialName("value")
+    public val value: String? = null,
+    @SerialName("display")
+    public val display: String? = null,
+    @SerialName("tool_progress")
+    public val toolProgress: String? = null,
+    @SerialName("model")
+    public val model: String? = null,
+    @SerialName("provider")
+    public val provider: String? = null,
+    @SerialName("providers")
+    public val providers: List<ConfigProviderRef>? = null,
+    @SerialName("home")
+    public val home: String? = null,
+    @SerialName("cwd")
+    public val cwd: String? = null,
+    @SerialName("branch")
+    public val branch: String? = null,
+    @SerialName("config")
+    public val config: Map<String, JsonElement>? = null,
+    @SerialName("prompt")
+    public val prompt: String? = null,
+    @SerialName("mtime")
+    public val mtime: Double? = null,
+    @SerialName("mcp_rev")
+    public val mcpRev: String? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConfigProviderRef.Serializer::class)
+public data class ConfigProviderRef(
+    public val id: String,
+    public val label: String,
+    public val aliases: List<String>? = null,
+    public val authenticated: Boolean? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<ConfigProviderRef> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConfigProviderRef {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConfigProviderRef requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConfigProviderRef requires an object")
+            return ConfigProviderRef(
+                id = json.decodeFromJsonElement<String>((input["id"] ?: throw SerializationException("Missing id"))),
+                label = json.decodeFromJsonElement<String>((input["label"] ?: throw SerializationException("Missing label"))),
+                aliases = input["aliases"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
+                authenticated = input["authenticated"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("id", "label", "aliases", "authenticated") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConfigProviderRef) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConfigProviderRef requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("id", "label", "aliases", "authenticated")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            output["id"] = json.encodeToJsonElement(value.id)
+            output["label"] = json.encodeToJsonElement(value.label)
+            value.aliases?.let { output["aliases"] = json.encodeToJsonElement(it) }
+            value.authenticated?.let { output["authenticated"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ConfigSection(
+    @SerialName("title")
+    public val title: String,
+    @SerialName("rows")
+    public val rows: List<List<String>>? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConfigSetParams.Serializer::class)
+public data class ConfigSetParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val key: String,
+    public val value: JsonElement? = null,
+    public val sessionId: Patch<String> = Patch.Absent,
+    public val scope: Patch<String> = Patch.Absent,
+    public val confirmExpensiveModel: Boolean? = null,
+)
+{
+    public object Serializer : KSerializer<ConfigSetParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConfigSetParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConfigSetParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConfigSetParams requires an object")
+            return ConfigSetParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
+                value = input["value"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<JsonElement>(it) },
+                sessionId = when (val raw = input["session_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                scope = when (val raw = input["scope"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                confirmExpensiveModel = input["confirm_expensive_model"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConfigSetParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConfigSetParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            output["key"] = json.encodeToJsonElement(value.key)
+            value.value?.let { output["value"] = json.encodeToJsonElement(it) }
+            when (val patch = value.sessionId) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["session_id"] = JsonNull
+                is Patch.Value -> output["session_id"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.scope) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["scope"] = JsonNull
+                is Patch.Value -> output["scope"] = json.encodeToJsonElement(patch.value)
+            }
+            value.confirmExpensiveModel?.let { output["confirm_expensive_model"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ConfigSetResult(
+    @SerialName("key")
+    public val key: String,
+    @SerialName("value")
+    public val value: ConfigSetResultValue? = null,
+    @SerialName("warning")
+    public val warning: String? = null,
+    @SerialName("confirm_required")
+    public val confirmRequired: Boolean? = null,
+    @SerialName("confirm_message")
+    public val confirmMessage: String? = null,
+    @SerialName("scope")
+    public val scope: String? = null,
+    @SerialName("deferred")
+    public val deferred: Boolean? = null,
+    @SerialName("tool_progress")
+    public val toolProgress: String? = null,
+    @SerialName("cwd")
+    public val cwd: String? = null,
+    @SerialName("branch")
+    public val branch: String? = null,
+    @SerialName("history_reset")
+    public val historyReset: Boolean? = null,
+    @SerialName("info")
+    public val info: SessionLiveInfo? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConfigSetResultValue.Serializer::class)
+public sealed interface ConfigSetResultValue {
+    public data class StringValue(public val value: String) : ConfigSetResultValue
+    public data class BooleanValue(public val value: Boolean) : ConfigSetResultValue
+
+    public object Serializer : KSerializer<ConfigSetResultValue> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConfigSetResultValue {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConfigSetResultValue requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return BooleanValue(json.decodeFromJsonElement<Boolean>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No ConfigSetResultValue variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: ConfigSetResultValue) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConfigSetResultValue requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is StringValue -> json.encodeToJsonElement(value.value)
+                is BooleanValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConfigShowParams.Serializer::class)
+public data class ConfigShowParams(
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ConfigShowParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConfigShowParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConfigShowParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConfigShowParams requires an object")
+            return ConfigShowParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConfigShowParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConfigShowParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConfigShowResult.Serializer::class)
+public data class ConfigShowResult(
+    public val sections: List<ConfigSection>? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<ConfigShowResult> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConfigShowResult {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConfigShowResult requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConfigShowResult requires an object")
+            return ConfigShowResult(
+                sections = input["sections"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<ConfigSection>>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("sections") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConfigShowResult) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConfigShowResult requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("sections")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            value.sections?.let { output["sections"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConnectionActor.Serializer::class)
+public sealed interface ConnectionActor {
+    public data object User : ConnectionActor
+    public data object BackendWatcher : ConnectionActor
+    public data object Clock : ConnectionActor
+    public data class Unknown(public val raw: kotlin.String) : ConnectionActor
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            User -> "user"
+            BackendWatcher -> "backend_watcher"
+            Clock -> "clock"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionActor = when (raw) {
+            "user" -> User
+            "backend_watcher" -> BackendWatcher
+            "clock" -> Clock
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<ConnectionActor> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionActor", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): ConnectionActor = when (val raw = decoder.decodeString()) {
+            "user" -> User
+            "backend_watcher" -> BackendWatcher
+            "clock" -> Clock
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: ConnectionActor) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConnectionAnswer.Serializer::class)
+public data class ConnectionAnswer(
+    public val targets: List<ConnectionAnswerTarget>? = null,
+    public val settledBy: Patch<ConnectionSettleReason> = Patch.Absent,
+    public val said: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ConnectionAnswer> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConnectionAnswer {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConnectionAnswer requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConnectionAnswer requires an object")
+            return ConnectionAnswer(
+                targets = input["targets"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<ConnectionAnswerTarget>>(it) },
+                settledBy = when (val raw = input["settled_by"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ConnectionSettleReason>(raw)) },
+                said = when (val raw = input["said"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConnectionAnswer) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConnectionAnswer requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            value.targets?.let { output["targets"] = json.encodeToJsonElement(it) }
+            when (val patch = value.settledBy) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["settled_by"] = JsonNull
+                is Patch.Value -> output["settled_by"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.said) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["said"] = JsonNull
+                is Patch.Value -> output["said"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConnectionAnswerStatus.Serializer::class)
+public sealed interface ConnectionAnswerStatus {
+    public data object Approved : ConnectionAnswerStatus
+    public data object Skipped : ConnectionAnswerStatus
+    public data class Unknown(public val raw: kotlin.String) : ConnectionAnswerStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Approved -> "approved"
+            Skipped -> "skipped"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ConnectionAnswerStatus = when (raw) {
+            "approved" -> Approved
+            "skipped" -> Skipped
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<ConnectionAnswerStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ConnectionAnswerStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): ConnectionAnswerStatus = when (val raw = decoder.decodeString()) {
+            "approved" -> Approved
+            "skipped" -> Skipped
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: ConnectionAnswerStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConnectionAnswerTarget.Serializer::class)
+public data class ConnectionAnswerTarget(
+    public val name: String,
+    public val status: ConnectionAnswerStatus,
+    public val detail: Patch<String> = Patch.Absent,
+    public val env: Patch<Map<String, String>> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ConnectionAnswerTarget> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConnectionAnswerTarget {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConnectionAnswerTarget requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConnectionAnswerTarget requires an object")
+            return ConnectionAnswerTarget(
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                status = json.decodeFromJsonElement<ConnectionAnswerStatus>((input["status"] ?: throw SerializationException("Missing status"))),
+                detail = when (val raw = input["detail"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                env = when (val raw = input["env"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Map<String, String>>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConnectionAnswerTarget) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConnectionAnswerTarget requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["name"] = json.encodeToJsonElement(value.name)
+            output["status"] = json.encodeToJsonElement(value.status)
+            when (val patch = value.detail) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["detail"] = JsonNull
+                is Patch.Value -> output["detail"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.env) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["env"] = JsonNull
+                is Patch.Value -> output["env"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ConnectionDisplay(
+    @SerialName("suggested")
+    public val suggested: List<String>,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConnectionOperationParams.Serializer::class)
+public data class ConnectionOperationParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val owner: ConnectionOperationParamsOwner,
+    public val opId: String,
+)
+{
+    public object Serializer : KSerializer<ConnectionOperationParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConnectionOperationParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConnectionOperationParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ConnectionOperationParams requires an object")
+            return ConnectionOperationParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                owner = json.decodeFromJsonElement<ConnectionOperationParamsOwner>((input["owner"] ?: throw SerializationException("Missing owner"))),
+                opId = json.decodeFromJsonElement<String>((input["op_id"] ?: throw SerializationException("Missing op_id"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ConnectionOperationParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConnectionOperationParams requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
             when (val patch = value.profile) {
@@ -981,9 +1075,46 @@ public data class ConnectorsConnectParams(
                 is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
             }
             output["owner"] = json.encodeToJsonElement(value.owner)
-            output["connectors"] = json.encodeToJsonElement(value.connectors)
-            value.reconnect?.let { output["reconnect"] = json.encodeToJsonElement(it) }
+            output["op_id"] = json.encodeToJsonElement(value.opId)
             jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConnectionOperationParamsOwner.Serializer::class)
+public sealed interface ConnectionOperationParamsOwner {
+    public data class SessionOwnerValue(public val value: SessionOwner) : ConnectionOperationParamsOwner
+    public data class AccountOwnerValue(public val value: AccountOwner) : ConnectionOperationParamsOwner
+
+    public object Serializer : KSerializer<ConnectionOperationParamsOwner> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConnectionOperationParamsOwner {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConnectionOperationParamsOwner requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            val objectValue = input as? JsonObject
+                ?: throw SerializationException("ConnectionOperationParamsOwner requires an object")
+            val tag = (objectValue["type"] as? JsonPrimitive)?.content
+                ?: throw SerializationException("Missing type discriminator")
+            return when (tag) {
+                "account" -> AccountOwnerValue(json.decodeFromJsonElement<AccountOwner>(input))
+                "session" -> SessionOwnerValue(json.decodeFromJsonElement<SessionOwner>(input))
+                else -> throw SerializationException("Unknown type discriminator: $tag")
+            }
+        }
+
+        override fun serialize(encoder: Encoder, value: ConnectionOperationParamsOwner) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConnectionOperationParamsOwner requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is SessionOwnerValue -> json.encodeToJsonElement(value.value)
+                is AccountOwnerValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
         }
     }
 }

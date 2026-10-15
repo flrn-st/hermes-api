@@ -1,0 +1,14 @@
+{
+  "canonical_method_count": 41,
+  "commit": "297552a9d646119871391d202509822cd86330df",
+  "desktop_contract": 8,
+  "hermes_version": "0.22.1",
+  "hermes_version_source": "tag-record",
+  "method_count": 257,
+  "notification_count": 78,
+  "openrpc_sha256": "bd6d36746140019047d002372565624e137635c4dac91d4b1a0f1514361f0dd8",
+  "ref": "v0.22.1",
+  "schema_count": 853,
+  "server_request_count": 16,
+  "tag": "v0.22.1"
+}

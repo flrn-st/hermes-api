@@ -170,8 +170,7 @@ public object LiveScenarios {
         gateway.setServerRequestHandler { request ->
             when (request) {
                 is ServerRequest.Clarify -> {
-                    val questions = (request.params.questions as? Patch.Value)?.value
-                        ?: throw LiveScenarioFailure("Missing clarification questions")
+                    val questions = request.params.questions
                     check(questions.size == 1) { "Unexpected clarification request" }
                     if (questions[0].question == Fixture.WITHDRAWN_QUESTION) {
                         // Left open until Hermes withdraws it; the gateway then cancels this handler.
@@ -369,7 +368,7 @@ public object LiveScenarios {
         }
         val clarifications = AtomicInteger()
         gateway.setServerRequestHandler { request ->
-            val questions = ((request as? ServerRequest.Clarify)?.params?.questions as? Patch.Value)?.value
+            val questions = (request as? ServerRequest.Clarify)?.params?.questions
                 ?: throw LiveScenarioFailure("Unexpected server request during reconnect")
             if (clarifications.incrementAndGet() == 1) {
                 // Drop the socket while the question is open; the rebind must re-deliver it.
@@ -452,7 +451,7 @@ public object LiveScenarios {
                     event.seq?.let(turn.sequence::add)
                     if (event.replayed) turn.replayedEvents++
                     when (val payload = event.payload) {
-                        GatewayEventPayload.MessageStart -> turn.sawStart = true
+                        is GatewayEventPayload.MessageStart -> turn.sawStart = true
                         is GatewayEventPayload.ToolStart -> if (payload.payload.name == tool) turn.sawToolStart = true
                         is GatewayEventPayload.ToolComplete -> if (payload.payload.name == tool) {
                             turn.sawToolComplete = true
@@ -460,7 +459,7 @@ public object LiveScenarios {
                         }
                         is GatewayEventPayload.MessageDelta -> {
                             val first = turn.streamed.isEmpty()
-                            turn.streamed.append(payload.payload.text)
+                            payload.payload.text?.let { turn.streamed.append(it) }
                             if (first) onFirstDelta?.invoke()
                         }
                         is GatewayEventPayload.MessageComplete ->

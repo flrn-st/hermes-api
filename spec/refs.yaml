@@ -1,8 +1,11 @@
 # Stable, published Hermes releases by version, each with the upstream release tag it was built from.
-# The tag's pyproject.toml must state that version. Release candidates, canaries and development
-# branches are intentionally excluded.
+# Date tags (v2026.9.24, up to v0.21.5): the tag's pyproject.toml must state that version.
+# Version tags (v0.22.1 on): the tag must name the version itself and be the release automation's annotated
+# tag whose JSON record states that version and the tagged commit (see tools/ref_policy.py).
+# Release candidates, canaries and development branches are intentionally excluded.
 upstream: NousResearch/hermes-agent
 minimum_contract_version: v0.21.3
 releases:
   v0.21.4: v2026.9.21
   v0.21.5: v2026.9.24
+  v0.22.1: v0.22.1

@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "hermes"
-version = "0.21.5"
+version = "1.0.0"
 
 repositories {
     mavenCentral()

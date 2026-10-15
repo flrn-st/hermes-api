@@ -3,7 +3,9 @@ import Foundation
 
 /// Contracted gateway notifications; unknown types retain their raw JSON payload.
 public enum GatewayEventPayload: Sendable, Hashable {
+    case agentPrint(AgentPrintPayload)
     case agentTerminalOutput(TerminalOutputPayload)
+    case approvalCancelled(ApprovalCancelledPayload)
     case backgroundComplete(SideAgentCompletePayload)
     case billingStepUpVerification(BillingStepUpVerificationPayload)
     case botRelayOutboxPending(ChangeSignalPayload)
@@ -19,13 +21,13 @@ public enum GatewayEventPayload: Sendable, Hashable {
     case displayLease(DisplayLeasePayload)
     case displayStatus(DisplayStatusPayload)
     case error(ErrorPayload)
+    case freeTierChallenge(FreeTierChallengePayload)
     case gatewayReady(GatewayReadyPayload)
-    case layoutApply(LayoutApplyPayload)
     case messageComplete(MessageCompletePayload)
-    case messageDelta(StreamDeltaPayload)
+    case messageDelta(MessageDeltaPayload)
     case messageInterim(MessageInterimPayload)
     case messageReaction(MessageReactionPayload)
-    case messageStart
+    case messageStart(MessageStartPayload)
     case moaAggregating(MoaAggregatingPayload)
     case moaPhase(MoaPhasePayload)
     case moaProgress(MoaProgressPayload)
@@ -33,6 +35,7 @@ public enum GatewayEventPayload: Sendable, Hashable {
     case notice(NoticePayload)
     case notificationClear(NotificationClearPayload)
     case notificationShow(NotificationShowPayload)
+    case onboardingEnded(OnboardingEndedPayload)
     case pairingChanged(ChangeSignalPayload)
     case paneReveal(PaneRevealPayload)
     case petChanged(PetChangedPayload)
@@ -43,6 +46,7 @@ public enum GatewayEventPayload: Sendable, Hashable {
     case previewOpen(PreviewOpenPayload)
     case previewRestartComplete(SideAgentCompletePayload)
     case previewRestartProgress(PreviewRestartProgressPayload)
+    case projectsChanged(ChangeSignalPayload)
     case reaction(ReactionPayload)
     case reasoningAvailable(StreamDeltaPayload)
     case reasoningDelta(StreamDeltaPayload)
@@ -73,6 +77,7 @@ public enum GatewayEventPayload: Sendable, Hashable {
     case toolOutputRisk(ToolOutputRiskPayload)
     case toolStart(ToolStartPayload)
     case voiceInterrupted
+    case voicePartial(VoicePartialPayload)
     case voiceStatus(VoiceStatusPayload)
     case voiceTranscript(VoiceTranscriptPayload)
     case wakeDetected(WakeDetectedPayload)
@@ -81,8 +86,12 @@ public enum GatewayEventPayload: Sendable, Hashable {
     public static func decode(type: String, payload: JSONValue) throws -> GatewayEventPayload {
         let data = try JSONEncoder().encode(payload)
         switch type {
+        case "agent.print":
+            return .agentPrint(try JSONDecoder().decode(AgentPrintPayload.self, from: data))
         case "agent.terminal.output":
             return .agentTerminalOutput(try JSONDecoder().decode(TerminalOutputPayload.self, from: data))
+        case "approval.cancelled":
+            return .approvalCancelled(try JSONDecoder().decode(ApprovalCancelledPayload.self, from: data))
         case "background.complete":
             return .backgroundComplete(try JSONDecoder().decode(SideAgentCompletePayload.self, from: data))
         case "billing.step_up.verification":
@@ -113,21 +122,20 @@ public enum GatewayEventPayload: Sendable, Hashable {
             return .displayStatus(try JSONDecoder().decode(DisplayStatusPayload.self, from: data))
         case "error":
             return .error(try JSONDecoder().decode(ErrorPayload.self, from: data))
+        case "free_tier.challenge":
+            return .freeTierChallenge(try JSONDecoder().decode(FreeTierChallengePayload.self, from: data))
         case "gateway.ready":
             return .gatewayReady(try JSONDecoder().decode(GatewayReadyPayload.self, from: data))
-        case "layout.apply":
-            return .layoutApply(try JSONDecoder().decode(LayoutApplyPayload.self, from: data))
         case "message.complete":
             return .messageComplete(try JSONDecoder().decode(MessageCompletePayload.self, from: data))
         case "message.delta":
-            return .messageDelta(try JSONDecoder().decode(StreamDeltaPayload.self, from: data))
+            return .messageDelta(try JSONDecoder().decode(MessageDeltaPayload.self, from: data))
         case "message.interim":
             return .messageInterim(try JSONDecoder().decode(MessageInterimPayload.self, from: data))
         case "message.reaction":
             return .messageReaction(try JSONDecoder().decode(MessageReactionPayload.self, from: data))
         case "message.start":
-            _ = try JSONDecoder().decode(EmptyObject.self, from: data)
-            return .messageStart
+            return .messageStart(try JSONDecoder().decode(MessageStartPayload.self, from: data))
         case "moa.aggregating":
             return .moaAggregating(try JSONDecoder().decode(MoaAggregatingPayload.self, from: data))
         case "moa.phase":
@@ -142,6 +150,8 @@ public enum GatewayEventPayload: Sendable, Hashable {
             return .notificationClear(try JSONDecoder().decode(NotificationClearPayload.self, from: data))
         case "notification.show":
             return .notificationShow(try JSONDecoder().decode(NotificationShowPayload.self, from: data))
+        case "onboarding.ended":
+            return .onboardingEnded(try JSONDecoder().decode(OnboardingEndedPayload.self, from: data))
         case "pairing.changed":
             return .pairingChanged(try JSONDecoder().decode(ChangeSignalPayload.self, from: data))
         case "pane.reveal":
@@ -162,6 +172,8 @@ public enum GatewayEventPayload: Sendable, Hashable {
             return .previewRestartComplete(try JSONDecoder().decode(SideAgentCompletePayload.self, from: data))
         case "preview.restart.progress":
             return .previewRestartProgress(try JSONDecoder().decode(PreviewRestartProgressPayload.self, from: data))
+        case "projects.changed":
+            return .projectsChanged(try JSONDecoder().decode(ChangeSignalPayload.self, from: data))
         case "reaction":
             return .reaction(try JSONDecoder().decode(ReactionPayload.self, from: data))
         case "reasoning.available":
@@ -223,6 +235,8 @@ public enum GatewayEventPayload: Sendable, Hashable {
         case "voice.interrupted":
             _ = try JSONDecoder().decode(EmptyObject.self, from: data)
             return .voiceInterrupted
+        case "voice.partial":
+            return .voicePartial(try JSONDecoder().decode(VoicePartialPayload.self, from: data))
         case "voice.status":
             return .voiceStatus(try JSONDecoder().decode(VoiceStatusPayload.self, from: data))
         case "voice.transcript":
@@ -242,8 +256,11 @@ public enum ServerRequest: Sendable, Hashable {
     case previewAct(PreviewActRequestParams)
     case previewRead(ReadRangeRequestParams)
     case secret(SecretRequestParams)
+    case setupBeat(SetupBeatRequestParams)
     case sudo(SudoRequestParams)
     case terminalRead(ReadRangeRequestParams)
+    case themeApply(ThemeApplyRequestParams)
+    case themePick(ThemePickRequestParams)
     case tour(TourRequestParams)
     case vaultCode(VaultCodeRequestParams)
     case vaultSaveLogin(VaultSaveLoginRequestParams)
@@ -266,10 +283,16 @@ public enum ServerRequest: Sendable, Hashable {
             return .previewRead(try JSONDecoder().decode(ReadRangeRequestParams.self, from: data))
         case "secret":
             return .secret(try JSONDecoder().decode(SecretRequestParams.self, from: data))
+        case "setup_beat":
+            return .setupBeat(try JSONDecoder().decode(SetupBeatRequestParams.self, from: data))
         case "sudo":
             return .sudo(try JSONDecoder().decode(SudoRequestParams.self, from: data))
         case "terminal.read":
             return .terminalRead(try JSONDecoder().decode(ReadRangeRequestParams.self, from: data))
+        case "theme.apply":
+            return .themeApply(try JSONDecoder().decode(ThemeApplyRequestParams.self, from: data))
+        case "theme.pick":
+            return .themePick(try JSONDecoder().decode(ThemePickRequestParams.self, from: data))
         case "tour":
             return .tour(try JSONDecoder().decode(TourRequestParams.self, from: data))
         case "vault.code":
@@ -293,8 +316,11 @@ public enum ServerRequest: Sendable, Hashable {
         case .previewAct: "preview.act"
         case .previewRead: "preview.read"
         case .secret: "secret"
+        case .setupBeat: "setup_beat"
         case .sudo: "sudo"
         case .terminalRead: "terminal.read"
+        case .themeApply: "theme.apply"
+        case .themePick: "theme.pick"
         case .tour: "tour"
         case .vaultCode: "vault.code"
         case .vaultSaveLogin: "vault.save_login"
@@ -313,8 +339,11 @@ public enum ServerRequestResult: Sendable, Hashable {
     case previewAct(ValueResult)
     case previewRead(ValueResult)
     case secret(ValueResult)
+    case setupBeat(SetupBeatResult)
     case sudo(ValueResult)
     case terminalRead(ValueResult)
+    case themeApply(ValueResult)
+    case themePick(ThemePickResult)
     case tour(ValueResult)
     case vaultCode(ValueResult)
     case vaultSaveLogin(ValueResult)
@@ -329,8 +358,11 @@ public enum ServerRequestResult: Sendable, Hashable {
         case (.previewAct, .previewAct): true
         case (.previewRead, .previewRead): true
         case (.secret, .secret): true
+        case (.setupBeat, .setupBeat): true
         case (.sudo, .sudo): true
         case (.terminalRead, .terminalRead): true
+        case (.themeApply, .themeApply): true
+        case (.themePick, .themePick): true
         case (.tour, .tour): true
         case (.vaultCode, .vaultCode): true
         case (.vaultSaveLogin, .vaultSaveLogin): true
@@ -349,8 +381,11 @@ public enum ServerRequestResult: Sendable, Hashable {
         case .previewAct(let value): return try encoder.encode(value)
         case .previewRead(let value): return try encoder.encode(value)
         case .secret(let value): return try encoder.encode(value)
+        case .setupBeat(let value): return try encoder.encode(value)
         case .sudo(let value): return try encoder.encode(value)
         case .terminalRead(let value): return try encoder.encode(value)
+        case .themeApply(let value): return try encoder.encode(value)
+        case .themePick(let value): return try encoder.encode(value)
         case .tour(let value): return try encoder.encode(value)
         case .vaultCode(let value): return try encoder.encode(value)
         case .vaultSaveLogin(let value): return try encoder.encode(value)

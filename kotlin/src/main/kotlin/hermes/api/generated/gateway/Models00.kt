@@ -10,6 +10,93 @@ import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
+public data class A2aForwardParams(
+    @SerialName("agent")
+    public val agent: String,
+    @SerialName("tenant")
+    public val tenant: String,
+    @SerialName("peer")
+    public val peer: String,
+    @SerialName("context_id")
+    public val contextId: String,
+    @SerialName("input_id")
+    public val inputId: String,
+    @SerialName("text")
+    public val text: String,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class A2aForwardResult(
+    @SerialName("admission_id")
+    public val admissionId: String,
+    @SerialName("ref")
+    public val ref: CanonicalSessionRef,
+    @SerialName("sequence")
+    public val sequence: Long,
+    @SerialName("status")
+    public val status: A2aForwardResultStatus,
+    @SerialName("outcome")
+    public val outcome: String?,
+    @SerialName("authority_epoch")
+    public val authorityEpoch: Long,
+    @SerialName("execution_generation")
+    public val executionGeneration: Long?,
+    @SerialName("session_id")
+    public val sessionId: String,
+    @SerialName("result")
+    public val result: JsonElement?,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = A2aForwardResultStatus.Serializer::class)
+public sealed interface A2aForwardResultStatus {
+    public data object Queued : A2aForwardResultStatus
+    public data object Started : A2aForwardResultStatus
+    public data object KnownUnknown : A2aForwardResultStatus
+    public data object Terminal : A2aForwardResultStatus
+    public data class Unknown(public val raw: kotlin.String) : A2aForwardResultStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Queued -> "queued"
+            Started -> "started"
+            KnownUnknown -> "unknown"
+            Terminal -> "terminal"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): A2aForwardResultStatus = when (raw) {
+            "queued" -> Queued
+            "started" -> Started
+            "unknown" -> KnownUnknown
+            "terminal" -> Terminal
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<A2aForwardResultStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("A2aForwardResultStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): A2aForwardResultStatus = when (val raw = decoder.decodeString()) {
+            "queued" -> Queued
+            "started" -> Started
+            "unknown" -> KnownUnknown
+            "terminal" -> Terminal
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: A2aForwardResultStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
 public data class AccountOwner(
     @SerialName("type")
     public val type: AccountOwnerType,
@@ -122,6 +209,72 @@ public data class ActiveSubagent(
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
+public data class AdmissionStatus(
+    @SerialName("admission_id")
+    public val admissionId: String,
+    @SerialName("ref")
+    public val ref: CanonicalSessionRef,
+    @SerialName("sequence")
+    public val sequence: Long,
+    @SerialName("status")
+    public val status: AdmissionStatusStatus,
+    @SerialName("outcome")
+    public val outcome: String?,
+    @SerialName("authority_epoch")
+    public val authorityEpoch: Long,
+    @SerialName("execution_generation")
+    public val executionGeneration: Long?,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = AdmissionStatusStatus.Serializer::class)
+public sealed interface AdmissionStatusStatus {
+    public data object Queued : AdmissionStatusStatus
+    public data object Started : AdmissionStatusStatus
+    public data object KnownUnknown : AdmissionStatusStatus
+    public data object Terminal : AdmissionStatusStatus
+    public data class Unknown(public val raw: kotlin.String) : AdmissionStatusStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Queued -> "queued"
+            Started -> "started"
+            KnownUnknown -> "unknown"
+            Terminal -> "terminal"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): AdmissionStatusStatus = when (raw) {
+            "queued" -> Queued
+            "started" -> Started
+            "unknown" -> KnownUnknown
+            "terminal" -> Terminal
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<AdmissionStatusStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("AdmissionStatusStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): AdmissionStatusStatus = when (val raw = decoder.decodeString()) {
+            "queued" -> Queued
+            "started" -> Started
+            "unknown" -> KnownUnknown
+            "terminal" -> Terminal
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: AdmissionStatusStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
 public data class AgentPluginRow(
     @SerialName("name")
     public val name: String,
@@ -159,6 +312,13 @@ public data class AgentPluginRow(
     public val pinnedSha: String? = null,
     @SerialName("settings_schema")
     public val settingsSchema: List<PluginSettingField>? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class AgentPrintPayload(
+    @SerialName("text")
+    public val text: String,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
@@ -214,6 +374,21 @@ public data class AgentsListParams(
 public data class AgentsListResult(
     @SerialName("processes")
     public val processes: List<AgentProcessRow>? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ApprovalCancelledPayload(
+    @SerialName("session_id")
+    public val sessionId: String,
+    @SerialName("stored_session_id")
+    public val storedSessionId: String,
+    @SerialName("reason")
+    public val reason: String,
+    @SerialName("cancelled_count")
+    public val cancelledCount: Long,
+    @SerialName("request_ids")
+    public val requestIds: List<String>,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
@@ -868,248 +1043,4 @@ public data class BillingBlock(
     public val message: String,
     @SerialName("unverified")
     public val unverified: Boolean? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class BillingCardInfo(
-    @SerialName("brand")
-    public val brand: String,
-    @SerialName("last4")
-    public val last4: String,
-    @SerialName("masked")
-    public val masked: String,
-    @SerialName("display")
-    public val display: String? = null,
-    @SerialName("resolved_via")
-    public val resolvedVia: String? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = BillingChargeParams.Serializer::class)
-public data class BillingChargeParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val amountUsd: Patch<BillingChargeParamsAmountUsd> = Patch.Absent,
-    public val idempotencyKey: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<BillingChargeParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): BillingChargeParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("BillingChargeParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("BillingChargeParams requires an object")
-            return BillingChargeParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                amountUsd = when (val raw = input["amount_usd"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<BillingChargeParamsAmountUsd>(raw)) },
-                idempotencyKey = when (val raw = input["idempotency_key"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: BillingChargeParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("BillingChargeParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.amountUsd) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["amount_usd"] = JsonNull
-                is Patch.Value -> output["amount_usd"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.idempotencyKey) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["idempotency_key"] = JsonNull
-                is Patch.Value -> output["idempotency_key"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = BillingChargeParamsAmountUsd.Serializer::class)
-public sealed interface BillingChargeParamsAmountUsd {
-    public data class DoubleValue(public val value: Double) : BillingChargeParamsAmountUsd
-    public data class StringValue(public val value: String) : BillingChargeParamsAmountUsd
-
-    public object Serializer : KSerializer<BillingChargeParamsAmountUsd> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): BillingChargeParamsAmountUsd {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("BillingChargeParamsAmountUsd requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            try {
-                return DoubleValue(json.decodeFromJsonElement<Double>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            try {
-                return StringValue(json.decodeFromJsonElement<String>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            throw SerializationException("No BillingChargeParamsAmountUsd variant matched")
-        }
-
-        override fun serialize(encoder: Encoder, value: BillingChargeParamsAmountUsd) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("BillingChargeParamsAmountUsd requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is DoubleValue -> json.encodeToJsonElement(value.value)
-                is StringValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class BillingChargeResult(
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("error")
-    public val error: String? = null,
-    @SerialName("message")
-    public val message: String? = null,
-    @SerialName("portal_url")
-    public val portalUrl: String? = null,
-    @SerialName("retry_after")
-    public val retryAfter: BillingChargeResultRetryAfter? = null,
-    @SerialName("payload")
-    public val payload: Map<String, JsonElement>? = null,
-    @SerialName("actor")
-    public val actor: String? = null,
-    @SerialName("code")
-    public val code: String? = null,
-    @SerialName("recovery")
-    public val recovery: String? = null,
-    @SerialName("charge_id")
-    public val chargeId: String? = null,
-    @SerialName("idempotency_key")
-    public val idempotencyKey: String? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = BillingChargeResultRetryAfter.Serializer::class)
-public sealed interface BillingChargeResultRetryAfter {
-    public data class LongValue(public val value: Long) : BillingChargeResultRetryAfter
-    public data class DoubleValue(public val value: Double) : BillingChargeResultRetryAfter
-
-    public object Serializer : KSerializer<BillingChargeResultRetryAfter> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): BillingChargeResultRetryAfter {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("BillingChargeResultRetryAfter requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            try {
-                return LongValue(json.decodeFromJsonElement<Long>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            try {
-                return DoubleValue(json.decodeFromJsonElement<Double>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            throw SerializationException("No BillingChargeResultRetryAfter variant matched")
-        }
-
-        override fun serialize(encoder: Encoder, value: BillingChargeResultRetryAfter) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("BillingChargeResultRetryAfter requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is LongValue -> json.encodeToJsonElement(value.value)
-                is DoubleValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = BillingChargeStatusParams.Serializer::class)
-public data class BillingChargeStatusParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val chargeId: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<BillingChargeStatusParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): BillingChargeStatusParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("BillingChargeStatusParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("BillingChargeStatusParams requires an object")
-            return BillingChargeStatusParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                chargeId = when (val raw = input["charge_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: BillingChargeStatusParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("BillingChargeStatusParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.chargeId) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["charge_id"] = JsonNull
-                is Patch.Value -> output["charge_id"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class BillingChargeStatusResult(
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("error")
-    public val error: String? = null,
-    @SerialName("message")
-    public val message: String? = null,
-    @SerialName("portal_url")
-    public val portalUrl: String? = null,
-    @SerialName("retry_after")
-    public val retryAfter: BillingChargeStatusResultRetryAfter? = null,
-    @SerialName("payload")
-    public val payload: Map<String, JsonElement>? = null,
-    @SerialName("actor")
-    public val actor: String? = null,
-    @SerialName("code")
-    public val code: String? = null,
-    @SerialName("recovery")
-    public val recovery: String? = null,
-    @SerialName("status")
-    public val status: String? = null,
-    @SerialName("amount_usd")
-    public val amountUsd: BillingChargeStatusResultAmountUsd? = null,
-    @SerialName("settled_at")
-    public val settledAt: String? = null,
-    @SerialName("reason")
-    public val reason: String? = null,
 )

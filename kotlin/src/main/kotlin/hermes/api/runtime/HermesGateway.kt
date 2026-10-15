@@ -651,7 +651,7 @@ public class HermesGateway(
                 settledSnapshotRequests.add(payload.payload.id)
                 serverJobs.remove(payload.payload.id)?.cancel()
             }
-            GatewayEventPayload.MessageStart -> sessionId?.let { setTurn(it, true) }
+            is GatewayEventPayload.MessageStart -> sessionId?.let { setTurn(it, true) }
             is GatewayEventPayload.MessageComplete, is GatewayEventPayload.Error -> sessionId?.let { setTurn(it, false) }
             is GatewayEventPayload.SessionReclaimed -> {
                 val reclaimed = payload.payload

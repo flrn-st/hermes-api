@@ -7,11 +7,13 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import hermes.api.generated.gateway.MessageStartPayload
 import hermes.api.generated.gateway.ApprovalChoice
 import hermes.api.generated.gateway.ApprovalResult
 import hermes.api.generated.gateway.ClarifyRequestParams
@@ -49,7 +51,7 @@ import kotlin.test.assertTrue
 private suspend fun connectAndAnswer(gateway: HermesGatewayClient): GatewayEvent = coroutineScope {
     gateway.setServerRequestHandler { request ->
         val clarify = request as? ServerRequest.Clarify ?: throw HermesGatewayException.Transport("Unexpected request")
-        ServerRequestResult.Clarify(ClarifyResult(answer = "Answer for ${clarify.params.sessionId}"))
+        ServerRequestResult.Clarify(ClarifyResult(answers = mapOf("q1" to "Answer for ${clarify.params.sessionId}")))
     }
     val firstEvent = async(start = CoroutineStart.UNDISPATCHED) { gateway.events.first() }
     gateway.connect()
@@ -66,12 +68,12 @@ class TestingSupportTest {
         fake.emit("message.start", sessionId = "s1", seq = 1)
         val event = withTimeout(3_000) { app.await() }
         assertEquals("s1", event.sessionId)
-        assertEquals(GatewayEventPayload.MessageStart, event.payload)
+        assertEquals(GatewayEventPayload.MessageStart(MessageStartPayload()), event.payload)
         assertEquals(listOf("ping"), fake.calls.map { it.method })
         assertEquals(listOf("connect"), fake.lifecycle)
 
-        val answer = fake.request("clarify", JsonObject(mapOf("session_id" to JsonPrimitive("s1"))))
-        assertEquals(ServerRequestResult.Clarify(ClarifyResult(answer = "Answer for s1")), answer)
+        val answer = fake.request("clarify", JsonObject(mapOf("session_id" to JsonPrimitive("s1"), "questions" to JsonArray(emptyList()))))
+        assertEquals(ServerRequestResult.Clarify(ClarifyResult(answers = mapOf("q1" to "Answer for s1"))), answer)
     }
 
     @Test
@@ -79,7 +81,7 @@ class TestingSupportTest {
         val fake = FakeGateway()
         fake.setServerRequestHandler { ServerRequestResult.Approval(ApprovalResult(choice = ApprovalChoice.Deny)) }
         assertFailsWith<HermesGatewayException.Protocol> {
-            fake.request(ServerRequest.Clarify(ClarifyRequestParams(sessionId = "s1")))
+            fake.request(ServerRequest.Clarify(ClarifyRequestParams(sessionId = "s1", questions = emptyList())))
         }
         assertEquals(-32601, assertFailsWith<HermesGatewayException.RPC> { fake.methods.ping(PingParams()) }.code)
     }
@@ -118,19 +120,19 @@ class TestingSupportTest {
         ), scope = backgroundScope)
         gateway.setServerRequestHandler {
             val context = currentServerRequest() ?: error("No server request context")
-            ServerRequestResult.Clarify(ClarifyResult(answer = "${context.method} ${context.id}"))
+            ServerRequestResult.Clarify(ClarifyResult(answers = mapOf("q1" to "${context.method} ${context.id}")))
         }
         gateway.connect()
-        socket.inject(GatewayFrames.serverRequest("srq-1", "clarify", """{"session_id":"s1"}"""))
+        socket.inject(GatewayFrames.serverRequest("srq-1", "clarify", """{"session_id":"s1","questions":[]}"""))
         val answer = SentAnswer(withTimeout(3_000) { socket.sent.receive() })
         assertEquals("srq-1", answer.id)
-        assertEquals(JsonObject(mapOf("answer" to JsonPrimitive("clarify srq-1"))), answer.result)
+        assertEquals(JsonObject(mapOf("answers" to JsonObject(mapOf("q1" to JsonPrimitive("clarify srq-1"))))), answer.result)
         gateway.disconnect()
 
         val fake = FakeGateway()
-        fake.setServerRequestHandler { ServerRequestResult.Clarify(ClarifyResult(answer = currentServerRequest()?.id)) }
-        val faked = fake.request(ServerRequest.Clarify(ClarifyRequestParams(sessionId = "s1")), id = "srq-2")
-        assertEquals(ServerRequestResult.Clarify(ClarifyResult(answer = "srq-2")), faked)
+        fake.setServerRequestHandler { ServerRequestResult.Clarify(ClarifyResult(answers = mapOf("q1" to currentServerRequest()?.id))) }
+        val faked = fake.request(ServerRequest.Clarify(ClarifyRequestParams(sessionId = "s1", questions = emptyList())), id = "srq-2")
+        assertEquals(ServerRequestResult.Clarify(ClarifyResult(answers = mapOf("q1" to "srq-2"))), faked)
         val caller: RESTCaller = ScriptedRESTCaller(routes = emptyMap())
         caller.methods.sessions
     }

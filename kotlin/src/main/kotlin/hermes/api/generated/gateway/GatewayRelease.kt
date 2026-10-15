@@ -3,10 +3,10 @@ package hermes.api.generated.gateway
 
 /** Release identity and protocol compatibility of this generated gateway contract. */
 public object HermesGatewayContract {
-    public const val release: String = "v0.21.5"
-    public const val upstreamVersion: String = "0.21.5"
+    public const val release: String = "v0.22.1"
+    public const val upstreamVersion: String = "0.22.1"
     /** The upstream git tag of this release. */
-    public const val upstreamTag: String = "v2026.9.24"
+    public const val upstreamTag: String = "v0.22.1"
     /** The desktop contract of this release. Hermes raises it whenever clients need something new from
      *  the backend, so a backend reporting it or higher offers everything this package relies on. */
     public const val desktopContract: Int = 8

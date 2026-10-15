@@ -67,6 +67,81 @@ public enum class GatewayKnownError(
     UNKNOWN_METHOD(GatewayErrorKind.UNSUPPORTED, "unknownMethod"),
 }
 
+/**
+ * Why Hermes' session authority (the unified gateway runtime) refused a call: the reason of its `4001`
+ * answers, which it sends as the message and as `data.reason`. See [hermes.api.runtime.refusal].
+ */
+public enum class GatewayRefusalReason(
+    /** The reason as Hermes sends it. */
+    public val wire: String,
+    public val kind: GatewayErrorKind,
+) {
+    ACP_MCP_DISCOVERY_FAILED("acp_mcp_discovery_failed", GatewayErrorKind.UNAVAILABLE),
+    ACP_MCP_POLICY_CONFLICT("acp_mcp_policy_conflict", GatewayErrorKind.CONFLICT),
+    ACP_MCP_SCHEMA_CHANGED("acp_mcp_schema_changed", GatewayErrorKind.CONFLICT),
+    ADMISSION_CONFLICT("admission_conflict", GatewayErrorKind.CONFLICT),
+    APPROVAL_NOT_PENDING("approval_not_pending", GatewayErrorKind.CONFLICT),
+    COMMAND_FAILED("command_failed", GatewayErrorKind.SERVER_ERROR),
+    COMMAND_TIMEOUT("command_timeout", GatewayErrorKind.SERVER_ERROR),
+    COMMAND_UNAVAILABLE("command_unavailable", GatewayErrorKind.UNSUPPORTED),
+    COMPRESSION_CHECKPOINT_REQUIRED("compression_checkpoint_required", GatewayErrorKind.CONFLICT),
+    CWD_UNAVAILABLE("cwd_unavailable", GatewayErrorKind.UNAVAILABLE),
+    DANGEROUS_COMMAND("dangerous_command", GatewayErrorKind.FORBIDDEN),
+    EXECUTION_NOT_READY("execution_not_ready", GatewayErrorKind.BUSY),
+    EXPORT_TOO_LARGE("export_too_large", GatewayErrorKind.CONFLICT),
+    FAST_UNAVAILABLE("fast_unavailable", GatewayErrorKind.UNSUPPORTED),
+    INVALID_CHECKPOINT("invalid_checkpoint", GatewayErrorKind.INVALID_REQUEST),
+    INVALID_KANBAN_CLAIM("invalid_kanban_claim", GatewayErrorKind.INVALID_REQUEST),
+    INVALID_PARAMS("invalid_params", GatewayErrorKind.INVALID_REQUEST),
+    INVALID_WORKER_FRAME("invalid_worker_frame", GatewayErrorKind.INVALID_REQUEST),
+    INVALID_WORKER_RESULT("invalid_worker_result", GatewayErrorKind.INVALID_REQUEST),
+    LAUNCH_CREDENTIALS_UNAVAILABLE("launch_credentials_unavailable", GatewayErrorKind.UNAVAILABLE),
+    MANAGED_WORKER_FAILED("managed_worker_failed", GatewayErrorKind.SERVER_ERROR),
+    MANAGED_WORKER_HELLO_TIMEOUT("managed_worker_hello_timeout", GatewayErrorKind.UNAVAILABLE),
+    MANAGED_WORKER_LOST("managed_worker_lost", GatewayErrorKind.UNAVAILABLE),
+    MANAGED_WORKER_STOPPED("managed_worker_stopped", GatewayErrorKind.SERVER_ERROR),
+    MODEL_RESOLUTION_FAILED("model_resolution_failed", GatewayErrorKind.SERVER_ERROR),
+    NOT_FOUND("not_found", GatewayErrorKind.NOT_FOUND),
+    OPEN_USER_TAIL("open_user_tail", GatewayErrorKind.CONFLICT),
+    PERMISSION_DENIED("permission_denied", GatewayErrorKind.FORBIDDEN),
+    PROCESS_NOT_FOUND("process_not_found", GatewayErrorKind.NOT_FOUND),
+    PRODUCER_NOT_STARTED("producer_not_started", GatewayErrorKind.CONFLICT),
+    PROFILE_MISMATCH("profile_mismatch", GatewayErrorKind.FORBIDDEN),
+    QUEUE_FULL("queue_full", GatewayErrorKind.BUSY),
+    REVISION_CONFLICT("revision_conflict", GatewayErrorKind.CONFLICT),
+    RUNTIME_COORDINATION_REQUIRED("runtime_coordination_required", GatewayErrorKind.UNAVAILABLE),
+    RUNTIME_DRAINING("runtime_draining", GatewayErrorKind.UNAVAILABLE),
+    RUNTIME_RETIRED("runtime_retired", GatewayErrorKind.UNAVAILABLE),
+    SESSION_BUSY("session_busy", GatewayErrorKind.BUSY),
+    STALE_EPOCH("stale_epoch", GatewayErrorKind.CONFLICT),
+    STALE_GENERATION("stale_generation", GatewayErrorKind.CONFLICT),
+    STALE_KANBAN_CLAIM("stale_kanban_claim", GatewayErrorKind.CONFLICT),
+    STORAGE_UNAVAILABLE("storage_unavailable", GatewayErrorKind.UNAVAILABLE),
+    UNKNOWN_EXECUTION("unknown_execution", GatewayErrorKind.NOT_FOUND),
+    UNKNOWN_PERSONALITY("unknown_personality", GatewayErrorKind.INVALID_REQUEST),
+    UNKNOWN_SKILL("unknown_skill", GatewayErrorKind.INVALID_REQUEST),
+    UNSUPPORTED_COMMAND("unsupported_command", GatewayErrorKind.UNSUPPORTED),
+    UNSUPPORTED_COMPRESS_OPTIONS("unsupported_compress_options", GatewayErrorKind.INVALID_REQUEST),
+    UNSUPPORTED_CONTROL("unsupported_control", GatewayErrorKind.UNSUPPORTED),
+    UNSUPPORTED_MANAGED_POLICY("unsupported_managed_policy", GatewayErrorKind.UNSUPPORTED),
+    UNSUPPORTED_OPERATION("unsupported_operation", GatewayErrorKind.UNSUPPORTED),
+    UNSUPPORTED_PRODUCER("unsupported_producer", GatewayErrorKind.UNSUPPORTED),
+    UNSUPPORTED_PROJECTION("unsupported_projection", GatewayErrorKind.UNSUPPORTED),
+    UNSUPPORTED_TERMINAL_BACKEND("unsupported_terminal_backend", GatewayErrorKind.UNSUPPORTED),
+    USE_SESSION_MUTATION_MODEL("use_session_mutation_model", GatewayErrorKind.INVALID_REQUEST),
+    WORKER_CONTROL_BACKPRESSURE("worker_control_backpressure", GatewayErrorKind.BUSY),
+    WORKER_NOT_LIVE("worker_not_live", GatewayErrorKind.CONFLICT),
+    WORKSPACE_UNAVAILABLE("workspace_unavailable", GatewayErrorKind.UNAVAILABLE),
+    ;
+
+    public companion object {
+        private val byWire = entries.associateBy { it.wire }
+
+        /** The reviewed reason Hermes sent as [wire], or null for one this release does not raise. */
+        public fun fromWire(wire: String): GatewayRefusalReason? = byWire[wire]
+    }
+}
+
 /** The reviewed classification of a code; message templates override its kind. */
 internal class GatewayCodeRule(
     val kind: GatewayErrorKind,
@@ -184,6 +259,8 @@ internal object GatewayErrorRules {
         )),
         4032 to GatewayCodeRule(GatewayErrorKind.FORBIDDEN, listOf(
         )),
+        4033 to GatewayCodeRule(GatewayErrorKind.INVALID_REQUEST, listOf(
+        )),
         4040 to GatewayCodeRule(GatewayErrorKind.NOT_FOUND, listOf(
         )),
         4041 to GatewayCodeRule(GatewayErrorKind.NOT_FOUND, listOf(
@@ -210,13 +287,10 @@ internal object GatewayErrorRules {
         )),
         4071 to GatewayCodeRule(GatewayErrorKind.INVALID_REQUEST, listOf(
         )),
-        4072 to GatewayCodeRule(GatewayErrorKind.NOT_FOUND, listOf(
-        )),
         4090 to GatewayCodeRule(GatewayErrorKind.CONFLICT, listOf(
-            listOf("profile and message required") to GatewayErrorKind.INVALID_REQUEST,
+            listOf("invalid_params") to GatewayErrorKind.INVALID_REQUEST,
         )),
         4091 to GatewayCodeRule(GatewayErrorKind.BUSY, listOf(
-            listOf("message too long") to GatewayErrorKind.INVALID_REQUEST,
         )),
         4092 to GatewayCodeRule(GatewayErrorKind.NOT_FOUND, listOf(
         )),
@@ -257,6 +331,10 @@ internal object GatewayErrorRules {
         4124 to GatewayCodeRule(GatewayErrorKind.INVALID_REQUEST, listOf(
         )),
         4130 to GatewayCodeRule(GatewayErrorKind.CONFLICT, listOf(
+        )),
+        4131 to GatewayCodeRule(GatewayErrorKind.CONFLICT, listOf(
+        )),
+        4132 to GatewayCodeRule(GatewayErrorKind.CONFLICT, listOf(
         )),
         4403 to GatewayCodeRule(GatewayErrorKind.FORBIDDEN, listOf(
             listOf("command_id required") to GatewayErrorKind.INVALID_REQUEST,
@@ -357,17 +435,19 @@ internal object GatewayErrorRules {
         )),
         5066 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
         )),
-        5067 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
-        )),
         5070 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
         )),
         5071 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
         )),
         5072 to GatewayCodeRule(GatewayErrorKind.UNAVAILABLE, listOf(
         )),
-        5073 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
+        5077 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
         )),
-        5074 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
+        5078 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
+        )),
+        5079 to GatewayCodeRule(GatewayErrorKind.UNAVAILABLE, listOf(
+        )),
+        5080 to GatewayCodeRule(GatewayErrorKind.CONFLICT, listOf(
         )),
         5090 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
         )),
@@ -383,6 +463,10 @@ internal object GatewayErrorRules {
             listOf("", " is not an enabled password manager") to GatewayErrorKind.CONFLICT,
         )),
         5096 to GatewayCodeRule(GatewayErrorKind.BUSY, listOf(
+        )),
+        5097 to GatewayCodeRule(GatewayErrorKind.BUSY, listOf(
+        )),
+        5098 to GatewayCodeRule(GatewayErrorKind.UNAVAILABLE, listOf(
         )),
         5110 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
         )),
@@ -411,11 +495,15 @@ internal object GatewayErrorRules {
         5300 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
             listOf("Bot Desktop runs on Linux gateway hosts only") to GatewayErrorKind.UNSUPPORTED,
             listOf("a human holds this screen; pass force: true to stop it anyway") to GatewayErrorKind.CONFLICT,
+            listOf("no sandbox image switch is pending for this profile") to GatewayErrorKind.CONFLICT,
             listOf("no supported package manager (apt-get, dnf, pacman) on this host") to GatewayErrorKind.UNSUPPORTED,
             listOf("this profile's Bot Desktop is not running; call display.start first") to GatewayErrorKind.CONFLICT,
+            listOf("this profile's screen lives inside the terminal backend's sandbox; give that sandbox an image with the desktop stack (nousresearch/hermes-sandbox:desktop) instead of installing on the gateway host") to GatewayErrorKind.UNSUPPORTED,
             listOf("viewer_id required") to GatewayErrorKind.INVALID_REQUEST,
             listOf("viewer_id required to release another viewer's lease (or pass force: true)") to GatewayErrorKind.INVALID_REQUEST,
             listOf("viewer_id was not minted for this connection; call display.observe first") to GatewayErrorKind.FORBIDDEN,
+        )),
+        5400 to GatewayCodeRule(GatewayErrorKind.SERVER_ERROR, listOf(
         )),
     )
 

@@ -14,6 +14,7 @@ class BootstrapTest {
         val current = Files.readString(Path.of("../spec/current-release.txt")).trim()
         assertEquals(current, HermesGatewayContract.release)
         assertEquals(current.removePrefix("v"), HermesGatewayContract.upstreamVersion)
-        assertTrue(HermesGatewayContract.upstreamTag.startsWith("v20"))
+        // Hermes tagged releases by date up to v0.21.5 (v2026.9.24) and by version from v0.22.1.
+        assertTrue(HermesGatewayContract.upstreamTag.startsWith("v20") || HermesGatewayContract.upstreamTag == current)
     }
 }

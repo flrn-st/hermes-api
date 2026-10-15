@@ -1,0 +1,14 @@
+{
+  "bundled_plugin_apis": [
+    "hermes-achievements",
+    "kanban"
+  ],
+  "commit": "297552a9d646119871391d202509822cd86330df",
+  "mounted_plugin_apis": [
+    "hermes-achievements",
+    "kanban"
+  ],
+  "operation_count": 344,
+  "path_count": 302,
+  "ref": "v0.22.1"
+}

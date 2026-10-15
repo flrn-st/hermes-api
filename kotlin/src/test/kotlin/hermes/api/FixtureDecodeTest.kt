@@ -82,8 +82,7 @@ class FixtureDecodeTest {
                 when (name) {
                     "clarify" -> {
                         val request = json.decodeFromJsonElement(ClarifyRequestParams.serializer(), frame.getValue("params"))
-                        val questions = (request.questions as? Patch.Value)?.value
-                            ?: error("Missing recorded clarification")
+                        val questions = request.questions
                         if (answerBody == JsonNull) {
                             // Left open for Hermes to withdraw.
                             assertEquals("Which HermesAPI question will be withdrawn?", questions.single().question)
@@ -161,7 +160,7 @@ class FixtureDecodeTest {
                     }
                 }
                 if (payload is GatewayEventPayload.MessageDelta) {
-                    assertTrue(payload.payload.text.trim() in FIXTURE_REPLIES)
+                    assertTrue(payload.payload.text.orEmpty().trim() in FIXTURE_REPLIES)
                 }
                 if (payload is GatewayEventPayload.ToolStart) assertTrue(payload.payload.name in FIXTURE_TOOLS)
                 if (payload is GatewayEventPayload.ToolComplete) {

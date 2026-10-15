@@ -52,9 +52,7 @@ private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task",
             case "clarify":
                 let request = try decoder.decode(ClarifyRequestParams.self,
                                                  from: JSONEncoder().encode(frame["params"]))
-                guard case .value(let questions) = request.questions else {
-                    throw HermesGatewayError.decoding("Missing recorded clarification")
-                }
+                let questions = request.questions
                 if record.answer == nil || record.answer == .null {
                     // Left open for Hermes to withdraw.
                     #expect(questions.count == 1 && questions[0].question == "Which HermesAPI question will be withdrawn?")
@@ -130,7 +128,7 @@ private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task",
                 #expect(fixtureReplies.contains(text))
             }
             if case .messageDelta(let delta) = payload {
-                #expect(fixtureReplies.contains(delta.text.trimmingCharacters(in: .whitespacesAndNewlines)))
+                #expect(fixtureReplies.contains((delta.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)))
             }
             if case .toolStart(let started) = payload {
                 #expect(fixtureTools.contains(started.name))

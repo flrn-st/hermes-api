@@ -29,11 +29,13 @@ public struct GatewayMethodCatalog: Sendable {
     public var gateway: GatewayMethods { GatewayMethods(caller: caller) }
     public var groups: GroupsMethods { GroupsMethods(caller: caller) }
     public var handoff: HandoffMethods { HandoffMethods(caller: caller) }
+    public var i18n: I18nMethods { I18nMethods(caller: caller) }
     public var image: ImageMethods { ImageMethods(caller: caller) }
     public var input: InputMethods { InputMethods(caller: caller) }
     public var insights: InsightsMethods { InsightsMethods(caller: caller) }
     public var learning: LearningMethods { LearningMethods(caller: caller) }
     public var llm: LlmMethods { LlmMethods(caller: caller) }
+    public var machine: MachineMethods { MachineMethods(caller: caller) }
     public var mcp: McpMethods { McpMethods(caller: caller) }
     public var message: MessageMethods { MessageMethods(caller: caller) }
     public var model: ModelMethods { ModelMethods(caller: caller) }
@@ -53,6 +55,7 @@ public struct GatewayMethodCatalog: Sendable {
     public var rollback: RollbackMethods { RollbackMethods(caller: caller) }
     public var session: SessionMethods { SessionMethods(caller: caller) }
     public var setup: SetupMethods { SetupMethods(caller: caller) }
+    public var sharedMetrics: SharedMetricsMethods { SharedMetricsMethods(caller: caller) }
     public var shell: ShellMethods { ShellMethods(caller: caller) }
     public var skills: SkillsMethods { SkillsMethods(caller: caller) }
     public var slash: SlashMethods { SlashMethods(caller: caller) }
@@ -68,6 +71,8 @@ public struct GatewayMethodCatalog: Sendable {
     public var verification: VerificationMethods { VerificationMethods(caller: caller) }
     public var voice: VoiceMethods { VoiceMethods(caller: caller) }
     public var wake: WakeMethods { WakeMethods(caller: caller) }
+    /// The unified gateway runtime's strict methods. See `CanonicalMethodCatalog`.
+    public var canonical: CanonicalMethodCatalog { CanonicalMethodCatalog(caller: caller) }
 
     /// Cheapest liveness probe; answered on the WS reader thread even while every agent is mid-turn.
     public func ping(_ params: PingParams) async throws -> PingResult {
@@ -85,7 +90,7 @@ public struct AgentsMethods: Sendable {
     /// - 4001 notFound: "session not found"
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     /// - 5033 unsupported
     public func list(_ params: AgentsListParams) async throws -> AgentsListResult {
         try await caller.call("agents.list", params: params, as: AgentsListResult.self)
@@ -101,7 +106,7 @@ public struct ApprovalMethods: Sendable {
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
     /// - 5004 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func pending(_ params: ApprovalPendingParams) async throws -> ApprovalPendingResult {
         try await caller.call("approval.pending", params: params, as: ApprovalPendingResult.self)
     }
@@ -111,7 +116,7 @@ public struct ApprovalMethods: Sendable {
     /// - 4001 notFound: "session not found"
     /// - 4006 invalidRequest: "request_id required"
     /// - 5004 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func received(_ params: ApprovalReceivedParams) async throws -> ApprovalReceivedResult {
         try await caller.call("approval.received", params: params, as: ApprovalReceivedResult.self)
     }
@@ -120,7 +125,7 @@ public struct ApprovalMethods: Sendable {
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
     /// - 5004 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func respond(_ params: ApprovalRespondParams) async throws -> ApprovalRespondResult {
         try await caller.call("approval.respond", params: params, as: ApprovalRespondResult.self)
     }
@@ -159,13 +164,9 @@ public struct BotRelayMethods: Sendable {
     /// Deliver a relayed DM into a Bot Chat on this gateway and return the one-turn reply (blocking).
     ///
     /// Hermes' handler can answer with these errors:
-    /// - 4090 invalidRequest: "profile and message required"
-    /// - 4091 invalidRequest: "message too long"
+    /// - 4090 invalidRequest: "invalid_params"
     /// - 4092 notFound: "no profile '{…}' on this gateway"
-    /// - 5092 serverError: "delivery turn failed: {…}"
-    /// - 5093 serverError: "delivery turn timed out"
     /// - 5094 serverError
-    /// - 5096 busy
     public func deliver(_ params: BotRelayDeliverParams) async throws -> BotRelayDeliverResult {
         try await caller.call("bot_relay.deliver", params: params, as: BotRelayDeliverResult.self)
     }
@@ -226,7 +227,7 @@ public struct BrowserMethods: Sendable {
     public func controllerResult(_ params: BrowserControllerResultParams) async throws -> BrowserControllerResultResult {
         try await caller.call("browser.controller.result", params: params, as: BrowserControllerResultResult.self)
     }
-    /// Inspect, attach to, or drop the CDP browser the tools use; ``messages`` narrate a connect.
+    /// Inspect, attach to, or drop the CDP browser the tools use, or switch Browser Use mode (``use``, applies to new sessions); ``messages`` narrate a connect.
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4015 invalidRequest: "browser url must be a string, got {…}", "invalid port in browser url: {…}", "missing host in browser url: {…}", "unknown action: {…}", …
@@ -310,7 +311,7 @@ public struct CommandMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5012 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func resolve(_ params: CommandResolveParams) async throws -> CommandResolveResult {
         try await caller.call("command.resolve", params: params, as: CommandResolveResult.self)
     }
@@ -327,7 +328,7 @@ public struct CommandsMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5020 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func catalog(_ params: CommandsCatalogParams) async throws -> CommandsCatalogResult {
         try await caller.call("commands.catalog", params: params, as: CommandsCatalogResult.self)
     }
@@ -380,7 +381,7 @@ public struct ConfigMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5030 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func show(_ params: ConfigShowParams) async throws -> ConfigShowResult {
         try await caller.call("config.show", params: params, as: ConfigShowResult.self)
     }
@@ -435,6 +436,19 @@ public struct ConnectorsMethods: Sendable {
     /// - 5034 unavailable: "Connector accounts are unavailable."
     public func accountsRemove(_ params: ConnectorAccountsRemoveParams) async throws -> ConnectorAccountsRemoveResult {
         try await caller.call("connectors.accounts.remove", params: params, as: ConnectorAccountsRemoveResult.self)
+    }
+    /// Name or rename one hosted connector account owned by the scoped member.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4000 invalidRequest: "That name is invalid.", "connection_id and a valid alias are required."
+    /// - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+    /// - 4031 unsupported: "Connectors are not available."
+    /// - 4032 forbidden: "Sign in to use connectors."
+    /// - 4041 notFound: "Connector account not found."
+    /// - 4090 conflict: "Select an organization to manage connector rules.", "That name is already used."
+    /// - 5034 unavailable: "Connector accounts are unavailable."
+    public func accountsRename(_ params: ConnectorAccountsRenameParams) async throws -> ConnectorAccountRow {
+        try await caller.call("connectors.accounts.rename", params: params, as: ConnectorAccountRow.self)
     }
     /// The hosted connector catalog available to the scoped member.
     ///
@@ -559,7 +573,7 @@ public struct CronMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5023 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func manage(_ params: CronManageParams) async throws -> CronManageResult {
         try await caller.call("cron.manage", params: params, as: CronManageResult.self)
     }
@@ -596,7 +610,7 @@ public struct DisplayMethods: Sendable {
     /// Run the distro package install on the gateway host; progress streams as display.install.log/.done.
     ///
     /// Hermes' handler can answer with these errors:
-    /// - 5300 unsupported: "Bot Desktop runs on Linux gateway hosts only", "no supported package manager (apt-get, dnf, pacman) on this host"
+    /// - 5300 unsupported: "Bot Desktop runs on Linux gateway hosts only", "no supported package manager (apt-get, dnf, pacman) on this host", "this profile's screen lives inside the terminal backend's sandbox; give that sandbox an image with the desktop stack (nousresearch/hermes-sandbox:desktop) instead of installing on the gateway host"
     public func install(_ params: ProfileParams) async throws -> DisplayInstallResult {
         try await caller.call("display.install", params: params, as: DisplayInstallResult.self)
     }
@@ -642,6 +656,13 @@ public struct DisplayMethods: Sendable {
     public func stop(_ params: DisplayStopParams) async throws -> DisplayStopResult {
         try await caller.call("display.stop", params: params, as: DisplayStopResult.self)
     }
+    /// Decide the pending default sandbox image switch for this profile; refused when none is pending.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5300 conflict: "no sandbox image switch is pending for this profile"
+    public func switchSandboxImage(_ params: DisplaySwitchSandboxImageParams) async throws -> DisplaySwitchSandboxImageResult {
+        try await caller.call("display.switchSandboxImage", params: params, as: DisplaySwitchSandboxImageResult.self)
+    }
     /// One JPEG grab of the bot's screen; read-only, never changes the lease.
     ///
     /// Hermes' handler can answer with these errors:
@@ -676,6 +697,17 @@ public struct FreeTierMethods: Sendable {
     /// - 5091 serverError
     public func ackNotice(_ params: ProfileParams) async throws -> FreeTierAckNoticeResult {
         try await caller.call("free_tier.ack_notice", params: params, as: FreeTierAckNoticeResult.self)
+    }
+    /// Report a browser window outcome for the matching pending attempt; mint remains authoritative.
+    public func challengeResult(_ params: FreeTierChallengeResultParams) async throws -> FreeTierChallengeResult {
+        try await caller.call("free_tier.challenge_result", params: params, as: FreeTierChallengeResult.self)
+    }
+    /// Claim the due sign-in offer; true for exactly one caller each time an offer comes due.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5093 serverError
+    public func claimNudge(_ params: ProfileParams) async throws -> FreeTierClaimNudgeResult {
+        try await caller.call("free_tier.claim_nudge", params: params, as: FreeTierClaimNudgeResult.self)
     }
     /// Explicit retry of the free-tier identity mint when the boot bootstrap could not create it.
     ///
@@ -900,6 +932,27 @@ public struct HandoffMethods: Sendable {
     }
 }
 
+public struct I18nMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Pack + overlay messages for one language and surface; the renderer merges them over its bundled catalog.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4002 invalidRequest: "surface must be one of {…}"
+    /// - 5400 serverError
+    public func catalog(_ params: I18nCatalogParams) async throws -> I18nCatalogResult {
+        try await caller.call("i18n.catalog", params: params, as: I18nCatalogResult.self)
+    }
+    /// Every language some layer supplies (bundled ∪ user overlay ∪ plugin packs), en first.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5400 serverError
+    public func languages(_ params: ProfileParams) async throws -> I18nLanguagesResult {
+        try await caller.call("i18n.languages", params: params, as: I18nLanguagesResult.self)
+    }
+}
+
 public struct ImageMethods: Sendable {
     private let caller: any GatewayCalling
 
@@ -969,7 +1022,7 @@ public struct InsightsMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5017 unavailable: "Session storage is unavailable: {…}. {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func get(_ params: InsightsGetParams) async throws -> InsightsGetResult {
         try await caller.call("insights.get", params: params, as: InsightsGetResult.self)
     }
@@ -986,7 +1039,7 @@ public struct LearningMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5000 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func delete(_ params: LearningNodeParams) async throws -> LearningMutationResult {
         try await caller.call("learning.delete", params: params, as: LearningMutationResult.self)
     }
@@ -997,7 +1050,7 @@ public struct LearningMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5000 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func detail(_ params: LearningNodeParams) async throws -> LearningDetailResult {
         try await caller.call("learning.detail", params: params, as: LearningDetailResult.self)
     }
@@ -1008,7 +1061,7 @@ public struct LearningMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5000 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func edit(_ params: LearningEditParams) async throws -> LearningMutationResult {
         try await caller.call("learning.edit", params: params, as: LearningMutationResult.self)
     }
@@ -1019,7 +1072,7 @@ public struct LearningMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5000 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func frames(_ params: LearningFramesParams) async throws -> LearningFramesResult {
         try await caller.call("learning.frames", params: params, as: LearningFramesResult.self)
     }
@@ -1041,6 +1094,16 @@ public struct LlmMethods: Sendable {
     }
 }
 
+public struct MachineMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Facts about the machine running this backend and its OS account, for the desktop first run.
+    public func facts(_ params: Params) async throws -> MachineFactsResult {
+        try await caller.call("machine.facts", params: params, as: MachineFactsResult.self)
+    }
+}
+
 public struct McpMethods: Sendable {
     private let caller: any GatewayCalling
 
@@ -1052,7 +1115,7 @@ public struct McpMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func catalog(_ params: ProfileParams) async throws -> McpCatalogResult {
         try await caller.call("mcp.catalog", params: params, as: McpCatalogResult.self)
     }
@@ -1060,11 +1123,11 @@ public struct McpMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4001 invalidRequest: "server '{…}' rejected: suspicious command/args configuration"; notFound: "session not found"
-    /// - 4063 invalidRequest: "config must specify a 'url' (http) or 'command' (stdio), or a valid 'preset'", "{…} required"
+    /// - 4063 invalidRequest: "Unknown MCP catalog entry or preset: {…}", "config must specify a 'url' (http) or 'command' (stdio), or a valid 'preset'", "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 4090 conflict: "server '{…}' already exists", "server '{…}' is provided by plugin '{…}' and cannot be modified"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversAdd(_ params: McpServersAddParams) async throws -> McpServersAddResult {
         try await caller.call("mcp.servers.add", params: params, as: McpServersAddResult.self)
     }
@@ -1075,7 +1138,7 @@ public struct McpMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversList(_ params: ProfileParams) async throws -> McpServersListResult {
         try await caller.call("mcp.servers.list", params: params, as: McpServersListResult.self)
     }
@@ -1086,7 +1149,7 @@ public struct McpMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversOauthCallback(_ params: McpOauthCallbackParams) async throws -> McpOauthCallbackResult {
         try await caller.call("mcp.servers.oauth.callback", params: params, as: McpOauthCallbackResult.self)
     }
@@ -1097,7 +1160,7 @@ public struct McpMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversOauthCancel(_ params: McpOauthFlowParams) async throws -> McpOauthCancelResult {
         try await caller.call("mcp.servers.oauth.cancel", params: params, as: McpOauthCancelResult.self)
     }
@@ -1108,7 +1171,7 @@ public struct McpMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversOauthPoll(_ params: McpOauthFlowParams) async throws -> McpOauthPollResult {
         try await caller.call("mcp.servers.oauth.poll", params: params, as: McpOauthPollResult.self)
     }
@@ -1120,7 +1183,7 @@ public struct McpMethods: Sendable {
     /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
     /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversOauthStart(_ params: McpOauthStartParams) async throws -> McpOauthStartResult {
         try await caller.call("mcp.servers.oauth.start", params: params, as: McpOauthStartResult.self)
     }
@@ -1132,7 +1195,7 @@ public struct McpMethods: Sendable {
     /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
     /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversRemove(_ params: McpServerNameParams) async throws -> McpServersRemoveResult {
         try await caller.call("mcp.servers.remove", params: params, as: McpServersRemoveResult.self)
     }
@@ -1144,7 +1207,7 @@ public struct McpMethods: Sendable {
     /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
     /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversSetApiKey(_ params: McpServersSetApiKeyParams) async throws -> McpServersSetApiKeyResult {
         try await caller.call("mcp.servers.set_api_key", params: params, as: McpServersSetApiKeyResult.self)
     }
@@ -1155,7 +1218,7 @@ public struct McpMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversStatus(_ params: ProfileParams) async throws -> McpServersStatusResult {
         try await caller.call("mcp.servers.status", params: params, as: McpServersStatusResult.self)
     }
@@ -1166,7 +1229,7 @@ public struct McpMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func serversTest(_ params: McpServerNameParams) async throws -> McpServersTestResult {
         try await caller.call("mcp.servers.test", params: params, as: McpServersTestResult.self)
     }
@@ -1207,6 +1270,7 @@ public struct ModelMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - 5033 unsupported
+    /// - 5098 unavailable
     public func options(_ params: ModelOptionsParams) async throws -> ModelOptionsResult {
         try await caller.call("model.options", params: params, as: ModelOptionsResult.self)
     }
@@ -1219,6 +1283,7 @@ public struct ModelMethods: Sendable {
     /// - 4004 conflict: "no env var defined for {…}"
     /// - 4006 forbidden: "managed install — credentials are read-only"
     /// - 5034 unavailable
+    /// - 5098 unavailable
     public func saveKey(_ params: ModelSaveKeyParams) async throws -> ModelSaveKeyResult {
         try await caller.call("model.save_key", params: params, as: ModelSaveKeyResult.self)
     }
@@ -1228,20 +1293,34 @@ public struct OnboardingMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
-    /// Create-or-read the backend-owned setup profile; the backend picks the name and finds it by role.
+    /// Write onboarding.run in the root profile's config.yaml; answers the new state.
     ///
     /// Hermes' handler can answer with these errors:
-    /// - 5073 serverError
-    public func ensureSetupProfile(_ params: Params) async throws -> OnboardingEnsureSetupProfileResult {
-        try await caller.call("onboarding.ensure_setup_profile", params: params, as: OnboardingEnsureSetupProfileResult.self)
+    /// - 4002 invalidRequest: "onboarding.set_run requires a boolean 'run'"
+    /// - 5077 serverError
+    public func setRun(_ params: OnboardingSetRunParams) async throws -> OnboardingRunStateResult {
+        try await caller.call("onboarding.set_run", params: params, as: OnboardingRunStateResult.self)
     }
-    /// Restore the setup profile to its created state in place (soul, memories, skills, sessions).
+    /// Skip setup: end the session's onboarding run and close the card that waits.
     ///
     /// Hermes' handler can answer with these errors:
-    /// - 4072 notFound: "no setup profile to reset"
-    /// - 5074 serverError
-    public func resetSetupProfile(_ params: Params) async throws -> OnboardingResetSetupProfileResult {
-        try await caller.call("onboarding.reset_setup_profile", params: params, as: OnboardingResetSetupProfileResult.self)
+    /// - 4001 notFound: "session not found"
+    public func skip(_ params: OnboardingSkipParams) async throws -> OnboardingSkipResult {
+        try await caller.call("onboarding.skip", params: params, as: OnboardingSkipResult.self)
+    }
+    /// Open the onboarding chat in the default profile: create it, write its run record and play the opening.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5000 unavailable: "Session storage is unavailable: {…}. {…}"
+    /// - 5078 serverError
+    /// - 5079 unavailable
+    /// - 5080 conflict
+    public func start(_ params: OnboardingStartParams) async throws -> OnboardingStartResult {
+        try await caller.call("onboarding.start", params: params, as: OnboardingStartResult.self)
+    }
+    /// Whether desktop first-run onboarding is due, and the chat in progress; reads the root profile's config.
+    public func state(_ params: OnboardingStateParams) async throws -> OnboardingRunStateResult {
+        try await caller.call("onboarding.state", params: params, as: OnboardingRunStateResult.self)
     }
 }
 
@@ -1403,13 +1482,17 @@ public struct PluginsMethods: Sendable {
     private let caller: any GatewayCalling
 
     init(caller: any GatewayCalling) { self.caller = caller }
+    /// One curated plugin-catalog entry by name, from the backend's live catalog (cached, with the in-tree fallback and kill list); backs hermes://plugin/install?catalog= deep links.
+    public func catalogLookup(_ params: PluginCatalogLookupParams) async throws -> PluginCatalogLookupResult {
+        try await caller.call("plugins.catalog.lookup", params: params, as: PluginCatalogLookupResult.self)
+    }
     /// Loaded plugin manager entries (legacy flat view); the Plugins Hub uses plugins.manage list.
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func list(_ params: PluginsListParams) async throws -> PluginsListResult {
         try await caller.call("plugins.list", params: params, as: PluginsListResult.self)
     }
@@ -1421,7 +1504,7 @@ public struct PluginsMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5026 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func manage(_ params: PluginsManageParams) async throws -> PluginsManageResult {
         try await caller.call("plugins.manage", params: params, as: PluginsManageResult.self)
     }
@@ -1436,7 +1519,7 @@ public struct PreviewMethods: Sendable {
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
     /// - 4012 invalidRequest: "url required"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     /// - 5035 unavailable: "backend is retiring; reconnect to continue"
     public func restart(_ params: PreviewRestartParams) async throws -> TaskIdResult {
         try await caller.call("preview.restart", params: params, as: TaskIdResult.self)
@@ -1456,7 +1539,7 @@ public struct ProcessMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5010 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func kill(_ params: ProcessKillParams) async throws -> ProcessKillResult {
         try await caller.call("process.kill", params: params, as: ProcessKillResult.self)
     }
@@ -1467,18 +1550,18 @@ public struct ProcessMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5010 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func list(_ params: ProcessListParams) async throws -> ProcessListResult {
         try await caller.call("process.list", params: params, as: ProcessListResult.self)
     }
-    /// Kill every background process in the registry (``/stop``), answering the count killed.
+    /// ``/stop``: on the shared owner, kill the background processes ``session_id`` owns (required); a standalone sidecar kills every process it holds. Answers the count killed.
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5010 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func stop(_ params: ProcessStopParams) async throws -> ProcessStopResult {
         try await caller.call("process.stop", params: params, as: ProcessStopResult.self)
     }
@@ -1530,13 +1613,6 @@ public struct ProfilesMethods: Sendable {
     /// - 5061 serverError
     public func list(_ params: ProfilesListParams) async throws -> ProfilesListResult {
         try await caller.call("profiles.list", params: params, as: ProfilesListResult.self)
-    }
-    /// Write the onboarding facts into the default profile's user memory and confirm they landed.
-    ///
-    /// Hermes' handler can answer with these errors:
-    /// - 5067 serverError
-    public func rememberOnboarding(_ params: ProfilesRememberOnboardingParams) async throws -> ProfilesRememberOnboardingResult {
-        try await caller.call("profiles.remember_onboarding", params: params, as: ProfilesRememberOnboardingResult.self)
     }
     /// Store or clear a profile asset (avatar) atomically.
     ///
@@ -1707,7 +1783,7 @@ public struct PromptMethods: Sendable {
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
     /// - 4012 invalidRequest: "text required"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     /// - 5035 unavailable: "backend is retiring; reconnect to continue"
     public func background(_ params: SideAgentParams) async throws -> TaskIdResult {
         try await caller.call("prompt.background", params: params, as: TaskIdResult.self)
@@ -1717,7 +1793,7 @@ public struct PromptMethods: Sendable {
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
     /// - 4012 invalidRequest: "text required"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     /// - 5035 unavailable: "backend is retiring; reconnect to continue"
     public func btw(_ params: SideAgentParams) async throws -> TaskIdResult {
         try await caller.call("prompt.btw", params: params, as: TaskIdResult.self)
@@ -1733,6 +1809,7 @@ public struct PromptMethods: Sendable {
     /// - 4028 conflict: "truncation would erase the entire session transcript; resubmit with confirm_empty_truncate=true if this is intended"
     /// - 4029 invalidRequest: "truncation parameters require confirm_truncate=true; an ordinary prompt.submit must not drop session history (update your Hermes client if a rewind was intended)"
     /// - 4030 conflict: "truncate_before_user_ordinal ({…}) does not match {…} target turn ({…})"
+    /// - 4033 invalidRequest: "truncation would archive later user turns; resubmit with confirm_deep_truncate=true if this is intended"
     /// - 4090 conflict
     /// - 4091 busy: "hosted room member session is busy"
     /// - 4120 invalidRequest: "hosted room turns require a bot_room session"; forbidden: "invalid hosted room turn proof"
@@ -1763,7 +1840,7 @@ public struct ReloadMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5015 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func env(_ params: ReloadEnvParams) async throws -> ReloadEnvResult {
         try await caller.call("reload.env", params: params, as: ReloadEnvResult.self)
     }
@@ -1775,7 +1852,7 @@ public struct ReloadMethods: Sendable {
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5015 serverError
     /// - 5019 serverError: "compute-host reload_mcp failed: {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func mcp(_ params: ReloadMcpParams) async throws -> ReloadMcpResult {
         try await caller.call("reload.mcp", params: params, as: ReloadMcpResult.self)
     }
@@ -1806,7 +1883,7 @@ public struct RollbackMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5022 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func diff(_ params: RollbackDiffParams) async throws -> RollbackDiffResult {
         try await caller.call("rollback.diff", params: params, as: RollbackDiffResult.self)
     }
@@ -1817,7 +1894,7 @@ public struct RollbackMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5020 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func list(_ params: RollbackListParams) async throws -> RollbackListResult {
         try await caller.call("rollback.list", params: params, as: RollbackListResult.self)
     }
@@ -1830,7 +1907,7 @@ public struct RollbackMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5021 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func restore(_ params: RollbackRestoreParams) async throws -> RollbackRestoreResult {
         try await caller.call("rollback.restore", params: params, as: RollbackRestoreResult.self)
     }
@@ -1856,6 +1933,15 @@ public struct SessionMethods: Sendable {
     public func activeList(_ params: SessionActiveListParams) async throws -> SessionActiveListResult {
         try await caller.call("session.active_list", params: params, as: SessionActiveListResult.self)
     }
+    /// Set/clear archived (soft-hide, messages kept) on a session + lineage; Desktop PATCH parity.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 4001 notFound: "session not found"
+    /// - 4006 invalidRequest: "session_id required"
+    /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+    public func archive(_ params: SessionArchiveParams) async throws -> SessionArchiveResult {
+        try await caller.call("session.archive", params: params, as: SessionArchiveResult.self)
+    }
     /// Fork a live session into a new stored child that shares the parent's history so far.
     ///
     /// Hermes' handler can answer with these errors:
@@ -1863,7 +1949,7 @@ public struct SessionMethods: Sendable {
     /// - 4008 conflict: "nothing to branch — send a message first"
     /// - 5000 serverError: "agent init failed on branch: {…}"
     /// - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func branch(_ params: SessionBranchParams) async throws -> SessionBranchResult {
         try await caller.call("session.branch", params: params, as: SessionBranchResult.self)
     }
@@ -1871,7 +1957,8 @@ public struct SessionMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - -32602 invalidRequest
-    /// - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+    /// - 4002 invalidRequest
+    /// - 4008 conflict: "nothing to branch — {…}", "send a message first"; invalidRequest: "parent_session_id is required when copying parent history"
     /// - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
     public func branchStored(_ params: SessionBranchStoredParams) async throws -> SessionBranchStoredResult {
         try await caller.call("session.branch_stored", params: params, as: SessionBranchStoredResult.self)
@@ -1883,7 +1970,7 @@ public struct SessionMethods: Sendable {
     /// - 4008 conflict: "nothing to branch — send a message first"
     /// - 5000 serverError: "agent init failed on branch: {…}"
     /// - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func branchWhole(_ params: SessionBranchWholeParams) async throws -> SessionBranchWholeResult {
         try await caller.call("session.branch_whole", params: params, as: SessionBranchWholeResult.self)
     }
@@ -1898,7 +1985,7 @@ public struct SessionMethods: Sendable {
     /// - 4009 busy
     /// - 5005 serverError
     /// - 5019 serverError: "compute-host compress failed: {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func compress(_ params: SessionCompressParams) async throws -> SessionCompressResult {
         try await caller.call("session.compress", params: params, as: SessionCompressResult.self)
     }
@@ -1931,7 +2018,8 @@ public struct SessionMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - -32602 invalidRequest
-    /// - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+    /// - 4002 invalidRequest
+    /// - 4008 conflict: "nothing to branch — {…}", "send a message first"; invalidRequest: "parent_session_id is required when copying parent history"
     /// - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
     public func create(_ params: SessionCreateParams) async throws -> SessionCreateResult {
         try await caller.call("session.create", params: params, as: SessionCreateResult.self)
@@ -2002,8 +2090,6 @@ public struct SessionMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
-    /// - 5019 serverError: "compute-host interrupt failed: {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
     public func interrupt(_ params: SessionInterruptParams) async throws -> SessionInterruptResult {
         try await caller.call("session.interrupt", params: params, as: SessionInterruptResult.self)
     }
@@ -2035,8 +2121,9 @@ public struct SessionMethods: Sendable {
     /// - 4007 notFound: "session no longer live; retry resume", "session not found"
     /// - 4009 busy: "session disconnect interrupt settling"
     /// - 4130 conflict
+    /// - 4132 conflict
     /// - 5000 unavailable: "Session storage is unavailable: {…}. {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func resume(_ params: SessionResumeParams) async throws -> SessionResumeResult {
         try await caller.call("session.resume", params: params, as: SessionResumeResult.self)
     }
@@ -2044,8 +2131,10 @@ public struct SessionMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
-    /// - 5011 serverError: "compute-host session save failed: {…}", "compute-host session save returned an invalid response", "failed to create save directory {…}: {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 4131 conflict
+    /// - 5011 serverError: "compute-host session save failed: {…}", "compute-host session save returned an invalid response", "failed to save {…}: {…}"
+    /// - 5032 busy
+    /// - codes relayed unchanged from a compute host, plugin or connector service
     public func save(_ params: SessionSaveParams) async throws -> SessionSaveResult {
         try await caller.call("session.save", params: params, as: SessionSaveResult.self)
     }
@@ -2053,6 +2142,7 @@ public struct SessionMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
+    /// - 4021 invalidRequest: "hidden required"
     /// - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
     public func setHidden(_ params: SessionSetHiddenParams) async throws -> SessionSetHiddenResult {
         try await caller.call("session.set_hidden", params: params, as: SessionSetHiddenResult.self)
@@ -2090,7 +2180,7 @@ public struct SessionMethods: Sendable {
     /// - 4001 notFound: "session not found"
     /// - 4009 busy
     /// - 5008 serverError: "undo: {…}"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func undo(_ params: SessionUndoParams) async throws -> SessionUndoResult {
         try await caller.call("session.undo", params: params, as: SessionUndoResult.self)
     }
@@ -2118,6 +2208,9 @@ public struct SetupMethods: Sendable {
 
     init(caller: any GatewayCalling) { self.caller = caller }
     /// Strict provider check through the same runtime resolution the agent uses on session creation.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5097 busy: "readiness check still in progress; retrying next tick"
     public func runtimeCheck(_ params: SetupRuntimeCheckParams) async throws -> SetupRuntimeCheckResult {
         try await caller.call("setup.runtime_check", params: params, as: SetupRuntimeCheckResult.self)
     }
@@ -2125,8 +2218,61 @@ public struct SetupMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - 5016 serverError
+    /// - 5097 busy: "readiness check still in progress; retrying next tick"
     public func status(_ params: ProfileParams) async throws -> SetupStatusResult {
         try await caller.call("setup.status", params: params, as: SetupStatusResult.self)
+    }
+}
+
+public struct SharedMetricsMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Record one finished Desktop day (mode use + button presses); recorded=false keeps it for a retry.
+    public func desktopDaily(_ params: SharedMetricsDesktopDailyParams) async throws -> SharedMetricsDesktopDailyResult {
+        try await caller.call("shared_metrics.desktop_daily", params: params, as: SharedMetricsDesktopDailyResult.self)
+    }
+    /// Count one Desktop dislike signal (fire-and-forget; capped per signal per day; a no-op unless on).
+    public func desktopDislike(_ params: SharedMetricsDesktopDislikeParams) async throws -> OkResult {
+        try await caller.call("shared_metrics.desktop_dislike", params: params, as: OkResult.self)
+    }
+    /// Count one Desktop area used today (fire-and-forget; once per area per UTC day; a no-op unless on).
+    public func desktopFeatureUse(_ params: SharedMetricsDesktopFeatureUseParams) async throws -> OkResult {
+        try await caller.call("shared_metrics.desktop_feature_use", params: params, as: OkResult.self)
+    }
+    /// Count one Desktop friction event (fire-and-forget; capped per day; a no-op unless on).
+    public func desktopFriction(_ params: SharedMetricsDesktopFrictionParams) async throws -> OkResult {
+        try await caller.call("shared_metrics.desktop_friction", params: params, as: OkResult.self)
+    }
+    /// Count one Desktop first-run step transition (fire-and-forget; once per step+event; a no-op unless on).
+    public func desktopOnboarding(_ params: SharedMetricsDesktopOnboardingParams) async throws -> OkResult {
+        try await caller.call("shared_metrics.desktop_onboarding", params: params, as: OkResult.self)
+    }
+    /// Write both shared-metrics opt-ins at once (send requires collection) and reconcile consent windows.
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5096 busy
+    public func set(_ params: SharedMetricsSetParams) async throws -> SharedMetricsConsentResult {
+        try await caller.call("shared_metrics.set", params: params, as: SharedMetricsConsentResult.self)
+    }
+    /// Count one user-typed slash command (fire-and-forget; a no-op unless shared metrics are on).
+    public func slashCommand(_ params: SharedMetricsSlashCommandParams) async throws -> SharedMetricsSlashCommandResult {
+        try await caller.call("shared_metrics.slash_command", params: params, as: SharedMetricsSlashCommandResult.self)
+    }
+    /// Record one client launch-to-ready latency (fire-and-forget; a no-op unless shared metrics are on).
+    public func startupLatency(_ params: SharedMetricsStartupLatencyParams) async throws -> SharedMetricsStartupLatencyResult {
+        try await caller.call("shared_metrics.startup_latency", params: params, as: SharedMetricsStartupLatencyResult.self)
+    }
+    /// Pure read of the focused profile's shared-metrics opt-ins (collection, upload, answered).
+    ///
+    /// Hermes' handler can answer with these errors:
+    /// - 5095 invalidRequest
+    public func status(_ params: ProfileParams) async throws -> SharedMetricsConsentResult {
+        try await caller.call("shared_metrics.status", params: params, as: SharedMetricsConsentResult.self)
+    }
+    /// Count one Desktop packaged self-update outcome (fire-and-forget; a no-op unless shared metrics are on).
+    public func updateRun(_ params: SharedMetricsUpdateRunParams) async throws -> SharedMetricsUpdateRunResult {
+        try await caller.call("shared_metrics.update_run", params: params, as: SharedMetricsUpdateRunResult.self)
     }
 }
 
@@ -2159,7 +2305,7 @@ public struct SkillsMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5024 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func manage(_ params: SkillsManageParams) async throws -> SkillsManageResult {
         try await caller.call("skills.manage", params: params, as: SkillsManageResult.self)
     }
@@ -2170,7 +2316,7 @@ public struct SkillsMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5025 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func reload(_ params: SkillsReloadParams) async throws -> SkillsReloadResult {
         try await caller.call("skills.reload", params: params, as: SkillsReloadResult.self)
     }
@@ -2314,12 +2460,13 @@ public struct ToolsMethods: Sendable {
     ///
     /// Hermes' handler can answer with these errors:
     /// - 4001 notFound: "session not found"
+    /// - 4009 busy
     /// - 4017 invalidRequest: "unknown tools action: {…}"
     /// - 4018 invalidRequest: "names required"
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     /// - 5035 unavailable
     public func configure(_ params: ToolsConfigureParams) async throws -> ToolsConfigureResult {
         try await caller.call("tools.configure", params: params, as: ToolsConfigureResult.self)
@@ -2331,7 +2478,7 @@ public struct ToolsMethods: Sendable {
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
     /// - 5031 serverError
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func list(_ params: _SessionScoped) async throws -> ToolsetsListResult {
         try await caller.call("tools.list", params: params, as: ToolsetsListResult.self)
     }
@@ -2341,7 +2488,7 @@ public struct ToolsMethods: Sendable {
     /// - 4001 notFound: "session not found"
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     /// - 5034 unavailable
     public func show(_ params: _SessionScoped) async throws -> ToolsShowResult {
         try await caller.call("tools.show", params: params, as: ToolsShowResult.self)
@@ -2358,7 +2505,7 @@ public struct ToolsetsMethods: Sendable {
     /// - 4001 notFound: "session not found"
     /// - 4063 invalidRequest: "{…} required"
     /// - 4064 notFound: "profile '{…}' not found"
-    /// - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+    /// - 5032 busy
     public func list(_ params: _SessionScoped) async throws -> ToolsetsListResult {
         try await caller.call("toolsets.list", params: params, as: ToolsetsListResult.self)
     }
@@ -2503,6 +2650,378 @@ public struct WakeMethods: Sendable {
     }
 }
 
+/// The unified gateway runtime's strict wire (`hermes-gateway-v1`): the methods only Hermes' session authority
+/// serves (`gateway/session_controls.py`), and the shared names it serves with a different contract.
+///
+/// The authority refuses unknown or missing params with `4001 invalid_params` (`data.fields` names them) and
+/// its other refusals with `4001 <reason>`; see `HermesGatewayError.refusal`. A legacy gateway answers these
+/// methods with `-32601`, or with the legacy shapes where the name is shared; `gateway.ready`'s
+/// `session_authority` tells the two apart.
+public struct CanonicalMethodCatalog: Sendable {
+    private let caller: any GatewayCalling
+
+    public init(caller: any GatewayCalling) { self.caller = caller }
+    public var a2a: CanonicalA2aMethods { CanonicalA2aMethods(caller: caller) }
+    public var approval: CanonicalApprovalMethods { CanonicalApprovalMethods(caller: caller) }
+    public var botRelay: CanonicalBotRelayMethods { CanonicalBotRelayMethods(caller: caller) }
+    public var clarify: CanonicalClarifyMethods { CanonicalClarifyMethods(caller: caller) }
+    public var config: CanonicalConfigMethods { CanonicalConfigMethods(caller: caller) }
+    public var cron: CanonicalCronMethods { CanonicalCronMethods(caller: caller) }
+    public var groups: CanonicalGroupsMethods { CanonicalGroupsMethods(caller: caller) }
+    public var image: CanonicalImageMethods { CanonicalImageMethods(caller: caller) }
+    public var kanban: CanonicalKanbanMethods { CanonicalKanbanMethods(caller: caller) }
+    public var profiles: CanonicalProfilesMethods { CanonicalProfilesMethods(caller: caller) }
+    public var prompt: CanonicalPromptMethods { CanonicalPromptMethods(caller: caller) }
+    public var runtime: CanonicalRuntimeMethods { CanonicalRuntimeMethods(caller: caller) }
+    public var session: CanonicalSessionMethods { CanonicalSessionMethods(caller: caller) }
+    public var shell: CanonicalShellMethods { CanonicalShellMethods(caller: caller) }
+    public var worker: CanonicalWorkerMethods { CanonicalWorkerMethods(caller: caller) }
+}
+
+public struct CanonicalA2aMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Forward one A2A input into the conversation its identity tuple names.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `queue_full`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func forward(_ params: A2aForwardParams) async throws -> A2aForwardResult {
+        try await caller.call("a2a.forward", params: params, as: A2aForwardResult.self)
+    }
+}
+
+public struct CanonicalApprovalMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func respond(_ params: CanonicalApprovalParams) async throws -> PromptResponseResult {
+        try await caller.call("approval.respond", params: params, as: PromptResponseResult.self)
+    }
+}
+
+public struct CanonicalBotRelayMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_params`; unsupported: `unsupported_managed_policy`, `unsupported_projection`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `runtime_coordination_required`, `runtime_draining`, `storage_unavailable`
+    public func deliver(_ params: CanonicalBotDeliverParams) async throws -> CanonicalBotDeliverResult {
+        try await caller.call("bot_relay.deliver", params: params, as: CanonicalBotDeliverResult.self)
+    }
+}
+
+public struct CanonicalClarifyMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Generation-fenced answer to a pending clarify prompt (empty answer = skipped).
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func respond(_ params: ClarifyRespondParams) async throws -> PromptResponseResult {
+        try await caller.call("clarify.respond", params: params, as: PromptResponseResult.self)
+    }
+}
+
+public struct CanonicalConfigMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`, `use_session_mutation_model`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func get(_ params: ConfigGetParams) async throws -> CanonicalConfigGetResult {
+        try await caller.call("config.get", params: params, as: CanonicalConfigGetResult.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`, `use_session_mutation_model`; unsupported: `fast_unavailable`, `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    /// - 4002
+    public func set(_ params: CanonicalConfigSetParams) async throws -> ConfigSetResult {
+        try await caller.call("config.set", params: params, as: ConfigSetResult.self)
+    }
+}
+
+public struct CanonicalCronMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Cancel a queued cron admission or latch cancellation on a started one.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func cancel(_ params: CronAdmissionParams) async throws -> CronCancelResult {
+        try await caller.call("cron.cancel", params: params, as: CronCancelResult.self)
+    }
+    /// Re-observe a firing after a scheduler restart (same request identity).
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func recover(_ params: CronRunParams) async throws -> CronStatusResult {
+        try await caller.call("cron.recover", params: params, as: CronStatusResult.self)
+    }
+    /// Status and, once terminal, the result of one cron admission.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func status(_ params: CronAdmissionParams) async throws -> CronStatusResult {
+        try await caller.call("cron.status", params: params, as: CronStatusResult.self)
+    }
+    /// Admit one cron firing into the owning profile's durable FIFO.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func submit(_ params: CronRunParams) async throws -> CronSubmitResult {
+        try await caller.call("cron.submit", params: params, as: CronSubmitResult.self)
+    }
+}
+
+public struct CanonicalGroupsMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func approve(_ params: CanonicalRoomApproveParams) async throws -> GroupsApproveResult {
+        try await caller.call("groups.approve", params: params, as: GroupsApproveResult.self)
+    }
+    /// Read one committed attachment for a live room viewer.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func attachmentDownload(_ params: GroupsAttachmentDownloadParams) async throws -> RoomAttachmentBytes {
+        try await caller.call("groups.attachment.download", params: params, as: RoomAttachmentBytes.self)
+    }
+    /// Store one attachment for a later groups.send manifest (idempotent per upload_id).
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func attachmentUpload(_ params: GroupsAttachmentUploadParams) async throws -> RoomAttachment {
+        try await caller.call("groups.attachment.upload", params: params, as: RoomAttachment.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func create(_ params: CanonicalRoomCreateParams) async throws -> GroupsCreateResult {
+        try await caller.call("groups.create", params: params, as: GroupsCreateResult.self)
+    }
+    /// Discard one indeterminate room task after explicit user confirmation.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func discard(_ params: GroupsDiscardParams) async throws -> GroupsDiscardResult {
+        try await caller.call("groups.discard", params: params, as: GroupsDiscardResult.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func retry(_ params: CanonicalRoomAttemptParams) async throws -> GroupsRetryResult {
+        try await caller.call("groups.retry", params: params, as: GroupsRetryResult.self)
+    }
+}
+
+public struct CanonicalImageMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func attachBytes(_ params: ImageAttachBytesParams) async throws -> CanonicalAttachedImageResult {
+        try await caller.call("image.attach_bytes", params: params, as: CanonicalAttachedImageResult.self)
+    }
+}
+
+public struct CanonicalKanbanMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Native-owner only: admit the dispatcher's current claim on a kanban task.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_kanban_claim`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `stale_kanban_claim`; busy: `queue_full`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func run(_ params: KanbanRunParams) async throws -> KanbanRunResult {
+        try await caller.call("kanban.run", params: params, as: KanbanRunResult.self)
+    }
+}
+
+public struct CanonicalProfilesMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func list(_ params: CanonicalProfilesParams) async throws -> CanonicalProfilesResult {
+        try await caller.call("profiles.list", params: params, as: CanonicalProfilesResult.self)
+    }
+}
+
+public struct CanonicalPromptMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Retire a still-queued admission; a started one is unaffected.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func cancel(_ params: PromptCancelParams) async throws -> AdmissionStatus {
+        try await caller.call("prompt.cancel", params: params, as: AdmissionStatus.self)
+    }
+    /// Current receipt of one admission the caller submitted (or controls).
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 notFound: `not_found`; forbidden: `permission_denied`
+    public func receipt(_ params: PromptReceiptParams) async throws -> PromptReceiptResult {
+        try await caller.call("prompt.receipt", params: params, as: PromptReceiptResult.self)
+    }
+    /// Acknowledge a turn lost across an owner restart; the FIFO behind it resumes. Never requeues the lost input.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func resolveUnknown(_ params: PromptResolveUnknownParams) async throws -> AdmissionStatus {
+        try await caller.call("prompt.resolve_unknown", params: params, as: AdmissionStatus.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `queue_full`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func submit(_ params: CanonicalSubmitParams) async throws -> AdmissionStatus {
+        try await caller.call("prompt.submit", params: params, as: AdmissionStatus.self)
+    }
+}
+
+public struct CanonicalRuntimeMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Owner identity and the canonical capabilities a client may rely on.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_params`; forbidden: `permission_denied`
+    public func describe(_ params: RuntimeDescribeParams) async throws -> RuntimeDescribeResult {
+        try await caller.call("runtime.describe", params: params, as: RuntimeDescribeResult.self)
+    }
+}
+
+public struct CanonicalSessionMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// The classic CLI's /goal, /subgoal, /loop, /heartbeat manager calls (state writes, the goal judge, quality gates), run by the owner on the session's row.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func automation(_ params: SessionAutomationParams) async throws -> SessionAutomationResult {
+        try await caller.call("session.automation", params: params, as: SessionAutomationResult.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func create(_ params: CanonicalCreateParams) async throws -> CanonicalSnapshot {
+        try await caller.call("session.create", params: params, as: CanonicalSnapshot.self)
+    }
+    /// Drop this connection's subscription; a stale subscription id answers detached=false. end_reason (snake_case): the viewer is closing the conversation; the last viewer leaving an idle local session ends its row with that reason.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_params`; notFound: `not_found`; forbidden: `permission_denied`
+    public func detach(_ params: SessionDetachParams) async throws -> SessionDetachResult {
+        try await caller.call("session.detach", params: params, as: SessionDetachResult.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func eventsSince(_ params: CanonicalEventsParams) async throws -> CanonicalEventsResult {
+        try await caller.call("session.events.since", params: params, as: CanonicalEventsResult.self)
+    }
+    /// Frozen launch policy projection of one local session.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func info(_ params: CanonicalSessionInfoParams) async throws -> CanonicalSessionInfo {
+        try await caller.call("session.info", params: params, as: CanonicalSessionInfo.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func interrupt(_ params: CanonicalControlParams) async throws -> CanonicalSessionHandle {
+        try await caller.call("session.interrupt", params: params, as: CanonicalSessionHandle.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func list(_ params: CanonicalListParams) async throws -> CanonicalListResult {
+        try await caller.call("session.list", params: params, as: CanonicalListResult.self)
+    }
+    /// Revision-fenced, retry-idempotent session edit (rename, archive, sidebar, branch, delete, rewind, reset, model, reasoning, workspace, compress, import).
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func mutate(_ params: SessionMutateParams) async throws -> SessionMutateResult {
+        try await caller.call("session.mutate", params: params, as: SessionMutateResult.self)
+    }
+    /// Local operator only: the owner deletes the ended sessions `hermes sessions prune` selected, skipping busy sessions and retained reset owners.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_params`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `runtime_draining`
+    public func prune(_ params: SessionPruneParams) async throws -> SessionPruneResult {
+        try await caller.call("session.prune", params: params, as: SessionPruneResult.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_control`, `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `execution_not_ready`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func redirect(_ params: CanonicalCorrectionParams) async throws -> CanonicalCorrectionResult {
+        try await caller.call("session.redirect", params: params, as: CanonicalCorrectionResult.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func resume(_ params: CanonicalResumeParams) async throws -> CanonicalSnapshot {
+        try await caller.call("session.resume", params: params, as: CanonicalSnapshot.self)
+    }
+    /// The session.usage dict on demand: what main's classic CLI read off its agent.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func stats(_ params: SessionStatsParams) async throws -> SessionStats {
+        try await caller.call("session.stats", params: params, as: SessionStats.self)
+    }
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_control`, `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `execution_not_ready`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func steer(_ params: CanonicalCorrectionParams) async throws -> CanonicalCorrectionResult {
+        try await caller.call("session.steer", params: params, as: CanonicalCorrectionResult.self)
+    }
+}
+
+public struct CanonicalShellMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Ink ``!cmd`` / ``{!cmd}`` on the shared owner: one safe command for a local session, in its frozen launch cwd (``gateway/session_shell.py``).
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `dangerous_command`, `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func exec(_ params: CanonicalShellExecParams) async throws -> ShellExecResult {
+        try await caller.call("shell.exec", params: params, as: ShellExecResult.self)
+    }
+}
+
+public struct CanonicalWorkerMethods: Sendable {
+    private let caller: any GatewayCalling
+
+    init(caller: any GatewayCalling) { self.caller = caller }
+    /// Adopt a registered execution after verifying the live producer claim.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_producer`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `worker_not_live`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func adopt(_ params: WorkerScopeParams) async throws -> WorkerExecution {
+        try await caller.call("worker.adopt", params: params, as: WorkerExecution.self)
+    }
+    /// Sequence-fenced typed persistence write from an adopted worker.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_producer`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `worker_not_live`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func persist(_ params: WorkerPersistParams) async throws -> WorkerPersistResult {
+        try await caller.call("worker.persist", params: params, as: WorkerPersistResult.self)
+    }
+    /// Register a compute worker execution on an idle session.
+    ///
+    /// The session authority can refuse it with:
+    /// - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_producer`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `worker_not_live`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+    public func register(_ params: WorkerRegisterParams) async throws -> WorkerExecution {
+        try await caller.call("worker.register", params: params, as: WorkerExecution.self)
+    }
+}
+
 public extension HermesGateway {
     nonisolated var agents: AgentsMethods { AgentsMethods(caller: self) }
     nonisolated var approval: ApprovalMethods { ApprovalMethods(caller: self) }
@@ -2528,11 +3047,13 @@ public extension HermesGateway {
     nonisolated var gateway: GatewayMethods { GatewayMethods(caller: self) }
     nonisolated var groups: GroupsMethods { GroupsMethods(caller: self) }
     nonisolated var handoff: HandoffMethods { HandoffMethods(caller: self) }
+    nonisolated var i18n: I18nMethods { I18nMethods(caller: self) }
     nonisolated var image: ImageMethods { ImageMethods(caller: self) }
     nonisolated var input: InputMethods { InputMethods(caller: self) }
     nonisolated var insights: InsightsMethods { InsightsMethods(caller: self) }
     nonisolated var learning: LearningMethods { LearningMethods(caller: self) }
     nonisolated var llm: LlmMethods { LlmMethods(caller: self) }
+    nonisolated var machine: MachineMethods { MachineMethods(caller: self) }
     nonisolated var mcp: McpMethods { McpMethods(caller: self) }
     nonisolated var message: MessageMethods { MessageMethods(caller: self) }
     nonisolated var model: ModelMethods { ModelMethods(caller: self) }
@@ -2552,6 +3073,7 @@ public extension HermesGateway {
     nonisolated var rollback: RollbackMethods { RollbackMethods(caller: self) }
     nonisolated var session: SessionMethods { SessionMethods(caller: self) }
     nonisolated var setup: SetupMethods { SetupMethods(caller: self) }
+    nonisolated var sharedMetrics: SharedMetricsMethods { SharedMetricsMethods(caller: self) }
     nonisolated var shell: ShellMethods { ShellMethods(caller: self) }
     nonisolated var skills: SkillsMethods { SkillsMethods(caller: self) }
     nonisolated var slash: SlashMethods { SlashMethods(caller: self) }
@@ -2567,6 +3089,8 @@ public extension HermesGateway {
     nonisolated var verification: VerificationMethods { VerificationMethods(caller: self) }
     nonisolated var voice: VoiceMethods { VoiceMethods(caller: self) }
     nonisolated var wake: WakeMethods { WakeMethods(caller: self) }
+    /// The unified gateway runtime's strict methods. See `CanonicalMethodCatalog`.
+    nonisolated var canonical: CanonicalMethodCatalog { CanonicalMethodCatalog(caller: self) }
     /// Cheapest liveness probe; answered on the WS reader thread even while every agent is mid-turn.
     nonisolated func ping(_ params: PingParams) async throws -> PingResult {
         try await call("ping", params: params, as: PingResult.self)

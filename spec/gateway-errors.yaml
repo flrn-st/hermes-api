@@ -116,7 +116,7 @@ codes:
     reviewed: e47836a1aa766ff34e30a87a74e7e6eccd6166cfefaf8662fd863a4d8262d1ff
   4000:
     kind: invalidRequest
-    reviewed: 2d6ba2463eb1a66d75b29177af4e3c926e8689c195484461930488ca0b7acf70
+    reviewed: 933d0dc8ea6e36d5d4f3d90ad17a9591ec90b1996d8572b39e18120b9135415c
   4001:
     kind: invalidRequest
     messages:
@@ -134,7 +134,7 @@ codes:
       "The operation has settled.": conflict
       "The target cannot be run again.": conflict
       "This target cannot be run again.": conflict
-    reviewed: 082befc90795d6b191fbd95191579703adf939744e7d13f4bbc5f8aad4712a55
+    reviewed: f1da121cc65ee9b2f49da3e245e87a895afb2ff923cb91d98fbaa0b81cca9621
   4003:
     kind: invalidRequest
     messages:
@@ -169,7 +169,7 @@ codes:
     kind: conflict
     messages:
       "parent_session_id is required when copying parent history": invalidRequest
-    reviewed: c0e05c46953bea404f6ca092a8845b488ff979ca453bbf4253f7a7dae416806d
+    reviewed: e653f854d642c49adc9df6916c8a681d14fc1f746341873d688f1cf8c9307047
   4009:
     kind: busy
     reviewed: c10159a5a017913854755d47f269a79ebe67ce3e900b406e56e5bf17a48cc457
@@ -217,7 +217,7 @@ codes:
     reviewed: 586ddcd389ac5876d6a0f27cc107e4030e68814fa4c5f4b09798a0392098e171
   4021:
     kind: invalidRequest
-    reviewed: 37dcc17905de0643d5d4b1462635922aac6c305f9b04a54334b2fcf5e9ead762
+    reviewed: c4f3be1bad1053028a0168f0289290862a4c2a1fe5d8662f947290530c87a32f
   4022:
     kind: invalidRequest
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
@@ -258,6 +258,9 @@ codes:
   4032:
     kind: forbidden
     reviewed: f7952a6ea727d34bbeca30503549ecbdcefef848113f082ad14ddcf79f3c7933
+  4033:
+    kind: invalidRequest
+    reviewed: 6461a4526c16f0eac6c56b205e84871510553b2eaa6e0e417c28d2281ca7f4ed
   4040:
     kind: notFound
     reviewed: 16c9e0cd0acf504f4b71325c4d592133c1b50fa06b91ff5088ac1feb69a11034
@@ -275,7 +278,7 @@ codes:
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   4063:
     kind: invalidRequest
-    reviewed: bd3f9c2e058c668a09ccac3e21037913f8990a4db55b4e2b590f918832560560
+    reviewed: 2556879df750a16182d22db101a342e2ce79636b5e03bfc0ea3bfff9efd91ebe
   4064:
     kind: notFound
     reviewed: 30c24a3d83a188c4d2a80cc74c6df7355cb23ce7b6be238353d5a143c2133434
@@ -297,19 +300,14 @@ codes:
   4071:
     kind: invalidRequest
     reviewed: 31ff2e3280d391e29d420488f5803090318bea03e8482d31da8d3c1c00c72b2e
-  4072:
-    kind: notFound
-    reviewed: 21c5fd0239a824723653eb6c8907e9d76132b524b2c4e1640e0416997684a44e
   4090:
     kind: conflict
     messages:
-      "profile and message required": invalidRequest
-    reviewed: 8a595c9d23c1047cfb504d8f1362d2d948eeb7e95ae8bdebf93cd40678467876
+      "invalid_params": invalidRequest
+    reviewed: 2d2f5e5d761708a6a3b8a1e042a2289d97b9eda26436935f5b004b7eab179621
   4091:
     kind: busy
-    messages:
-      "message too long": invalidRequest
-    reviewed: 56b98a6a45f6387b61cad46a9a9e54e5e25f1a14aed636f5ecf200c793c7dfa2
+    reviewed: 9c867db308ec29886c3f1de7e05c1741cd069c36651be3a9c395a1017e4f28c2
   4092:
     kind: notFound
     reviewed: 08bbbb67caf96de7ea38b8311116206a73154fea5d5c83141d8075d51a16b68e
@@ -371,6 +369,12 @@ codes:
   4130:
     kind: conflict
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4131:
+    kind: conflict
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  4132:
+    kind: conflict
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   4403:
     kind: forbidden
     messages:
@@ -417,7 +421,7 @@ codes:
     reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
   5011:
     kind: serverError
-    reviewed: dc7d055c7d112439305b5b0df451ccff17859aaf0b24561760ffa0a122a92013
+    reviewed: c5e87bb3b38217630fa37de2bdea911358a57a94dea99c0346cc3152f1843661
   5012:
     kind: serverError
     reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
@@ -434,7 +438,7 @@ codes:
     reviewed: cb3a3a513be9ec3e974946e81c62f92633d3a8cc684907c1f6bdaf4c6d7f10e6
   5019:
     kind: serverError
-    reviewed: 736a27b6308fdfac172933b0a5ee48f7c73221bdfda62ef54a2916bfa3b1aeac
+    reviewed: d7e9048bfe9c9594be5ac3ca76f978355f8b193e6b5d6af9a96c47c47d577173
   5020:
     kind: serverError
     reviewed: 893422f41850e599a701f80d8d41204a76c186e4c2beed731c93519e62567904
@@ -482,7 +486,7 @@ codes:
     reviewed: dc0d11c15db41d2a60f52d706377e1ac8c7742dfa61f7717873c14a2c924e01f
   5032:
     kind: busy
-    reviewed: e69caaa70e8d5289a41c1db2dd5d893b2b127fc7029540f72567df251675bc32
+    reviewed: 89e8688d48cf2088c76034e6e31487b2e1305fcc8bf877dccfa92b0b1005ce64
   5033:
     kind: unsupported
     reviewed: dcfe05c494e3fde6a680e2f6213b15e64288c5d69779f54c92b63b38c5498a07
@@ -523,9 +527,6 @@ codes:
   5066:
     kind: serverError
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
-  5067:
-    kind: serverError
-    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   5070:
     kind: serverError
     reviewed: 4906042160937daf46c7a0c464da92299885d244d7ce9e0cd3c553730e242870
@@ -535,11 +536,17 @@ codes:
   5072:
     kind: unavailable
     reviewed: fd2d7358e87cd77ec9d9645e921fce53c491889d2d7b689f03de23da4999556d
-  5073:
+  5077:
     kind: serverError
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
-  5074:
+  5078:
     kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5079:
+    kind: unavailable
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5080:
+    kind: conflict
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   5090:
     kind: serverError
@@ -549,10 +556,10 @@ codes:
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   5092:
     kind: serverError
-    reviewed: f6d9834407f3b8ca2bbd26cacf10d72923c1009471ca5cef7db83a0c41192978
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   5093:
     kind: serverError
-    reviewed: 75b907bcf9f2ba9f9245651a042c29a19c8bbfeadac38cbe28b036cab669e6a7
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   5094:
     kind: serverError
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
@@ -563,6 +570,12 @@ codes:
     reviewed: 6786b334e42f0b9b8c0bc5ec30b8b677371b3c8343222efc61a40231eb9ef01c
   5096:
     kind: busy
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  5097:
+    kind: busy
+    reviewed: e216ad47456bd6d3ca692630b5fe3f8ef396d80baf12b73b27683ac252439aec
+  5098:
+    kind: unavailable
     reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
   5110:
     kind: serverError
@@ -605,9 +618,80 @@ codes:
     messages:
       "Bot Desktop runs on Linux gateway hosts only": unsupported
       "a human holds this screen; pass force: true to stop it anyway": conflict
+      "no sandbox image switch is pending for this profile": conflict
       "no supported package manager (apt-get, dnf, pacman) on this host": unsupported
       "this profile's Bot Desktop is not running; call display.start first": conflict
+      "this profile's screen lives inside the terminal backend's sandbox; give that sandbox an image with the desktop stack (nousresearch/hermes-sandbox:desktop) instead of installing on the gateway host": unsupported
       "viewer_id required": invalidRequest
       "viewer_id required to release another viewer's lease (or pass force: true)": invalidRequest
       "viewer_id was not minted for this connection; call display.observe first": forbidden
-    reviewed: ae91839fe04973162cbbfc2ea1fe29640c4630adb1c9d4f8b96ac6b1990660b4
+    reviewed: 2d3860230de4aeb7407a04e4ed2a297d91d96bdf89677157a8d15fa0ca88e4a4
+  5400:
+    kind: serverError
+    reviewed: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+# refusals: what Hermes' session authority (the unified gateway runtime, v0.22.1 on) refuses with. Its handlers
+# raise RuntimeStoreError(reason); gateway/session_controls.py answers {code: 4001, message: <reason>, data: {reason}}
+# (plus data.fields for invalid_params, naming the unknown or missing params). `make rest` lists every reason the
+# authority's modules raise (gateway/, hermes_state*.py) in spec/out/<ref>/gateway-errors.json under
+# authority.reasons, and per served method the reasons its handler can reach. Each reason gets one kind;
+# `reviewed` pins the sorted reason list as for codes.
+refusals:
+  reviewed: c1eafcad76f43c7157bc988b74d05a8a74660db0c4e24152f607a8badf40adb6
+  reasons:
+    acp_mcp_discovery_failed: unavailable
+    acp_mcp_policy_conflict: conflict
+    acp_mcp_schema_changed: conflict
+    admission_conflict: conflict
+    approval_not_pending: conflict
+    command_failed: serverError
+    command_timeout: serverError
+    command_unavailable: unsupported
+    compression_checkpoint_required: conflict
+    cwd_unavailable: unavailable
+    dangerous_command: forbidden
+    execution_not_ready: busy
+    export_too_large: conflict
+    fast_unavailable: unsupported
+    invalid_checkpoint: invalidRequest
+    invalid_kanban_claim: invalidRequest
+    invalid_params: invalidRequest
+    invalid_worker_frame: invalidRequest
+    invalid_worker_result: invalidRequest
+    launch_credentials_unavailable: unavailable
+    managed_worker_failed: serverError
+    managed_worker_hello_timeout: unavailable
+    managed_worker_lost: unavailable
+    managed_worker_stopped: serverError
+    model_resolution_failed: serverError
+    not_found: notFound
+    open_user_tail: conflict
+    permission_denied: forbidden
+    process_not_found: notFound
+    producer_not_started: conflict
+    profile_mismatch: forbidden
+    queue_full: busy
+    revision_conflict: conflict
+    runtime_coordination_required: unavailable
+    runtime_draining: unavailable
+    runtime_retired: unavailable
+    session_busy: busy
+    stale_epoch: conflict
+    stale_generation: conflict
+    stale_kanban_claim: conflict
+    storage_unavailable: unavailable
+    unknown_execution: notFound
+    unknown_personality: invalidRequest
+    unknown_skill: invalidRequest
+    unsupported_command: unsupported
+    unsupported_compress_options: invalidRequest
+    unsupported_control: unsupported
+    unsupported_managed_policy: unsupported
+    unsupported_operation: unsupported
+    unsupported_producer: unsupported
+    unsupported_projection: unsupported
+    unsupported_terminal_backend: unsupported
+    use_session_mutation_model: invalidRequest
+    worker_control_backpressure: busy
+    worker_not_live: conflict
+    workspace_unavailable: unavailable

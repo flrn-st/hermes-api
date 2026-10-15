@@ -85,6 +85,128 @@ public enum GatewayKnownError: String, Sendable, Hashable, CaseIterable {
     }
 }
 
+/// Why Hermes' session authority (the unified gateway runtime) refused a call: the reason of its `4001`
+/// answers, which it sends as the message and as `data.reason`. See `HermesGatewayError.refusal`.
+public enum GatewayRefusalReason: String, Sendable, Hashable, CaseIterable {
+    case acpMcpDiscoveryFailed = "acp_mcp_discovery_failed"
+    case acpMcpPolicyConflict = "acp_mcp_policy_conflict"
+    case acpMcpSchemaChanged = "acp_mcp_schema_changed"
+    case admissionConflict = "admission_conflict"
+    case approvalNotPending = "approval_not_pending"
+    case commandFailed = "command_failed"
+    case commandTimeout = "command_timeout"
+    case commandUnavailable = "command_unavailable"
+    case compressionCheckpointRequired = "compression_checkpoint_required"
+    case cwdUnavailable = "cwd_unavailable"
+    case dangerousCommand = "dangerous_command"
+    case executionNotReady = "execution_not_ready"
+    case exportTooLarge = "export_too_large"
+    case fastUnavailable = "fast_unavailable"
+    case invalidCheckpoint = "invalid_checkpoint"
+    case invalidKanbanClaim = "invalid_kanban_claim"
+    case invalidParams = "invalid_params"
+    case invalidWorkerFrame = "invalid_worker_frame"
+    case invalidWorkerResult = "invalid_worker_result"
+    case launchCredentialsUnavailable = "launch_credentials_unavailable"
+    case managedWorkerFailed = "managed_worker_failed"
+    case managedWorkerHelloTimeout = "managed_worker_hello_timeout"
+    case managedWorkerLost = "managed_worker_lost"
+    case managedWorkerStopped = "managed_worker_stopped"
+    case modelResolutionFailed = "model_resolution_failed"
+    case notFound = "not_found"
+    case openUserTail = "open_user_tail"
+    case permissionDenied = "permission_denied"
+    case processNotFound = "process_not_found"
+    case producerNotStarted = "producer_not_started"
+    case profileMismatch = "profile_mismatch"
+    case queueFull = "queue_full"
+    case revisionConflict = "revision_conflict"
+    case runtimeCoordinationRequired = "runtime_coordination_required"
+    case runtimeDraining = "runtime_draining"
+    case runtimeRetired = "runtime_retired"
+    case sessionBusy = "session_busy"
+    case staleEpoch = "stale_epoch"
+    case staleGeneration = "stale_generation"
+    case staleKanbanClaim = "stale_kanban_claim"
+    case storageUnavailable = "storage_unavailable"
+    case unknownExecution = "unknown_execution"
+    case unknownPersonality = "unknown_personality"
+    case unknownSkill = "unknown_skill"
+    case unsupportedCommand = "unsupported_command"
+    case unsupportedCompressOptions = "unsupported_compress_options"
+    case unsupportedControl = "unsupported_control"
+    case unsupportedManagedPolicy = "unsupported_managed_policy"
+    case unsupportedOperation = "unsupported_operation"
+    case unsupportedProducer = "unsupported_producer"
+    case unsupportedProjection = "unsupported_projection"
+    case unsupportedTerminalBackend = "unsupported_terminal_backend"
+    case useSessionMutationModel = "use_session_mutation_model"
+    case workerControlBackpressure = "worker_control_backpressure"
+    case workerNotLive = "worker_not_live"
+    case workspaceUnavailable = "workspace_unavailable"
+
+    public var kind: GatewayErrorKind {
+        switch self {
+        case .acpMcpDiscoveryFailed: .unavailable
+        case .acpMcpPolicyConflict: .conflict
+        case .acpMcpSchemaChanged: .conflict
+        case .admissionConflict: .conflict
+        case .approvalNotPending: .conflict
+        case .commandFailed: .serverError
+        case .commandTimeout: .serverError
+        case .commandUnavailable: .unsupported
+        case .compressionCheckpointRequired: .conflict
+        case .cwdUnavailable: .unavailable
+        case .dangerousCommand: .forbidden
+        case .executionNotReady: .busy
+        case .exportTooLarge: .conflict
+        case .fastUnavailable: .unsupported
+        case .invalidCheckpoint: .invalidRequest
+        case .invalidKanbanClaim: .invalidRequest
+        case .invalidParams: .invalidRequest
+        case .invalidWorkerFrame: .invalidRequest
+        case .invalidWorkerResult: .invalidRequest
+        case .launchCredentialsUnavailable: .unavailable
+        case .managedWorkerFailed: .serverError
+        case .managedWorkerHelloTimeout: .unavailable
+        case .managedWorkerLost: .unavailable
+        case .managedWorkerStopped: .serverError
+        case .modelResolutionFailed: .serverError
+        case .notFound: .notFound
+        case .openUserTail: .conflict
+        case .permissionDenied: .forbidden
+        case .processNotFound: .notFound
+        case .producerNotStarted: .conflict
+        case .profileMismatch: .forbidden
+        case .queueFull: .busy
+        case .revisionConflict: .conflict
+        case .runtimeCoordinationRequired: .unavailable
+        case .runtimeDraining: .unavailable
+        case .runtimeRetired: .unavailable
+        case .sessionBusy: .busy
+        case .staleEpoch: .conflict
+        case .staleGeneration: .conflict
+        case .staleKanbanClaim: .conflict
+        case .storageUnavailable: .unavailable
+        case .unknownExecution: .notFound
+        case .unknownPersonality: .invalidRequest
+        case .unknownSkill: .invalidRequest
+        case .unsupportedCommand: .unsupported
+        case .unsupportedCompressOptions: .invalidRequest
+        case .unsupportedControl: .unsupported
+        case .unsupportedManagedPolicy: .unsupported
+        case .unsupportedOperation: .unsupported
+        case .unsupportedProducer: .unsupported
+        case .unsupportedProjection: .unsupported
+        case .unsupportedTerminalBackend: .unsupported
+        case .useSessionMutationModel: .invalidRequest
+        case .workerControlBackpressure: .busy
+        case .workerNotLive: .conflict
+        case .workspaceUnavailable: .unavailable
+        }
+    }
+}
+
 extension GatewayErrorCatalog {
     static let codes: [Int: GatewayCodeRule] = [
         -32700: GatewayCodeRule(kind: .invalidRequest, messages: []),
@@ -173,6 +295,7 @@ extension GatewayErrorCatalog {
         ]),
         4031: GatewayCodeRule(kind: .unsupported, messages: []),
         4032: GatewayCodeRule(kind: .forbidden, messages: []),
+        4033: GatewayCodeRule(kind: .invalidRequest, messages: []),
         4040: GatewayCodeRule(kind: .notFound, messages: []),
         4041: GatewayCodeRule(kind: .notFound, messages: []),
         4044: GatewayCodeRule(kind: .notFound, messages: []),
@@ -186,13 +309,10 @@ extension GatewayErrorCatalog {
         4069: GatewayCodeRule(kind: .invalidRequest, messages: []),
         4070: GatewayCodeRule(kind: .invalidRequest, messages: []),
         4071: GatewayCodeRule(kind: .invalidRequest, messages: []),
-        4072: GatewayCodeRule(kind: .notFound, messages: []),
         4090: GatewayCodeRule(kind: .conflict, messages: [
-            GatewayMessageRule(template: GatewayMessageTemplate(["profile and message required"]), kind: .invalidRequest),
+            GatewayMessageRule(template: GatewayMessageTemplate(["invalid_params"]), kind: .invalidRequest),
         ]),
-        4091: GatewayCodeRule(kind: .busy, messages: [
-            GatewayMessageRule(template: GatewayMessageTemplate(["message too long"]), kind: .invalidRequest),
-        ]),
+        4091: GatewayCodeRule(kind: .busy, messages: []),
         4092: GatewayCodeRule(kind: .notFound, messages: []),
         4093: GatewayCodeRule(kind: .invalidRequest, messages: []),
         4094: GatewayCodeRule(kind: .invalidRequest, messages: []),
@@ -216,6 +336,8 @@ extension GatewayErrorCatalog {
         4123: GatewayCodeRule(kind: .unavailable, messages: []),
         4124: GatewayCodeRule(kind: .invalidRequest, messages: []),
         4130: GatewayCodeRule(kind: .conflict, messages: []),
+        4131: GatewayCodeRule(kind: .conflict, messages: []),
+        4132: GatewayCodeRule(kind: .conflict, messages: []),
         4403: GatewayCodeRule(kind: .forbidden, messages: [
             GatewayMessageRule(template: GatewayMessageTemplate(["command_id required"]), kind: .invalidRequest),
             GatewayMessageRule(template: GatewayMessageTemplate(["controller_id, browser_profile_id, and server session profile are required"]), kind: .invalidRequest),
@@ -292,12 +414,13 @@ extension GatewayErrorCatalog {
         5064: GatewayCodeRule(kind: .serverError, messages: []),
         5065: GatewayCodeRule(kind: .serverError, messages: []),
         5066: GatewayCodeRule(kind: .serverError, messages: []),
-        5067: GatewayCodeRule(kind: .serverError, messages: []),
         5070: GatewayCodeRule(kind: .serverError, messages: []),
         5071: GatewayCodeRule(kind: .serverError, messages: []),
         5072: GatewayCodeRule(kind: .unavailable, messages: []),
-        5073: GatewayCodeRule(kind: .serverError, messages: []),
-        5074: GatewayCodeRule(kind: .serverError, messages: []),
+        5077: GatewayCodeRule(kind: .serverError, messages: []),
+        5078: GatewayCodeRule(kind: .serverError, messages: []),
+        5079: GatewayCodeRule(kind: .unavailable, messages: []),
+        5080: GatewayCodeRule(kind: .conflict, messages: []),
         5090: GatewayCodeRule(kind: .serverError, messages: []),
         5091: GatewayCodeRule(kind: .serverError, messages: []),
         5092: GatewayCodeRule(kind: .serverError, messages: []),
@@ -307,6 +430,8 @@ extension GatewayErrorCatalog {
             GatewayMessageRule(template: GatewayMessageTemplate(["", " is not an enabled password manager"]), kind: .conflict),
         ]),
         5096: GatewayCodeRule(kind: .busy, messages: []),
+        5097: GatewayCodeRule(kind: .busy, messages: []),
+        5098: GatewayCodeRule(kind: .unavailable, messages: []),
         5110: GatewayCodeRule(kind: .serverError, messages: []),
         5111: GatewayCodeRule(kind: .serverError, messages: []),
         5112: GatewayCodeRule(kind: .serverError, messages: []),
@@ -322,12 +447,15 @@ extension GatewayErrorCatalog {
         5300: GatewayCodeRule(kind: .serverError, messages: [
             GatewayMessageRule(template: GatewayMessageTemplate(["Bot Desktop runs on Linux gateway hosts only"]), kind: .unsupported),
             GatewayMessageRule(template: GatewayMessageTemplate(["a human holds this screen; pass force: true to stop it anyway"]), kind: .conflict),
+            GatewayMessageRule(template: GatewayMessageTemplate(["no sandbox image switch is pending for this profile"]), kind: .conflict),
             GatewayMessageRule(template: GatewayMessageTemplate(["no supported package manager (apt-get, dnf, pacman) on this host"]), kind: .unsupported),
             GatewayMessageRule(template: GatewayMessageTemplate(["this profile's Bot Desktop is not running; call display.start first"]), kind: .conflict),
+            GatewayMessageRule(template: GatewayMessageTemplate(["this profile's screen lives inside the terminal backend's sandbox; give that sandbox an image with the desktop stack (nousresearch/hermes-sandbox:desktop) instead of installing on the gateway host"]), kind: .unsupported),
             GatewayMessageRule(template: GatewayMessageTemplate(["viewer_id required"]), kind: .invalidRequest),
             GatewayMessageRule(template: GatewayMessageTemplate(["viewer_id required to release another viewer's lease (or pass force: true)"]), kind: .invalidRequest),
             GatewayMessageRule(template: GatewayMessageTemplate(["viewer_id was not minted for this connection; call display.observe first"]), kind: .forbidden),
         ]),
+        5400: GatewayCodeRule(kind: .serverError, messages: []),
     ]
 
     static let names: [Int: [GatewayNameRule]] = [

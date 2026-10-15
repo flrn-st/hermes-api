@@ -40,6 +40,7 @@ public enum GatewayOperations {
         "connection.respond",
         "connectors.accounts",
         "connectors.accounts.remove",
+        "connectors.accounts.rename",
         "connectors.catalog",
         "connectors.connect",
         "connectors.list",
@@ -59,9 +60,12 @@ public enum GatewayOperations {
         "display.start",
         "display.status",
         "display.stop",
+        "display.switchSandboxImage",
         "display.thumbnail",
         "file.attach",
         "free_tier.ack_notice",
+        "free_tier.challenge_result",
+        "free_tier.claim_nudge",
         "free_tier.provision",
         "free_tier.status",
         "gateway.capabilities",
@@ -86,6 +90,8 @@ public enum GatewayOperations {
         "handoff.fail",
         "handoff.request",
         "handoff.state",
+        "i18n.catalog",
+        "i18n.languages",
         "image.attach",
         "image.attach_bytes",
         "image.detach",
@@ -97,6 +103,7 @@ public enum GatewayOperations {
         "learning.edit",
         "learning.frames",
         "llm.oneshot",
+        "machine.facts",
         "mcp.catalog",
         "mcp.servers.add",
         "mcp.servers.list",
@@ -112,8 +119,10 @@ public enum GatewayOperations {
         "model.disconnect",
         "model.options",
         "model.save_key",
-        "onboarding.ensure_setup_profile",
-        "onboarding.reset_setup_profile",
+        "onboarding.set_run",
+        "onboarding.skip",
+        "onboarding.start",
+        "onboarding.state",
         "paste.collapse",
         "pdf.attach",
         "pet.cancel",
@@ -132,6 +141,7 @@ public enum GatewayOperations {
         "pet.select",
         "pet.thumb",
         "ping",
+        "plugins.catalog.lookup",
         "plugins.list",
         "plugins.manage",
         "preview.restart",
@@ -143,7 +153,6 @@ public enum GatewayOperations {
         "profiles.describe",
         "profiles.get_asset",
         "profiles.list",
-        "profiles.remember_onboarding",
         "profiles.set_asset",
         "project.facts",
         "projects.add_folder",
@@ -172,6 +181,7 @@ public enum GatewayOperations {
         "rollback.restore",
         "session.activate",
         "session.active_list",
+        "session.archive",
         "session.branch",
         "session.branch_stored",
         "session.branch_whole",
@@ -204,6 +214,16 @@ public enum GatewayOperations {
         "session.workspace.move",
         "setup.runtime_check",
         "setup.status",
+        "shared_metrics.desktop_daily",
+        "shared_metrics.desktop_dislike",
+        "shared_metrics.desktop_feature_use",
+        "shared_metrics.desktop_friction",
+        "shared_metrics.desktop_onboarding",
+        "shared_metrics.set",
+        "shared_metrics.slash_command",
+        "shared_metrics.startup_latency",
+        "shared_metrics.status",
+        "shared_metrics.update_run",
         "shell.exec",
         "skills.manage",
         "skills.reload",
@@ -314,6 +334,8 @@ public enum GatewayOperations {
             return try encode(try await gateway.connectors.accounts(try decode(ConnectorAccountsParams.self, params)))
         case "connectors.accounts.remove":
             return try encode(try await gateway.connectors.accountsRemove(try decode(ConnectorAccountsRemoveParams.self, params)))
+        case "connectors.accounts.rename":
+            return try encode(try await gateway.connectors.accountsRename(try decode(ConnectorAccountsRenameParams.self, params)))
         case "connectors.catalog":
             return try encode(try await gateway.connectors.catalog(try decode(ProfileParams.self, params)))
         case "connectors.connect":
@@ -352,12 +374,18 @@ public enum GatewayOperations {
             return try encode(try await gateway.display.status(try decode(ProfileParams.self, params)))
         case "display.stop":
             return try encode(try await gateway.display.stop(try decode(DisplayStopParams.self, params)))
+        case "display.switchSandboxImage":
+            return try encode(try await gateway.display.switchSandboxImage(try decode(DisplaySwitchSandboxImageParams.self, params)))
         case "display.thumbnail":
             return try encode(try await gateway.display.thumbnail(try decode(ProfileParams.self, params)))
         case "file.attach":
             return try encode(try await gateway.file.attach(try decode(FileAttachParams.self, params)))
         case "free_tier.ack_notice":
             return try encode(try await gateway.freeTier.ackNotice(try decode(ProfileParams.self, params)))
+        case "free_tier.challenge_result":
+            return try encode(try await gateway.freeTier.challengeResult(try decode(FreeTierChallengeResultParams.self, params)))
+        case "free_tier.claim_nudge":
+            return try encode(try await gateway.freeTier.claimNudge(try decode(ProfileParams.self, params)))
         case "free_tier.provision":
             return try encode(try await gateway.freeTier.provision(try decode(ProfileParams.self, params)))
         case "free_tier.status":
@@ -406,6 +434,10 @@ public enum GatewayOperations {
             return try encode(try await gateway.handoff.request(try decode(HandoffRequestParams.self, params)))
         case "handoff.state":
             return try encode(try await gateway.handoff.state(try decode(SessionParams.self, params)))
+        case "i18n.catalog":
+            return try encode(try await gateway.i18n.catalog(try decode(I18nCatalogParams.self, params)))
+        case "i18n.languages":
+            return try encode(try await gateway.i18n.languages(try decode(ProfileParams.self, params)))
         case "image.attach":
             return try encode(try await gateway.image.attach(try decode(ImageAttachParams.self, params)))
         case "image.attach_bytes":
@@ -428,6 +460,8 @@ public enum GatewayOperations {
             return try encode(try await gateway.learning.frames(try decode(LearningFramesParams.self, params)))
         case "llm.oneshot":
             return try encode(try await gateway.llm.oneshot(try decode(LlmOneshotParams.self, params)))
+        case "machine.facts":
+            return try encode(try await gateway.machine.facts(try decode(Params.self, params)))
         case "mcp.catalog":
             return try encode(try await gateway.mcp.catalog(try decode(ProfileParams.self, params)))
         case "mcp.servers.add":
@@ -458,10 +492,14 @@ public enum GatewayOperations {
             return try encode(try await gateway.model.options(try decode(ModelOptionsParams.self, params)))
         case "model.save_key":
             return try encode(try await gateway.model.saveKey(try decode(ModelSaveKeyParams.self, params)))
-        case "onboarding.ensure_setup_profile":
-            return try encode(try await gateway.onboarding.ensureSetupProfile(try decode(Params.self, params)))
-        case "onboarding.reset_setup_profile":
-            return try encode(try await gateway.onboarding.resetSetupProfile(try decode(Params.self, params)))
+        case "onboarding.set_run":
+            return try encode(try await gateway.onboarding.setRun(try decode(OnboardingSetRunParams.self, params)))
+        case "onboarding.skip":
+            return try encode(try await gateway.onboarding.skip(try decode(OnboardingSkipParams.self, params)))
+        case "onboarding.start":
+            return try encode(try await gateway.onboarding.start(try decode(OnboardingStartParams.self, params)))
+        case "onboarding.state":
+            return try encode(try await gateway.onboarding.state(try decode(OnboardingStateParams.self, params)))
         case "paste.collapse":
             return try encode(try await gateway.paste.collapse(try decode(PasteCollapseParams.self, params)))
         case "pdf.attach":
@@ -498,6 +536,8 @@ public enum GatewayOperations {
             return try encode(try await gateway.pet.thumb(try decode(PetThumbParams.self, params)))
         case "ping":
             return try encode(try await gateway.ping(try decode(PingParams.self, params)))
+        case "plugins.catalog.lookup":
+            return try encode(try await gateway.plugins.catalogLookup(try decode(PluginCatalogLookupParams.self, params)))
         case "plugins.list":
             return try encode(try await gateway.plugins.list(try decode(PluginsListParams.self, params)))
         case "plugins.manage":
@@ -520,8 +560,6 @@ public enum GatewayOperations {
             return try encode(try await gateway.profiles.getAsset(try decode(ProfilesGetAssetParams.self, params)))
         case "profiles.list":
             return try encode(try await gateway.profiles.list(try decode(ProfilesListParams.self, params)))
-        case "profiles.remember_onboarding":
-            return try encode(try await gateway.profiles.rememberOnboarding(try decode(ProfilesRememberOnboardingParams.self, params)))
         case "profiles.set_asset":
             return try encode(try await gateway.profiles.setAsset(try decode(ProfilesSetAssetParams.self, params)))
         case "project.facts":
@@ -578,6 +616,8 @@ public enum GatewayOperations {
             return try encode(try await gateway.session.activate(try decode(SessionActivateParams.self, params)))
         case "session.active_list":
             return try encode(try await gateway.session.activeList(try decode(SessionActiveListParams.self, params)))
+        case "session.archive":
+            return try encode(try await gateway.session.archive(try decode(SessionArchiveParams.self, params)))
         case "session.branch":
             return try encode(try await gateway.session.branch(try decode(SessionBranchParams.self, params)))
         case "session.branch_stored":
@@ -642,6 +682,26 @@ public enum GatewayOperations {
             return try encode(try await gateway.setup.runtimeCheck(try decode(SetupRuntimeCheckParams.self, params)))
         case "setup.status":
             return try encode(try await gateway.setup.status(try decode(ProfileParams.self, params)))
+        case "shared_metrics.desktop_daily":
+            return try encode(try await gateway.sharedMetrics.desktopDaily(try decode(SharedMetricsDesktopDailyParams.self, params)))
+        case "shared_metrics.desktop_dislike":
+            return try encode(try await gateway.sharedMetrics.desktopDislike(try decode(SharedMetricsDesktopDislikeParams.self, params)))
+        case "shared_metrics.desktop_feature_use":
+            return try encode(try await gateway.sharedMetrics.desktopFeatureUse(try decode(SharedMetricsDesktopFeatureUseParams.self, params)))
+        case "shared_metrics.desktop_friction":
+            return try encode(try await gateway.sharedMetrics.desktopFriction(try decode(SharedMetricsDesktopFrictionParams.self, params)))
+        case "shared_metrics.desktop_onboarding":
+            return try encode(try await gateway.sharedMetrics.desktopOnboarding(try decode(SharedMetricsDesktopOnboardingParams.self, params)))
+        case "shared_metrics.set":
+            return try encode(try await gateway.sharedMetrics.set(try decode(SharedMetricsSetParams.self, params)))
+        case "shared_metrics.slash_command":
+            return try encode(try await gateway.sharedMetrics.slashCommand(try decode(SharedMetricsSlashCommandParams.self, params)))
+        case "shared_metrics.startup_latency":
+            return try encode(try await gateway.sharedMetrics.startupLatency(try decode(SharedMetricsStartupLatencyParams.self, params)))
+        case "shared_metrics.status":
+            return try encode(try await gateway.sharedMetrics.status(try decode(ProfileParams.self, params)))
+        case "shared_metrics.update_run":
+            return try encode(try await gateway.sharedMetrics.updateRun(try decode(SharedMetricsUpdateRunParams.self, params)))
         case "shell.exec":
             return try encode(try await gateway.shell.exec(try decode(ShellExecParams.self, params)))
         case "skills.manage":
@@ -763,6 +823,7 @@ public enum GatewayOperations {
         case "connection.respond": return try encode(try decode(ConnectionRespondResult.self, result))
         case "connectors.accounts": return try encode(try decode(ConnectorAccountsResult.self, result))
         case "connectors.accounts.remove": return try encode(try decode(ConnectorAccountsRemoveResult.self, result))
+        case "connectors.accounts.rename": return try encode(try decode(ConnectorAccountRow.self, result))
         case "connectors.catalog": return try encode(try decode(ConnectorsCatalogResult.self, result))
         case "connectors.connect": return try encode(try decode(ConnectorsConnectResult.self, result))
         case "connectors.list": return try encode(try decode(ConnectorsListResult.self, result))
@@ -782,9 +843,12 @@ public enum GatewayOperations {
         case "display.start": return try encode(try decode(DisplayStatus.self, result))
         case "display.status": return try encode(try decode(DisplayStatus.self, result))
         case "display.stop": return try encode(try decode(DisplayStopResult.self, result))
+        case "display.switchSandboxImage": return try encode(try decode(DisplaySwitchSandboxImageResult.self, result))
         case "display.thumbnail": return try encode(try decode(DisplayThumbnailResult.self, result))
         case "file.attach": return try encode(try decode(FileAttachResult.self, result))
         case "free_tier.ack_notice": return try encode(try decode(FreeTierAckNoticeResult.self, result))
+        case "free_tier.challenge_result": return try encode(try decode(FreeTierChallengeResult.self, result))
+        case "free_tier.claim_nudge": return try encode(try decode(FreeTierClaimNudgeResult.self, result))
         case "free_tier.provision": return try encode(try decode(FreeTierProvisionResult.self, result))
         case "free_tier.status": return try encode(try decode(FreeTierStatusResult.self, result))
         case "gateway.capabilities": return try encode(try decode(GatewayCapabilitiesResult.self, result))
@@ -809,6 +873,8 @@ public enum GatewayOperations {
         case "handoff.fail": return try encode(try decode(HandoffFailResult.self, result))
         case "handoff.request": return try encode(try decode(HandoffRequestResult.self, result))
         case "handoff.state": return try encode(try decode(HandoffStateResult.self, result))
+        case "i18n.catalog": return try encode(try decode(I18nCatalogResult.self, result))
+        case "i18n.languages": return try encode(try decode(I18nLanguagesResult.self, result))
         case "image.attach": return try encode(try decode(AttachedImageResult.self, result))
         case "image.attach_bytes": return try encode(try decode(AttachedImageResult.self, result))
         case "image.detach": return try encode(try decode(ImageDetachResult.self, result))
@@ -820,6 +886,7 @@ public enum GatewayOperations {
         case "learning.edit": return try encode(try decode(LearningMutationResult.self, result))
         case "learning.frames": return try encode(try decode(LearningFramesResult.self, result))
         case "llm.oneshot": return try encode(try decode(LlmOneshotResult.self, result))
+        case "machine.facts": return try encode(try decode(MachineFactsResult.self, result))
         case "mcp.catalog": return try encode(try decode(McpCatalogResult.self, result))
         case "mcp.servers.add": return try encode(try decode(McpServersAddResult.self, result))
         case "mcp.servers.list": return try encode(try decode(McpServersListResult.self, result))
@@ -835,8 +902,10 @@ public enum GatewayOperations {
         case "model.disconnect": return try encode(try decode(ModelDisconnectResult.self, result))
         case "model.options": return try encode(try decode(ModelOptionsResult.self, result))
         case "model.save_key": return try encode(try decode(ModelSaveKeyResult.self, result))
-        case "onboarding.ensure_setup_profile": return try encode(try decode(OnboardingEnsureSetupProfileResult.self, result))
-        case "onboarding.reset_setup_profile": return try encode(try decode(OnboardingResetSetupProfileResult.self, result))
+        case "onboarding.set_run": return try encode(try decode(OnboardingRunStateResult.self, result))
+        case "onboarding.skip": return try encode(try decode(OnboardingSkipResult.self, result))
+        case "onboarding.start": return try encode(try decode(OnboardingStartResult.self, result))
+        case "onboarding.state": return try encode(try decode(OnboardingRunStateResult.self, result))
         case "paste.collapse": return try encode(try decode(PasteCollapseResult.self, result))
         case "pdf.attach": return try encode(try decode(PdfAttachResult.self, result))
         case "pet.cancel": return try encode(try decode(PetCancelResult.self, result))
@@ -855,6 +924,7 @@ public enum GatewayOperations {
         case "pet.select": return try encode(try decode(PetSlugResult.self, result))
         case "pet.thumb": return try encode(try decode(PetThumbResult.self, result))
         case "ping": return try encode(try decode(PingResult.self, result))
+        case "plugins.catalog.lookup": return try encode(try decode(PluginCatalogLookupResult.self, result))
         case "plugins.list": return try encode(try decode(PluginsListResult.self, result))
         case "plugins.manage": return try encode(try decode(PluginsManageResult.self, result))
         case "preview.restart": return try encode(try decode(TaskIdResult.self, result))
@@ -866,7 +936,6 @@ public enum GatewayOperations {
         case "profiles.describe": return try encode(try decode(ProfilesDescribeResult.self, result))
         case "profiles.get_asset": return try encode(try decode(ProfilesGetAssetResult.self, result))
         case "profiles.list": return try encode(try decode(ProfilesListResult.self, result))
-        case "profiles.remember_onboarding": return try encode(try decode(ProfilesRememberOnboardingResult.self, result))
         case "profiles.set_asset": return try encode(try decode(ProfilesSetAssetResult.self, result))
         case "project.facts": return try encode(try decode(ProjectFactsResult.self, result))
         case "projects.add_folder": return try encode(try decode(ProjectResult.self, result))
@@ -895,6 +964,7 @@ public enum GatewayOperations {
         case "rollback.restore": return try encode(try decode(RollbackRestoreResult.self, result))
         case "session.activate": return try encode(try decode(SessionActivateResult.self, result))
         case "session.active_list": return try encode(try decode(SessionActiveListResult.self, result))
+        case "session.archive": return try encode(try decode(SessionArchiveResult.self, result))
         case "session.branch": return try encode(try decode(SessionBranchResult.self, result))
         case "session.branch_stored": return try encode(try decode(SessionBranchStoredResult.self, result))
         case "session.branch_whole": return try encode(try decode(SessionBranchWholeResult.self, result))
@@ -927,6 +997,16 @@ public enum GatewayOperations {
         case "session.workspace.move": return try encode(try decode(SessionWorkspaceMoveResult.self, result))
         case "setup.runtime_check": return try encode(try decode(SetupRuntimeCheckResult.self, result))
         case "setup.status": return try encode(try decode(SetupStatusResult.self, result))
+        case "shared_metrics.desktop_daily": return try encode(try decode(SharedMetricsDesktopDailyResult.self, result))
+        case "shared_metrics.desktop_dislike": return try encode(try decode(OkResult.self, result))
+        case "shared_metrics.desktop_feature_use": return try encode(try decode(OkResult.self, result))
+        case "shared_metrics.desktop_friction": return try encode(try decode(OkResult.self, result))
+        case "shared_metrics.desktop_onboarding": return try encode(try decode(OkResult.self, result))
+        case "shared_metrics.set": return try encode(try decode(SharedMetricsConsentResult.self, result))
+        case "shared_metrics.slash_command": return try encode(try decode(SharedMetricsSlashCommandResult.self, result))
+        case "shared_metrics.startup_latency": return try encode(try decode(SharedMetricsStartupLatencyResult.self, result))
+        case "shared_metrics.status": return try encode(try decode(SharedMetricsConsentResult.self, result))
+        case "shared_metrics.update_run": return try encode(try decode(SharedMetricsUpdateRunResult.self, result))
         case "shell.exec": return try encode(try decode(ShellExecResult.self, result))
         case "skills.manage": return try encode(try decode(SkillsManageResult.self, result))
         case "skills.reload": return try encode(try decode(SkillsReloadResult.self, result))

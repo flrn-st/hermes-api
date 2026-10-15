@@ -10,7 +10,8 @@ import Testing
         .trimmingCharacters(in: .whitespacesAndNewlines)
     #expect(HermesGatewayContract.release == current)
     #expect(HermesGatewayContract.upstreamVersion == String(current.dropFirst()))
-    #expect(HermesGatewayContract.upstreamTag.hasPrefix("v20"))
+    // Hermes tagged releases by date up to v0.21.5 (v2026.9.24) and by version from v0.22.1.
+    #expect(HermesGatewayContract.upstreamTag.hasPrefix("v20") || HermesGatewayContract.upstreamTag == current)
 }
 
 /// Apps with types of the same names qualify generated ones by module, so nothing may be named `HermesAPI`.

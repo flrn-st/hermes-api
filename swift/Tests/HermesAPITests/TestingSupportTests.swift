@@ -7,7 +7,7 @@ import Testing
 private func connectAndAnswer(_ gateway: any HermesGatewayClient) async throws -> GatewayEvent? {
     await gateway.setServerRequestHandler { request in
         guard case .clarify(let params) = request else { throw HermesGatewayError.transport("Unexpected request") }
-        return .clarify(ClarifyResult(answer: "Answer for \(params.sessionId)"))
+        return .clarify(ClarifyResult(answers: ["q1": "Answer for \(params.sessionId)"]))
     }
     let events = gateway.events()
     try await gateway.connect()
@@ -31,15 +31,15 @@ private func connectAndAnswer(_ gateway: any HermesGatewayClient) async throws -
     #expect(await fake.calls.map(\.method) == ["ping"])
     #expect(await fake.lifecycle == ["connect"])
 
-    let answer = try await fake.request(method: "clarify", params: .object(["session_id": .string("s1")]))
-    #expect(answer == .clarify(ClarifyResult(answer: "Answer for s1")))
+    let answer = try await fake.request(method: "clarify", params: .object(["session_id": .string("s1"), "questions": .array([])]))
+    #expect(answer == .clarify(ClarifyResult(answers: ["q1": "Answer for s1"])))
 }
 
 @Test func fakeGatewayRejectsAMismatchedAnswer() async throws {
     let fake = FakeGateway()
     await fake.setServerRequestHandler { _ in .approval(ApprovalResult(choice: .deny)) }
     await #expect(throws: HermesGatewayError.self) {
-        _ = try await fake.request(.clarify(ClarifyRequestParams(sessionId: "s1")))
+        _ = try await fake.request(.clarify(ClarifyRequestParams(sessionId: "s1", questions: [])))
     }
     await #expect(throws: HermesGatewayError.self) { _ = try await fake.methods.ping(.init()) }
 }
@@ -78,20 +78,20 @@ private func connectAndAnswer(_ gateway: any HermesGatewayClient) async throws -
     ))
     await gateway.setServerRequestHandler { _ in
         let context = try #require(ServerRequestContext.current)
-        return .clarify(ClarifyResult(answer: "\(context.method) \(context.id)"))
+        return .clarify(ClarifyResult(answers: ["q1": "\(context.method) \(context.id)"]))
     }
     try await gateway.connect()
-    await socket.inject(GatewayFrames.serverRequest(id: "srq-1", method: "clarify", params: #"{"session_id":"s1"}"#))
+    await socket.inject(GatewayFrames.serverRequest(id: "srq-1", method: "clarify", params: #"{"session_id":"s1","questions":[]}"#))
     var sent = socket.sent.makeAsyncIterator()
     let answer = try SentAnswer(try #require(await sent.next()))
     #expect(answer.id == "srq-1")
-    #expect(answer.result == .object(["answer": .string("clarify srq-1")]))
+    #expect(answer.result == .object(["answers": .object(["q1": .string("clarify srq-1")])]))
     await gateway.disconnect()
 
     let fake = FakeGateway()
-    await fake.setServerRequestHandler { _ in .clarify(ClarifyResult(answer: ServerRequestContext.current?.id)) }
-    let faked = try await fake.request(.clarify(ClarifyRequestParams(sessionId: "s1")), id: "srq-2")
-    #expect(faked == .clarify(ClarifyResult(answer: "srq-2")))
+    await fake.setServerRequestHandler { _ in .clarify(ClarifyResult(answers: ["q1": ServerRequestContext.current?.id])) }
+    let faked = try await fake.request(.clarify(ClarifyRequestParams(sessionId: "s1", questions: [])), id: "srq-2")
+    #expect(faked == .clarify(ClarifyResult(answers: ["q1": "srq-2"])))
 }
 
 @Test func errorsDescribeThemselves() {

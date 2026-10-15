@@ -47,12 +47,62 @@ enum GatewayErrorCatalog {
     }
 }
 
+/// A refusal by Hermes' session authority (the unified gateway runtime), read from the `data` of its answer:
+/// `{reason}`, plus `fields` for `invalid_params`. Hermes after v0.22.1 adds `field` and `detail` when the check
+/// that fired names them; the pinned release never sends them, so they are `nil` there.
+public struct GatewayRefusal: Sendable, Hashable {
+    /// The reason as Hermes sent it.
+    public let reason: String
+    /// For `invalid_params` from the dispatcher: the params it refused (unknown or missing), as key paths.
+    public let fields: [String]?
+    /// The param or field the check that fired names.
+    public let field: String?
+    /// Why that check fired.
+    public let detail: String?
+
+    public init(reason: String, fields: [String]? = nil, field: String? = nil, detail: String? = nil) {
+        self.reason = reason
+        self.fields = fields
+        self.field = field
+        self.detail = detail
+    }
+
+    /// The reviewed reason, or `nil` for one the pinned release does not raise.
+    public var known: GatewayRefusalReason? { GatewayRefusalReason(rawValue: reason) }
+
+    /// Reads `data`; `nil` unless it is an object with a string `reason`.
+    init?(data: JSONValue?) {
+        guard case .object(let object)? = data, case .string(let reason)? = object["reason"] else { return nil }
+        var fields: [String]?
+        if case .array(let items)? = object["fields"] {
+            fields = items.compactMap { item in
+                if case .string(let path) = item { return path }
+                return nil
+            }
+        }
+        var field: String?
+        if case .string(let value)? = object["field"] { field = value }
+        var detail: String?
+        if case .string(let value)? = object["detail"] { detail = value }
+        self.init(reason: reason, fields: fields, field: field, detail: detail)
+    }
+}
+
 public extension HermesGatewayError {
     /// What a client can do about an error Hermes answered, or `nil` when the failure is not an answer
-    /// from Hermes. Hermes reuses codes for unrelated failures, so this reads the message as well.
+    /// from Hermes. Hermes reuses codes for unrelated failures, so this reads the message as well; a session
+    /// authority's refusal is classified by its reviewed reason.
     var kind: GatewayErrorKind? {
         guard case .rpc(let code, let message, _) = self else { return nil }
+        if let reason = refusal?.known { return reason.kind }
         return GatewayErrorCatalog.kind(code: code, message: message)
+    }
+
+    /// The session authority's refusal, when Hermes answered with one: an error whose `data` carries a
+    /// `reason` (`4001` refusals, `-32601 unknown_method`, `5001 storage_unavailable`).
+    var refusal: GatewayRefusal? {
+        guard case .rpc(_, _, let data) = self else { return nil }
+        return GatewayRefusal(data: data)
     }
 
     /// The named error Hermes answered with, when it is one clients can rely on.

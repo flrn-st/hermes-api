@@ -161,6 +161,41 @@ and generation stops when a release adds, removes or changes a code until it is 
 scenarios provoke refusals on purpose (an unknown method, a wrongly typed parameter, a missing session
 and profile) and both clients must classify them as the catalog says.
 
+## The unified gateway runtime
+
+From v0.22.1 a Hermes gateway can serve a session authority (`gateway/session_controls.py`), which answers a
+socket on its own listener instead of the legacy dispatcher. The first frame tells them apart:
+`gateway.ready`'s payload has `session_authority: true` only on an authority socket, and
+`runtime.describe` answers there with the owner's capabilities and the `session.create` parameters it accepts.
+The authority serves a strict wire (`hermes-gateway-v1`): Hermes lists its methods as `x-canonical-methods` in
+the same OpenRPC document, and the generators expose them under `canonical`, beside the legacy namespaces:
+
+```swift
+let described = try await gateway.canonical.runtime.describe(RuntimeDescribeParams())
+let snapshot = try await gateway.canonical.session.resume(CanonicalResumeParams(sessionId: id))
+_ = try await gateway.canonical.session.mutate(SessionMutateParams(
+    sessionId: id, requestId: UUID().uuidString, expectedRevision: snapshot.revision,
+    operation: "rename", payload: ["title": .string("Plans")]))
+```
+
+Their types keep Hermes' component names: a name the authority serves with a different contract has a
+`Canonical` variant (`CanonicalCreateParams` beside `SessionCreateParams`, `CanonicalSnapshot`), and the
+authority's own verbs have their own (`SessionMutateParams`, `AdmissionStatus`, `RuntimeDescribeResult`). Every
+canonical namespace type is `Canonical<Namespace>Methods`. A legacy gateway answers the authority's own verbs
+with `-32601` and shared names with the legacy shapes, so pick the namespace from `session_authority`. The
+authority serves other legacy methods with their legacy contracts; those stay in the legacy namespaces.
+
+The authority refuses with `4001` and a reason (`not_found`, `session_busy`, `stale_generation`,
+`revision_conflict`, …), sent as the message and as `data.reason`; parameters it refuses before the handler
+runs come as `invalid_params` with `data.fields`. `error.refusal` (Kotlin: `HermesGatewayException.RPC.refusal`)
+reads that data: `reason`, its reviewed `GatewayRefusalReason` (`known`), `fields`, and `field` and `detail`,
+which Hermes sends after v0.22.1 when the check that fired names them. `error.kind` classifies a refusal by its
+reviewed reason. `make rest` reads the reasons the authority's modules raise, and per served method the ones
+its handler can reach, into `authority` in `spec/out/<ref>/gateway-errors.json`; `refusals` in
+`spec/gateway-errors.yaml` gives each reason a kind and pins the list by hash. The per-method lists follow calls
+by name, `self`, and the receivers named in `RECEIVERS` (`tools/_render_gateway_errors.py`), so shared helpers
+make them generous and calls the analysis cannot resolve can hide a reason.
+
 ## How it is tested
 
 Unit tests drive both runtimes through a fake Hermes: a scripted transport,

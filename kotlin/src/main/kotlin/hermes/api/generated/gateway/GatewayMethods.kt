@@ -30,11 +30,13 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
     public val gateway: GatewayMethods = GatewayMethods(caller)
     public val groups: GroupsMethods = GroupsMethods(caller)
     public val handoff: HandoffMethods = HandoffMethods(caller)
+    public val i18n: I18nMethods = I18nMethods(caller)
     public val image: ImageMethods = ImageMethods(caller)
     public val input: InputMethods = InputMethods(caller)
     public val insights: InsightsMethods = InsightsMethods(caller)
     public val learning: LearningMethods = LearningMethods(caller)
     public val llm: LlmMethods = LlmMethods(caller)
+    public val machine: MachineMethods = MachineMethods(caller)
     public val mcp: McpMethods = McpMethods(caller)
     public val message: MessageMethods = MessageMethods(caller)
     public val model: ModelMethods = ModelMethods(caller)
@@ -54,6 +56,7 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
     public val rollback: RollbackMethods = RollbackMethods(caller)
     public val session: SessionMethods = SessionMethods(caller)
     public val setup: SetupMethods = SetupMethods(caller)
+    public val sharedMetrics: SharedMetricsMethods = SharedMetricsMethods(caller)
     public val shell: ShellMethods = ShellMethods(caller)
     public val skills: SkillsMethods = SkillsMethods(caller)
     public val slash: SlashMethods = SlashMethods(caller)
@@ -69,6 +72,8 @@ public class GatewayMethodCatalog(private val caller: GatewayCaller) {
     public val verification: VerificationMethods = VerificationMethods(caller)
     public val voice: VoiceMethods = VoiceMethods(caller)
     public val wake: WakeMethods = WakeMethods(caller)
+    /** The unified gateway runtime's strict methods. See [CanonicalMethodCatalog]. */
+    public val canonical: CanonicalMethodCatalog = CanonicalMethodCatalog(caller)
     /**
      * Cheapest liveness probe; answered on the WS reader thread even while every agent is mid-turn.
      */
@@ -84,7 +89,7 @@ public class AgentsMethods(private val caller: GatewayCaller) {
      * - 4001 notFound: "session not found"
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      * - 5033 unsupported
      */
     public suspend fun list(params: AgentsListParams): AgentsListResult =
@@ -98,7 +103,7 @@ public class ApprovalMethods(private val caller: GatewayCaller) {
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
      * - 5004 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun pending(params: ApprovalPendingParams): ApprovalPendingResult =
         caller.call("approval.pending", params, serializer<ApprovalPendingParams>(), serializer<ApprovalPendingResult>())
@@ -109,7 +114,7 @@ public class ApprovalMethods(private val caller: GatewayCaller) {
      * - 4001 notFound: "session not found"
      * - 4006 invalidRequest: "request_id required"
      * - 5004 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun received(params: ApprovalReceivedParams): ApprovalReceivedResult =
         caller.call("approval.received", params, serializer<ApprovalReceivedParams>(), serializer<ApprovalReceivedResult>())
@@ -119,7 +124,7 @@ public class ApprovalMethods(private val caller: GatewayCaller) {
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
      * - 5004 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun respond(params: ApprovalRespondParams): ApprovalRespondResult =
         caller.call("approval.respond", params, serializer<ApprovalRespondParams>(), serializer<ApprovalRespondResult>())
@@ -158,13 +163,9 @@ public class BotRelayMethods(private val caller: GatewayCaller) {
      * Deliver a relayed DM into a Bot Chat on this gateway and return the one-turn reply (blocking).
      *
      * Hermes' handler can answer with these errors:
-     * - 4090 invalidRequest: "profile and message required"
-     * - 4091 invalidRequest: "message too long"
+     * - 4090 invalidRequest: "invalid_params"
      * - 4092 notFound: "no profile '{…}' on this gateway"
-     * - 5092 serverError: "delivery turn failed: {…}"
-     * - 5093 serverError: "delivery turn timed out"
      * - 5094 serverError
-     * - 5096 busy
      */
     public suspend fun deliver(params: BotRelayDeliverParams): BotRelayDeliverResult =
         caller.call("bot_relay.deliver", params, serializer<BotRelayDeliverParams>(), serializer<BotRelayDeliverResult>())
@@ -230,7 +231,7 @@ public class BrowserMethods(private val caller: GatewayCaller) {
     public suspend fun controllerResult(params: BrowserControllerResultParams): BrowserControllerResultResult =
         caller.call("browser.controller.result", params, serializer<BrowserControllerResultParams>(), serializer<BrowserControllerResultResult>())
     /**
-     * Inspect, attach to, or drop the CDP browser the tools use; ``messages`` narrate a connect.
+     * Inspect, attach to, or drop the CDP browser the tools use, or switch Browser Use mode (``use``, applies to new sessions); ``messages`` narrate a connect.
      *
      * Hermes' handler can answer with these errors:
      * - 4015 invalidRequest: "browser url must be a string, got {…}", "invalid port in browser url: {…}", "missing host in browser url: {…}", "unknown action: {…}", …
@@ -305,7 +306,7 @@ public class CommandMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5012 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun resolve(params: CommandResolveParams): CommandResolveResult =
         caller.call("command.resolve", params, serializer<CommandResolveParams>(), serializer<CommandResolveResult>())
@@ -320,7 +321,7 @@ public class CommandsMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5020 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun catalog(params: CommandsCatalogParams): CommandsCatalogResult =
         caller.call("commands.catalog", params, serializer<CommandsCatalogParams>(), serializer<CommandsCatalogResult>())
@@ -372,7 +373,7 @@ public class ConfigMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5030 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun show(params: ConfigShowParams): ConfigShowResult =
         caller.call("config.show", params, serializer<ConfigShowParams>(), serializer<ConfigShowResult>())
@@ -425,6 +426,20 @@ public class ConnectorsMethods(private val caller: GatewayCaller) {
      */
     public suspend fun accountsRemove(params: ConnectorAccountsRemoveParams): ConnectorAccountsRemoveResult =
         caller.call("connectors.accounts.remove", params, serializer<ConnectorAccountsRemoveParams>(), serializer<ConnectorAccountsRemoveResult>())
+    /**
+     * Name or rename one hosted connector account owned by the scoped member.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4000 invalidRequest: "That name is invalid.", "connection_id and a valid alias are required."
+     * - 4030 forbidden: "Connector access is not permitted for this account.", "This account cannot manage connectors for this organization."
+     * - 4031 unsupported: "Connectors are not available."
+     * - 4032 forbidden: "Sign in to use connectors."
+     * - 4041 notFound: "Connector account not found."
+     * - 4090 conflict: "Select an organization to manage connector rules.", "That name is already used."
+     * - 5034 unavailable: "Connector accounts are unavailable."
+     */
+    public suspend fun accountsRename(params: ConnectorAccountsRenameParams): ConnectorAccountRow =
+        caller.call("connectors.accounts.rename", params, serializer<ConnectorAccountsRenameParams>(), serializer<ConnectorAccountRow>())
     /**
      * The hosted connector catalog available to the scoped member.
      *
@@ -554,7 +569,7 @@ public class CronMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5023 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun manage(params: CronManageParams): CronManageResult =
         caller.call("cron.manage", params, serializer<CronManageParams>(), serializer<CronManageResult>())
@@ -586,7 +601,7 @@ public class DisplayMethods(private val caller: GatewayCaller) {
      * Run the distro package install on the gateway host; progress streams as display.install.log/.done.
      *
      * Hermes' handler can answer with these errors:
-     * - 5300 unsupported: "Bot Desktop runs on Linux gateway hosts only", "no supported package manager (apt-get, dnf, pacman) on this host"
+     * - 5300 unsupported: "Bot Desktop runs on Linux gateway hosts only", "no supported package manager (apt-get, dnf, pacman) on this host", "this profile's screen lives inside the terminal backend's sandbox; give that sandbox an image with the desktop stack (nousresearch/hermes-sandbox:desktop) instead of installing on the gateway host"
      */
     public suspend fun install(params: ProfileParams): DisplayInstallResult =
         caller.call("display.install", params, serializer<ProfileParams>(), serializer<DisplayInstallResult>())
@@ -639,6 +654,14 @@ public class DisplayMethods(private val caller: GatewayCaller) {
     public suspend fun stop(params: DisplayStopParams): DisplayStopResult =
         caller.call("display.stop", params, serializer<DisplayStopParams>(), serializer<DisplayStopResult>())
     /**
+     * Decide the pending default sandbox image switch for this profile; refused when none is pending.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5300 conflict: "no sandbox image switch is pending for this profile"
+     */
+    public suspend fun switchSandboxImage(params: DisplaySwitchSandboxImageParams): DisplaySwitchSandboxImageResult =
+        caller.call("display.switchSandboxImage", params, serializer<DisplaySwitchSandboxImageParams>(), serializer<DisplaySwitchSandboxImageResult>())
+    /**
      * One JPEG grab of the bot's screen; read-only, never changes the lease.
      *
      * Hermes' handler can answer with these errors:
@@ -670,6 +693,19 @@ public class FreeTierMethods(private val caller: GatewayCaller) {
      */
     public suspend fun ackNotice(params: ProfileParams): FreeTierAckNoticeResult =
         caller.call("free_tier.ack_notice", params, serializer<ProfileParams>(), serializer<FreeTierAckNoticeResult>())
+    /**
+     * Report a browser window outcome for the matching pending attempt; mint remains authoritative.
+     */
+    public suspend fun challengeResult(params: FreeTierChallengeResultParams): FreeTierChallengeResult =
+        caller.call("free_tier.challenge_result", params, serializer<FreeTierChallengeResultParams>(), serializer<FreeTierChallengeResult>())
+    /**
+     * Claim the due sign-in offer; true for exactly one caller each time an offer comes due.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5093 serverError
+     */
+    public suspend fun claimNudge(params: ProfileParams): FreeTierClaimNudgeResult =
+        caller.call("free_tier.claim_nudge", params, serializer<ProfileParams>(), serializer<FreeTierClaimNudgeResult>())
     /**
      * Explicit retry of the free-tier identity mint when the boot bootstrap could not create it.
      *
@@ -908,6 +944,26 @@ public class HandoffMethods(private val caller: GatewayCaller) {
         caller.call("handoff.state", params, serializer<SessionParams>(), serializer<HandoffStateResult>())
 }
 
+public class I18nMethods(private val caller: GatewayCaller) {
+    /**
+     * Pack + overlay messages for one language and surface; the renderer merges them over its bundled catalog.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4002 invalidRequest: "surface must be one of {…}"
+     * - 5400 serverError
+     */
+    public suspend fun catalog(params: I18nCatalogParams): I18nCatalogResult =
+        caller.call("i18n.catalog", params, serializer<I18nCatalogParams>(), serializer<I18nCatalogResult>())
+    /**
+     * Every language some layer supplies (bundled ∪ user overlay ∪ plugin packs), en first.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5400 serverError
+     */
+    public suspend fun languages(params: ProfileParams): I18nLanguagesResult =
+        caller.call("i18n.languages", params, serializer<ProfileParams>(), serializer<I18nLanguagesResult>())
+}
+
 public class ImageMethods(private val caller: GatewayCaller) {
     /**
      * Queue a gateway-visible image file for the next turn.
@@ -974,7 +1030,7 @@ public class InsightsMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5017 unavailable: "Session storage is unavailable: {…}. {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun get(params: InsightsGetParams): InsightsGetResult =
         caller.call("insights.get", params, serializer<InsightsGetParams>(), serializer<InsightsGetResult>())
@@ -989,7 +1045,7 @@ public class LearningMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5000 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun delete(params: LearningNodeParams): LearningMutationResult =
         caller.call("learning.delete", params, serializer<LearningNodeParams>(), serializer<LearningMutationResult>())
@@ -1001,7 +1057,7 @@ public class LearningMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5000 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun detail(params: LearningNodeParams): LearningDetailResult =
         caller.call("learning.detail", params, serializer<LearningNodeParams>(), serializer<LearningDetailResult>())
@@ -1013,7 +1069,7 @@ public class LearningMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5000 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun edit(params: LearningEditParams): LearningMutationResult =
         caller.call("learning.edit", params, serializer<LearningEditParams>(), serializer<LearningMutationResult>())
@@ -1025,7 +1081,7 @@ public class LearningMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5000 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun frames(params: LearningFramesParams): LearningFramesResult =
         caller.call("learning.frames", params, serializer<LearningFramesParams>(), serializer<LearningFramesResult>())
@@ -1045,6 +1101,14 @@ public class LlmMethods(private val caller: GatewayCaller) {
         caller.call("llm.oneshot", params, serializer<LlmOneshotParams>(), serializer<LlmOneshotResult>())
 }
 
+public class MachineMethods(private val caller: GatewayCaller) {
+    /**
+     * Facts about the machine running this backend and its OS account, for the desktop first run.
+     */
+    public suspend fun facts(params: Params): MachineFactsResult =
+        caller.call("machine.facts", params, serializer<Params>(), serializer<MachineFactsResult>())
+}
+
 public class McpMethods(private val caller: GatewayCaller) {
     /**
      * Curated MCP presets with per-profile installed/enabled state and the env keys each needs.
@@ -1054,7 +1118,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun catalog(params: ProfileParams): McpCatalogResult =
         caller.call("mcp.catalog", params, serializer<ProfileParams>(), serializer<McpCatalogResult>())
@@ -1063,11 +1127,11 @@ public class McpMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - 4001 invalidRequest: "server '{…}' rejected: suspicious command/args configuration"; notFound: "session not found"
-     * - 4063 invalidRequest: "config must specify a 'url' (http) or 'command' (stdio), or a valid 'preset'", "{…} required"
+     * - 4063 invalidRequest: "Unknown MCP catalog entry or preset: {…}", "config must specify a 'url' (http) or 'command' (stdio), or a valid 'preset'", "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 4090 conflict: "server '{…}' already exists", "server '{…}' is provided by plugin '{…}' and cannot be modified"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversAdd(params: McpServersAddParams): McpServersAddResult =
         caller.call("mcp.servers.add", params, serializer<McpServersAddParams>(), serializer<McpServersAddResult>())
@@ -1079,7 +1143,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversList(params: ProfileParams): McpServersListResult =
         caller.call("mcp.servers.list", params, serializer<ProfileParams>(), serializer<McpServersListResult>())
@@ -1091,7 +1155,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversOauthCallback(params: McpOauthCallbackParams): McpOauthCallbackResult =
         caller.call("mcp.servers.oauth.callback", params, serializer<McpOauthCallbackParams>(), serializer<McpOauthCallbackResult>())
@@ -1103,7 +1167,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversOauthCancel(params: McpOauthFlowParams): McpOauthCancelResult =
         caller.call("mcp.servers.oauth.cancel", params, serializer<McpOauthFlowParams>(), serializer<McpOauthCancelResult>())
@@ -1115,7 +1179,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversOauthPoll(params: McpOauthFlowParams): McpOauthPollResult =
         caller.call("mcp.servers.oauth.poll", params, serializer<McpOauthFlowParams>(), serializer<McpOauthPollResult>())
@@ -1128,7 +1192,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
      * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversOauthStart(params: McpOauthStartParams): McpOauthStartResult =
         caller.call("mcp.servers.oauth.start", params, serializer<McpOauthStartParams>(), serializer<McpOauthStartResult>())
@@ -1141,7 +1205,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
      * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversRemove(params: McpServerNameParams): McpServersRemoveResult =
         caller.call("mcp.servers.remove", params, serializer<McpServerNameParams>(), serializer<McpServersRemoveResult>())
@@ -1154,7 +1218,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
      * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversSetApiKey(params: McpServersSetApiKeyParams): McpServersSetApiKeyResult =
         caller.call("mcp.servers.set_api_key", params, serializer<McpServersSetApiKeyParams>(), serializer<McpServersSetApiKeyResult>())
@@ -1166,7 +1230,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversStatus(params: ProfileParams): McpServersStatusResult =
         caller.call("mcp.servers.status", params, serializer<ProfileParams>(), serializer<McpServersStatusResult>())
@@ -1178,7 +1242,7 @@ public class McpMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found", "server '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun serversTest(params: McpServerNameParams): McpServersTestResult =
         caller.call("mcp.servers.test", params, serializer<McpServerNameParams>(), serializer<McpServersTestResult>())
@@ -1216,6 +1280,7 @@ public class ModelMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - 5033 unsupported
+     * - 5098 unavailable
      */
     public suspend fun options(params: ModelOptionsParams): ModelOptionsResult =
         caller.call("model.options", params, serializer<ModelOptionsParams>(), serializer<ModelOptionsResult>())
@@ -1229,6 +1294,7 @@ public class ModelMethods(private val caller: GatewayCaller) {
      * - 4004 conflict: "no env var defined for {…}"
      * - 4006 forbidden: "managed install — credentials are read-only"
      * - 5034 unavailable
+     * - 5098 unavailable
      */
     public suspend fun saveKey(params: ModelSaveKeyParams): ModelSaveKeyResult =
         caller.call("model.save_key", params, serializer<ModelSaveKeyParams>(), serializer<ModelSaveKeyResult>())
@@ -1236,22 +1302,38 @@ public class ModelMethods(private val caller: GatewayCaller) {
 
 public class OnboardingMethods(private val caller: GatewayCaller) {
     /**
-     * Create-or-read the backend-owned setup profile; the backend picks the name and finds it by role.
+     * Write onboarding.run in the root profile's config.yaml; answers the new state.
      *
      * Hermes' handler can answer with these errors:
-     * - 5073 serverError
+     * - 4002 invalidRequest: "onboarding.set_run requires a boolean 'run'"
+     * - 5077 serverError
      */
-    public suspend fun ensureSetupProfile(params: Params): OnboardingEnsureSetupProfileResult =
-        caller.call("onboarding.ensure_setup_profile", params, serializer<Params>(), serializer<OnboardingEnsureSetupProfileResult>())
+    public suspend fun setRun(params: OnboardingSetRunParams): OnboardingRunStateResult =
+        caller.call("onboarding.set_run", params, serializer<OnboardingSetRunParams>(), serializer<OnboardingRunStateResult>())
     /**
-     * Restore the setup profile to its created state in place (soul, memories, skills, sessions).
+     * Skip setup: end the session's onboarding run and close the card that waits.
      *
      * Hermes' handler can answer with these errors:
-     * - 4072 notFound: "no setup profile to reset"
-     * - 5074 serverError
+     * - 4001 notFound: "session not found"
      */
-    public suspend fun resetSetupProfile(params: Params): OnboardingResetSetupProfileResult =
-        caller.call("onboarding.reset_setup_profile", params, serializer<Params>(), serializer<OnboardingResetSetupProfileResult>())
+    public suspend fun skip(params: OnboardingSkipParams): OnboardingSkipResult =
+        caller.call("onboarding.skip", params, serializer<OnboardingSkipParams>(), serializer<OnboardingSkipResult>())
+    /**
+     * Open the onboarding chat in the default profile: create it, write its run record and play the opening.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5000 unavailable: "Session storage is unavailable: {…}. {…}"
+     * - 5078 serverError
+     * - 5079 unavailable
+     * - 5080 conflict
+     */
+    public suspend fun start(params: OnboardingStartParams): OnboardingStartResult =
+        caller.call("onboarding.start", params, serializer<OnboardingStartParams>(), serializer<OnboardingStartResult>())
+    /**
+     * Whether desktop first-run onboarding is due, and the chat in progress; reads the root profile's config.
+     */
+    public suspend fun state(params: OnboardingStateParams): OnboardingRunStateResult =
+        caller.call("onboarding.state", params, serializer<OnboardingStateParams>(), serializer<OnboardingRunStateResult>())
 }
 
 public class PasteMethods(private val caller: GatewayCaller) {
@@ -1418,13 +1500,18 @@ public class PetMethods(private val caller: GatewayCaller) {
 
 public class PluginsMethods(private val caller: GatewayCaller) {
     /**
+     * One curated plugin-catalog entry by name, from the backend's live catalog (cached, with the in-tree fallback and kill list); backs hermes://plugin/install?catalog= deep links.
+     */
+    public suspend fun catalogLookup(params: PluginCatalogLookupParams): PluginCatalogLookupResult =
+        caller.call("plugins.catalog.lookup", params, serializer<PluginCatalogLookupParams>(), serializer<PluginCatalogLookupResult>())
+    /**
      * Loaded plugin manager entries (legacy flat view); the Plugins Hub uses plugins.manage list.
      *
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun list(params: PluginsListParams): PluginsListResult =
         caller.call("plugins.list", params, serializer<PluginsListParams>(), serializer<PluginsListResult>())
@@ -1437,7 +1524,7 @@ public class PluginsMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5026 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun manage(params: PluginsManageParams): PluginsManageResult =
         caller.call("plugins.manage", params, serializer<PluginsManageParams>(), serializer<PluginsManageResult>())
@@ -1450,7 +1537,7 @@ public class PreviewMethods(private val caller: GatewayCaller) {
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
      * - 4012 invalidRequest: "url required"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      * - 5035 unavailable: "backend is retiring; reconnect to continue"
      */
     public suspend fun restart(params: PreviewRestartParams): TaskIdResult =
@@ -1468,7 +1555,7 @@ public class ProcessMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5010 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun kill(params: ProcessKillParams): ProcessKillResult =
         caller.call("process.kill", params, serializer<ProcessKillParams>(), serializer<ProcessKillResult>())
@@ -1480,19 +1567,19 @@ public class ProcessMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5010 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun list(params: ProcessListParams): ProcessListResult =
         caller.call("process.list", params, serializer<ProcessListParams>(), serializer<ProcessListResult>())
     /**
-     * Kill every background process in the registry (``/stop``), answering the count killed.
+     * ``/stop``: on the shared owner, kill the background processes ``session_id`` owns (required); a standalone sidecar kills every process it holds. Answers the count killed.
      *
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5010 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun stop(params: ProcessStopParams): ProcessStopResult =
         caller.call("process.stop", params, serializer<ProcessStopParams>(), serializer<ProcessStopResult>())
@@ -1547,14 +1634,6 @@ public class ProfilesMethods(private val caller: GatewayCaller) {
      */
     public suspend fun list(params: ProfilesListParams): ProfilesListResult =
         caller.call("profiles.list", params, serializer<ProfilesListParams>(), serializer<ProfilesListResult>())
-    /**
-     * Write the onboarding facts into the default profile's user memory and confirm they landed.
-     *
-     * Hermes' handler can answer with these errors:
-     * - 5067 serverError
-     */
-    public suspend fun rememberOnboarding(params: ProfilesRememberOnboardingParams): ProfilesRememberOnboardingResult =
-        caller.call("profiles.remember_onboarding", params, serializer<ProfilesRememberOnboardingParams>(), serializer<ProfilesRememberOnboardingResult>())
     /**
      * Store or clear a profile asset (avatar) atomically.
      *
@@ -1733,7 +1812,7 @@ public class PromptMethods(private val caller: GatewayCaller) {
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
      * - 4012 invalidRequest: "text required"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      * - 5035 unavailable: "backend is retiring; reconnect to continue"
      */
     public suspend fun background(params: SideAgentParams): TaskIdResult =
@@ -1744,7 +1823,7 @@ public class PromptMethods(private val caller: GatewayCaller) {
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
      * - 4012 invalidRequest: "text required"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      * - 5035 unavailable: "backend is retiring; reconnect to continue"
      */
     public suspend fun btw(params: SideAgentParams): TaskIdResult =
@@ -1761,6 +1840,7 @@ public class PromptMethods(private val caller: GatewayCaller) {
      * - 4028 conflict: "truncation would erase the entire session transcript; resubmit with confirm_empty_truncate=true if this is intended"
      * - 4029 invalidRequest: "truncation parameters require confirm_truncate=true; an ordinary prompt.submit must not drop session history (update your Hermes client if a rewind was intended)"
      * - 4030 conflict: "truncate_before_user_ordinal ({…}) does not match {…} target turn ({…})"
+     * - 4033 invalidRequest: "truncation would archive later user turns; resubmit with confirm_deep_truncate=true if this is intended"
      * - 4090 conflict
      * - 4091 busy: "hosted room member session is busy"
      * - 4120 invalidRequest: "hosted room turns require a bot_room session"; forbidden: "invalid hosted room turn proof"
@@ -1789,7 +1869,7 @@ public class ReloadMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5015 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun env(params: ReloadEnvParams): ReloadEnvResult =
         caller.call("reload.env", params, serializer<ReloadEnvParams>(), serializer<ReloadEnvResult>())
@@ -1802,7 +1882,7 @@ public class ReloadMethods(private val caller: GatewayCaller) {
      * - 4064 notFound: "profile '{…}' not found"
      * - 5015 serverError
      * - 5019 serverError: "compute-host reload_mcp failed: {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun mcp(params: ReloadMcpParams): ReloadMcpResult =
         caller.call("reload.mcp", params, serializer<ReloadMcpParams>(), serializer<ReloadMcpResult>())
@@ -1829,7 +1909,7 @@ public class RollbackMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5022 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun diff(params: RollbackDiffParams): RollbackDiffResult =
         caller.call("rollback.diff", params, serializer<RollbackDiffParams>(), serializer<RollbackDiffResult>())
@@ -1841,7 +1921,7 @@ public class RollbackMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5020 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun list(params: RollbackListParams): RollbackListResult =
         caller.call("rollback.list", params, serializer<RollbackListParams>(), serializer<RollbackListResult>())
@@ -1855,7 +1935,7 @@ public class RollbackMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5021 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun restore(params: RollbackRestoreParams): RollbackRestoreResult =
         caller.call("rollback.restore", params, serializer<RollbackRestoreParams>(), serializer<RollbackRestoreResult>())
@@ -1881,6 +1961,16 @@ public class SessionMethods(private val caller: GatewayCaller) {
     public suspend fun activeList(params: SessionActiveListParams): SessionActiveListResult =
         caller.call("session.active_list", params, serializer<SessionActiveListParams>(), serializer<SessionActiveListResult>())
     /**
+     * Set/clear archived (soft-hide, messages kept) on a session + lineage; Desktop PATCH parity.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 4001 notFound: "session not found"
+     * - 4006 invalidRequest: "session_id required"
+     * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
+     */
+    public suspend fun archive(params: SessionArchiveParams): SessionArchiveResult =
+        caller.call("session.archive", params, serializer<SessionArchiveParams>(), serializer<SessionArchiveResult>())
+    /**
      * Fork a live session into a new stored child that shares the parent's history so far.
      *
      * Hermes' handler can answer with these errors:
@@ -1888,7 +1978,7 @@ public class SessionMethods(private val caller: GatewayCaller) {
      * - 4008 conflict: "nothing to branch — send a message first"
      * - 5000 serverError: "agent init failed on branch: {…}"
      * - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun branch(params: SessionBranchParams): SessionBranchResult =
         caller.call("session.branch", params, serializer<SessionBranchParams>(), serializer<SessionBranchResult>())
@@ -1897,7 +1987,8 @@ public class SessionMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - -32602 invalidRequest
-     * - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+     * - 4002 invalidRequest
+     * - 4008 conflict: "nothing to branch — {…}", "send a message first"; invalidRequest: "parent_session_id is required when copying parent history"
      * - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
      */
     public suspend fun branchStored(params: SessionBranchStoredParams): SessionBranchStoredResult =
@@ -1910,7 +2001,7 @@ public class SessionMethods(private val caller: GatewayCaller) {
      * - 4008 conflict: "nothing to branch — send a message first"
      * - 5000 serverError: "agent init failed on branch: {…}"
      * - 5008 serverError: "branch failed: {…}"; unavailable: "Session storage is unavailable: {…}. {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun branchWhole(params: SessionBranchWholeParams): SessionBranchWholeResult =
         caller.call("session.branch_whole", params, serializer<SessionBranchWholeParams>(), serializer<SessionBranchWholeResult>())
@@ -1927,7 +2018,7 @@ public class SessionMethods(private val caller: GatewayCaller) {
      * - 4009 busy
      * - 5005 serverError
      * - 5019 serverError: "compute-host compress failed: {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun compress(params: SessionCompressParams): SessionCompressResult =
         caller.call("session.compress", params, serializer<SessionCompressParams>(), serializer<SessionCompressResult>())
@@ -1964,7 +2055,8 @@ public class SessionMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - -32602 invalidRequest
-     * - 4008 conflict: "nothing to branch — send a message first", "nothing to branch — {…}"; invalidRequest: "parent_session_id is required when copying parent history"
+     * - 4002 invalidRequest
+     * - 4008 conflict: "nothing to branch — {…}", "send a message first"; invalidRequest: "parent_session_id is required when copying parent history"
      * - 5008 unavailable: "Session storage is unavailable: {…}. {…}"
      */
     public suspend fun create(params: SessionCreateParams): SessionCreateResult =
@@ -2044,8 +2136,6 @@ public class SessionMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
-     * - 5019 serverError: "compute-host interrupt failed: {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
      */
     public suspend fun interrupt(params: SessionInterruptParams): SessionInterruptResult =
         caller.call("session.interrupt", params, serializer<SessionInterruptParams>(), serializer<SessionInterruptResult>())
@@ -2081,8 +2171,9 @@ public class SessionMethods(private val caller: GatewayCaller) {
      * - 4007 notFound: "session no longer live; retry resume", "session not found"
      * - 4009 busy: "session disconnect interrupt settling"
      * - 4130 conflict
+     * - 4132 conflict
      * - 5000 unavailable: "Session storage is unavailable: {…}. {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun resume(params: SessionResumeParams): SessionResumeResult =
         caller.call("session.resume", params, serializer<SessionResumeParams>(), serializer<SessionResumeResult>())
@@ -2091,8 +2182,10 @@ public class SessionMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
-     * - 5011 serverError: "compute-host session save failed: {…}", "compute-host session save returned an invalid response", "failed to create save directory {…}: {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 4131 conflict
+     * - 5011 serverError: "compute-host session save failed: {…}", "compute-host session save returned an invalid response", "failed to save {…}: {…}"
+     * - 5032 busy
+     * - codes relayed unchanged from a compute host, plugin or connector service
      */
     public suspend fun save(params: SessionSaveParams): SessionSaveResult =
         caller.call("session.save", params, serializer<SessionSaveParams>(), serializer<SessionSaveResult>())
@@ -2101,6 +2194,7 @@ public class SessionMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
+     * - 4021 invalidRequest: "hidden required"
      * - 5007 unavailable: "Session storage is unavailable: {…}. {…}"
      */
     public suspend fun setHidden(params: SessionSetHiddenParams): SessionSetHiddenResult =
@@ -2142,7 +2236,7 @@ public class SessionMethods(private val caller: GatewayCaller) {
      * - 4001 notFound: "session not found"
      * - 4009 busy
      * - 5008 serverError: "undo: {…}"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun undo(params: SessionUndoParams): SessionUndoResult =
         caller.call("session.undo", params, serializer<SessionUndoParams>(), serializer<SessionUndoResult>())
@@ -2170,6 +2264,9 @@ public class SessionMethods(private val caller: GatewayCaller) {
 public class SetupMethods(private val caller: GatewayCaller) {
     /**
      * Strict provider check through the same runtime resolution the agent uses on session creation.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5097 busy: "readiness check still in progress; retrying next tick"
      */
     public suspend fun runtimeCheck(params: SetupRuntimeCheckParams): SetupRuntimeCheckResult =
         caller.call("setup.runtime_check", params, serializer<SetupRuntimeCheckParams>(), serializer<SetupRuntimeCheckResult>())
@@ -2178,9 +2275,69 @@ public class SetupMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - 5016 serverError
+     * - 5097 busy: "readiness check still in progress; retrying next tick"
      */
     public suspend fun status(params: ProfileParams): SetupStatusResult =
         caller.call("setup.status", params, serializer<ProfileParams>(), serializer<SetupStatusResult>())
+}
+
+public class SharedMetricsMethods(private val caller: GatewayCaller) {
+    /**
+     * Record one finished Desktop day (mode use + button presses); recorded=false keeps it for a retry.
+     */
+    public suspend fun desktopDaily(params: SharedMetricsDesktopDailyParams): SharedMetricsDesktopDailyResult =
+        caller.call("shared_metrics.desktop_daily", params, serializer<SharedMetricsDesktopDailyParams>(), serializer<SharedMetricsDesktopDailyResult>())
+    /**
+     * Count one Desktop dislike signal (fire-and-forget; capped per signal per day; a no-op unless on).
+     */
+    public suspend fun desktopDislike(params: SharedMetricsDesktopDislikeParams): OkResult =
+        caller.call("shared_metrics.desktop_dislike", params, serializer<SharedMetricsDesktopDislikeParams>(), serializer<OkResult>())
+    /**
+     * Count one Desktop area used today (fire-and-forget; once per area per UTC day; a no-op unless on).
+     */
+    public suspend fun desktopFeatureUse(params: SharedMetricsDesktopFeatureUseParams): OkResult =
+        caller.call("shared_metrics.desktop_feature_use", params, serializer<SharedMetricsDesktopFeatureUseParams>(), serializer<OkResult>())
+    /**
+     * Count one Desktop friction event (fire-and-forget; capped per day; a no-op unless on).
+     */
+    public suspend fun desktopFriction(params: SharedMetricsDesktopFrictionParams): OkResult =
+        caller.call("shared_metrics.desktop_friction", params, serializer<SharedMetricsDesktopFrictionParams>(), serializer<OkResult>())
+    /**
+     * Count one Desktop first-run step transition (fire-and-forget; once per step+event; a no-op unless on).
+     */
+    public suspend fun desktopOnboarding(params: SharedMetricsDesktopOnboardingParams): OkResult =
+        caller.call("shared_metrics.desktop_onboarding", params, serializer<SharedMetricsDesktopOnboardingParams>(), serializer<OkResult>())
+    /**
+     * Write both shared-metrics opt-ins at once (send requires collection) and reconcile consent windows.
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5096 busy
+     */
+    public suspend fun set(params: SharedMetricsSetParams): SharedMetricsConsentResult =
+        caller.call("shared_metrics.set", params, serializer<SharedMetricsSetParams>(), serializer<SharedMetricsConsentResult>())
+    /**
+     * Count one user-typed slash command (fire-and-forget; a no-op unless shared metrics are on).
+     */
+    public suspend fun slashCommand(params: SharedMetricsSlashCommandParams): SharedMetricsSlashCommandResult =
+        caller.call("shared_metrics.slash_command", params, serializer<SharedMetricsSlashCommandParams>(), serializer<SharedMetricsSlashCommandResult>())
+    /**
+     * Record one client launch-to-ready latency (fire-and-forget; a no-op unless shared metrics are on).
+     */
+    public suspend fun startupLatency(params: SharedMetricsStartupLatencyParams): SharedMetricsStartupLatencyResult =
+        caller.call("shared_metrics.startup_latency", params, serializer<SharedMetricsStartupLatencyParams>(), serializer<SharedMetricsStartupLatencyResult>())
+    /**
+     * Pure read of the focused profile's shared-metrics opt-ins (collection, upload, answered).
+     *
+     * Hermes' handler can answer with these errors:
+     * - 5095 invalidRequest
+     */
+    public suspend fun status(params: ProfileParams): SharedMetricsConsentResult =
+        caller.call("shared_metrics.status", params, serializer<ProfileParams>(), serializer<SharedMetricsConsentResult>())
+    /**
+     * Count one Desktop packaged self-update outcome (fire-and-forget; a no-op unless shared metrics are on).
+     */
+    public suspend fun updateRun(params: SharedMetricsUpdateRunParams): SharedMetricsUpdateRunResult =
+        caller.call("shared_metrics.update_run", params, serializer<SharedMetricsUpdateRunParams>(), serializer<SharedMetricsUpdateRunResult>())
 }
 
 public class ShellMethods(private val caller: GatewayCaller) {
@@ -2208,7 +2365,7 @@ public class SkillsMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5024 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun manage(params: SkillsManageParams): SkillsManageResult =
         caller.call("skills.manage", params, serializer<SkillsManageParams>(), serializer<SkillsManageResult>())
@@ -2220,7 +2377,7 @@ public class SkillsMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5025 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun reload(params: SkillsReloadParams): SkillsReloadResult =
         caller.call("skills.reload", params, serializer<SkillsReloadParams>(), serializer<SkillsReloadResult>())
@@ -2359,12 +2516,13 @@ public class ToolsMethods(private val caller: GatewayCaller) {
      *
      * Hermes' handler can answer with these errors:
      * - 4001 notFound: "session not found"
+     * - 4009 busy
      * - 4017 invalidRequest: "unknown tools action: {…}"
      * - 4018 invalidRequest: "names required"
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 4090 conflict: "server '{…}' is provided by plugin '{…}' and cannot be modified"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      * - 5035 unavailable
      */
     public suspend fun configure(params: ToolsConfigureParams): ToolsConfigureResult =
@@ -2377,7 +2535,7 @@ public class ToolsMethods(private val caller: GatewayCaller) {
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
      * - 5031 serverError
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun list(params: _SessionScoped): ToolsetsListResult =
         caller.call("tools.list", params, serializer<_SessionScoped>(), serializer<ToolsetsListResult>())
@@ -2388,7 +2546,7 @@ public class ToolsMethods(private val caller: GatewayCaller) {
      * - 4001 notFound: "session not found"
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      * - 5034 unavailable
      */
     public suspend fun show(params: _SessionScoped): ToolsShowResult =
@@ -2403,7 +2561,7 @@ public class ToolsetsMethods(private val caller: GatewayCaller) {
      * - 4001 notFound: "session not found"
      * - 4063 invalidRequest: "{…} required"
      * - 4064 notFound: "profile '{…}' not found"
-     * - 5032 busy: "Hermes is still starting this session (loading tools), so this command could not run yet. Wait for the status bar to show ready and try again."
+     * - 5032 busy
      */
     public suspend fun list(params: _SessionScoped): ToolsetsListResult =
         caller.call("toolsets.list", params, serializer<_SessionScoped>(), serializer<ToolsetsListResult>())
@@ -2549,4 +2707,371 @@ public class WakeMethods(private val caller: GatewayCaller) {
      */
     public suspend fun stop(params: WakeStopParams): WakeStopResult =
         caller.call("wake.stop", params, serializer<WakeStopParams>(), serializer<WakeStopResult>())
+}
+
+/**
+ * The unified gateway runtime's strict wire (`hermes-gateway-v1`): the methods only Hermes' session authority
+ * serves (`gateway/session_controls.py`), and the shared names it serves with a different contract.
+ *
+ * The authority refuses unknown or missing params with `4001 invalid_params` (`data.fields` names them) and
+ * its other refusals with `4001 <reason>`; see `HermesGatewayException.Rpc.refusal`. A legacy gateway answers
+ * these methods with `-32601`, or with the legacy shapes where the name is shared; `gateway.ready`'s
+ * `session_authority` tells the two apart.
+ */
+public class CanonicalMethodCatalog(private val caller: GatewayCaller) {
+    public val a2a: CanonicalA2aMethods = CanonicalA2aMethods(caller)
+    public val approval: CanonicalApprovalMethods = CanonicalApprovalMethods(caller)
+    public val botRelay: CanonicalBotRelayMethods = CanonicalBotRelayMethods(caller)
+    public val clarify: CanonicalClarifyMethods = CanonicalClarifyMethods(caller)
+    public val config: CanonicalConfigMethods = CanonicalConfigMethods(caller)
+    public val cron: CanonicalCronMethods = CanonicalCronMethods(caller)
+    public val groups: CanonicalGroupsMethods = CanonicalGroupsMethods(caller)
+    public val image: CanonicalImageMethods = CanonicalImageMethods(caller)
+    public val kanban: CanonicalKanbanMethods = CanonicalKanbanMethods(caller)
+    public val profiles: CanonicalProfilesMethods = CanonicalProfilesMethods(caller)
+    public val prompt: CanonicalPromptMethods = CanonicalPromptMethods(caller)
+    public val runtime: CanonicalRuntimeMethods = CanonicalRuntimeMethods(caller)
+    public val session: CanonicalSessionMethods = CanonicalSessionMethods(caller)
+    public val shell: CanonicalShellMethods = CanonicalShellMethods(caller)
+    public val worker: CanonicalWorkerMethods = CanonicalWorkerMethods(caller)
+}
+
+public class CanonicalA2aMethods(private val caller: GatewayCaller) {
+    /**
+     * Forward one A2A input into the conversation its identity tuple names.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `queue_full`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun forward(params: A2aForwardParams): A2aForwardResult =
+        caller.call("a2a.forward", params, serializer<A2aForwardParams>(), serializer<A2aForwardResult>())
+}
+
+public class CanonicalApprovalMethods(private val caller: GatewayCaller) {
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun respond(params: CanonicalApprovalParams): PromptResponseResult =
+        caller.call("approval.respond", params, serializer<CanonicalApprovalParams>(), serializer<PromptResponseResult>())
+}
+
+public class CanonicalBotRelayMethods(private val caller: GatewayCaller) {
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_params`; unsupported: `unsupported_managed_policy`, `unsupported_projection`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `runtime_coordination_required`, `runtime_draining`, `storage_unavailable`
+     */
+    public suspend fun deliver(params: CanonicalBotDeliverParams): CanonicalBotDeliverResult =
+        caller.call("bot_relay.deliver", params, serializer<CanonicalBotDeliverParams>(), serializer<CanonicalBotDeliverResult>())
+}
+
+public class CanonicalClarifyMethods(private val caller: GatewayCaller) {
+    /**
+     * Generation-fenced answer to a pending clarify prompt (empty answer = skipped).
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun respond(params: ClarifyRespondParams): PromptResponseResult =
+        caller.call("clarify.respond", params, serializer<ClarifyRespondParams>(), serializer<PromptResponseResult>())
+}
+
+public class CanonicalConfigMethods(private val caller: GatewayCaller) {
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`, `use_session_mutation_model`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun get(params: ConfigGetParams): CanonicalConfigGetResult =
+        caller.call("config.get", params, serializer<ConfigGetParams>(), serializer<CanonicalConfigGetResult>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`, `use_session_mutation_model`; unsupported: `fast_unavailable`, `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     * - 4002
+     */
+    public suspend fun set(params: CanonicalConfigSetParams): ConfigSetResult =
+        caller.call("config.set", params, serializer<CanonicalConfigSetParams>(), serializer<ConfigSetResult>())
+}
+
+public class CanonicalCronMethods(private val caller: GatewayCaller) {
+    /**
+     * Cancel a queued cron admission or latch cancellation on a started one.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun cancel(params: CronAdmissionParams): CronCancelResult =
+        caller.call("cron.cancel", params, serializer<CronAdmissionParams>(), serializer<CronCancelResult>())
+    /**
+     * Re-observe a firing after a scheduler restart (same request identity).
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun recover(params: CronRunParams): CronStatusResult =
+        caller.call("cron.recover", params, serializer<CronRunParams>(), serializer<CronStatusResult>())
+    /**
+     * Status and, once terminal, the result of one cron admission.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun status(params: CronAdmissionParams): CronStatusResult =
+        caller.call("cron.status", params, serializer<CronAdmissionParams>(), serializer<CronStatusResult>())
+    /**
+     * Admit one cron firing into the owning profile's durable FIFO.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun submit(params: CronRunParams): CronSubmitResult =
+        caller.call("cron.submit", params, serializer<CronRunParams>(), serializer<CronSubmitResult>())
+}
+
+public class CanonicalGroupsMethods(private val caller: GatewayCaller) {
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun approve(params: CanonicalRoomApproveParams): GroupsApproveResult =
+        caller.call("groups.approve", params, serializer<CanonicalRoomApproveParams>(), serializer<GroupsApproveResult>())
+    /**
+     * Read one committed attachment for a live room viewer.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun attachmentDownload(params: GroupsAttachmentDownloadParams): RoomAttachmentBytes =
+        caller.call("groups.attachment.download", params, serializer<GroupsAttachmentDownloadParams>(), serializer<RoomAttachmentBytes>())
+    /**
+     * Store one attachment for a later groups.send manifest (idempotent per upload_id).
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun attachmentUpload(params: GroupsAttachmentUploadParams): RoomAttachment =
+        caller.call("groups.attachment.upload", params, serializer<GroupsAttachmentUploadParams>(), serializer<RoomAttachment>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun create(params: CanonicalRoomCreateParams): GroupsCreateResult =
+        caller.call("groups.create", params, serializer<CanonicalRoomCreateParams>(), serializer<GroupsCreateResult>())
+    /**
+     * Discard one indeterminate room task after explicit user confirmation.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun discard(params: GroupsDiscardParams): GroupsDiscardResult =
+        caller.call("groups.discard", params, serializer<GroupsDiscardParams>(), serializer<GroupsDiscardResult>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun retry(params: CanonicalRoomAttemptParams): GroupsRetryResult =
+        caller.call("groups.retry", params, serializer<CanonicalRoomAttemptParams>(), serializer<GroupsRetryResult>())
+}
+
+public class CanonicalImageMethods(private val caller: GatewayCaller) {
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun attachBytes(params: ImageAttachBytesParams): CanonicalAttachedImageResult =
+        caller.call("image.attach_bytes", params, serializer<ImageAttachBytesParams>(), serializer<CanonicalAttachedImageResult>())
+}
+
+public class CanonicalKanbanMethods(private val caller: GatewayCaller) {
+    /**
+     * Native-owner only: admit the dispatcher's current claim on a kanban task.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_kanban_claim`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `stale_kanban_claim`; busy: `queue_full`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun run(params: KanbanRunParams): KanbanRunResult =
+        caller.call("kanban.run", params, serializer<KanbanRunParams>(), serializer<KanbanRunResult>())
+}
+
+public class CanonicalProfilesMethods(private val caller: GatewayCaller) {
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun list(params: CanonicalProfilesParams): CanonicalProfilesResult =
+        caller.call("profiles.list", params, serializer<CanonicalProfilesParams>(), serializer<CanonicalProfilesResult>())
+}
+
+public class CanonicalPromptMethods(private val caller: GatewayCaller) {
+    /**
+     * Retire a still-queued admission; a started one is unaffected.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun cancel(params: PromptCancelParams): AdmissionStatus =
+        caller.call("prompt.cancel", params, serializer<PromptCancelParams>(), serializer<AdmissionStatus>())
+    /**
+     * Current receipt of one admission the caller submitted (or controls).
+     *
+     * The session authority can refuse it with:
+     * - 4001 notFound: `not_found`; forbidden: `permission_denied`
+     */
+    public suspend fun receipt(params: PromptReceiptParams): PromptReceiptResult =
+        caller.call("prompt.receipt", params, serializer<PromptReceiptParams>(), serializer<PromptReceiptResult>())
+    /**
+     * Acknowledge a turn lost across an owner restart; the FIFO behind it resumes. Never requeues the lost input.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun resolveUnknown(params: PromptResolveUnknownParams): AdmissionStatus =
+        caller.call("prompt.resolve_unknown", params, serializer<PromptResolveUnknownParams>(), serializer<AdmissionStatus>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `queue_full`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun submit(params: CanonicalSubmitParams): AdmissionStatus =
+        caller.call("prompt.submit", params, serializer<CanonicalSubmitParams>(), serializer<AdmissionStatus>())
+}
+
+public class CanonicalRuntimeMethods(private val caller: GatewayCaller) {
+    /**
+     * Owner identity and the canonical capabilities a client may rely on.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_params`; forbidden: `permission_denied`
+     */
+    public suspend fun describe(params: RuntimeDescribeParams): RuntimeDescribeResult =
+        caller.call("runtime.describe", params, serializer<RuntimeDescribeParams>(), serializer<RuntimeDescribeResult>())
+}
+
+public class CanonicalSessionMethods(private val caller: GatewayCaller) {
+    /**
+     * The classic CLI's /goal, /subgoal, /loop, /heartbeat manager calls (state writes, the goal judge, quality gates), run by the owner on the session's row.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun automation(params: SessionAutomationParams): SessionAutomationResult =
+        caller.call("session.automation", params, serializer<SessionAutomationParams>(), serializer<SessionAutomationResult>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun create(params: CanonicalCreateParams): CanonicalSnapshot =
+        caller.call("session.create", params, serializer<CanonicalCreateParams>(), serializer<CanonicalSnapshot>())
+    /**
+     * Drop this connection's subscription; a stale subscription id answers detached=false. end_reason (snake_case): the viewer is closing the conversation; the last viewer leaving an idle local session ends its row with that reason.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_params`; notFound: `not_found`; forbidden: `permission_denied`
+     */
+    public suspend fun detach(params: SessionDetachParams): SessionDetachResult =
+        caller.call("session.detach", params, serializer<SessionDetachParams>(), serializer<SessionDetachResult>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun eventsSince(params: CanonicalEventsParams): CanonicalEventsResult =
+        caller.call("session.events.since", params, serializer<CanonicalEventsParams>(), serializer<CanonicalEventsResult>())
+    /**
+     * Frozen launch policy projection of one local session.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun info(params: CanonicalSessionInfoParams): CanonicalSessionInfo =
+        caller.call("session.info", params, serializer<CanonicalSessionInfoParams>(), serializer<CanonicalSessionInfo>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun interrupt(params: CanonicalControlParams): CanonicalSessionHandle =
+        caller.call("session.interrupt", params, serializer<CanonicalControlParams>(), serializer<CanonicalSessionHandle>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun list(params: CanonicalListParams): CanonicalListResult =
+        caller.call("session.list", params, serializer<CanonicalListParams>(), serializer<CanonicalListResult>())
+    /**
+     * Revision-fenced, retry-idempotent session edit (rename, archive, sidebar, branch, delete, rewind, reset, model, reasoning, workspace, compress, import).
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun mutate(params: SessionMutateParams): SessionMutateResult =
+        caller.call("session.mutate", params, serializer<SessionMutateParams>(), serializer<SessionMutateResult>())
+    /**
+     * Local operator only: the owner deletes the ended sessions `hermes sessions prune` selected, skipping busy sessions and retained reset owners.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_params`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `runtime_draining`
+     */
+    public suspend fun prune(params: SessionPruneParams): SessionPruneResult =
+        caller.call("session.prune", params, serializer<SessionPruneParams>(), serializer<SessionPruneResult>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_control`, `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `execution_not_ready`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun redirect(params: CanonicalCorrectionParams): CanonicalCorrectionResult =
+        caller.call("session.redirect", params, serializer<CanonicalCorrectionParams>(), serializer<CanonicalCorrectionResult>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun resume(params: CanonicalResumeParams): CanonicalSnapshot =
+        caller.call("session.resume", params, serializer<CanonicalResumeParams>(), serializer<CanonicalSnapshot>())
+    /**
+     * The session.usage dict on demand: what main's classic CLI read off its agent.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun stats(params: SessionStatsParams): SessionStats =
+        caller.call("session.stats", params, serializer<SessionStatsParams>(), serializer<SessionStats>())
+    /**
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_control`, `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `execution_not_ready`, `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun steer(params: CanonicalCorrectionParams): CanonicalCorrectionResult =
+        caller.call("session.steer", params, serializer<CanonicalCorrectionParams>(), serializer<CanonicalCorrectionResult>())
+}
+
+public class CanonicalShellMethods(private val caller: GatewayCaller) {
+    /**
+     * Ink ``!cmd`` / ``{!cmd}`` on the shared owner: one safe command for a local session, in its frozen launch cwd (``gateway/session_shell.py``).
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `dangerous_command`, `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun exec(params: CanonicalShellExecParams): ShellExecResult =
+        caller.call("shell.exec", params, serializer<CanonicalShellExecParams>(), serializer<ShellExecResult>())
+}
+
+public class CanonicalWorkerMethods(private val caller: GatewayCaller) {
+    /**
+     * Adopt a registered execution after verifying the live producer claim.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_producer`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `worker_not_live`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun adopt(params: WorkerScopeParams): WorkerExecution =
+        caller.call("worker.adopt", params, serializer<WorkerScopeParams>(), serializer<WorkerExecution>())
+    /**
+     * Sequence-fenced typed persistence write from an adopted worker.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_producer`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `worker_not_live`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun persist(params: WorkerPersistParams): WorkerPersistResult =
+        caller.call("worker.persist", params, serializer<WorkerPersistParams>(), serializer<WorkerPersistResult>())
+    /**
+     * Register a compute worker execution on an idle session.
+     *
+     * The session authority can refuse it with:
+     * - 4001 invalidRequest: `invalid_checkpoint`, `invalid_params`, `invalid_worker_frame`, `invalid_worker_result`; unsupported: `unsupported_managed_policy`, `unsupported_producer`, `unsupported_projection`, `unsupported_terminal_backend`; notFound: `not_found`, `process_not_found`, `unknown_execution`; conflict: `acp_mcp_policy_conflict`, `admission_conflict`, `open_user_tail`, `stale_epoch`, `stale_generation`, `worker_not_live`; busy: `session_busy`, `worker_control_backpressure`; forbidden: `permission_denied`, `profile_mismatch`; unavailable: `acp_mcp_discovery_failed`, `launch_credentials_unavailable`, `managed_worker_hello_timeout`, `runtime_coordination_required`, `runtime_draining`, `runtime_retired`, `storage_unavailable`; serverError: `managed_worker_failed`, `managed_worker_stopped`
+     */
+    public suspend fun register(params: WorkerRegisterParams): WorkerExecution =
+        caller.call("worker.register", params, serializer<WorkerRegisterParams>(), serializer<WorkerExecution>())
 }

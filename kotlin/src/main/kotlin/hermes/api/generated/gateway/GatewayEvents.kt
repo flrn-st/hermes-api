@@ -7,7 +7,9 @@ import kotlinx.serialization.json.JsonElement
 
 /** Contracted gateway notifications; unknown types retain their raw JSON payload. */
 public sealed interface GatewayEventPayload {
+    public data class AgentPrint(public val payload: AgentPrintPayload) : GatewayEventPayload
     public data class AgentTerminalOutput(public val payload: TerminalOutputPayload) : GatewayEventPayload
+    public data class ApprovalCancelled(public val payload: ApprovalCancelledPayload) : GatewayEventPayload
     public data class BackgroundComplete(public val payload: SideAgentCompletePayload) : GatewayEventPayload
     public data class BillingStepUpVerification(public val payload: BillingStepUpVerificationPayload) : GatewayEventPayload
     public data class BotRelayOutboxPending(public val payload: ChangeSignalPayload) : GatewayEventPayload
@@ -23,13 +25,13 @@ public sealed interface GatewayEventPayload {
     public data class DisplayLease(public val payload: DisplayLeasePayload) : GatewayEventPayload
     public data class DisplayStatus(public val payload: DisplayStatusPayload) : GatewayEventPayload
     public data class Error(public val payload: ErrorPayload) : GatewayEventPayload
+    public data class FreeTierChallenge(public val payload: FreeTierChallengePayload) : GatewayEventPayload
     public data class GatewayReady(public val payload: GatewayReadyPayload) : GatewayEventPayload
-    public data class LayoutApply(public val payload: LayoutApplyPayload) : GatewayEventPayload
     public data class MessageComplete(public val payload: MessageCompletePayload) : GatewayEventPayload
-    public data class MessageDelta(public val payload: StreamDeltaPayload) : GatewayEventPayload
+    public data class MessageDelta(public val payload: MessageDeltaPayload) : GatewayEventPayload
     public data class MessageInterim(public val payload: MessageInterimPayload) : GatewayEventPayload
     public data class MessageReaction(public val payload: MessageReactionPayload) : GatewayEventPayload
-    public data object MessageStart : GatewayEventPayload
+    public data class MessageStart(public val payload: MessageStartPayload) : GatewayEventPayload
     public data class MoaAggregating(public val payload: MoaAggregatingPayload) : GatewayEventPayload
     public data class MoaPhase(public val payload: MoaPhasePayload) : GatewayEventPayload
     public data class MoaProgress(public val payload: MoaProgressPayload) : GatewayEventPayload
@@ -37,6 +39,7 @@ public sealed interface GatewayEventPayload {
     public data class Notice(public val payload: NoticePayload) : GatewayEventPayload
     public data class NotificationClear(public val payload: NotificationClearPayload) : GatewayEventPayload
     public data class NotificationShow(public val payload: NotificationShowPayload) : GatewayEventPayload
+    public data class OnboardingEnded(public val payload: OnboardingEndedPayload) : GatewayEventPayload
     public data class PairingChanged(public val payload: ChangeSignalPayload) : GatewayEventPayload
     public data class PaneReveal(public val payload: PaneRevealPayload) : GatewayEventPayload
     public data class PetChanged(public val payload: PetChangedPayload) : GatewayEventPayload
@@ -47,6 +50,7 @@ public sealed interface GatewayEventPayload {
     public data class PreviewOpen(public val payload: PreviewOpenPayload) : GatewayEventPayload
     public data class PreviewRestartComplete(public val payload: SideAgentCompletePayload) : GatewayEventPayload
     public data class PreviewRestartProgress(public val payload: PreviewRestartProgressPayload) : GatewayEventPayload
+    public data class ProjectsChanged(public val payload: ChangeSignalPayload) : GatewayEventPayload
     public data class Reaction(public val payload: ReactionPayload) : GatewayEventPayload
     public data class ReasoningAvailable(public val payload: StreamDeltaPayload) : GatewayEventPayload
     public data class ReasoningDelta(public val payload: StreamDeltaPayload) : GatewayEventPayload
@@ -77,6 +81,7 @@ public sealed interface GatewayEventPayload {
     public data class ToolOutputRisk(public val payload: ToolOutputRiskPayload) : GatewayEventPayload
     public data class ToolStart(public val payload: ToolStartPayload) : GatewayEventPayload
     public data object VoiceInterrupted : GatewayEventPayload
+    public data class VoicePartial(public val payload: VoicePartialPayload) : GatewayEventPayload
     public data class VoiceStatus(public val payload: VoiceStatusPayload) : GatewayEventPayload
     public data class VoiceTranscript(public val payload: VoiceTranscriptPayload) : GatewayEventPayload
     public data class WakeDetected(public val payload: WakeDetectedPayload) : GatewayEventPayload
@@ -84,7 +89,9 @@ public sealed interface GatewayEventPayload {
 
     public companion object {
         public fun decode(type: String, payload: JsonElement, json: Json): GatewayEventPayload = when (type) {
+            "agent.print" -> AgentPrint(json.decodeFromJsonElement(AgentPrintPayload.serializer(), payload))
             "agent.terminal.output" -> AgentTerminalOutput(json.decodeFromJsonElement(TerminalOutputPayload.serializer(), payload))
+            "approval.cancelled" -> ApprovalCancelled(json.decodeFromJsonElement(ApprovalCancelledPayload.serializer(), payload))
             "background.complete" -> BackgroundComplete(json.decodeFromJsonElement(SideAgentCompletePayload.serializer(), payload))
             "billing.step_up.verification" -> BillingStepUpVerification(json.decodeFromJsonElement(BillingStepUpVerificationPayload.serializer(), payload))
             "bot_relay.outbox.pending" -> BotRelayOutboxPending(json.decodeFromJsonElement(ChangeSignalPayload.serializer(), payload))
@@ -100,13 +107,13 @@ public sealed interface GatewayEventPayload {
             "display.lease" -> DisplayLease(json.decodeFromJsonElement(DisplayLeasePayload.serializer(), payload))
             "display.status" -> DisplayStatus(json.decodeFromJsonElement(DisplayStatusPayload.serializer(), payload))
             "error" -> Error(json.decodeFromJsonElement(ErrorPayload.serializer(), payload))
+            "free_tier.challenge" -> FreeTierChallenge(json.decodeFromJsonElement(FreeTierChallengePayload.serializer(), payload))
             "gateway.ready" -> GatewayReady(json.decodeFromJsonElement(GatewayReadyPayload.serializer(), payload))
-            "layout.apply" -> LayoutApply(json.decodeFromJsonElement(LayoutApplyPayload.serializer(), payload))
             "message.complete" -> MessageComplete(json.decodeFromJsonElement(MessageCompletePayload.serializer(), payload))
-            "message.delta" -> MessageDelta(json.decodeFromJsonElement(StreamDeltaPayload.serializer(), payload))
+            "message.delta" -> MessageDelta(json.decodeFromJsonElement(MessageDeltaPayload.serializer(), payload))
             "message.interim" -> MessageInterim(json.decodeFromJsonElement(MessageInterimPayload.serializer(), payload))
             "message.reaction" -> MessageReaction(json.decodeFromJsonElement(MessageReactionPayload.serializer(), payload))
-            "message.start" -> MessageStart
+            "message.start" -> MessageStart(json.decodeFromJsonElement(MessageStartPayload.serializer(), payload))
             "moa.aggregating" -> MoaAggregating(json.decodeFromJsonElement(MoaAggregatingPayload.serializer(), payload))
             "moa.phase" -> MoaPhase(json.decodeFromJsonElement(MoaPhasePayload.serializer(), payload))
             "moa.progress" -> MoaProgress(json.decodeFromJsonElement(MoaProgressPayload.serializer(), payload))
@@ -114,6 +121,7 @@ public sealed interface GatewayEventPayload {
             "notice" -> Notice(json.decodeFromJsonElement(NoticePayload.serializer(), payload))
             "notification.clear" -> NotificationClear(json.decodeFromJsonElement(NotificationClearPayload.serializer(), payload))
             "notification.show" -> NotificationShow(json.decodeFromJsonElement(NotificationShowPayload.serializer(), payload))
+            "onboarding.ended" -> OnboardingEnded(json.decodeFromJsonElement(OnboardingEndedPayload.serializer(), payload))
             "pairing.changed" -> PairingChanged(json.decodeFromJsonElement(ChangeSignalPayload.serializer(), payload))
             "pane.reveal" -> PaneReveal(json.decodeFromJsonElement(PaneRevealPayload.serializer(), payload))
             "pet.changed" -> PetChanged(json.decodeFromJsonElement(PetChangedPayload.serializer(), payload))
@@ -124,6 +132,7 @@ public sealed interface GatewayEventPayload {
             "preview.open" -> PreviewOpen(json.decodeFromJsonElement(PreviewOpenPayload.serializer(), payload))
             "preview.restart.complete" -> PreviewRestartComplete(json.decodeFromJsonElement(SideAgentCompletePayload.serializer(), payload))
             "preview.restart.progress" -> PreviewRestartProgress(json.decodeFromJsonElement(PreviewRestartProgressPayload.serializer(), payload))
+            "projects.changed" -> ProjectsChanged(json.decodeFromJsonElement(ChangeSignalPayload.serializer(), payload))
             "reaction" -> Reaction(json.decodeFromJsonElement(ReactionPayload.serializer(), payload))
             "reasoning.available" -> ReasoningAvailable(json.decodeFromJsonElement(StreamDeltaPayload.serializer(), payload))
             "reasoning.delta" -> ReasoningDelta(json.decodeFromJsonElement(StreamDeltaPayload.serializer(), payload))
@@ -154,6 +163,7 @@ public sealed interface GatewayEventPayload {
             "tool.output_risk" -> ToolOutputRisk(json.decodeFromJsonElement(ToolOutputRiskPayload.serializer(), payload))
             "tool.start" -> ToolStart(json.decodeFromJsonElement(ToolStartPayload.serializer(), payload))
             "voice.interrupted" -> VoiceInterrupted
+            "voice.partial" -> VoicePartial(json.decodeFromJsonElement(VoicePartialPayload.serializer(), payload))
             "voice.status" -> VoiceStatus(json.decodeFromJsonElement(VoiceStatusPayload.serializer(), payload))
             "voice.transcript" -> VoiceTranscript(json.decodeFromJsonElement(VoiceTranscriptPayload.serializer(), payload))
             "wake.detected" -> WakeDetected(json.decodeFromJsonElement(WakeDetectedPayload.serializer(), payload))
@@ -185,11 +195,20 @@ public sealed interface ServerRequest {
     public data class Secret(public val params: SecretRequestParams) : ServerRequest {
         override val method: String get() = "secret"
     }
+    public data class SetupBeat(public val params: SetupBeatRequestParams) : ServerRequest {
+        override val method: String get() = "setup_beat"
+    }
     public data class Sudo(public val params: SudoRequestParams) : ServerRequest {
         override val method: String get() = "sudo"
     }
     public data class TerminalRead(public val params: ReadRangeRequestParams) : ServerRequest {
         override val method: String get() = "terminal.read"
+    }
+    public data class ThemeApply(public val params: ThemeApplyRequestParams) : ServerRequest {
+        override val method: String get() = "theme.apply"
+    }
+    public data class ThemePick(public val params: ThemePickRequestParams) : ServerRequest {
+        override val method: String get() = "theme.pick"
     }
     public data class Tour(public val params: TourRequestParams) : ServerRequest {
         override val method: String get() = "tour"
@@ -216,8 +235,11 @@ public sealed interface ServerRequest {
             "preview.act" -> PreviewAct(json.decodeFromJsonElement(PreviewActRequestParams.serializer(), params))
             "preview.read" -> PreviewRead(json.decodeFromJsonElement(ReadRangeRequestParams.serializer(), params))
             "secret" -> Secret(json.decodeFromJsonElement(SecretRequestParams.serializer(), params))
+            "setup_beat" -> SetupBeat(json.decodeFromJsonElement(SetupBeatRequestParams.serializer(), params))
             "sudo" -> Sudo(json.decodeFromJsonElement(SudoRequestParams.serializer(), params))
             "terminal.read" -> TerminalRead(json.decodeFromJsonElement(ReadRangeRequestParams.serializer(), params))
+            "theme.apply" -> ThemeApply(json.decodeFromJsonElement(ThemeApplyRequestParams.serializer(), params))
+            "theme.pick" -> ThemePick(json.decodeFromJsonElement(ThemePickRequestParams.serializer(), params))
             "tour" -> Tour(json.decodeFromJsonElement(TourRequestParams.serializer(), params))
             "vault.code" -> VaultCode(json.decodeFromJsonElement(VaultCodeRequestParams.serializer(), params))
             "vault.save_login" -> VaultSaveLogin(json.decodeFromJsonElement(VaultSaveLoginRequestParams.serializer(), params))
@@ -236,8 +258,11 @@ public sealed interface ServerRequestResult {
     public data class PreviewAct(public val value: ValueResult) : ServerRequestResult
     public data class PreviewRead(public val value: ValueResult) : ServerRequestResult
     public data class Secret(public val value: ValueResult) : ServerRequestResult
+    public data class SetupBeat(public val value: SetupBeatResult) : ServerRequestResult
     public data class Sudo(public val value: ValueResult) : ServerRequestResult
     public data class TerminalRead(public val value: ValueResult) : ServerRequestResult
+    public data class ThemeApply(public val value: ValueResult) : ServerRequestResult
+    public data class ThemePick(public val value: ThemePickResult) : ServerRequestResult
     public data class Tour(public val value: ValueResult) : ServerRequestResult
     public data class VaultCode(public val value: ValueResult) : ServerRequestResult
     public data class VaultSaveLogin(public val value: ValueResult) : ServerRequestResult
@@ -251,8 +276,11 @@ public sealed interface ServerRequestResult {
         is PreviewAct -> request is ServerRequest.PreviewAct
         is PreviewRead -> request is ServerRequest.PreviewRead
         is Secret -> request is ServerRequest.Secret
+        is SetupBeat -> request is ServerRequest.SetupBeat
         is Sudo -> request is ServerRequest.Sudo
         is TerminalRead -> request is ServerRequest.TerminalRead
+        is ThemeApply -> request is ServerRequest.ThemeApply
+        is ThemePick -> request is ServerRequest.ThemePick
         is Tour -> request is ServerRequest.Tour
         is VaultCode -> request is ServerRequest.VaultCode
         is VaultSaveLogin -> request is ServerRequest.VaultSaveLogin
@@ -267,8 +295,11 @@ public sealed interface ServerRequestResult {
         is PreviewAct -> json.encodeToString(ValueResult.serializer(), value)
         is PreviewRead -> json.encodeToString(ValueResult.serializer(), value)
         is Secret -> json.encodeToString(ValueResult.serializer(), value)
+        is SetupBeat -> json.encodeToString(SetupBeatResult.serializer(), value)
         is Sudo -> json.encodeToString(ValueResult.serializer(), value)
         is TerminalRead -> json.encodeToString(ValueResult.serializer(), value)
+        is ThemeApply -> json.encodeToString(ValueResult.serializer(), value)
+        is ThemePick -> json.encodeToString(ThemePickResult.serializer(), value)
         is Tour -> json.encodeToString(ValueResult.serializer(), value)
         is VaultCode -> json.encodeToString(ValueResult.serializer(), value)
         is VaultSaveLogin -> json.encodeToString(ValueResult.serializer(), value)

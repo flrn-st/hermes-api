@@ -1,0 +1,1722 @@
+{
+  "DELETE /api/credentials/pool/{provider}/{index}": {
+    "body_sha256": "5f9dd9307130d6f5ce2b3b976ff104fd6fb4e08c5d4d8057c851f31a9bcc7001",
+    "handler_sha256": "fced577705aa3383dca0ccf990fbd751a8b3622b59f7bba6f0b184088d67976b",
+    "source": "hermes_cli/web_routers/ops.py:431"
+  },
+  "DELETE /api/cron/jobs/{job_id}": {
+    "body_sha256": "5a8f5c13d7082165ea42288edcc8f348d670ee52eaa4447369fdc63de20e6913",
+    "handler_sha256": "89403ea7244d2f1fa9488d6bbdc3d21a1d1b0e820b112ee8e9359b0739691c33",
+    "source": "hermes_cli/web_routers/cron.py:734"
+  },
+  "DELETE /api/dashboard/agent-plugins/{name}": {
+    "body_sha256": "56ed08c767ededa186c0501e0dd08d2b1362113481e375fe48040fe98db9d7dd",
+    "handler_sha256": "a27818f4b058e244b3a34cd65d37476935a8ec95ef88c560659a72ed74444627",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:286"
+  },
+  "DELETE /api/env": {
+    "body_sha256": "21c80885c0f7b775f7d6a507c406cbd05af700dfde3d71143c0903e6852aea82",
+    "handler_sha256": "7d8016dcc5578d16a7ba0fc7d844328588442a6381a5c7ce0fecbaf611046f5f",
+    "source": "hermes_cli/web_routers/config_env.py:1067"
+  },
+  "DELETE /api/files": {
+    "body_sha256": "08ef5e94cd9768d8869769fdc130c0558bc70bb222d4635863a0fc52e4aede4e",
+    "handler_sha256": "b4ece9ba0cc0ca48c8bbdb8a8e4b303ffb3db5aa7f13ffa588d4a3859efcb7a2",
+    "source": "hermes_cli/web_routers/files.py:732"
+  },
+  "DELETE /api/learning/node": {
+    "body_sha256": "cbd1d61a0d8e9b01f9ddcdfbd47f6e6438d845c454e1d4852ed365ad4088aa10",
+    "handler_sha256": "500317c3b5e7a4a5da336deb5fd0b118e782db8422081eb026c8db9d84fc3980",
+    "source": "hermes_cli/web_routers/status.py:711"
+  },
+  "DELETE /api/local-models/models/{model_id}": {
+    "body_sha256": "b9914341b82504ea7ddd15c955bf751cb5d200ac28e0782f1f6201e6ab67fe8c",
+    "handler_sha256": "75a3026af4762a43ebf41a08f18216aff44787588f3dbd7498453c7c37fb2b74",
+    "source": "hermes_cli/web_routers/local_models.py:736"
+  },
+  "DELETE /api/mcp/oauth/flows/{flow_id}": {
+    "body_sha256": "9b99e71d1a3606d20a7a413aabe504d915786815df6e91466578d29f6cf4ca19",
+    "handler_sha256": "d3329ebb72cf3305b26b7d1af6df925d0e50ab042057e769c15ad8da90deba07",
+    "source": "hermes_cli/web_routers/mcp.py:325"
+  },
+  "DELETE /api/mcp/servers/{name}": {
+    "body_sha256": "f5accb2dedcf47acfb46327682b1f4822440e03e63f9cc6e3e2c3f8c98c1b88c",
+    "handler_sha256": "5a0db139b28772ac3a2e117dd6061386f712dc0aca98069345f9d70fe7fcaf7c",
+    "source": "hermes_cli/web_routers/mcp.py:183"
+  },
+  "DELETE /api/messaging/telegram/onboarding/{pairing_id}": {
+    "body_sha256": "47603807048d634b1febfe8b7a6a63d38c9e8feb926eaff89eee34463cdb3d79",
+    "handler_sha256": "6dffdab7eac99ceda6144e9ca5f22c60b4f9e92ca0ed41776e676f3701154653",
+    "source": "hermes_cli/web_routers/messaging.py:815"
+  },
+  "DELETE /api/messaging/whatsapp/onboarding/{pairing_id}": {
+    "body_sha256": "956c8ed6c69427e74b84a01633ab12fb0c5a305d089998e698a0ce5fe4dacbc7",
+    "handler_sha256": "9bddd478179b532e4c08f8c5ec0c87536e386e7aba052d740d6f08cef92fd0bb",
+    "source": "hermes_cli/web_routers/messaging.py:656"
+  },
+  "DELETE /api/ops/hooks": {
+    "body_sha256": "41d4323747262ee0b8c4f045c177f7db59533597a9a6147b45c74349f665e376",
+    "handler_sha256": "4f9de7d9db0ec8bac2bedd1492c5f92acb2a66f16dfa60b8031ba0a9a5a72403",
+    "source": "hermes_cli/web_routers/ops.py:766"
+  },
+  "DELETE /api/plugins/kanban/attachments/{attachment_id}": {
+    "body_sha256": "ffeb566853f9471355a6aa5f03322436ac9f686865f26d8db1eb62ea9aa8fee4",
+    "handler_sha256": "aa2f32a7fc70223ff88b35393f70e9613a228d2d4df42126819002f19477c5d3",
+    "source": "plugins/kanban/dashboard/plugin_api.py:523"
+  },
+  "DELETE /api/plugins/kanban/boards/{slug}": {
+    "body_sha256": "ca99129b68187100616f177b0d1011a182fa40bb54510c2cdfc261bf99264f18",
+    "handler_sha256": "9ddf8f3bbd9522de4b58e55d638ea56c59afce0be18948452d912d18d1fb830c",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1480"
+  },
+  "DELETE /api/plugins/kanban/links": {
+    "body_sha256": "8c5ee402f1c7fb5e6539968cf4d3dff019e2f23a719e29ff6c6e10b0afa1a26c",
+    "handler_sha256": "520dd8f460247eb8211552e8aa7d6ebd7adb230f53e296c9250f87257b77e7e7",
+    "source": "plugins/kanban/dashboard/plugin_api.py:824"
+  },
+  "DELETE /api/plugins/kanban/tasks/{task_id}": {
+    "body_sha256": "f16927d84d7b6b5bdeb0f6e7cc3e8f090b7b10d000b973b4b1ad3c1040f10591",
+    "handler_sha256": "2a38d8e8840afae95e392866f2b532ef4b8a5045a6b27f7db0831b15ca2ba129",
+    "source": "plugins/kanban/dashboard/plugin_api.py:719"
+  },
+  "DELETE /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}": {
+    "body_sha256": "a7bb92c771a69c9cbda3d5f4a3479d2e02d7c8c6d1ff11eb26a4efd614f6c6c5",
+    "handler_sha256": "324831d5a1e83303a234dc5ba3bec044dbea6eb24362f08e0283ebddaeca8471",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1228"
+  },
+  "DELETE /api/profiles/{name}": {
+    "body_sha256": "fee8a1cfab732d29725f322a73ce50f4b548e3420b93e9855d1a1183de7d3614",
+    "handler_sha256": "ef1dc51faa2825906ebd8e586fb67291c15813b411f7ae36f1e9c6c6a350e15e",
+    "source": "hermes_cli/web_routers/profiles.py:972"
+  },
+  "DELETE /api/providers/custom-endpoints/{endpoint_id}": {
+    "body_sha256": "9517b65c1a56e6979115b99b2ff5041ca659dbdae5ab50ede7a14f841cdfb966",
+    "handler_sha256": "a7ab98613c86f441742b6547fb315694cdab3758a8840562075a869f817a2898",
+    "source": "hermes_cli/web_routers/config_env.py:824"
+  },
+  "DELETE /api/providers/oauth/sessions/{session_id}": {
+    "body_sha256": "89df686974a5abb92531a130b6afde346a97701f0326829b776e5b76fed0e504",
+    "handler_sha256": "ae2db4d759d4ee56bceedb7e0cb9ae7e408464304309bebbf2472221793b85f7",
+    "source": "hermes_cli/web_routers/oauth.py:897"
+  },
+  "DELETE /api/providers/oauth/{provider_id}": {
+    "body_sha256": "da2b1862b9382e0b6473bd94015ee15452f24119147b7da6c84ba89f50eb406a",
+    "handler_sha256": "3c038104d39b51d675ec6a6f058f2f4eedf32516e3c786000e7ec123f3172918",
+    "source": "hermes_cli/web_routers/oauth.py:744"
+  },
+  "DELETE /api/sessions/empty": {
+    "body_sha256": "d78c1b2076c34f47ef1f84024b2d73b2b2e326e7f54b109977ff9b07a280213b",
+    "handler_sha256": "c652c2879e7dba653459d6646f9f629f82ed21f9c29d640a83e61e44e0bf2677",
+    "source": "hermes_cli/web_routers/sessions.py:519"
+  },
+  "DELETE /api/sessions/{session_id}": {
+    "body_sha256": "bbac197e6baf082b4e046e0eb92420b7424c52ddc858029e4cf30026d3c7748d",
+    "handler_sha256": "b82bb8275bfc32915aedd037d16ea0a9fbf9e69b0d96e2cd189367e192e153b9",
+    "source": "hermes_cli/web_routers/sessions.py:843"
+  },
+  "DELETE /api/webhooks/{name}": {
+    "body_sha256": "e1430cb97a7b3c8fe7f4d516cc3d9d94e7fbc97b486483ed8404a1ec30694cbc",
+    "handler_sha256": "be723a92601c0452b187cd5d5348737a237a4b16ecfaee0bec372671a8f29d1e",
+    "source": "hermes_cli/web_routers/ops.py:254"
+  },
+  "GET /api/actions/{name}/status": {
+    "body_sha256": "aa1734b79e1aa2917e2a1aff5c7af2051a0a769c4818ad4f5bbc037fdc302ead",
+    "handler_sha256": "71cc4314e4e3ffdefbc7a084252e7bf7b7ea2026dd62d59b6a529f1961a66693",
+    "source": "hermes_cli/web_routers/actions.py:373"
+  },
+  "GET /api/analytics/models": {
+    "body_sha256": "5da2c81a1bea01f3dfc5ac9756d6149045549e213c51cddd096ccfb720272ca6",
+    "handler_sha256": "9bdbd136d071072249f52f7302e285a2cab8f87d9e6cae29c7c7cf288967319b",
+    "source": "hermes_cli/web_routers/analytics.py:410"
+  },
+  "GET /api/analytics/usage": {
+    "body_sha256": "cdab6463c81bab0837f80cc82302cabb46d621603cc7bfc0e1ce91a5d348030a",
+    "handler_sha256": "885941292538372e4b0ad3b98e17f73b93d7f3cbf82433e7bfeae690bb8053b9",
+    "source": "hermes_cli/web_routers/analytics.py:145"
+  },
+  "GET /api/audio/elevenlabs/voices": {
+    "body_sha256": "deb064887ef9cd8f979ba2d1d116d0c0ef7421f40526eb2fd88ea87f5b9d8511",
+    "handler_sha256": "4db25d475a3c2d566a20b4109f64e572bf7f095a2a1adaa651409cce1807c45d",
+    "source": "hermes_cli/web_routers/audio.py:218"
+  },
+  "GET /api/audio/voice-config": {
+    "body_sha256": "9bf0188275b33c4b753a3f5c653a4b2db1c31574a73e317919da82815aa68c6b",
+    "handler_sha256": "120d9b93fd2f20617e8e3478dc18bf538b4b609689311ffb0bf3b710434bcc3f",
+    "source": "hermes_cli/web_routers/audio.py:149"
+  },
+  "GET /api/audio/voice-live/status": {
+    "body_sha256": "4e59adb334e8c58a7f1865316f6c2876d376b0247094dc8684337bdd551aca33",
+    "handler_sha256": "035ef29e3550c9b1f06995f1155c5c681258c0c63e56a289ec76fb312dd048c7",
+    "source": "hermes_cli/web_routers/audio.py:178"
+  },
+  "GET /api/auth/me": {
+    "body_sha256": "d2b5d71fa6f25f377f5b6465a8a5a666f99af1d12ec27177c0fc85fb5fb38534",
+    "handler_sha256": "27c07e9ddc84f52cfb6a4dce1ccd47150ce49c71dba9f6c61c0feaf62abc507d",
+    "source": "hermes_cli/dashboard_auth/routes.py:524"
+  },
+  "GET /api/auth/providers": {
+    "body_sha256": "729ebc2045e2338f70143b4a9d29d50b01b897874e196a96b7177e195945db76",
+    "handler_sha256": "905d5aa69ff08dd6257f943bf4f97429d40bb21d29efc886dc1b5d6e993f4111",
+    "source": "hermes_cli/dashboard_auth/routes.py:203"
+  },
+  "GET /api/chat/workspaces": {
+    "body_sha256": "744916f9f3f373497bb38502596b1c57459e06d7c922dc8b9739548dad41898a",
+    "handler_sha256": "c14e426dd2489b456c563f91c316b034efe13e707ed1470fe70d9ba46bd3f5b2",
+    "source": "hermes_cli/web_routers/chat_workspaces.py:72"
+  },
+  "GET /api/config": {
+    "body_sha256": "2b338c4fa8f52b80c31505894f2ce29cbf00687b861198dfece2aa6010b89281",
+    "handler_sha256": "f71bf23b7068798bb30a94a3c8534c7d8397317b04b8588144ac0b804b03ca3f",
+    "source": "hermes_cli/web_routers/config_env.py:80"
+  },
+  "GET /api/config/defaults": {
+    "body_sha256": "3075711d6da5fde969aa364dc8afdece8276e18a5e46b465f00dd905ae9f1650",
+    "handler_sha256": "773f84c9f53b3b1e4268776373229cd464aba45259e789e6dd950510e404be23",
+    "source": "hermes_cli/web_routers/config_env.py:94"
+  },
+  "GET /api/config/raw": {
+    "body_sha256": "fad5080c46bd2d2edac8538557098a53c54c38888f513fbd5c20358f4bcda13b",
+    "handler_sha256": "982880acabd8cd84a78932a700d19aae5fd33debef68ae21ed5231e54befe073",
+    "source": "hermes_cli/web_routers/analytics.py:34"
+  },
+  "GET /api/config/schema": {
+    "body_sha256": "1816a911a657c299e2442d87a34dd7df60591b98a0bbc58e8e073caf38d9b49a",
+    "handler_sha256": "2ccbd35b0a27e52eb11c23f2bfb414f6f807182c4686e5a909b07cc966ffede4",
+    "source": "hermes_cli/web_routers/config_env.py:99"
+  },
+  "GET /api/credentials/pool": {
+    "body_sha256": "902ae8dee9ba71728ed2ac42e89385a0407d23fe8c171d7198593e28a3d631fe",
+    "handler_sha256": "b5228c5e248394626d8435b65a454189d765d3f92856c533dfc1fe47b2af1ffe",
+    "source": "hermes_cli/web_routers/ops.py:344"
+  },
+  "GET /api/cron/blueprints": {
+    "body_sha256": "cb843c90963f1dfd62abeb24257d8ae6b9f89e7481e15d1d7b57922fc22701ec",
+    "handler_sha256": "f1cf0e7afe02a104bc534467000d65803b49798340b69562f3540d67cc4828ca",
+    "source": "hermes_cli/web_routers/cron.py:858"
+  },
+  "GET /api/cron/delivery-targets": {
+    "body_sha256": "b75070a7bf1b40346d336c193fd0967938d9e378f317cb273c8f03a3f6b02271",
+    "handler_sha256": "0c8ac3e35f777d6b1f8b4123578aa4b217b11ab3c44fd4a8224cf6ac4125226b",
+    "source": "hermes_cli/web_routers/cron.py:688"
+  },
+  "GET /api/cron/jobs": {
+    "body_sha256": "b384ea7a85af20c55b5fe4598eb392e1aa807ba110193bf68e298487426bb8aa",
+    "handler_sha256": "7f6c0fc87fd91b05b1a09b23b5448b51afe8da96dab7a80d196cffb6c7e90813",
+    "source": "hermes_cli/web_routers/cron.py:668"
+  },
+  "GET /api/cron/jobs/{job_id}": {
+    "body_sha256": "580a98c043a728b3f6e81af8d59fe05e25fa87fc1da9bd2318b764510e122e53",
+    "handler_sha256": "00532fe91749c44b1588471ad874ab1c8c3b5b155af8aa4ea4d5d2412cf0a6ed",
+    "source": "hermes_cli/web_routers/cron.py:673"
+  },
+  "GET /api/cron/jobs/{job_id}/runs": {
+    "body_sha256": "bdb7e9a4fc6a56e8a85f1a4d235c755d998180d2a98c6ff4d854832cf04d5726",
+    "handler_sha256": "9d8373548f189891c2309a5cdc73089f4e3af724f39461f7ff49985239644766",
+    "source": "hermes_cli/web_routers/cron.py:678"
+  },
+  "GET /api/curator": {
+    "body_sha256": "cf8daa9bbca7aee5fac0c279b67a5ad407237232b61d773f1ed7760daadcb2b8",
+    "handler_sha256": "0d1136ec5e3066aa6d5c845a99056a00259eeb1ae2d3c45363b66cfb1457aaf6",
+    "source": "hermes_cli/web_routers/status.py:629"
+  },
+  "GET /api/dashboard/font": {
+    "body_sha256": "3f93b8dae58b7889ee89375db61d29ad412d3eca0bfaaee6a153d780a707ec62",
+    "handler_sha256": "068c52940cf0cf46ae4d6693a546826e03cbb4ce33035b0ea0f1a369b2138f8f",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:90"
+  },
+  "GET /api/dashboard/plugins": {
+    "body_sha256": "c2d5274d24f8527b54088ed5eb20ac7f4f5f2fb89327cbf14e58f12c69e747dc",
+    "handler_sha256": "6868acd296476f7cd5d3af20fd83a942c164643f0e43646f4df4d8c67cd1dc85",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:131"
+  },
+  "GET /api/dashboard/plugins/catalog": {
+    "body_sha256": "dc5c374584b9e1c2a135c796d1408a392733a8b23110e884b250a341e5db7243",
+    "handler_sha256": "deeb40c20c9a1407a18fa4ac44b668fb0bda2dda147304594512b65ad4b0af19",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:183"
+  },
+  "GET /api/dashboard/plugins/hub": {
+    "body_sha256": "23a11163440dd77cc4107c13d0bcc79454897645c0c512573bef6fc4af21c7da",
+    "handler_sha256": "85989fd1dc90620108ec9452e440099cd989851cbbed293789670fcf9c563ff7",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:156"
+  },
+  "GET /api/dashboard/plugins/rescan": {
+    "body_sha256": "ede7bcfc2056171a336a079d92f3f1e6a3bf5b63e716a0a88b6c22b836a565f6",
+    "handler_sha256": "06d64b2163cddae642c985580f0ad75ee2d6e2905ecdba235e66c236bc5c3dd9",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:149"
+  },
+  "GET /api/dashboard/themes": {
+    "body_sha256": "c1921c04e7ae9dcf0b98aa07173b3a41af66c2512097e65df1adbafeed9e058b",
+    "handler_sha256": "d7af1d0834431d64394f8b2aa1401ab70108999f55be165136c7c52616ef181a",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:51"
+  },
+  "GET /api/egress/status": {
+    "body_sha256": "933c4e5e4210ca4a29cda620f54594dfaa2cd30e4910e53d07da477faf19458a",
+    "handler_sha256": "0f6eb6ed9cf43dfa60db52a593a123bd35466c99f00f0a9ba257b3b3aa7d1f61",
+    "source": "hermes_cli/web_routers/config_env.py:109"
+  },
+  "GET /api/env": {
+    "body_sha256": "c58fb8337264a959f5f33c6327b2d9e9f342a33d064874815290a0f067125b47",
+    "handler_sha256": "40dcd1368efea080d1022585bb92b91d1741070818d2202caa5294299bb99580",
+    "source": "hermes_cli/web_routers/config_env.py:259"
+  },
+  "GET /api/files": {
+    "body_sha256": "0ba54061dd9bfd9f42166ff7bd62887a01bccdb39a24be2f7e2a17f4a3c4dc52",
+    "handler_sha256": "8a649c18fc5d581fbe966a2f99939903f85edeea2271ca7c6eb907ed2467afc5",
+    "source": "hermes_cli/web_routers/files.py:508"
+  },
+  "GET /api/files/download": {
+    "body_sha256": "8735de814c6da19b402895322562d318d25401dc5d722b7f810c7ed9fd1e1d6a",
+    "handler_sha256": "f6d0d5e4460a63b44a8865024651857515b63204189bee147c208256a6427060",
+    "source": "hermes_cli/web_routers/files.py:599"
+  },
+  "GET /api/files/read": {
+    "body_sha256": "c9b95e7f57950d952a71daecc786a6f2fd71d03185ae3b281f68952f7ef976a3",
+    "handler_sha256": "cd9b110ff0a5f0a5b1598a0a8e48a1b8ce420205008764a33556a7f1f407f55c",
+    "source": "hermes_cli/web_routers/files.py:561"
+  },
+  "GET /api/files/stream": {
+    "body_sha256": "9a07c3622f75d6769dc0dba545be24eff40dffeea6e6195c24d787a898b6108b",
+    "handler_sha256": "1766c0f28a073ab0a3b4f2cf9fdd85ee1451fe666d9025b95e0ab79edc8a3c43",
+    "source": "hermes_cli/web_routers/files.py:619"
+  },
+  "GET /api/fs/default-cwd": {
+    "body_sha256": "49d9918bfb2b1f7b4e131c58ea4e0de3e14c73607cdd1a362c6e8d89aafb4b14",
+    "handler_sha256": "19c00763f8d210ee9b9eb38eeab4f96dc1b92789247eaf35b7d70cdb2983ffe9",
+    "source": "hermes_cli/web_routers/files.py:982"
+  },
+  "GET /api/fs/download": {
+    "body_sha256": "e5e85912602b1b69c659e3c86bb77d5760eb6d09c541edfe9bc553501be7314f",
+    "handler_sha256": "729d4376e983e422908a03e4abc42393f1d068347185f9b273f03bdb390b81f3",
+    "source": "hermes_cli/web_routers/files.py:934"
+  },
+  "GET /api/fs/git-root": {
+    "body_sha256": "30ce70d19255b42fe29e31328cf56221faa8b19637a90bf90c9d13a23ea6ac6d",
+    "handler_sha256": "738da5e5d086db569d33bc1ef8307452be7820f837d0a396d460beaa47490f12",
+    "source": "hermes_cli/web_routers/files.py:965"
+  },
+  "GET /api/fs/list": {
+    "body_sha256": "12c088acae3cda253b5519bcc58139ddeaff21e2acdab8edf5fe8005cc7fe69e",
+    "handler_sha256": "48399a2d7e290196fd7fac4bb40fbac65a1c6d90107e0562f21661876ad83787",
+    "source": "hermes_cli/web_routers/files.py:763"
+  },
+  "GET /api/fs/read-data-url": {
+    "body_sha256": "111350adbad120fed9cc5fa9c948c97340e2abe844627cfa31b72d067a432c6c",
+    "handler_sha256": "cd8ec65fa40da7c7fce2968e33420a0e8edc740a2339560adfc2a84070dec2f2",
+    "source": "hermes_cli/web_routers/files.py:908"
+  },
+  "GET /api/fs/read-text": {
+    "body_sha256": "5c732e98ebcfdaacd606e08dff39648cebb0c240f87c164cbc31e94a392640f7",
+    "handler_sha256": "b7c63ed78ecba163e024af3aecded0b5534013bcd9aaf11d177e29b26dee5b30",
+    "source": "hermes_cli/web_routers/files.py:793"
+  },
+  "GET /api/gateway/migrate/plan": {
+    "body_sha256": "c4dfa372d22996ed40351574fa199e49ebddcf4b971bb1ccf267a9e99202baf7",
+    "handler_sha256": "e993d554561559e632733a8663af8fc785c67338b3f45a67362564fae2bce4d3",
+    "source": "hermes_cli/web_routers/actions.py:168"
+  },
+  "GET /api/git/base-branches": {
+    "body_sha256": "224a578f61b54e3ee601a90c67162deb9f9b1c469d6a07dc33721cd83ae7c390",
+    "handler_sha256": "60f3a6727d7c9618b808589290c4405f074e62c367903a967bfd42bab5fdf680",
+    "source": "hermes_cli/web_routers/git.py:120"
+  },
+  "GET /api/git/branches": {
+    "body_sha256": "1a0282eadede21c91b07566b941a936fe174dad85d32fdfb8537a1117d240712",
+    "handler_sha256": "3380947bbdd180431413a98d276b00289d805708625617428244ff416ed818a3",
+    "source": "hermes_cli/web_routers/git.py:115"
+  },
+  "GET /api/git/file-diff": {
+    "body_sha256": "25b9e5416d5a2bd6fcb8f2cf0d9878ca8d7762d36b68fcdf5e4311eacb1a819f",
+    "handler_sha256": "c651e83621f6bee0d4da1e056f37c448ec1426f81bc0048677335dbc6d70681c",
+    "source": "hermes_cli/web_routers/git.py:141"
+  },
+  "GET /api/git/gh-auth": {
+    "body_sha256": "dd742b2c1978da4405577c52b2d46789090b6ab75b7625ef579730786d1d306c",
+    "handler_sha256": "c153aa5c514a3b2f5d60e5e61444dbd1273d79232b54a520254b4c2f3c667713",
+    "source": "hermes_cli/web_routers/git.py:84"
+  },
+  "GET /api/git/review/commit-context": {
+    "body_sha256": "72edf2764039d2adee59fb1a52b36828ba19721bf92475c1225218dcdf10cac4",
+    "handler_sha256": "05d04c24122d7f170bef16053c3b5897923c3fca6273d5fe5b68c6e6a2bf7513",
+    "source": "hermes_cli/web_routers/git.py:149"
+  },
+  "GET /api/git/review/diff": {
+    "body_sha256": "a84dafc768782b527d3c689307d0147a5ff6c2acc7953901591e48513786983b",
+    "handler_sha256": "ac9588ce428f3fd034b63bc9e9134349b23dc2ddcfbc8f4409d6391e8f9fa4c1",
+    "source": "hermes_cli/web_routers/git.py:130"
+  },
+  "GET /api/git/review/list": {
+    "body_sha256": "f031742750dc093a93e1754ef293d42fbf9dac6428ade94e71992bef7dfcfdf0",
+    "handler_sha256": "9b8c5c2de64a5d2152e625af422cc03e0666c5df40df599a104233d3c1ca580a",
+    "source": "hermes_cli/web_routers/git.py:125"
+  },
+  "GET /api/git/review/rev-parse": {
+    "body_sha256": "b86e2b2081065619f76e26cf8852f6ba56563bda6aea413e5dbd232749791dc0",
+    "handler_sha256": "d68d4bc8e71fae66cf8ff57c7d446c8fcc431a5d7cd9ec5c951d128c15639fc5",
+    "source": "hermes_cli/web_routers/git.py:157"
+  },
+  "GET /api/git/review/ship-info": {
+    "body_sha256": "7fbefe16ff87ff09b2ff23802e1bd46198d1ddc135607a2d75aec0a764e5a76c",
+    "handler_sha256": "d2be38da70dc498f4515b750c97125e25e5280142b2f95c46335108f23316111",
+    "source": "hermes_cli/web_routers/git.py:162"
+  },
+  "GET /api/git/status": {
+    "body_sha256": "62c9af2ebd62b51a097e2347a94dadf4640e525c0d186166284c641a4f5e8971",
+    "handler_sha256": "296a03870e08deba7138dcdaee028650770c9e8471bc7b0e910addedc6db2627",
+    "source": "hermes_cli/web_routers/git.py:50"
+  },
+  "GET /api/git/worktrees": {
+    "body_sha256": "1c0ae0061ce6252299fbe7a59a1469f67f32494508ccf141a678fd0ca9aa15bb",
+    "handler_sha256": "800bc06d38e0de0a04a264b25196115f13fb0f533a6e18df84041ff5a7d22f96",
+    "source": "hermes_cli/web_routers/git.py:110"
+  },
+  "GET /api/health": {
+    "body_sha256": "668785181bc17b6e56cf1022d5f1b3e654e58cc52161a3b8cd30966f526d8419",
+    "handler_sha256": "d7a6f9a316dd769730739bc6e60c3668164bf0f7f9284be92b7106a4331206fc",
+    "source": "hermes_cli/web_routers/status.py:116"
+  },
+  "GET /api/health/idle": {
+    "body_sha256": "1a3feac8c4ed8e80459646de91119893c62c5ffa67a86a9e00d25e321a482b83",
+    "handler_sha256": "0d35deca838280b99572dd1a57a2a697ae0439642ac388246b93e56dca1b90c0",
+    "source": "hermes_cli/web_routers/status.py:149"
+  },
+  "GET /api/hermes/update/check": {
+    "body_sha256": "32e9c1b70ef53735f56da25f8963631aa11c845be08f96ed786583c0d687f5c6",
+    "handler_sha256": "97333e9b11f9b7aab0a35380b91e6e87b068f23c0d17ad8d973c552fa1955354",
+    "source": "hermes_cli/web_routers/actions.py:283"
+  },
+  "GET /api/hermes/update/receipt": {
+    "body_sha256": "71c703d837f2f3d8c8ad67167b3866b7bd4139ac8c8a30e5714f0acc6f794658",
+    "handler_sha256": "b175b85754a47e14209d3512537067bc55a34445fd2eba29c45543c927430336",
+    "source": "hermes_cli/web_routers/actions.py:479"
+  },
+  "GET /api/host/identity": {
+    "body_sha256": "bda7908276534ff0772555dae05d1c26103ad39a86dc9324ebc9ea7ce0454bbb",
+    "handler_sha256": "ba05393e6a67c494481b8605f5a4599ed0318023ab18911b2fb3c04dbdbcf316",
+    "source": "hermes_cli/web_routers/status.py:130"
+  },
+  "GET /api/learning/graph": {
+    "body_sha256": "bed9888cc1e1f5aa6d4530c5fb74ceaa2fec44813f63ab5060b92f297e8a3be2",
+    "handler_sha256": "3ba06917d7fc7001230531dc3111b19ea74939f8031007db55eba50c16999ab7",
+    "source": "hermes_cli/web_routers/status.py:677"
+  },
+  "GET /api/learning/node": {
+    "body_sha256": "812020eaa0fdfc8adf0dc8ee852b7ec8a372e8a8ed3ce880d66ab8a906d90680",
+    "handler_sha256": "b8458a11216d80571f7e8e0e4653c4b534c04b9152511cd705c74e8e7b8268ab",
+    "source": "hermes_cli/web_routers/status.py:704"
+  },
+  "GET /api/local-models/catalog": {
+    "body_sha256": "44ca9cfd9f5d4cdcdf07bb9e74561dca4e5fccd08098e3c922ea22fa10338687",
+    "handler_sha256": "5bee402bd65124a7e3932c2a58c97436e705c222b3feffe5beb907d8df652374",
+    "source": "hermes_cli/web_routers/local_models.py:616"
+  },
+  "GET /api/local-models/hardware": {
+    "body_sha256": "24b4bcfd81b751f17fa7f17312823b048204ae5f22cfc86ffdc311a8ba97acea",
+    "handler_sha256": "c098ceb9adcb1164ff581527608385741445676657e87727ad2adbefb473e396",
+    "source": "hermes_cli/web_routers/local_models.py:543"
+  },
+  "GET /api/local-models/jobs": {
+    "body_sha256": "a47558164b6a5575ab12b611e8095ef9c8aa2e704da3e289fdc574e274cafe19",
+    "handler_sha256": "08be3f751e78ed898cf2f62f0a5a60cf756ef87f93e40e7a0aa8230ecbedb15f",
+    "source": "hermes_cli/web_routers/local_models.py:920"
+  },
+  "GET /api/local-models/jobs/{job_id}": {
+    "body_sha256": "fb8a17ab7933d3d77a2e36870151fdd17c314f7bd51ca0270450e23c660db01e",
+    "handler_sha256": "80fe816dbbcea6dfd82a67248a8e4537a123bfb260526f6747b06698cecc5427",
+    "source": "hermes_cli/web_routers/local_models.py:930"
+  },
+  "GET /api/local-models/search": {
+    "body_sha256": "21fcb8129f90bdaedfadd70f73f7b8b7ea09123651d6c3dccabca8c5798d74db",
+    "handler_sha256": "b8de0cf8ddd0d5252b080d74253cd849e2aa6a895ecb849b3be900eb5c1c4757",
+    "source": "hermes_cli/web_routers/local_models.py:940"
+  },
+  "GET /api/local-models/search/files": {
+    "body_sha256": "78bad93c2dff449d5515f641c51753149350e8f8e2a53c0874c726355a21b68f",
+    "handler_sha256": "07018791aeb7b2c6450c21e65176670bd7a9ba3996c2d4703ab09b8726b9f82d",
+    "source": "hermes_cli/web_routers/local_models.py:949"
+  },
+  "GET /api/local-models/status": {
+    "body_sha256": "23d48cf6b4b68df0ca326e03d7f318ad32752865f90670a6a6d8fd091738796a",
+    "handler_sha256": "1e166511dc9c60c1fc16a328121c66f713cac75ca543fa24a7e393cba14aa1d0",
+    "source": "hermes_cli/web_routers/local_models.py:492"
+  },
+  "GET /api/logs": {
+    "body_sha256": "87162d05532793364d9a54ee2968eff92e9d0289585eb38ea3975abd2c67282a",
+    "handler_sha256": "aba2019bac9e605edd62701b65a5ea191fd056a3054be0266b12cfef84ae676a",
+    "source": "hermes_cli/web_routers/status.py:825"
+  },
+  "GET /api/mcp/catalog": {
+    "body_sha256": "35694c3c1cbaa27268504456b51b0baa4e48f3c6eea12be604a9efc2573c40cd",
+    "handler_sha256": "1cda95d50eea249619e09cd4307d9179a7e5bdf6b0b0087d03b0f91ab9179df8",
+    "source": "hermes_cli/web_routers/mcp.py:439"
+  },
+  "GET /api/mcp/oauth/callback/{server_name}": {
+    "body_sha256": "9c1f32728159fa2fdb861918f314d0190ad109684ebedbe27847c902d4273002",
+    "handler_sha256": "db246cff2cd857a624d55552bb4501cd1208015a3876d11c96ea4e1f6a2a6e84",
+    "source": "hermes_cli/web_routers/mcp.py:339"
+  },
+  "GET /api/mcp/oauth/flows/{flow_id}": {
+    "body_sha256": "54d764b9643b2a7e1f7e0af87477340689f270258a60e25f23db966d4765d022",
+    "handler_sha256": "b8b11bb4599ca4a2a0d8b9f9df9ba567f4c48b3247a39dfd93234e9d288e9dee",
+    "source": "hermes_cli/web_routers/mcp.py:313"
+  },
+  "GET /api/mcp/servers": {
+    "body_sha256": "2cd41964921b7399485ee894ae46a7a3fbb50c77d98d8069089defd75ffb2a68",
+    "handler_sha256": "14e4212c431c1496e5043c58b781696c34b75e3dc5e01cb02ec3e2e6cb1d6c5a",
+    "source": "hermes_cli/web_routers/mcp.py:94"
+  },
+  "GET /api/media": {
+    "body_sha256": "5e49fd6272ed2cad6a12b88147031d90db3d7dc527025595b78d64afc4b78156",
+    "handler_sha256": "1fb78a58e27d32f603b30c55189b6cbf549cc57814115fede53607f823759124",
+    "source": "hermes_cli/web_routers/files.py:329"
+  },
+  "GET /api/media/proxy": {
+    "body_sha256": "137b92b2edcc54416417b2725ca36b6bab7e207386bc04cbf6513ee97a1a4966",
+    "handler_sha256": "0dff07d4a3fe95307c9e57a87a313365eb66d2f788214c25bf31a92057d41803",
+    "source": "hermes_cli/web_routers/files.py:373"
+  },
+  "GET /api/memory": {
+    "body_sha256": "1dfa2a8fccf401d005e5f4267c8637599ebcf74260d61c226c53bd987ca07a70",
+    "handler_sha256": "c94513cf59b42f5f964c41f1a933f75ea5044a85bcf8c9600fd0c30e4a9d2653",
+    "source": "hermes_cli/web_routers/ops.py:491"
+  },
+  "GET /api/memory/providers/{name}/config": {
+    "body_sha256": "df3d3d0a99928aff667db10c98d01f0156227e3b13beae0a93101e491bc2f535",
+    "handler_sha256": "0a01e594aaab5690d20f427f5132f79fccb43a9eb43a7962207d117557714388",
+    "source": "hermes_cli/web_routers/memory_providers.py:508"
+  },
+  "GET /api/memory/providers/{provider}/oauth/status": {
+    "body_sha256": "bc182867e0ea9c023c8a78093c34b54e4174500506ee896aa583753bb4f4c819",
+    "handler_sha256": "a1f4704e0923645fb5ddc01c82180a9adc59a2b5d756833fe1d20b247015d967",
+    "source": "hermes_cli/memory_oauth.py:65"
+  },
+  "GET /api/messaging/platforms": {
+    "body_sha256": "bb7b8b4bbdd6f8c0ee8370702459ba3f2314bc207dd6a58dfb7282828cb6e4a7",
+    "handler_sha256": "8ffcd0c6f82ec30dc81f25ce07e29443cb74d1183495b1d5c85c9cff852ebd6c",
+    "source": "hermes_cli/web_routers/messaging.py:825"
+  },
+  "GET /api/messaging/telegram/onboarding/{pairing_id}": {
+    "body_sha256": "48a4bf66087717ee474222cfb868ad638f7d00238c3c74a6cf92aa5bbeb65741",
+    "handler_sha256": "d557cec9bdb6baf725b429ecaacb36d0c808e903ef89949d0d5e650e4e70cd12",
+    "source": "hermes_cli/web_routers/messaging.py:736"
+  },
+  "GET /api/messaging/whatsapp/onboarding/{pairing_id}": {
+    "body_sha256": "331457ca23ca62b3103b79b6dc40b642414d0bb8303258972abffc96adb5a3e7",
+    "handler_sha256": "287f112fcdaaf7278bdb58db603b8f59928ddb7d742e33c163dbadd70adcbf6e",
+    "source": "hermes_cli/web_routers/messaging.py:616"
+  },
+  "GET /api/model/auxiliary": {
+    "body_sha256": "2c670d4c31e8e26da8118ae90a37e380b1f6feb79efbd033c156b80d3cb0926b",
+    "handler_sha256": "25cc1369410aa287b5a2d1bca4c5b2a4486d37ae4b8970e6318e000b21308f9a",
+    "source": "hermes_cli/web_routers/models.py:219"
+  },
+  "GET /api/model/info": {
+    "body_sha256": "667e08b5315d8ad9e757629ae8d794d0245019e084bd55eda29f6b600536349a",
+    "handler_sha256": "28d1c26d975128088ccccb7c784c57d015a6d4c4047448791c97a60a7facfdd4",
+    "source": "hermes_cli/web_routers/models.py:90"
+  },
+  "GET /api/model/moa": {
+    "body_sha256": "4f1bad995950c2938f6a81ce915e06c77099e808f54230038b940c19a733c8af",
+    "handler_sha256": "106e167f6ffd4d68fef15be885545fdf2d11fe61ff97155c5d8e645f99fb46b3",
+    "source": "hermes_cli/web_routers/models.py:272"
+  },
+  "GET /api/model/options": {
+    "body_sha256": "976f67f4177d00fdc013f929fd7165a008c242f936265916262189294c7e0705",
+    "handler_sha256": "cdd326e27167d58b9971c8a62757d5c1e4f38d61cce67ab3f820c793d65fdc3f",
+    "source": "hermes_cli/web_routers/models.py:138"
+  },
+  "GET /api/model/recommended-default": {
+    "body_sha256": "bcbc924b8aae6940731dd0122b6bdcc47852510406b773a1ba08a631bd17e795",
+    "handler_sha256": "aa2ac77e3e47c8d3ce83c27340fa7bcc6c5d63388e049497293120c05e318322",
+    "source": "hermes_cli/web_routers/models.py:176"
+  },
+  "GET /api/ops/backup/download": {
+    "body_sha256": "506fde70d4c18718967101a7a7e2e1d13077af852b52b9e7c3d8ddd4a1ed710c",
+    "handler_sha256": "547ef8fe75a0d4813f3ddd375df7cc38379ce91de168736915f8630625219713",
+    "source": "hermes_cli/web_routers/ops.py:595"
+  },
+  "GET /api/ops/checkpoints": {
+    "body_sha256": "7f12f3b833f4e94364f680b1509daff94eb93636ff8b77fa3db6da74beb4253a",
+    "handler_sha256": "7b7a6ad7dec0339d68635843bd7d051139a0c3b15b6c935039cafcab039eb990",
+    "source": "hermes_cli/web_routers/ops.py:801"
+  },
+  "GET /api/ops/hooks": {
+    "body_sha256": "a57382f8fa3215e317b50c1ffa49f09851bd120095bba3873a4cdb85842aa5f0",
+    "handler_sha256": "c8d62701e0be910a1e3fbce266ef41023687d3fdc6922b42fd2842a7d5969f37",
+    "source": "hermes_cli/web_routers/ops.py:666"
+  },
+  "GET /api/pairing": {
+    "body_sha256": "42a8f853940a74c67f4dedf213ec54825687cb80131c8440938af285993a9c11",
+    "handler_sha256": "0d8005f425f1edd70f5ad6dd81a24d40ec972bad523b0c0e36d69e7bc516eaf3",
+    "source": "hermes_cli/web_routers/ops.py:84"
+  },
+  "GET /api/plugins/hermes-achievements/achievements": {
+    "body_sha256": "e95ee0f4172cf15fb2a78db4e11fd0bb9aedbbe93fb4a27270346fea5545c9d3",
+    "handler_sha256": "b9bff06c4c0e2b14e6cf6325b1d68a2af715a3a1b23132161dc8ff16f9f2844c",
+    "source": "plugins/hermes-achievements/dashboard/plugin_api.py:846"
+  },
+  "GET /api/plugins/hermes-achievements/recent-unlocks": {
+    "body_sha256": "c0cfc0b8822cb9441e1fb47e3689e1270524f7330eaae6c2a9084c7cc0707236",
+    "handler_sha256": "40bf1e183867aa87a3346791046216734860506db18be52f849e9c2d4e9770be",
+    "source": "plugins/hermes-achievements/dashboard/plugin_api.py:860"
+  },
+  "GET /api/plugins/hermes-achievements/scan-status": {
+    "body_sha256": "48720164abab214b2b2bc09727a950576f80b6e7dbfb963ba4246ab7ccb951a4",
+    "handler_sha256": "666ca4a4b6f551381f6bde08b8458107a021d64ccead44a639be28aec568be9c",
+    "source": "plugins/hermes-achievements/dashboard/plugin_api.py:855"
+  },
+  "GET /api/plugins/hermes-achievements/sessions/{session_id}/badges": {
+    "body_sha256": "67b234b24d0cb135d1a5de0d5e679cda621112da66d8eccad0d44091528ed14e",
+    "handler_sha256": "ed899ecef1af957e8a252fe3966d14fad731855ade01e9b235125fd00052d5e7",
+    "source": "plugins/hermes-achievements/dashboard/plugin_api.py:866"
+  },
+  "GET /api/plugins/kanban/assignees": {
+    "body_sha256": "675f0bd278435040de716f27888757d82a7acf63c15c557ecb8c7b6dc6dd393e",
+    "handler_sha256": "3471a25e9813fcc61b188d3546aaf233c3d26e866dce367a0ed6b6aea61c6c9f",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1247"
+  },
+  "GET /api/plugins/kanban/attachments/{attachment_id}": {
+    "body_sha256": "b7530e18e3bd087bca849a4c118da941d458a4899372b14c7e6f097177f6ee8a",
+    "handler_sha256": "32e841f53433d7a54063a5c5d397aa0bf2548ae2d860eddae97d72ac008796a4",
+    "source": "plugins/kanban/dashboard/plugin_api.py:505"
+  },
+  "GET /api/plugins/kanban/board": {
+    "body_sha256": "48becb4a5863eb2a51047b9135a8f3779692b5dc69168457b68baf26cd5fd5c3",
+    "handler_sha256": "b3537dcfa99e960765141f06130ba4b2983b3bd5168aeb74eed7cc68baed3537",
+    "source": "plugins/kanban/dashboard/plugin_api.py:359"
+  },
+  "GET /api/plugins/kanban/boards": {
+    "body_sha256": "ffc2edadfe6c5e0e835d44d5e6419718ecf19393cae358c4110745d3fcf00dbf",
+    "handler_sha256": "3e3505eda245cbe38e74f20920a488cd69adad3f6ddbd7ea7a2db0d1b61f2a4e",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1411"
+  },
+  "GET /api/plugins/kanban/config": {
+    "body_sha256": "baca1fc16d69f8a7b38d87d0fe9e8c1c0012ba255c5eea296947cf25a12e1162",
+    "handler_sha256": "ecb5394e9d5cc00536b7ccd4a1d3a893758055308bcefadcc58f02d38cb28c16",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1149"
+  },
+  "GET /api/plugins/kanban/diagnostics": {
+    "body_sha256": "146721e2f29b344fc8733342683843eeb2f7e331aa9a0ff7a5f8a5f46e1cc033",
+    "handler_sha256": "a2e860d0f9180390e43c09b626b84f09f099dc396a9434a9be28020e26562874",
+    "source": "plugins/kanban/dashboard/plugin_api.py:882"
+  },
+  "GET /api/plugins/kanban/home-channels": {
+    "body_sha256": "a8534d2e754437963148e8c1cc772da28558d15265bdfe98d52e10e9338ceb9d",
+    "handler_sha256": "8be5020ee792e29a4aaf8f3106939639734ed25bdda3e13cb1383ff30cee4dd5",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1196"
+  },
+  "GET /api/plugins/kanban/model-options": {
+    "body_sha256": "dad2edef5e1b8c76d7348a7a19c004256228515064bfa0d6418248d496b761d7",
+    "handler_sha256": "74bff6f4f004660249963099539412233ecf115e87d2263d795a756c087323d2",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1280"
+  },
+  "GET /api/plugins/kanban/orchestration": {
+    "body_sha256": "68575b223c4f52df5756b690b06d42ef0abb6c6d78c975e35b9da17684809bcb",
+    "handler_sha256": "5c81fb7535a003fb559d7aa838496b79db5a4d8b95690906f48f192870bfba4c",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1633"
+  },
+  "GET /api/plugins/kanban/profiles": {
+    "body_sha256": "0816b692d480492854a82f4cc2af31b7cca21115310f59217196339475e565c3",
+    "handler_sha256": "07817e3fad521b8ab114ab328bb6daafec1a78e1591afd901a917e643d9501d6",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1553"
+  },
+  "GET /api/plugins/kanban/projects": {
+    "body_sha256": "bfb9b5461a444d9e3df31f1bcbb16acc9a0e32663968bb0693ecce8bdc67b555",
+    "handler_sha256": "9ae0248c4500291202cbe10cf23ca41ef036737cf6418858f4c46b7b9ec1f65f",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1398"
+  },
+  "GET /api/plugins/kanban/runs/{run_id}": {
+    "body_sha256": "ebdf2da0a96cf012763d2d96f5661cb7e47ec312e3052e84511830ea484fb33d",
+    "handler_sha256": "112fbc84eb17d4dc9c7184aadd2b0243a72e365bb432e4887c0ce30f519837b5",
+    "source": "plugins/kanban/dashboard/plugin_api.py:936"
+  },
+  "GET /api/plugins/kanban/runs/{run_id}/inspect": {
+    "body_sha256": "3203b8f3211b7d7e1598f6c0fe01a5e484eb0c1fc8f4d9a959e56563cadeae07",
+    "handler_sha256": "1f38e98558f03a3784aa68f90bbd9ca9b9846683eea9ebb9cc2d480ac06a57f0",
+    "source": "plugins/kanban/dashboard/plugin_api.py:943"
+  },
+  "GET /api/plugins/kanban/stats": {
+    "body_sha256": "fae6c197df40550a866c83d1b7954390cf2f15c18750ee292989ec1c8816bc12",
+    "handler_sha256": "6895c3730fd924f1d5eb66aa6ab3a3ef21115fb9e0a30d9b20842137b5790080",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1240"
+  },
+  "GET /api/plugins/kanban/tasks/{task_id}": {
+    "body_sha256": "cd2277e21c06f6ee88e95dead7ebff68bed756ff66f723137a0941dd93f65d34",
+    "handler_sha256": "280ffddf1935a00cd9607ec103f7d5c68ae7757b71d937e8e6191e7bf9dc9e73",
+    "source": "plugins/kanban/dashboard/plugin_api.py:379"
+  },
+  "GET /api/plugins/kanban/tasks/{task_id}/attachments": {
+    "body_sha256": "de6649ae55f2dc6e1ae673ee336568f7a79fee16ed0cbcc3c9243086bcfaf165",
+    "handler_sha256": "5e99061722a7473721a8632b673074ea87e199162cc12a8abf2aacc11853580a",
+    "source": "plugins/kanban/dashboard/plugin_api.py:464"
+  },
+  "GET /api/plugins/kanban/tasks/{task_id}/log": {
+    "body_sha256": "972c174b0026273c847d2748eb9b06231a26433ef28203f7c96eb3d3d9cdd073",
+    "handler_sha256": "1eee6be87742315fd412c7080aa6864f688ac26641e5a3b03fb19dbe1b8f096a",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1255"
+  },
+  "GET /api/plugins/kanban/workers/active": {
+    "body_sha256": "45d1d75fb77ebafb4386b571ba350e568662015b23effa7e2b64298e58e89643",
+    "handler_sha256": "8e9b515acfd35430091453369d193c9f8c3b0f5939e9b7cbcd8fc10a52861b50",
+    "source": "plugins/kanban/dashboard/plugin_api.py:920"
+  },
+  "GET /api/plugins/kanban/workflow": {
+    "body_sha256": "3b502e5e17badac06c18f1e1034dac61ac5d404030a541bae314a4fa97ecf81e",
+    "handler_sha256": "8fe89225a045474bafb8df5e0475dc74e540de883dedf44cd1a283e2beec9e1b",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1625"
+  },
+  "GET /api/portal": {
+    "body_sha256": "dd4d4121b40902fb0b0331e0d9413db585b908b847d4785104c2a99209a18c2e",
+    "handler_sha256": "995af2868007f6cd33adbb9069751229d927a6e44d1f25dd00244a2cfd3a87a4",
+    "source": "hermes_cli/web_routers/status.py:733"
+  },
+  "GET /api/profiles": {
+    "body_sha256": "df02efa1ba891c4b4693fc61cb0556f78d8264e3cd7190fb59c2b8df1224cf36",
+    "handler_sha256": "b7992377fe83cd92cd7b39d5412c47ae87ad2169a07184375ba6170375b1aaf1",
+    "source": "hermes_cli/web_routers/profiles.py:800"
+  },
+  "GET /api/profiles/active": {
+    "body_sha256": "3632f16ef780efd4e67c5125c09cfbb9aa925d61ee1b5417b4c1c83326517141",
+    "handler_sha256": "a109ce58ba5e1f6813383d262135c4df9b7666f9e9b9be716c63b3df701b4ab8",
+    "source": "hermes_cli/web_routers/profiles.py:878"
+  },
+  "GET /api/profiles/projects/tree": {
+    "body_sha256": "77e8448947b26180ecd0dcf70a611f7b9067db47f2a7a684f4aeb4272f279186",
+    "handler_sha256": "d8aa3f0b8a2f210bff564e01b98e4df7a03bcd7af5de00c50d68db32c0584769",
+    "source": "hermes_cli/web_routers/profiles.py:709"
+  },
+  "GET /api/profiles/sessions": {
+    "body_sha256": "30f269841d1ee806ac8882ba2b1c46561af76b29c0270586250009267c68c384",
+    "handler_sha256": "5fd8db1ab3a140384fdf8220eff5953fb1feb1f7880c5a0659c998be979889b7",
+    "source": "hermes_cli/web_routers/profiles.py:453"
+  },
+  "GET /api/profiles/sessions/sidebar": {
+    "body_sha256": "e9bccbd1c1064149f18094bc02ab93c5dc4396bad0b4ad91298b7abd744929ba",
+    "handler_sha256": "569334ce48e156c46d60b04111a839ecb0154f90735caf12749e525658429d17",
+    "source": "hermes_cli/web_routers/profiles.py:514"
+  },
+  "GET /api/profiles/{name}/desktop-overlay": {
+    "body_sha256": "5a05506ec39657a2be395af8918dcbc515d92f7a1848637cf61722acecb64d9c",
+    "handler_sha256": "be1be8c11e54304ae39c7bea8583cbc2b1879cfd1072c5e1fe9a7deb33a0b274",
+    "source": "hermes_cli/web_routers/profiles.py:1137"
+  },
+  "GET /api/profiles/{name}/setup-command": {
+    "body_sha256": "d1a806a6bb06c69454641f4152a3ea98afac987d4f550f309637fe233a282090",
+    "handler_sha256": "f8f71e42e3a5766766e2346a683e1aac8c98e6182719cbb607e8f85f41b4ae1e",
+    "source": "hermes_cli/web_routers/profiles.py:910"
+  },
+  "GET /api/profiles/{name}/soul": {
+    "body_sha256": "7920fbd5d7419bf431276b2b28e7a5740fb6b8742a6a180ae5f8331bb2714f0b",
+    "handler_sha256": "613bb337516d9e7163a5d2fa8b556cb57442f030841dadd38b5a6d90c08fe76f",
+    "source": "hermes_cli/web_routers/profiles.py:993"
+  },
+  "GET /api/providers/custom-endpoints": {
+    "body_sha256": "ed857c0986df1ce57cf8a4dc98c80ec52eee298b3ff2800783d78de775786eaf",
+    "handler_sha256": "5a8fcf395062fd108a5ddc0668f80d6fa6136d9ef0ba95d726e62054b0c52fd3",
+    "source": "hermes_cli/web_routers/config_env.py:728"
+  },
+  "GET /api/providers/oauth": {
+    "body_sha256": "d357033ead7a16fd935ecdd9f93d687dde7571b1fbdc2a1de6045c8e86c29b9c",
+    "handler_sha256": "7db275b51f0b9a3906f88b3b4b1dc8e9a2d2d60d05ecd037a8b2326ac7f72153",
+    "source": "hermes_cli/web_routers/oauth.py:688"
+  },
+  "GET /api/providers/oauth/{provider_id}/poll/{session_id}": {
+    "body_sha256": "478ff707601284eeab4aaab7d55efa691bc587426dfea4e3a6bbf9bd830d396e",
+    "handler_sha256": "28dd787a5bc480878a21c89c5b9382ba1a4c9a7a316a9f7f516a8abbb7e3239c",
+    "source": "hermes_cli/web_routers/oauth.py:873"
+  },
+  "GET /api/sessions": {
+    "body_sha256": "92b7601bd7741602ffa82bd2db2cb5e874cec7b418822f5954b6bf0a85701848",
+    "handler_sha256": "6ba526b1fa59e357c2aead992b629e664ff536a2a46dcfd8d21b843b3154fd29",
+    "source": "hermes_cli/web_routers/sessions.py:182"
+  },
+  "GET /api/sessions/empty/count": {
+    "body_sha256": "2b9716293cf2fafbecb1c26993e0fc095cdfb5ac14a60656015d6bef9e9e013f",
+    "handler_sha256": "15b13fa34f08f74e31cc05412efa4f2fc76de2e331b2a62e5d88cd43faf33d12",
+    "source": "hermes_cli/web_routers/sessions.py:511"
+  },
+  "GET /api/sessions/search": {
+    "body_sha256": "2761ad078483cae48062e6e7fc8d3ee7e37b6bac6cd8e38ff55f10345350808f",
+    "handler_sha256": "0698c30a4b6cda1e77a13b1f924291f815609c7230ca57d62b9d461a6f989936",
+    "source": "hermes_cli/web_routers/sessions.py:286"
+  },
+  "GET /api/sessions/stats": {
+    "body_sha256": "310606df446dc518f3aed62b6f28e8110808c8104404d656410bcf82ade910ab",
+    "handler_sha256": "400406febd19235b32168201b8643e739d0d16e6d58595c0711e249e9f3acb33",
+    "source": "hermes_cli/web_routers/sessions.py:538"
+  },
+  "GET /api/sessions/{session_id}": {
+    "body_sha256": "19a660756ad890b390ec671d24c4dd6cfb4bc111f9ff0bb40f4dfd8d972717c6",
+    "handler_sha256": "3923e8f09d8898857e5001ff5323e188bded3c04c2d31ca4d2bc876a02eb69b4",
+    "source": "hermes_cli/web_routers/sessions.py:560"
+  },
+  "GET /api/sessions/{session_id}/export": {
+    "body_sha256": "293c5f0c27981c95f453445cdc6244f36b8855050701a16153adde99a134a01d",
+    "handler_sha256": "30b177aaff1d59eb8490f9d0837901374d89d8c7c906e2e37a2bfa7157af69ce",
+    "source": "hermes_cli/web_routers/sessions.py:938"
+  },
+  "GET /api/sessions/{session_id}/latest-descendant": {
+    "body_sha256": "0323395c8dacb1cdd809719e03ce98788cdbdd44e0965f92e28fd83c9e12a3a0",
+    "handler_sha256": "62ed068b030749e53ff2c380da0ec2a07353ba8f007b3bea8978e729b0c6fc99",
+    "source": "hermes_cli/web_routers/sessions.py:598"
+  },
+  "GET /api/sessions/{session_id}/messages": {
+    "body_sha256": "ca7ebb1ce017bdf94319562656210443045179e3c8ae4292c7dce3932a8424fc",
+    "handler_sha256": "e29e94c900b4c67260f70824b0c1dababc9386e95b7c85d793a1b537378818dc",
+    "source": "hermes_cli/web_routers/sessions.py:736"
+  },
+  "GET /api/sessions/{session_id}/messages/around": {
+    "body_sha256": "43eec8e0b677b3a8eaa4d536ada2bbe92d088c305f2fe609656b494ebe26dc4f",
+    "handler_sha256": "143e50c05baa568ff6449e9b081d7b054714107b3c036a659e3d4eaf1c6f499b",
+    "source": "hermes_cli/web_routers/sessions.py:820"
+  },
+  "GET /api/sessions/{session_id}/mutation-snapshot": {
+    "body_sha256": "57f6ff13286064118ab6a8ccabc2e5b965a5aa2717bc674bec7f38c5d1c1d1fd",
+    "handler_sha256": "6b65b8d8fa82b14c7d97096669fd53e5c2063763c01243018f9a628219f3f1a3",
+    "source": "hermes_cli/web_routers/sessions.py:583"
+  },
+  "GET /api/sessions/{session_id}/timeline": {
+    "body_sha256": "ff2e4f8d249ace6aea80cdc9609c00194b03aed637cb105be1c39b3929296d99",
+    "handler_sha256": "dd5d54f981df5eaad233e4a461a5515ccc3b1b37a8d4b66352565184b17cdfd2",
+    "source": "hermes_cli/web_routers/sessions.py:798"
+  },
+  "GET /api/shared-metrics/consent": {
+    "body_sha256": "c82bc481c62ebd3423acd051510d19babd79e43092aa161ff284490306362993",
+    "handler_sha256": "e0fccabb623d9aa4546a094343206e1694388d65c2a3c621931fd25a55c0fff1",
+    "source": "hermes_cli/web_routers/shared_metrics.py:34"
+  },
+  "GET /api/skills": {
+    "body_sha256": "833faccebeaad9151b3a78d6e4f557e9d5bd49e8520cacd12a0b0fc8a3420c40",
+    "handler_sha256": "bc9d1bb4506ab05c43cd5fece99bc737d17f4dc0ece5f21060cc0424b980d18b",
+    "source": "hermes_cli/web_routers/skills.py:343"
+  },
+  "GET /api/skills/content": {
+    "body_sha256": "57b44f270cc752cbc230c27b808ec8870f434b75681315a942dba55875ac2551",
+    "handler_sha256": "4fad202c658c953695550bfa9152abac977b07105edf9fce7b0e10fd2fa2eec6",
+    "source": "hermes_cli/web_routers/skills.py:397"
+  },
+  "GET /api/skills/hub/official": {
+    "body_sha256": "cf6a1ce0daed9a5590e1be42f5160e34721239e44c7dfff90337ab42010f015d",
+    "handler_sha256": "7e327b92e29332d3535f17fdddec25c7b435e862e86a983153761b61c55748ca",
+    "source": "hermes_cli/web_routers/skills.py:123"
+  },
+  "GET /api/skills/hub/preview": {
+    "body_sha256": "3e2580738b3a557e7431ace71d9effc13a6c0d1a4665d682883aff9ecc219451",
+    "handler_sha256": "38efc9c26a56583fe3302cfb16ca7e0ee0c9545fd4c58e5952cff77c4499524a",
+    "source": "hermes_cli/web_routers/skills.py:227"
+  },
+  "GET /api/skills/hub/scan": {
+    "body_sha256": "e991b85567c8e6e3fdf08cb628b892669aa6d9653dfc463529df144178cebde9",
+    "handler_sha256": "705ae67c26ff65a7872392338a99549a78e7f09b7679f977ab027bc75d657f64",
+    "source": "hermes_cli/web_routers/skills.py:265"
+  },
+  "GET /api/skills/hub/search": {
+    "body_sha256": "fd0b42550ad05b2c8bfbcfc5b8a1966a3cc9f24f1bee0bbbc69704731fbae061",
+    "handler_sha256": "67649bc690e2f538d7089ee9611421051c000e35416f0f8045f51445ae37222a",
+    "source": "hermes_cli/web_routers/skills.py:185"
+  },
+  "GET /api/skills/hub/sources": {
+    "body_sha256": "67f9b0f864372c9e3402a117a88eb34822ff0fc7b24c9fdbcde218a2d8e1015b",
+    "handler_sha256": "cf048ad71e8641065913d4144bb44c39d39ba0baebe223d0057ffb6de1288334",
+    "source": "hermes_cli/web_routers/skills.py:147"
+  },
+  "GET /api/ssh/ownership": {
+    "body_sha256": "9b83ef5494b748c15a1b195e5d53cf3793f199ab00f494e6ec86c23b80937728",
+    "handler_sha256": "985ff366261691ea4bd7507c45ee383085c0328eff75ed9426b09f541ee8b2da",
+    "source": "hermes_cli/web_routers/status.py:106"
+  },
+  "GET /api/status": {
+    "body_sha256": "cdc7737a9de7907851487d867b9dfc30c93eeccd850631f3799852491605a29c",
+    "handler_sha256": "894559a420b86cbe2343094ecec041313559c0e13c9dbbbfd63a3325ffc81c8a",
+    "source": "hermes_cli/web_routers/status.py:466"
+  },
+  "GET /api/system/stats": {
+    "body_sha256": "1c5706edab4416c57f21c82a38d9fe598ff516be82db12c62790c0b7c5e8e270",
+    "handler_sha256": "a76a601b48084c134826b124ca2019b02ddfcf4781504593f0101ca5778b2c1f",
+    "source": "hermes_cli/web_routers/status.py:569"
+  },
+  "GET /api/tools/computer-use/status": {
+    "body_sha256": "ebfd673f4ffad561ff11e9c312f4f912fcafb67feaa45cfb30e2177b4db6dc3e",
+    "handler_sha256": "b8d121ec009a7bd004edf26536120ba5be4df3f593af269eb6eb7544ab16ab62",
+    "source": "hermes_cli/web_routers/tools.py:699"
+  },
+  "GET /api/tools/terminal/backends": {
+    "body_sha256": "5482aec146279502e4d4b4d1254f805259d2f806bf9000600f78d07d809a2e22",
+    "handler_sha256": "5fad15d13fe97162d2a23396c849627a2d857a17c46a21653fc79dd2abb28702",
+    "source": "hermes_cli/web_routers/tools.py:650"
+  },
+  "GET /api/tools/toolsets": {
+    "body_sha256": "7dab73ce630552724f942a2706947e96abaf464ed4f52028fc1398786ffe65ba",
+    "handler_sha256": "4ae278f41c8670ff79fc73c11372b4edec04e2384fa0f7704c1aff307350c36f",
+    "source": "hermes_cli/web_routers/tools.py:230"
+  },
+  "GET /api/tools/toolsets/{name}/config": {
+    "body_sha256": "52aaae93968b68a9327a7342a8a55fe4cc85592e280c478a04858554fb72ffc4",
+    "handler_sha256": "51dc1d15f121fcb23d6da9576ad77626814e5f0fe48e6222e5d212c2e7093d15",
+    "source": "hermes_cli/web_routers/tools.py:345"
+  },
+  "GET /api/tools/toolsets/{name}/models": {
+    "body_sha256": "fff543e6c447ca51147b9098c88920a1101e077a946ea1ccbb663308ddc24d39",
+    "handler_sha256": "7afec1aafca57c60678fd26a5ca77023a52476c791d146a6bd07f203413a746c",
+    "source": "hermes_cli/web_routers/tools.py:432"
+  },
+  "GET /api/webhooks": {
+    "body_sha256": "c4c81899132a13d8979f557725a7553e8b48e9e08ea83f986eb9db608f5bc822",
+    "handler_sha256": "fc31ec4fd90a7a5ca491572fb36ff4894e4bad30399e3e431522109b420187e4",
+    "source": "hermes_cli/web_routers/ops.py:154"
+  },
+  "GET /assets/{filename}.css": {
+    "body_sha256": "bbc64e5357a598f91d33380b406932872e577e62e7b96e703979f441c75dd54a",
+    "handler_sha256": "0ff0126c0960af2bf653a58f094948cf68380c105cdca0045b3f9293b17fe9f7",
+    "source": "hermes_cli/web_server_dashboard.py:201"
+  },
+  "GET /auth/callback": {
+    "body_sha256": "f1f7d52f6fda237541aff7d7993fcb50bc05c6aac0f7274b986bbd69fdba1e57",
+    "handler_sha256": "092c50406c093f66b910953fa6324264801fc353e627c671c5f75c07709fcf9f",
+    "source": "hermes_cli/dashboard_auth/routes.py:338"
+  },
+  "GET /auth/login": {
+    "body_sha256": "2619acceda87f71a5b8984e699bfb797e9fece4386be05aceeebb8c7ac2fccf8",
+    "handler_sha256": "40b81e3fdc679ca68c221e83bd2946c17c12cbeae210a7cbf3c702bcada684ab",
+    "source": "hermes_cli/dashboard_auth/routes.py:217"
+  },
+  "GET /auth/native/authorize": {
+    "body_sha256": "a7b5b1a0cffdf56bbda2d92a643368f2abdf069f3ead6dd410799ad5df6f30a6",
+    "handler_sha256": "24914a3311caa8927f7ad38465e8ce876229fe6e5f78b9400c9ea3c5ac3c173e",
+    "source": "hermes_cli/dashboard_auth/routes.py:289"
+  },
+  "GET /dashboard-plugins/{plugin_name}/{file_path}": {
+    "body_sha256": "95fe84efddd828fc005ab68291ab65bca128efc218ac65274ccbe47eba77b789",
+    "handler_sha256": "c5256c157f423f829b9d81ba6005fcf04dd0f3c2f68762c7b1a89b221c118ea1",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:385"
+  },
+  "GET /login": {
+    "body_sha256": "d780135a7b2cf0f615f26b1157cda8cb2c434895d172669b8db18a40d3afc995",
+    "handler_sha256": "cac2bf8825c9d9a3194c1956f81c79773daf42997ecd4e5a55d1cbb7927b51d8",
+    "source": "hermes_cli/dashboard_auth/routes.py:195"
+  },
+  "GET /{full_path}": {
+    "body_sha256": "0adf0fb59943c7d2ae1eb020e5d7371dbfcd54ec085deaf7829921be8abdfdba",
+    "handler_sha256": "0d71bb78fbb583a9f51851afb655ba14c5c354958e9ae6e4f0299fbc7a7dc005",
+    "source": "hermes_cli/web_server_dashboard.py:230"
+  },
+  "HEAD /api/files/stream": {
+    "body_sha256": "9a07c3622f75d6769dc0dba545be24eff40dffeea6e6195c24d787a898b6108b",
+    "handler_sha256": "1766c0f28a073ab0a3b4f2cf9fdd85ee1451fe666d9025b95e0ab79edc8a3c43",
+    "source": "hermes_cli/web_routers/files.py:619"
+  },
+  "PATCH /api/plugins/kanban/boards/{slug}": {
+    "body_sha256": "c2721f96ee3c8ad76e1e51b7afc386772e1ba2f91c2b96c4a93ba3a173640bc2",
+    "handler_sha256": "2be3d2f2d50a82bef4ecbb3cb764372a6a50b03d65405dedefcf765c50273a0b",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1457"
+  },
+  "PATCH /api/plugins/kanban/profiles/{profile_name}": {
+    "body_sha256": "a8c898dbeb0a97ec2870ee40fc53a83867d68e7c25caf403ec47cc0e79c4bbc2",
+    "handler_sha256": "bc869c469ba46f644b73e3ffc49f8e111f7979b1ac805dd97621986a50d455b0",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1567"
+  },
+  "PATCH /api/plugins/kanban/tasks/{task_id}": {
+    "body_sha256": "5e4725b747974eb1bd41b23ead607ebe2e4411f3c42b1d12f72248ad629ab979",
+    "handler_sha256": "abf4eae16c3b87a215ebbfdb48997192e293be23355cb8d147189502be413180",
+    "source": "plugins/kanban/dashboard/plugin_api.py:692"
+  },
+  "PATCH /api/profiles/{name}": {
+    "body_sha256": "942d860dbed98ffed0204873ef5ad6a89385d3269eb6d331f78c571b279dcc49",
+    "handler_sha256": "ec1d951d2ba24fedbd0de32a7db2e37287a1b4b9e6c81df062d6066b22658799",
+    "source": "hermes_cli/web_routers/profiles.py:953"
+  },
+  "PATCH /api/sessions/{session_id}": {
+    "body_sha256": "d0c0513f728c5becd29df3aac4645b372cf5656df3060775d740e04bdf051825",
+    "handler_sha256": "4bc6c4ba07ff78099ab467c267fff9e9ecebc1b55226b34da5ddd2bc41839f70",
+    "source": "hermes_cli/web_routers/sessions.py:923"
+  },
+  "POST /api/audio/speak": {
+    "body_sha256": "ea36839910723a4fb17f07be9499f87cfca6d78ec4c8a4b7c69261f0598e6799",
+    "handler_sha256": "d2754c48eb90210226f48804d2e6b030294bd8dd2cf77ea292ab082dcdf91a09",
+    "source": "hermes_cli/web_routers/audio.py:293"
+  },
+  "POST /api/audio/stt-lease": {
+    "body_sha256": "53f09bbd5770084fcde75fdd658567d6efe7e009478598fa5c505f53c9f86224",
+    "handler_sha256": "4f948dc8088809bbe0dad34f3b5614f031ee3988785e069ace135756a9ee36c0",
+    "source": "hermes_cli/web_routers/audio.py:482"
+  },
+  "POST /api/audio/transcribe": {
+    "body_sha256": "4e7559362ea213a5e27310fa2049d8b4ba5b5dd886a4de8e23970afa1a916f96",
+    "handler_sha256": "2019dcb77ffbb5348969578106993e795a06d1372800ed89097a157cd863db64",
+    "source": "hermes_cli/web_routers/audio.py:86"
+  },
+  "POST /api/audio/tts-lease": {
+    "body_sha256": "a35a8c9f535b679023c01b5405a35efe2a06c3bee00f99900a1b38549e79a366",
+    "handler_sha256": "3b4f152fbca079f7b38550f626ef738d41da4ee47c4253841b7b03c0e6dab3d8",
+    "source": "hermes_cli/web_routers/audio.py:350"
+  },
+  "POST /api/audio/voice-live/session": {
+    "body_sha256": "7f87ab81a098608737ecdbcca86fa6f686cdff6403632feb55f097d43130bf30",
+    "handler_sha256": "bc4f97cfc7663dba40f5da0f435df4693af9671890306735163f116baaa253f4",
+    "source": "hermes_cli/web_routers/audio.py:188"
+  },
+  "POST /api/auth/ws-ticket": {
+    "body_sha256": "ba35afb458310741a31dc576e5ff549e9fddf9726924074c1e7e79e35c8ec11d",
+    "handler_sha256": "c2191871b6416dada8e2e12c5f4e8718a26a855f90b129b6da8523ee876bfa7d",
+    "source": "hermes_cli/dashboard_auth/routes.py:556"
+  },
+  "POST /api/chat/image-upload": {
+    "body_sha256": "a42d1339b1ff04a534d0948185231c0a54d0bce063bc715f4b77f95ccd67234d",
+    "handler_sha256": "9ff242c3daee47cd3c086939a210056e83bd4fed92c83658c2816a9367bd9607",
+    "source": "hermes_cli/web_routers/files.py:470"
+  },
+  "POST /api/credentials/pool": {
+    "body_sha256": "f7426e615e6edc7345c3a15f3088dbfa9211ef4c5f196499fb3affdd8cb27352",
+    "handler_sha256": "2f7ceb14ddeef560a8253ea42b2c2dc4abc79cefc7e95bb7546dff86c2df5201",
+    "source": "hermes_cli/web_routers/ops.py:373"
+  },
+  "POST /api/cron/blueprints/instantiate": {
+    "body_sha256": "b40b3bbcbd9127dde973baa6a27e62615760e9f4f77e36166af4999dfc77b198",
+    "handler_sha256": "980086b2e66afb776ccfccca9c30176b7ae0da28afa27498670985a4a2d4cf17",
+    "source": "hermes_cli/web_routers/cron.py:877"
+  },
+  "POST /api/cron/fire": {
+    "body_sha256": "5d54a5f9fba1d31da05cac9bd65b04e35584820941e1801490de93f2938a968d",
+    "handler_sha256": "b222191afbb175e46b4fa0df17fd519e4167c18b8c7c490adf6becd34dbc54a4",
+    "source": "hermes_cli/web_routers/cron.py:739"
+  },
+  "POST /api/cron/jobs": {
+    "body_sha256": "d7595af8153341ed6bd56ba59630810f5b0ae574194ab9a27f858819e43dffc4",
+    "handler_sha256": "b9e36c32818fb251f255ab7090d63d0dee154b76b17b9de63267bdf2bd30f7b1",
+    "source": "hermes_cli/web_routers/cron.py:683"
+  },
+  "POST /api/cron/jobs/{job_id}/pause": {
+    "body_sha256": "731de0b4a849489a20a933cdff01228068818cc712d67a852dd9504bd7229c48",
+    "handler_sha256": "d01f80b4e9e8ddd419b6ba8ea877b0224bc734da6e652ce5c686f622267d02e6",
+    "source": "hermes_cli/web_routers/cron.py:719"
+  },
+  "POST /api/cron/jobs/{job_id}/resume": {
+    "body_sha256": "11c031120b197fdcbad59bbc57fce51cdcb49a43074c8262094c39db57f58086",
+    "handler_sha256": "32a9838ceef5e1c1b58db7ecbfc2943eb532b83b8642194f363f9269104f24dc",
+    "source": "hermes_cli/web_routers/cron.py:724"
+  },
+  "POST /api/cron/jobs/{job_id}/trigger": {
+    "body_sha256": "4f1c972ff870ecbbfb38549f1b612698943d51eab57f5f5a9c490ca49efb4b73",
+    "handler_sha256": "55b5134b1aaf9d12f8b9f60062ba01c0e8fb12a27f8404bc0fec6930d9488820",
+    "source": "hermes_cli/web_routers/cron.py:729"
+  },
+  "POST /api/curator/run": {
+    "body_sha256": "bc9421c576cf088bbf52384a9b9a7a9d66ccdd74b194ffe9d56eb286a031125f",
+    "handler_sha256": "1ec6b7d123c6c107af57d776565f6085ac6c7c851c2a3771ea37bbd90a2b14d5",
+    "source": "hermes_cli/web_routers/status.py:668"
+  },
+  "POST /api/dashboard/agent-plugins/activate": {
+    "body_sha256": "34a20ad71e445391a8eb98b856126fbc28ef39e763f3b3a9aae90c7700d0701b",
+    "handler_sha256": "7a8c7656977731c29d6f41a641e1d6c2fba20ed88eab050d6edbbb0265860fec",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:292"
+  },
+  "POST /api/dashboard/agent-plugins/install": {
+    "body_sha256": "48172d85fe0d701ddfad9fe9d0fdc925074fad89dd2cb582af8a486fb9aa5b7b",
+    "handler_sha256": "e0d1759056ffbcc0dcba64751fd9150339e4c7496a74c008f7ed919788e87aa6",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:224"
+  },
+  "POST /api/dashboard/agent-plugins/{name}/disable": {
+    "body_sha256": "11a1b47870ed3bff59aaaa63afb29e2bf8e28c95cc85181b2f6e31ae7768f9bd",
+    "handler_sha256": "5add31cf5bcb68785fb0f50c569f0ed4dfee3937b3b67d846e886f5e66620b9c",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:264"
+  },
+  "POST /api/dashboard/agent-plugins/{name}/enable": {
+    "body_sha256": "93f99abe3f3a867e03ab6859785ca01003bd74bed8f7fbd226cdec4fcaa940dc",
+    "handler_sha256": "8a5a3b45eeea81d08099bfa53fa416e0606d918c68ce8ac737400405b8b96a45",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:257"
+  },
+  "POST /api/dashboard/agent-plugins/{name}/update": {
+    "body_sha256": "e8b2ab5eb4257d52d4e6f1255aa5734856a88eb46b5529043a1e43f3fa9a77cd",
+    "handler_sha256": "fd1834ade1b1fcd050e2ceec563d49629d9cac985e96013653c49f6ef5f766e7",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:271"
+  },
+  "POST /api/dashboard/plugins/{name}/visibility": {
+    "body_sha256": "47d66f8326c3c057160b1f5c474e35e3e77ac86bbf07d043de6940e12f39f9db",
+    "handler_sha256": "62a90b77bf7b0cd2b3914674c7567254230ee9940609d0853a597e013c41db97",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:347"
+  },
+  "POST /api/env/reveal": {
+    "body_sha256": "fc53a1353f1a511aca9143402fad7e2f30f0b7b1996e6680c7a4e9fec9715dcb",
+    "handler_sha256": "807ff4de9ededff968ad409097d19296b3f80783955fe6a0d971676eb5195d29",
+    "source": "hermes_cli/web_routers/config_env.py:1085"
+  },
+  "POST /api/files/mkdir": {
+    "body_sha256": "7a2eaaa2366fb642edcff604ffb5888bb27cefa325ebea613d1e166429a42922",
+    "handler_sha256": "91d0a999747dde2d4d529fb1aa99b2ebb566ee1ec4bd6a29a65596d416356994",
+    "source": "hermes_cli/web_routers/files.py:722"
+  },
+  "POST /api/files/upload": {
+    "body_sha256": "d2c391ddfdb58b3b0ad3536dfc32ff45478bee9e3914440c3bed26e6c4922292",
+    "handler_sha256": "ea51fcad11d2d5c9da292d53e22dbbea92145a69a008349ad1b731b18516a36e",
+    "source": "hermes_cli/web_routers/files.py:647"
+  },
+  "POST /api/files/upload-stream": {
+    "body_sha256": "68ea9e5a626840f67c43b686e1d33323993cba0aedd91f155dfe5300bdf39dfc",
+    "handler_sha256": "b7dbc2f2bfe00b24ccef624bd9a934a386c7be03d7f22500c20e49402aabe80f",
+    "source": "hermes_cli/web_routers/files.py:701"
+  },
+  "POST /api/fs/write-text": {
+    "body_sha256": "77286e9bc1c48ba67b901805bf7d99931c4f306b712df840a76f2e2417443860",
+    "handler_sha256": "d84ea15d5c50f954fe14fc080f44fd966d9384f0d8d59c7f7fba5fca89e32741",
+    "source": "hermes_cli/web_routers/files.py:835"
+  },
+  "POST /api/gateway/drain": {
+    "body_sha256": "a123d49c0ed865b4b861cc5b21011a728906c21c3a6417552f572666b948adf5",
+    "handler_sha256": "a4368bc614b8f1b747536fad22df9fbb4e1e5a9fd21148bfb855d9105f734c8a",
+    "source": "hermes_cli/web_routers/actions.py:186"
+  },
+  "POST /api/gateway/migrate": {
+    "body_sha256": "939154637be20243c13a92b467eba71ec6bdaa11e01236f2b47ac6ed4b6eba78",
+    "handler_sha256": "076985975d5723e479c5a6298ee002edecec52510c237c54b655071d77b4269e",
+    "source": "hermes_cli/web_routers/actions.py:176"
+  },
+  "POST /api/gateway/restart": {
+    "body_sha256": "e7749d980c672a595d7fc02154d0393bbcb74e6af164eca17ec2bb16d7fde253",
+    "handler_sha256": "09b24d4e47d9c486aeef81c751059085f73401209bcfdbc320465771f9bd30ec",
+    "source": "hermes_cli/web_routers/actions.py:160"
+  },
+  "POST /api/gateway/start": {
+    "body_sha256": "0ec3b1573396dd813681587e37c4d0c9cc4c98e2aadcc123a999e6dd2fbc1989",
+    "handler_sha256": "7bab0601ca1510bbd7ed0a2f8d663d0e27708091111e18193638189facbbf259",
+    "source": "hermes_cli/web_routers/ops.py:292"
+  },
+  "POST /api/gateway/stop": {
+    "body_sha256": "1e9fa80bd079e012c8844fc6b45e700834671d51227d50a994b026801b979ded",
+    "handler_sha256": "31adc99a7ee3b9e8f1c69e423d0c8c4a47cf81905e5a219c2f3166f3c89e6421",
+    "source": "hermes_cli/web_routers/ops.py:305"
+  },
+  "POST /api/git/branch/switch": {
+    "body_sha256": "e590c276ae00dc67cf3025dba7113fb87661468a235ae533013f930d6af7decf",
+    "handler_sha256": "9f52e45a4adc3c77f28ca5bb396dbc1f5c39ae5440c4beac2305b0786237a6ef",
+    "source": "hermes_cli/web_routers/git.py:219"
+  },
+  "POST /api/git/review/commit": {
+    "body_sha256": "a6233d0d137957c44683a0bdf28efa9495256aef593c62e32efdf8d6dec6c842",
+    "handler_sha256": "a24abf63a557c141a0efc0c3d771da3a4e382248ecca06e36afa828208f8e426",
+    "source": "hermes_cli/web_routers/git.py:187"
+  },
+  "POST /api/git/review/create-pr": {
+    "body_sha256": "fca18a55bfab8d5a4214ea7f5349fad5a33fbf0f4216b93588529667b6a0736d",
+    "handler_sha256": "122a2b2c459b02dd6911fbb16a5405daf2f039cd792dbc94f757bb545e3d966f",
+    "source": "hermes_cli/web_routers/git.py:197"
+  },
+  "POST /api/git/review/pr-list": {
+    "body_sha256": "6750d92a4ea34ea9ec6c11f60cbd6acb722a89ffb4a028d451e16057527d42ed",
+    "handler_sha256": "86787a8cc9d6b7315037c4192d2556899303c7041bb9e1eae6d56b11673b965f",
+    "source": "hermes_cli/web_routers/git.py:167"
+  },
+  "POST /api/git/review/push": {
+    "body_sha256": "dfe0040c829d17054ab3095c6f261a652322145b9ec567c1e29d40fa56a6f351",
+    "handler_sha256": "e51ad088fa613660a21c5f4334043737486fdf4ecf3f39d941edc2edd3d6f5d4",
+    "source": "hermes_cli/web_routers/git.py:192"
+  },
+  "POST /api/git/review/revert": {
+    "body_sha256": "19aeacc888c06487314387237875df8349e22ee942273c29bd7feed45dc61b2d",
+    "handler_sha256": "321bbe6368a29152ca9671ed6028253ab399c543e5527c053d860b4a84a7f742",
+    "source": "hermes_cli/web_routers/git.py:182"
+  },
+  "POST /api/git/review/stage": {
+    "body_sha256": "0845b2acfbe83a5c51cbbadeb7b816177d8a0d7eb624b2d790db5eafbcdbdb26",
+    "handler_sha256": "f03f171025f64c50d00a08f4e6859d875d11902d6af6e26aa626cddde9c0a6f8",
+    "source": "hermes_cli/web_routers/git.py:172"
+  },
+  "POST /api/git/review/unstage": {
+    "body_sha256": "7226f826ce405a928505c302753ed15cdd1a209ea065ed0fa1fbca3112cb2482",
+    "handler_sha256": "e251962a2e98b0fbf3a08573aebbdbd2c1f6f2d70a0fe3482f5f0c6b295371a5",
+    "source": "hermes_cli/web_routers/git.py:177"
+  },
+  "POST /api/git/worktree/add": {
+    "body_sha256": "69ed1b8e07bc44b3bc9eca464dc7d618ed8cec6c071c35149adbcace3364b055",
+    "handler_sha256": "91addb638736aa8864edf8394bb7a022ec13dce991daf129c1fa6880dc4a1bc9",
+    "source": "hermes_cli/web_routers/git.py:202"
+  },
+  "POST /api/git/worktree/remove": {
+    "body_sha256": "f1ba7673aa2481eeb732085158a664b92005507be664685b7b58e7059deff40d",
+    "handler_sha256": "fa7a4bd8c5b25f499e9c270128c97a89e43bb3777e292f2dfde7cf5846bc1163",
+    "source": "hermes_cli/web_routers/git.py:212"
+  },
+  "POST /api/health/retirement": {
+    "body_sha256": "c04f15a3846d5af957fdc8fc6ee19931d7b8dae4af815f691b5bfd2743c229fe",
+    "handler_sha256": "3bf36964298d230a5b4c11d0e46082ac4c3561a12cc3d56f73c80a210299c7fc",
+    "source": "hermes_cli/web_routers/status.py:157"
+  },
+  "POST /api/hermes/update": {
+    "body_sha256": "3686b2eea1c9f31df0f443f8c334ddd5c07168f19aa9084088beecddfebe5a47",
+    "handler_sha256": "86d65aca4065fa79b28210858ca3260d603f3536735190865b37a1a362ac6efc",
+    "source": "hermes_cli/web_routers/actions.py:240"
+  },
+  "POST /api/local-models/activate": {
+    "body_sha256": "5a90e62759d7c8007699bce8d58bfa1c30fa58e1f0f6afb59ac7a8ac8b762c36",
+    "handler_sha256": "65fe174a1dbb23084f83438096794ea5a19e278112951edc834e5988ceecf789",
+    "source": "hermes_cli/web_routers/local_models.py:893"
+  },
+  "POST /api/local-models/download": {
+    "body_sha256": "19b5743e230eeecb6fb2cff7fee199bf2be692199301e3684601dcc7d55aa86c",
+    "handler_sha256": "b8d7c98336d65f3679fe9d5869ad4d5e66bd08e03caab0edab7df676782bca71",
+    "source": "hermes_cli/web_routers/local_models.py:697"
+  },
+  "POST /api/local-models/download-browsed": {
+    "body_sha256": "c0c2851da2ca6576a214e506ca7af342a3c9210f2eb2c9ba3d9135a90f42cf4c",
+    "handler_sha256": "76ab9aa3e5f88559a4041716822bd20665435c0360f52e27e86316738bfd75e5",
+    "source": "hermes_cli/web_routers/local_models.py:958"
+  },
+  "POST /api/local-models/download/pause": {
+    "body_sha256": "0339b66d7d7767a7160ab8c144e4052de79359f393ba82df724aaf1d51f8ffd8",
+    "handler_sha256": "e3c38d33760f238dc95c087a98de8d53e3399f333aff3ffdbe75468da35611f2",
+    "source": "hermes_cli/web_routers/local_models.py:714"
+  },
+  "POST /api/local-models/download/resume": {
+    "body_sha256": "b989d18eee0a59b05ad005524ad879dd7e17215be7bdb8762986db7c51d47dfb",
+    "handler_sha256": "b76914ba8def630576f49ea941b1dc781af213a68ed905514dd8f42539031a82",
+    "source": "hermes_cli/web_routers/local_models.py:727"
+  },
+  "POST /api/local-models/eject": {
+    "body_sha256": "c1882b9d21df35ec999e5c2547ac8fbbc89efb487f9750757a1f3e722f7c2422",
+    "handler_sha256": "11e9286a6c5ab6b68bcb09f73e3819a841ada201271c124e8ab4434fb7ade2ba",
+    "source": "hermes_cli/web_routers/local_models.py:875"
+  },
+  "POST /api/local-models/quickstart": {
+    "body_sha256": "77528363d1216a2a50caff3696b8ba6dd7ac96f5a90ba0e420e37d03c149b583",
+    "handler_sha256": "5a752ff00d95cf79f3e12544a815f58a2f3ba7a4f313e4b2bdde7c6080b2b9da",
+    "source": "hermes_cli/web_routers/local_models.py:790"
+  },
+  "POST /api/local-models/runtime/install": {
+    "body_sha256": "de44adc3140987a150d2894f756275743b9e43a886e3a738aaf80c10b2428083",
+    "handler_sha256": "a1a773cd5c6ddc3e7b23d341aa766cea1519f9304398b9b5763af30dccc50dfd",
+    "source": "hermes_cli/web_routers/local_models.py:662"
+  },
+  "POST /api/local-models/server": {
+    "body_sha256": "2619623a9d4a89c291eac6816bf3d03dfa689894ee6768f33f8ed5aa863e1e16",
+    "handler_sha256": "c1ce623a58a4394d4f587541d199a2f004672e90129731bf90a8f81dd0f0e4f3",
+    "source": "hermes_cli/web_routers/local_models.py:858"
+  },
+  "POST /api/local-models/sideload": {
+    "body_sha256": "d61b8c8f0396263c5b9d3eb5dd42fd2f0ffde6f1b9b5a5e0d84653cd4bd0cd23",
+    "handler_sha256": "c183df49e4271e1529c559167a6bdf9b12a3ab6a88c5871a78adda0d8255769d",
+    "source": "hermes_cli/web_routers/local_models.py:981"
+  },
+  "POST /api/mcp/catalog/install": {
+    "body_sha256": "f7c1ba97534a40b55129a4294f97ad72c6209012ff993828bde879727bb1a243",
+    "handler_sha256": "b5b2f78d81d86a1c77f91d19ed4a958d558736388e4e317b77a57e8614a47f6e",
+    "source": "hermes_cli/web_routers/mcp.py:471"
+  },
+  "POST /api/mcp/servers": {
+    "body_sha256": "1d2d3a5f36a35d7cd5dedddef46b34cfd32f5447fe6fc5adc83650985735c2fd",
+    "handler_sha256": "0b76338981c4c498e6a363e8c917a2644ea5662bfdd2f9a3191cc46470578c42",
+    "source": "hermes_cli/web_routers/mcp.py:110"
+  },
+  "POST /api/mcp/servers/{name}/auth": {
+    "body_sha256": "97adc72a5518c53ebe5f655b79653e4cec1403f489c757e0a93dae247a37c653",
+    "handler_sha256": "1f5e4fa311a1e6a76d120c75ba54322dec7f3adb4bf50dd950e0b2c6d03f845d",
+    "source": "hermes_cli/web_routers/mcp.py:254"
+  },
+  "POST /api/mcp/servers/{name}/test": {
+    "body_sha256": "f5bb0c02095066946103e8a301affce8ca9daf43a11c2e933a9109620e8025a1",
+    "handler_sha256": "cdbeec9036a9b4b1f5a6a76b09b5108c7c619ad51fc2e8ee8be9eddb7b82007f",
+    "source": "hermes_cli/web_routers/mcp.py:204"
+  },
+  "POST /api/memory/providers/{name}/setup": {
+    "body_sha256": "ca7c031b1702122f45bdc0a3854cc3a7b91f1f45daedada1fc6874ed87584435",
+    "handler_sha256": "d380648a18bb660842f092da1510ce59484c2f09c19437cbc8a3e7e6cbf4b165",
+    "source": "hermes_cli/web_routers/memory_providers.py:528"
+  },
+  "POST /api/memory/providers/{provider}/oauth/start": {
+    "body_sha256": "8d7fb643afccec662c9c4ea2aca2eb41a6c151e2f08e38c4a833f743d925c25f",
+    "handler_sha256": "1599695e8c1c342ae2fff7ff4f1b2eb00f4ba0fee67075d99000488d757090be",
+    "source": "hermes_cli/memory_oauth.py:51"
+  },
+  "POST /api/memory/reset": {
+    "body_sha256": "92407b9c1471cd7c39b153a07eed7144da42af2d2a5bcf29cadd1992d749f7c8",
+    "handler_sha256": "33a6d8c6fe63d3c2f53bacf9066bc02af03231950bb06efe9e2306a8c3e85e9d",
+    "source": "hermes_cli/web_routers/ops.py:528"
+  },
+  "POST /api/messaging/platforms/{platform_id}/test": {
+    "body_sha256": "28dfbd2dd57d339e95090304c82c57018958741190f6e73758d9705085065674",
+    "handler_sha256": "a7e849e81d327ad0760c776cc6a0889f27c1781058ab1b32f137f89a21660101",
+    "source": "hermes_cli/web_routers/messaging.py:1083"
+  },
+  "POST /api/messaging/telegram/onboarding/start": {
+    "body_sha256": "6e0e9f4126cd3f0e2e60a8cb5dc857e7287b176c69e45753e7239ee751a4047f",
+    "handler_sha256": "6b5ee6849be6b703b0cae65c99fe9c6173eadcaff339aa4db6d05db893371445",
+    "source": "hermes_cli/web_routers/messaging.py:713"
+  },
+  "POST /api/messaging/telegram/onboarding/{pairing_id}/apply": {
+    "body_sha256": "7ffac59bb4a657740eb1cef8099364f8d9b9f71cf3b99c84707cdbae06e44fc1",
+    "handler_sha256": "22c6e7796d113323f5bb3ac81b0ccdd09e2d391ab6debcc4d4380e9ed904f2ba",
+    "source": "hermes_cli/web_routers/messaging.py:775"
+  },
+  "POST /api/messaging/whatsapp/onboarding/start": {
+    "body_sha256": "ce20e96c9e3bebdeae2f7230b9b96ced8ba52f90f7ea3587b3cc52541fe46cc5",
+    "handler_sha256": "895946f163f2168ba13c5083d5e710df225afc4432ef6489867dd800f375da1c",
+    "source": "hermes_cli/web_routers/messaging.py:582"
+  },
+  "POST /api/messaging/whatsapp/onboarding/{pairing_id}/apply": {
+    "body_sha256": "e0126f363e4a1a168d133b28ad3e63d7859d128197b7e32a93e5544cd8b10b28",
+    "handler_sha256": "db8e0f55b9477e08cc1d888331fbf80364a9db975e2ce67b016ce3015fb86d1c",
+    "source": "hermes_cli/web_routers/messaging.py:625"
+  },
+  "POST /api/model/set": {
+    "body_sha256": "5229cbaef5f09b6f3755c633ecbfd23bf439e4eca882beacc333171208fa46c0",
+    "handler_sha256": "a3788f853c46919235444d43620ccbcdb9b1e38ccff3e05d2436a9029d5dc477",
+    "source": "hermes_cli/web_routers/models.py:376"
+  },
+  "POST /api/ops/backup": {
+    "body_sha256": "25a866948a537fcce109d77e0c5d020b1f4fb6224ed95e2e0c1e64c24e633a07",
+    "handler_sha256": "0c1592d06c92b239e3701ecb814332f5d926f6e23593dadfc58f9a9ba8d31103",
+    "source": "hermes_cli/web_routers/ops.py:576"
+  },
+  "POST /api/ops/checkpoints/prune": {
+    "body_sha256": "f478324adbbcf1ff0d513aaf9241e9f80cc850ff5ebfc862f0781e442858e815",
+    "handler_sha256": "77d6a892d5e0d1eed57a37c01155f50c7fa2dc4220b77aa5907e41f9e93ebb69",
+    "source": "hermes_cli/web_routers/ops.py:831"
+  },
+  "POST /api/ops/config-migrate": {
+    "body_sha256": "c756f72166b39cbc2cfecbec63b4779012e0622f6cd2bcc95663a4236ccd3399",
+    "handler_sha256": "9a1f3ddfec8b66432e785300d9acdbca7befe1a88805283cf5066c2cbc6b4b17",
+    "source": "hermes_cli/web_routers/status.py:793"
+  },
+  "POST /api/ops/debug-share": {
+    "body_sha256": "9ed75152beca2f3d74c6cd62c12c54e1f44766a334e19157250f999aa7aecdc3",
+    "handler_sha256": "4afaccf54dbf6e965d233ed33695e75540ef26050fe3d184cd9fe112977aee4c",
+    "source": "hermes_cli/web_routers/status.py:798"
+  },
+  "POST /api/ops/doctor": {
+    "body_sha256": "56bebd82c087f633af894d828ed82dd9dd705241d7f52e8da50339f509796a84",
+    "handler_sha256": "0b2aa16fdbd03ff88fa78239f5718cd4b3a7bea5a7110951082e9c3debc1aa6d",
+    "source": "hermes_cli/web_routers/ops.py:556"
+  },
+  "POST /api/ops/dump": {
+    "body_sha256": "071c0e30387c69d896e452c39d7ff08b91aa6563ba3ce82f6854d317d618716d",
+    "handler_sha256": "a0c520864f5ecc7e1993fae91a20f8ac86c462f63a68cd48408d35bad18c15b2",
+    "source": "hermes_cli/web_routers/status.py:788"
+  },
+  "POST /api/ops/hooks": {
+    "body_sha256": "6914468147c20637b9a7bbda738a6ea47a008db15841e25d9dd7c76e70b9960c",
+    "handler_sha256": "1383b10f5c1d1ab1f60133bf93f5014f4bb7ca34a997d5bca2496534ab3b2bba",
+    "source": "hermes_cli/web_routers/ops.py:715"
+  },
+  "POST /api/ops/import": {
+    "body_sha256": "e8f822a4d48c78fc82ee540bf375af0a9e6b3e1f8e39c9531b8ed35d11e68e74",
+    "handler_sha256": "33928e5399b221ee7dbb31c35e2118a73baa53d588674868ec0949d457b68293",
+    "source": "hermes_cli/web_routers/ops.py:622"
+  },
+  "POST /api/ops/import-upload": {
+    "body_sha256": "c92a31b97a7eb1f9fc220a035a239b05fa4c14d4f0a46d346ccb2b9ff22fb6a8",
+    "handler_sha256": "f021c39cdb59320c733e035ca614fa6bed0c81982b94edd2d7d52655184baafe",
+    "source": "hermes_cli/web_routers/ops.py:641"
+  },
+  "POST /api/ops/prompt-size": {
+    "body_sha256": "caece17474b24002fd08ad2531a0d9374684d18c83222b3402fc77432487850d",
+    "handler_sha256": "6dcac00cf6c90e2c19cfb6d8de71378d718693844940cd058c371d4fe40ce231",
+    "source": "hermes_cli/web_routers/status.py:783"
+  },
+  "POST /api/ops/security-audit": {
+    "body_sha256": "9e3474ba4473450a9ec6c5df21f1d417361519023165002e99bfd9937a3f6609",
+    "handler_sha256": "b061c0db67a02b08f47894d7316e6c7844c0ab778241e345cb6a2d0a9c7ca326",
+    "source": "hermes_cli/web_routers/ops.py:562"
+  },
+  "POST /api/pairing/approve": {
+    "body_sha256": "8f171d1b1fa7a307d4f052a525a913f583b31eef1f9a41dc67f524e56d33fc37",
+    "handler_sha256": "f53f4ad9d594e397bbad063d2a567f819b3007410107093cc7651c751770769c",
+    "source": "hermes_cli/web_routers/ops.py:90"
+  },
+  "POST /api/pairing/clear-pending": {
+    "body_sha256": "bb6cb9ec9079fcb5b12ff50a269f5b244cc0412b3e2c592985ac923e3e33adaf",
+    "handler_sha256": "a9e0e67a86113702f6a08aa0f6a9f351b3cd8ae30b0f2cf530df181595218e9a",
+    "source": "hermes_cli/web_routers/ops.py:127"
+  },
+  "POST /api/pairing/revoke": {
+    "body_sha256": "97f42d34b1c688f742a918e2d11d7b0459460ad6739e9e1d67c28a1a0e400621",
+    "handler_sha256": "232307be3c388332ad44b1a7f9083ab6d2ef6346a96189ed32e52d88a1c87ac9",
+    "source": "hermes_cli/web_routers/ops.py:116"
+  },
+  "POST /api/plugins/hermes-achievements/rescan": {
+    "body_sha256": "b722da537edf9cf752c6faec0814b8ea79f32c75605d5038534269fb59492d65",
+    "handler_sha256": "7155556e376df9ac0193a8a6297755394b3d6f493f7effa678c247722e8a1c00",
+    "source": "plugins/hermes-achievements/dashboard/plugin_api.py:877"
+  },
+  "POST /api/plugins/hermes-achievements/reset-state": {
+    "body_sha256": "5757240283261d127aea955fcd924b32237ef6dba4651299d10929c89d803dc4",
+    "handler_sha256": "971fb19e2621f8799482d12d4eb915375507d0fc5d9500b67fde24444f202294",
+    "source": "plugins/hermes-achievements/dashboard/plugin_api.py:882"
+  },
+  "POST /api/plugins/kanban/boards": {
+    "body_sha256": "89ed35455c76ca3e761523ea5b75dae69c208fe37991ef8e4952b8b9fc8e6d4d",
+    "handler_sha256": "643c1c7e4b08ebe01cb3c3f9bce64c8abd49738b1a010c70d8195bb45b90159c",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1440"
+  },
+  "POST /api/plugins/kanban/boards/import": {
+    "body_sha256": "28544b6f2d1bc0d19c9e88f1c34677278579dc618ec4cfc53f57b51cbbcaa6ad",
+    "handler_sha256": "82d09abcd5783f0639b3df724f944b61976de245062a45a06396cc0c47db5b83",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1520"
+  },
+  "POST /api/plugins/kanban/boards/{slug}/export": {
+    "body_sha256": "674cff5e0bcd92110eff7abc1ee88478564f754667a414a7e2f0bcbaf4316c11",
+    "handler_sha256": "52e6686266e68897453897d937cbfdf594608166b1ae4dd6a67085493ae25f31",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1502"
+  },
+  "POST /api/plugins/kanban/boards/{slug}/switch": {
+    "body_sha256": "2faf7265ff8c80439502b4d3f3d9a1861137ccb5e5663c210d1b4576107f0e96",
+    "handler_sha256": "e0071dc16137b5cc6c1ce8e0320124cc4c64734756e9db377bd6720af00b834b",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1534"
+  },
+  "POST /api/plugins/kanban/dispatch": {
+    "body_sha256": "c2870c3dd65e12b3b4644daa2a9c2f8db46106ebf612c5cd25af471a61bf9b58",
+    "handler_sha256": "2e9ff9399027e3722539dae7ee4b4de32f10dc2cf2987b67ae7fa138ae75c522",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1269"
+  },
+  "POST /api/plugins/kanban/estimate": {
+    "body_sha256": "6d6652857bdf4ac5df471cf824f32445c276fd4d29718b4ca981d753737b2542",
+    "handler_sha256": "964ef6a58c50b2aae57c1bbbedc7ed4deadd28a1309e4ba4b3506e85462d3735",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1071"
+  },
+  "POST /api/plugins/kanban/links": {
+    "body_sha256": "a6ee875292586a45a6c5507cf60793f5e83a42dcf0be2f6dc7e1b576c496be2e",
+    "handler_sha256": "409ff1f6d963fc0cfe268753e2aad9d1775139f5e8c0152657c5ee8f65b927ee",
+    "source": "plugins/kanban/dashboard/plugin_api.py:817"
+  },
+  "POST /api/plugins/kanban/profiles/{profile_name}/describe-auto": {
+    "body_sha256": "84a3c8102dc08cf160dbf1964d4f04ce6dbb61cbd02e6dbb5eaa8c14a4727dd3",
+    "handler_sha256": "82531b0dc7c831f8e5ae22b96141822a74c3153e678b3beef79baa6fbb603f94",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1586"
+  },
+  "POST /api/plugins/kanban/runs/{run_id}/terminate": {
+    "body_sha256": "2d1d0690eaad75bb5a13ce4d76d1ce1ab9ec286bed407432b88c599cca237027",
+    "handler_sha256": "7f3c75912ee963a63ca0b9b153578a652d1f32d34da651d411914e478c716c82",
+    "source": "plugins/kanban/dashboard/plugin_api.py:985"
+  },
+  "POST /api/plugins/kanban/tasks": {
+    "body_sha256": "c66125a7818562bc842da3f48bb09be27a7a9ad49a1fe58bcc0726d9ca255e5b",
+    "handler_sha256": "800fcb65e9f38a8a1e8bc8f25b68d6b0ff79d0219c155bfa5b01c7167e84aa5d",
+    "source": "plugins/kanban/dashboard/plugin_api.py:435"
+  },
+  "POST /api/plugins/kanban/tasks/bulk": {
+    "body_sha256": "882b3d9cb923b6ee08560ac4942f366fd73367cd51090ba8e136595940017b4d",
+    "handler_sha256": "7e7f35c662cfc9e944076bcd347f624e94e68a32736b5b1c7a990b9e5641f092",
+    "source": "plugins/kanban/dashboard/plugin_api.py:858"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/attachments": {
+    "body_sha256": "a8199599e692510c5bdfa58d9d1d3a37e0034391f33886bcafb33792d68d231d",
+    "handler_sha256": "b30cfe5f3aaf541351d28213c2055e966f960b9567af87c65b89ed9605f7ba25",
+    "source": "plugins/kanban/dashboard/plugin_api.py:471"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/comments": {
+    "body_sha256": "b1ff2ae68a7c3982311e2f6ec8454113e89c5443b4452e23edbf88aa4bebdf01",
+    "handler_sha256": "192f21eb4cb717dc768934690802894334647f1d8c1cb3ea1b4ed051196b27f1",
+    "source": "plugins/kanban/dashboard/plugin_api.py:802"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/decompose": {
+    "body_sha256": "297c3bad96eabbafc3cb833528cd83f3c2fb60877e2bbbcca895da15c581c99f",
+    "handler_sha256": "97803f7bee2775b2a54394c7d7b98f92ede61e4893d6eaa6b7d418cb03c29d6a",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1602"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/estimate": {
+    "body_sha256": "2edd0b9bf6def1faba84ae581f6f727f0a669f14271d6f12ad3a05fdf450336a",
+    "handler_sha256": "accd27a886e0febb2957617f977fa36250e80b59f9d43f93748899fac46de9a3",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1077"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}": {
+    "body_sha256": "8e5e622bf210db2d601e8e2a5a7f49cbe5e33463bcf958cf8e6ef72681eb5e89",
+    "handler_sha256": "7ff4f4189b3b64ccf62bf765bb6d9bc1924141ffbfe27b3113dde086048cd3e0",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1211"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/reassign": {
+    "body_sha256": "f2b71cf6339c56d2ffea8b1e2f3cad9f9a850b9fe3f7490bd200d20f8715739d",
+    "handler_sha256": "193e34abfd98a12ec988edb88440d4eb28a7fefb17b1394a3780253ab0765a6b",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1039"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/reclaim": {
+    "body_sha256": "33f4747f9be7d218210242e4fe05ca14be17e9074e0783687f3554ec47963900",
+    "handler_sha256": "546dccc4df5b668f707da54cb9c2c75d89a370eab3f7e542f0027b3a0b3365ff",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1008"
+  },
+  "POST /api/plugins/kanban/tasks/{task_id}/specify": {
+    "body_sha256": "da9f6418914a6fc071592caaa97d1ca3c8d74ef44ba28b3980135e70f9686057",
+    "handler_sha256": "0db9ee30fec6bbf1970571728cbe9aa38cc14a079fbb89a6f4a17f999bdeac7c",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1025"
+  },
+  "POST /api/profiles": {
+    "body_sha256": "c64b931c1deb58f38e04960884f0b9ff45c541cbb3ade4538722aa7d51207941",
+    "handler_sha256": "fcb5917b82cfb719a7ca5b0659297e54f7c7b4b0f6decb8c37f61e9cb2209b8b",
+    "source": "hermes_cli/web_routers/profiles.py:805"
+  },
+  "POST /api/profiles/active": {
+    "body_sha256": "a44ccf32e7ad2d892b9f3ae5ac830b5b9d7ec1292291c8d541072d8a8babfe08",
+    "handler_sha256": "9afc499eabf3458d4ca3f1d9a9ba3d086bf7121e6a9357109346d6755ae569bf",
+    "source": "hermes_cli/web_routers/profiles.py:899"
+  },
+  "POST /api/profiles/import": {
+    "body_sha256": "84b78c7f8b415c5d45647d65e47320d9227b9a2c2b21003c048b5d0307fb18f9",
+    "handler_sha256": "363a5259f7130f3ffb87f4c8169fc771b174140fb9a8a1463131199a04d5b527",
+    "source": "hermes_cli/web_routers/profiles.py:1108"
+  },
+  "POST /api/profiles/sessions/pull-requests": {
+    "body_sha256": "e2dc0baad46b1665fd0eee42bdda230d0868932284275e9085185250d871a8fa",
+    "handler_sha256": "b1e2e6065872ae71f223c09e99dae578dc249e259212baccdbf596210003a901",
+    "source": "hermes_cli/web_routers/profiles.py:762"
+  },
+  "POST /api/profiles/{name}/describe-auto": {
+    "body_sha256": "5a2562f08a49d9b5571252c1a0b290f92e78313da96f7ec57168df1f4a3adcec",
+    "handler_sha256": "e2611d5b76967224c27929fb14abadd496836b3c9a5cf5462ecaeb28933da658",
+    "source": "hermes_cli/web_routers/profiles.py:1059"
+  },
+  "POST /api/profiles/{name}/export": {
+    "body_sha256": "d71bcb3a9321305b5726f9a6fd56be7ac2d3e3ec93e26ae8df4f121e27394ee0",
+    "handler_sha256": "0a17e675631ec36b11a906f400e5193b7d03c31b4f39e60717722d8d3861548c",
+    "source": "hermes_cli/web_routers/profiles.py:1090"
+  },
+  "POST /api/profiles/{name}/open-terminal": {
+    "body_sha256": "61103cc765a1d79159879ecc7a6e46a3fbc11ed90c1f99b79ceaa5b58a464610",
+    "handler_sha256": "c730c528258af0c9794545daaaf918c1ca0fbd7e3089e7352c877dd19c6beef7",
+    "source": "hermes_cli/web_routers/profiles.py:931"
+  },
+  "POST /api/providers/custom-endpoints": {
+    "body_sha256": "2686671f6f912d3e0bdad2387b3a5deba7e1992013ba06b174183409acb57a48",
+    "handler_sha256": "a616f8428cc2b114c921afb1835067603a3f03f76c12a1cff2992b1be89a4593",
+    "source": "hermes_cli/web_routers/config_env.py:741"
+  },
+  "POST /api/providers/custom-endpoints/validate": {
+    "body_sha256": "5dbe57dddf74f4534362d99d4cb08da43da59d1803777159fd131907bd2c972a",
+    "handler_sha256": "96b0ab06edebafc481c5e8c2ffa2bf83102c38fa3b2ebcafe5ad76143486ebf7",
+    "source": "hermes_cli/web_routers/config_env.py:852"
+  },
+  "POST /api/providers/custom-endpoints/{endpoint_id}/activate": {
+    "body_sha256": "33e31066a27c81b12fef2b5d85768b48aada237ffeab2f90969e19c8c3a133fb",
+    "handler_sha256": "73504d8d49b1a781701acfe6e22502d5884fb1928484deeeb06b4636dbb216f4",
+    "source": "hermes_cli/web_routers/config_env.py:772"
+  },
+  "POST /api/providers/oauth/{provider_id}/start": {
+    "body_sha256": "22ee0b38e9d1803efc54785e546c3b0ea3c1f15c371f31dd52a194a782ee7e3c",
+    "handler_sha256": "9999adb4183d7720bf46b020f02be3c7e38d03ce379657ab41010d7ead41af8e",
+    "source": "hermes_cli/web_routers/oauth.py:811"
+  },
+  "POST /api/providers/oauth/{provider_id}/submit": {
+    "body_sha256": "380e8afd4779830def477bfeef479939cbcfc654fbcaf0fbb8ab6f17d293b13b",
+    "handler_sha256": "3d304ddda1ecb15eb23632423886406986015fe86b42bb3b524c030fea6fbb41",
+    "source": "hermes_cli/web_routers/oauth.py:864"
+  },
+  "POST /api/providers/validate": {
+    "body_sha256": "1856d8bfed04737f79a7fe2f0a0fb8a2a281f2d530a35b9c4af3b4e5881f3545",
+    "handler_sha256": "972fab986ef497f0941d72606266ac73933991eccb048937d35b7c92ac21b0ba",
+    "source": "hermes_cli/web_routers/config_env.py:997"
+  },
+  "POST /api/sessions/bulk-delete": {
+    "body_sha256": "2489e5b6b345c77e633c5e9578025e4f8fe4dbfa9a68a043577d7992efed1220",
+    "handler_sha256": "f89439b9c4dc09877eb12f217eb2fd6957a722b6a39a09a4721984e2aa7fe6d8",
+    "source": "hermes_cli/web_routers/sessions.py:466"
+  },
+  "POST /api/sessions/import": {
+    "body_sha256": "ad11aeec98baf6c4f7d3b69ab29263c3167af31a6cb458aa5e565a9e3fa59870",
+    "handler_sha256": "fac3d866550233cdd26ac036c2c322ec1357ac4c2cb96bb9b6e1b121b52935f9",
+    "source": "hermes_cli/web_routers/sessions.py:492"
+  },
+  "POST /api/sessions/owner-backfill": {
+    "body_sha256": "9486b613fbd898c7ee133fb41f1d52dca4bc178d81af33eb875a9abb8ebd0919",
+    "handler_sha256": "a11e45e4fc10c082d812985eddbd103036e85e542d21db6b15454dbf2f0180b5",
+    "source": "hermes_cli/web_routers/sessions.py:887"
+  },
+  "POST /api/sessions/prune": {
+    "body_sha256": "cc86315bcd83083164c8b51f9b27304555b26419a5d7be4d09d881119cd4302f",
+    "handler_sha256": "0f81a4872e63c904c0d260deeb60cfe942b060067ac19b5e4c25fc495279a19c",
+    "source": "hermes_cli/web_routers/sessions.py:974"
+  },
+  "POST /api/skills": {
+    "body_sha256": "7e63bbbd3766bb1ece7ae42237d91a1cc93c8b8b81a595a1b2713be91bc5d32c",
+    "handler_sha256": "3108fba60d72b25571620ac4e42657728c6f3fe131d44d12348c80cd668b3cba",
+    "source": "hermes_cli/web_routers/skills.py:418"
+  },
+  "POST /api/skills/hub/install": {
+    "body_sha256": "f28d68c7fdf2a504f792c94ebe66742233102f729e60b12e0e45bca1ab7548c4",
+    "handler_sha256": "cd29e5b536e4cfc4b88365f3607b1790ee5639070e165fbd9558990d56b81488",
+    "source": "hermes_cli/web_routers/skills.py:97"
+  },
+  "POST /api/skills/hub/uninstall": {
+    "body_sha256": "2336ea8da867fa145444b670cef007543d3286a64deb366df60fbd124734413e",
+    "handler_sha256": "b54fee062dccc8b8e733513ab02eee15404f7f005a4f80e5b28e4d1a37d95d3d",
+    "source": "hermes_cli/web_routers/skills.py:106"
+  },
+  "POST /api/skills/hub/update": {
+    "body_sha256": "7ff308e421c7af35d6d0dc7877d34052eca6448f93609c8c25163bf53bc77876",
+    "handler_sha256": "47623d7a3000f00cec6f5efb8e5ef722ced5087dfe6eda7c55733da2c5897906",
+    "source": "hermes_cli/web_routers/skills.py:115"
+  },
+  "POST /api/tools/computer-use/permissions/grant": {
+    "body_sha256": "5cef62ae35e0057dd3f9c8b081b5eaa73899498de5fdb45bc73d8bdf06c298b8",
+    "handler_sha256": "53211f9ea3015d4be78539a9cea1058d81d7c3618c441ffca81ebf7307065c4c",
+    "source": "hermes_cli/web_routers/tools.py:708"
+  },
+  "POST /api/tools/toolsets/{name}/post-setup": {
+    "body_sha256": "33c3c96f275960d90a9f995c11c8fefb63db392af483a5cf2ed9d9e981ffd491",
+    "handler_sha256": "ee90eacf624619e1472942ecf34642157a27768195342bce208e003d4f5feb0e",
+    "source": "hermes_cli/web_routers/tools.py:631"
+  },
+  "POST /api/webhooks": {
+    "body_sha256": "7c9e46284681bb06f7978e061ed90f9d1b4fa25083a789a90ff68091bf267368",
+    "handler_sha256": "2f4cc4f01ee0cd8a72771073b14a368c4d5afba5f861075e4f38d7083bc97aec",
+    "source": "hermes_cli/web_routers/ops.py:190"
+  },
+  "POST /api/webhooks/enable": {
+    "body_sha256": "c9163cba34f03e188b2c310e4643f0347242bae2378324727f720d6663ae8f42",
+    "handler_sha256": "a88a42a894c933ec6119ae1583ebb1fe9bc60aa28024e0e7dd8c36d0ab5f8a24",
+    "source": "hermes_cli/web_routers/ops.py:172"
+  },
+  "POST /auth/logout": {
+    "body_sha256": "d57563047605992a14b13ab915d3b67a0ec6ad10c578c04bad3cd0a7938d1857",
+    "handler_sha256": "654b6a55812af4d7fffbe5bc1bf89ff94d0cd0cc8ab9b5d142f18323f064146a",
+    "source": "hermes_cli/dashboard_auth/routes.py:496"
+  },
+  "POST /auth/native/refresh": {
+    "body_sha256": "95b3b76800c62bb3d7e40e643e14213fcbc4eea63325243c95a1a8e587979100",
+    "handler_sha256": "070f76ace7d16b28f40739785013cb0519e2c823802f08c85c4095e5deba29a3",
+    "source": "hermes_cli/dashboard_auth/routes.py:594"
+  },
+  "POST /auth/native/token": {
+    "body_sha256": "5aeead8bc05e6096e17c8bda491d7419d85aca9d73ea4f98fe14b5c99d42b04c",
+    "handler_sha256": "b4f6d4f578d6badbb82d6c1f71679facc7931e8880e2c374f1b3ebee97c5edd1",
+    "source": "hermes_cli/dashboard_auth/routes.py:574"
+  },
+  "POST /auth/password-login": {
+    "body_sha256": "b12197b60303e777dd27e1d2cf841005b180ce417b77ad54bf0ddec82e8067bc",
+    "handler_sha256": "bdf87f90cffd43bbbd3876c2fd23cf0f6f2ca5d4e22ddeab799529ea4b3ac7ff",
+    "source": "hermes_cli/dashboard_auth/routes.py:447"
+  },
+  "PUT /api/config": {
+    "body_sha256": "f4b51c1ac3447f84911e65b92e1b8f07b0e260f63ef600d4e5b04b225aa61bf8",
+    "handler_sha256": "7e90e9d43934451428bc9f012c77f0f73faeb9df10ad6a08a8d7a8668072bde7",
+    "source": "hermes_cli/web_routers/config_env.py:117"
+  },
+  "PUT /api/config/raw": {
+    "body_sha256": "eac34d3f9ff49b8c022e697ad582b5c48c63966c18cd0791b2241289b465971b",
+    "handler_sha256": "ae66b495686c88836db3f764b0728b8566e7c5db4da2d795a0e8d05a1647edf4",
+    "source": "hermes_cli/web_routers/analytics.py:53"
+  },
+  "PUT /api/cron/jobs/{job_id}": {
+    "body_sha256": "dcf9b6922629aac139dad645c992e0b6f8e69679778c1ed22c35f16e3582c7e8",
+    "handler_sha256": "97093fe341ae3b7ceb5aca947ef572203823521f0b8d63de53f70151d9d8ef26",
+    "source": "hermes_cli/web_routers/cron.py:714"
+  },
+  "PUT /api/curator/paused": {
+    "body_sha256": "f263fc5ba3fc59bd62b8ee27525b72768e5852854c96f35f14b1809a9243dbf1",
+    "handler_sha256": "56ce985454676030b6f7c83d2ba8cd2697e465d44a122e36c458fc10e175fca2",
+    "source": "hermes_cli/web_routers/status.py:649"
+  },
+  "PUT /api/dashboard/font": {
+    "body_sha256": "95c4c2d2ebaed8a50797a6869a151ca2b0421da90cb272c8f7676454fc133490",
+    "handler_sha256": "ac55ca2aed02a0ad4318da01dfb8e6aa0dc30de6ea22768b380ddb366f74d667",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:100"
+  },
+  "PUT /api/dashboard/plugin-providers": {
+    "body_sha256": "33c0c0279fce83cf22f61fedc37db8c40212b1e31535e3e16252e170f7ee66dc",
+    "handler_sha256": "0a44efe083bd7f47c16b41e49bc99909c71651e735ed7184f10f780fa44e08de",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:319"
+  },
+  "PUT /api/dashboard/theme": {
+    "body_sha256": "6684dccb4e5c82c3e6470e359afbb11030cb69b593ad283304718b8688dde41e",
+    "handler_sha256": "aa187b52aacec6a66f37620410a4b1173d31544ee7c81f8834f0dcc1cde1fe25",
+    "source": "hermes_cli/web_routers/dashboard_ui.py:71"
+  },
+  "PUT /api/env": {
+    "body_sha256": "842532131eba856d1c2f7a8da53ac0b03aa113c0058829a1db728bfc6080d8f4",
+    "handler_sha256": "5af8393d70b357c558fc7535412ad76b2132b7e9739ea6a480c7bf89cfa71e6a",
+    "source": "hermes_cli/web_routers/config_env.py:328"
+  },
+  "PUT /api/learning/node": {
+    "body_sha256": "e80da1fad38590e3142f61a60e5be552292f4d0e427c06bdff28343fe508d1e5",
+    "handler_sha256": "92974c9e5dadcee78d633eed9ca96a334a1320e10c2fd7923407e3da12ef0d56",
+    "source": "hermes_cli/web_routers/status.py:722"
+  },
+  "PUT /api/mcp/servers": {
+    "body_sha256": "f7b4137d4865380d46240b186e337108c688ad67ca0a8dc28df16f77bb4c588c",
+    "handler_sha256": "210e0c99f667b266ea827e82d98ec7d38d85dee671c21a13e78491646918c612",
+    "source": "hermes_cli/web_routers/mcp.py:160"
+  },
+  "PUT /api/mcp/servers/{name}/enabled": {
+    "body_sha256": "9dfd014285335e51474ed71c0dd5486ff85ff3c670eca28967df17e3ed1dac5c",
+    "handler_sha256": "6490de3b97b392f55589b55e0453de8218e233ade81db2c4d7f748e9a61264b1",
+    "source": "hermes_cli/web_routers/mcp.py:372"
+  },
+  "PUT /api/memory/provider": {
+    "body_sha256": "405f0f0a927854064ac4689f4e45c094bab3e8442f565dcab0356fd2a28fd09c",
+    "handler_sha256": "41dfb0e0f8d9382588515a108d4b46cf1ce3d0295fe7a04eb411781794fc3838",
+    "source": "hermes_cli/web_routers/ops.py:507"
+  },
+  "PUT /api/memory/providers/{name}/config": {
+    "body_sha256": "42112761306c0b2bdc0f7b7492eaab58f48a8468767ea8c549cd11145b87bd01",
+    "handler_sha256": "3ea18a14785c4b3aa0a8b13878f08c23a2aa8a4778a7cf161be51baa35a566fe",
+    "source": "hermes_cli/web_routers/memory_providers.py:551"
+  },
+  "PUT /api/messaging/platforms/{platform_id}": {
+    "body_sha256": "d145809ac3e1ec06708c0e116e9e2ca295f774cd54fc7494f01566a48a140ee6",
+    "handler_sha256": "889ce572e64ad5aa128fa82c9736a6485641aed4f211069e336de51d94beebea",
+    "source": "hermes_cli/web_routers/messaging.py:884"
+  },
+  "PUT /api/model/moa": {
+    "body_sha256": "5de29edecc49c53b301b3365f5a052734e112c2fd2fc929c37a9c6fdd602837d",
+    "handler_sha256": "8bc6ddd95e56aa38803e5e751e9c1e4d9c9277521feb0db86ff4f6c462fb30fa",
+    "source": "hermes_cli/web_routers/models.py:303"
+  },
+  "PUT /api/plugins/kanban/orchestration": {
+    "body_sha256": "c5f968ab918253a667bdf652ce217948014920724c9f2191a274519f961c45ce",
+    "handler_sha256": "657f550d34c26b4918f8110f8712071f85c0a12dc52118684cfa7a6280567738",
+    "source": "plugins/kanban/dashboard/plugin_api.py:1675"
+  },
+  "PUT /api/profiles/{name}/description": {
+    "body_sha256": "b830903dfd9c1a73ec03c78a38c6b6dcacaa5d90524ed0cd0dd7557ae838a736",
+    "handler_sha256": "0fa78625db456c5e9c866cfe68a23119d709c76be08e109e708992b5d0102d30",
+    "source": "hermes_cli/web_routers/profiles.py:1030"
+  },
+  "PUT /api/profiles/{name}/model": {
+    "body_sha256": "02ea18e4550f25513b28060644ffa237b09dac096712c77b9d3752c64d5e81dc",
+    "handler_sha256": "72705127b47a304ea8edbe0aa5ca3326e1b245201988fcc0f6c1b669ef3e3ead",
+    "source": "hermes_cli/web_routers/profiles.py:1044"
+  },
+  "PUT /api/profiles/{name}/soul": {
+    "body_sha256": "eccc900eff82cc06d32d1021ea7b241e483a11fb8a319746587f807abdee4d2c",
+    "handler_sha256": "03805dabea87de48990f0bec5f4c27eea0d0e12ed75b70cd19efb302647ccbdb",
+    "source": "hermes_cli/web_routers/profiles.py:1008"
+  },
+  "PUT /api/shared-metrics/consent": {
+    "body_sha256": "6876ccb73defbc911bf805ce484dc823a88dd981672749aa7506d36f7c615311",
+    "handler_sha256": "efc0a56004a5c5e97ed157168efe54db82816c7ce9c886aaa8ceb765eed34a31",
+    "source": "hermes_cli/web_routers/shared_metrics.py:39"
+  },
+  "PUT /api/skills/content": {
+    "body_sha256": "435372e3048a8d9c3d487ede496494d5cbf5409d0c187d0732f4a11d6e2fbc55",
+    "handler_sha256": "3a740a502460ee98f34092fdc8100e4bf61d5fe375d432a03050fa622237e47b",
+    "source": "hermes_cli/web_routers/skills.py:433"
+  },
+  "PUT /api/skills/toggle": {
+    "body_sha256": "fb759f0a4c2ac82bed804c6c44b5e4516602fa535c59bbb6aef50cc7319d4a2d",
+    "handler_sha256": "2886812fa2e1c2a7a9b5f79328070a4e4715f358ddc4a1aae855f4e23698be71",
+    "source": "hermes_cli/web_routers/skills.py:379"
+  },
+  "PUT /api/tools/terminal/backend": {
+    "body_sha256": "6c34ac935949515cf6dca4b86d4162379c586914d32e8bba47285bb723974853",
+    "handler_sha256": "b1e557387ce97916724edc727a9d764736e0a898212191c238e77770a3ce4b73",
+    "source": "hermes_cli/web_routers/tools.py:677"
+  },
+  "PUT /api/tools/toolsets/{name}": {
+    "body_sha256": "6b87d9b009ea2629839a7923bd3adf8dd35992420e76ec1e6d910dc570e28abc",
+    "handler_sha256": "aec92387649ce3d544a6b832fa5d90452caccaa6225a4f3ee6e08c706716942e",
+    "source": "hermes_cli/web_routers/tools.py:280"
+  },
+  "PUT /api/tools/toolsets/{name}/env": {
+    "body_sha256": "23084aff7cf35cad580a3b623e41538ac9f0ddaf4e494fab357e856c4bc1818e",
+    "handler_sha256": "026fdc630145a0bf083f52d02ae98bf07946a12ab0db0c807e06aad2619cedbf",
+    "source": "hermes_cli/web_routers/tools.py:590"
+  },
+  "PUT /api/tools/toolsets/{name}/model": {
+    "body_sha256": "1d3e66b3b41520ed96f3d3900b7423cf4fc492a1b2a7912655b169b913037992",
+    "handler_sha256": "dd4edc192fe6b6944145560cbbb4dd2ac4ee334b1f388e29f40f2bc240b979e3",
+    "source": "hermes_cli/web_routers/tools.py:472"
+  },
+  "PUT /api/tools/toolsets/{name}/provider": {
+    "body_sha256": "2efce3e605161f1faa0c65e271832e6e01314ad0aa5157b2d070eeee8699cd7c",
+    "handler_sha256": "1bdd4cd9c794e1d7219a2356285ca59bb6db561cc2e2f1c4f9844c3b5d14fd8c",
+    "source": "hermes_cli/web_routers/tools.py:504"
+  },
+  "PUT /api/webhooks/{name}/enabled": {
+    "body_sha256": "a69daa16556432aaf4df1a7fee13751a3c056914a72a69d49d27ee324756bfea",
+    "handler_sha256": "a26f258c8cb6ae53a4ac8462c7aa26cd0103cfc14b05b883119288332ccc37c5",
+    "source": "hermes_cli/web_routers/ops.py:270"
+  }
+}

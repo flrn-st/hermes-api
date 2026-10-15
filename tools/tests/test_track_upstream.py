@@ -11,9 +11,16 @@ ccc^{}\trefs/tags/v2026.9.22^{}
 ddd\trefs/tags/v2026.9.24
 eee\trefs/tags/v0.21.4+canary.20260925T065930Z
 fff\trefs/tags/v2026.9.14
+ggg\trefs/tags/v0.22.1
+hhh\trefs/tags/rc.2-v0.22.2
+iii\trefs/tags/v0.22.2
+jjj\trefs/tags/v0.22.1+canary.20261015T070051Z
 """
 
 VERSIONS = {"v2026.9.14": "v0.21.3", "v2026.9.21": "v0.21.4", "v2026.9.22": None, "v2026.9.24": "v0.21.5"}
+DATE_TAGS = {tag: line for tag, line in ((line.rsplit("/", 1)[-1], line) for line in TAGS.splitlines())
+             if tag.startswith("v2026")}
+DATE_ONLY = "\n".join(DATE_TAGS.values())
 
 
 def release_root(tmp_path: Path) -> Path:
@@ -30,10 +37,23 @@ def release_root(tmp_path: Path) -> Path:
 
 def test_detects_the_newest_released_version_and_skips_pre_releases(tmp_path: Path) -> None:
     root = release_root(tmp_path)
-    assert stable_tags(TAGS) == ["v2026.9.14", "v2026.9.21", "v2026.9.22", "v2026.9.24"]
-    assert newest_untracked(TAGS, root, VERSIONS.get) == ("v0.21.5", "v2026.9.24")
+    assert stable_tags(DATE_ONLY) == ["v2026.9.14", "v2026.9.21", "v2026.9.22", "v2026.9.24"]
+    assert newest_untracked(DATE_ONLY, root, VERSIONS.get) == ("v0.21.5", "v2026.9.24")
     # A newer tag that is only a pre-release in its pyproject.toml is never adopted.
-    assert newest_untracked(TAGS, root, {**VERSIONS, "v2026.9.24": None}.get) is None
+    assert newest_untracked(DATE_ONLY, root, {**VERSIONS, "v2026.9.24": None}.get) is None
+
+
+def test_version_tags_follow_the_date_tags(tmp_path: Path) -> None:
+    root = release_root(tmp_path)
+    assert stable_tags(TAGS) == ["v2026.9.14", "v2026.9.21", "v2026.9.22", "v2026.9.24", "v0.22.1", "v0.22.2"]
+    versions = {**VERSIONS, "v0.22.1": "v0.22.1", "v0.22.2": "v0.22.2"}
+    assert newest_untracked(TAGS, root, versions.get) == ("v0.22.2", "v0.22.2")
+
+
+def test_adopts_a_version_tag(tmp_path: Path) -> None:
+    root = release_root(tmp_path)
+    assert adopt("v0.22.2", "v0.22.2", root) == "1.4.0"
+    assert "v0.22.2: v0.22.2" in (root / "spec/refs.yaml").read_text()
 
 
 def test_adopts_a_version_with_its_tag_and_bumps_the_minor(tmp_path: Path) -> None:

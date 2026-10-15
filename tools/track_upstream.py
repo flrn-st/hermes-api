@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import argparse
 import subprocess
-import tomllib
 from collections.abc import Callable
 from pathlib import Path
 
-from tools.fetch_spec import PYPROJECT_PATH, ROOT, UPSTREAM, _git, _prepare_remote
+from tools.fetch_spec import ROOT, UPSTREAM, _git, _prepare_remote, tagged_version
 from tools.ref_policy import (
     current_release,
     load_config,
@@ -23,7 +22,7 @@ from tools.release_version import bump_minor
 
 
 def stable_tags(remote_output: str) -> list[str]:
-    """Hermes release tags (``vYYYY.M.D``) from ``git ls-remote --tags``, oldest first."""
+    """Hermes release tags (``vX.Y.Z`` and the older ``vYYYY.M.D``) from ``git ls-remote --tags``, oldest first."""
     tags: set[str] = set()
     for line in remote_output.splitlines():
         if "\trefs/tags/" not in line:
@@ -38,10 +37,15 @@ def stable_tags(remote_output: str) -> list[str]:
 
 
 def tag_version(tag: str, cache: Path = ROOT / "spec" / ".upstream") -> str | None:
-    """The Hermes version a tag was released as, from its pyproject.toml; None for a pre-release."""
+    """The Hermes version a tag was released as; None for a pre-release.
+
+    A version tag's version comes from its verified release record (a tag without one raises), a date
+    tag's from its pyproject.toml.
+    """
     _prepare_remote(cache, tag)
-    pyproject = tomllib.loads(_git(cache, "show", f"refs/tags/{tag}:{PYPROJECT_PATH}").decode())
-    return version_from_pyproject(str(pyproject["project"]["version"]))
+    commit = _git(cache, "rev-parse", f"refs/tags/{tag}^{{commit}}").decode().strip()
+    version, _ = tagged_version(cache, tag, commit)
+    return version_from_pyproject(version)
 
 
 def newest_untracked(

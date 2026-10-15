@@ -10,7 +10,13 @@ import subprocess
 import tomllib
 from pathlib import Path
 
-from tools.ref_policy import require_release, require_upstream_tag, upstream_tag
+from tools.ref_policy import (
+    is_version_tag,
+    release_record_version,
+    require_release,
+    require_upstream_tag,
+    upstream_tag,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = "https://github.com/NousResearch/hermes-agent.git"
@@ -40,6 +46,21 @@ def _prepare_remote(cache: Path, tag: str) -> None:
          f"refs/tags/{tag}:refs/tags/{tag}")
 
 
+def tagged_version(source_repo: Path, tag: str, commit: str) -> tuple[str, str]:
+    """The Hermes version ``tag`` was released as, and where it was read: ``(version, source)``.
+
+    A version tag (``v0.22.2``) is read from its annotated release record, since its ``pyproject.toml``
+    holds the placeholder ``0.0.0``; a date tag (``v2026.9.24``) from its ``pyproject.toml``. See
+    ``tools/ref_policy.py`` for why the record is the trustworthy source.
+    """
+    if is_version_tag(tag):
+        tag_type = _git(source_repo, "cat-file", "-t", f"refs/tags/{tag}").decode().strip()
+        message = _git(source_repo, "tag", "-l", tag, "--format=%(contents)").decode()
+        return release_record_version(tag, tag_type, message, commit)[1:], "tag-record"
+    pyproject = tomllib.loads(_git(source_repo, "show", f"{commit}:{PYPROJECT_PATH}").decode())
+    return str(pyproject["project"]["version"]), "pyproject"
+
+
 def extract(ref: str, source_repo: Path, output_dir: Path, tag: str) -> dict[str, object]:
     """Write a tag-pinned contract and deterministic source metadata for Hermes version ``ref``."""
     require_release(ref)
@@ -59,9 +80,9 @@ def extract(ref: str, source_repo: Path, output_dir: Path, tag: str) -> dict[str
     if not isinstance(schemas, dict):
         raise TypeError("Missing OpenRPC component schemas")
 
-    pyproject = tomllib.loads(_git(source_repo, "show", f"{commit}:{PYPROJECT_PATH}").decode())
-    if f"v{pyproject['project']['version']}" != ref:
-        raise ValueError(f"Tag {tag} is Hermes {pyproject['project']['version']}, not {ref}")
+    hermes_version, version_source = tagged_version(source_repo, tag, commit)
+    if f"v{hermes_version}" != ref:
+        raise ValueError(f"Tag {tag} is Hermes {hermes_version}, not {ref}")
     server = _git(source_repo, "show", f"{commit}:{SERVER_PATH}").decode()
     matches = re.findall(r"^DESKTOP_BACKEND_CONTRACT\s*=\s*(\d+)\s*$", server, re.MULTILINE)
     if len(matches) != 1:
@@ -71,7 +92,8 @@ def extract(ref: str, source_repo: Path, output_dir: Path, tag: str) -> dict[str
         "ref": ref,
         "tag": tag,
         "commit": commit,
-        "hermes_version": pyproject["project"]["version"],
+        "hermes_version": hermes_version,
+        "hermes_version_source": version_source,
         "desktop_contract": int(matches[0]),
         "openrpc_sha256": hashlib.sha256(contract_bytes).hexdigest(),
         "method_count": len(contract["methods"]),

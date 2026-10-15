@@ -27,10 +27,15 @@ import hermes.api.runtime.HermesGatewayException
  *
  * @param answersHeartbeats Reply to `gateway.ping` so an idle connection stays alive.
  * @param serverRequests The server request kinds the capability handshake reports.
+ * @param sessionAuthority Behave like the Hermes session authority (v0.22.1 and later): open with a `gateway.ready`
+ *   reporting `session_authority: true` and answer `runtime.describe` with [runtimeDescription]. The client then
+ *   translates legacy calls; see [GatewayFrames.authorityEvent] for its events.
  */
 public class ScriptedGatewaySocket(
     private val answersHeartbeats: Boolean = false,
     private val serverRequests: List<String> = listOf("approval"),
+    public val sessionAuthority: Boolean = false,
+    private val runtimeDescription: String = GatewayFrames.RUNTIME_DESCRIPTION,
 ) : GatewayConnection {
     private val incoming = Channel<String>(Channel.UNLIMITED)
     private val sentFrames = Channel<String>(Channel.UNLIMITED)
@@ -46,6 +51,10 @@ public class ScriptedGatewaySocket(
 
     @Volatile public var isClosed: Boolean = false
         private set
+
+    init {
+        if (sessionAuthority) inject(GatewayFrames.gatewayReady(sessionAuthority = true))
+    }
 
     /** The socket died, but its reader has not noticed: sends fail, reads still wait. */
     public fun failSends() {
@@ -63,6 +72,11 @@ public class ScriptedGatewaySocket(
                 inject(GatewayFrames.result(id, JsonObject(mapOf(
                     "server_requests" to JsonArray(serverRequests.map(::JsonPrimitive)),
                 ))))
+            }
+            "runtime.describe" -> {
+                if (!sessionAuthority) { sentFrames.trySend(text); return }
+                val id = (frame["id"] as? JsonPrimitive)?.intOrNull ?: 0
+                inject(GatewayFrames.result(id, runtimeDescription))
             }
             "gateway.ping" -> {
                 val id = (frame["id"] as? JsonPrimitive)?.content.orEmpty()

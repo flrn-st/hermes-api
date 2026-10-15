@@ -30,6 +30,12 @@ public interface HermesGatewayClient : GatewayCaller {
     /** The desktop contract Hermes last reported, or `null` before the first session result. */
     public val backendContract: Int?
 
+    /** The runtime of the current (or last) connection, or `null` before the first one. See [GatewayRuntime]. */
+    public val runtime: GatewayRuntime? get() = null
+
+    /** The current connection is served by the Hermes session authority; see [GatewayRuntime]. */
+    public val sessionAuthority: Boolean get() = runtime?.sessionAuthority == true
+
     public fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult)
 
     /** Re-delivers pending requests from a session snapshot after the app has registered its session

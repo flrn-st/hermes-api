@@ -34,6 +34,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
+import java.util.UUID
 import hermes.api.generated.gateway.ClientCapabilitiesParams
 import hermes.api.generated.gateway.ClientCapabilitiesResult
 import hermes.api.generated.gateway.GatewayEventPayload
@@ -42,7 +43,9 @@ import hermes.api.generated.gateway.GatewayMethodCatalog
 import hermes.api.generated.gateway.HermesGatewayContract
 import hermes.api.generated.gateway.ServerRequest
 import hermes.api.generated.gateway.OpenRequestEntry
+import hermes.api.generated.gateway.RequestCancelPayload
 import hermes.api.generated.gateway.ServerRequestResult
+import hermes.api.generated.gateway.SessionTitlePayload
 import hermes.api.generated.gateway.SessionActivateParams
 import hermes.api.generated.gateway.SessionEventsSinceParams
 import hermes.api.generated.gateway.SessionEventsSinceResult
@@ -127,6 +130,21 @@ public class HermesGateway(
     /** The desktop contract Hermes last reported in a session result, or `null` before the first one. */
     @Volatile override var backendContract: Int? = null
         private set
+
+    /** The current connection's `gateway.ready` reported `session_authority: true`. */
+    private var authorityConnection = false
+    /** Each authority session numbers its events within its own replay epoch, unrelated to `gateway.ready`'s. */
+    private val sessionEpochs = mutableMapOf<String, String>()
+    private val authority = SessionAuthority(
+        epochOf = { sessionEpochs[it] },
+        sequenceOf = { lastSequence[it] },
+        onSnapshot = { snapshot, explicit -> adoptSnapshotWatermark(snapshot, explicit) },
+    )
+
+    @Volatile override var runtime: GatewayRuntime? = null
+        private set
+
+    override val sessionAuthority: Boolean get() = runtime?.sessionAuthority == true
 
     // Every collector buffers independently and without bound, so a slow collector delays only itself and
     // never stalls the socket (and with it heartbeat replies).
@@ -271,6 +289,7 @@ public class HermesGateway(
             }
             socket = connection
             inboundSinceTick = true
+            authorityConnection = false
             if (hasConnected) trackedSessionIds().forEach { replayHold[it] = mutableListOf() }
             reader = scope.launch(confined) { readLoop(connection, current) }
             // Hermes forgets this per connection; without it every server request fails immediately.
@@ -278,6 +297,7 @@ public class HermesGateway(
                 ClientCapabilitiesParams.serializer(), ClientCapabilitiesResult.serializer(),
                 configuration.connectTimeoutMillis, waitsForConnection = false)
             if (socket !== connection) throw HermesGatewayException.Transport("Connection ended during handshake")
+            describeRuntime(connection, current)
             if (hasConnected) recoverSessions(connection, current)
             if (socket !== connection) throw HermesGatewayException.Transport("Connection ended during session recovery")
             hasConnected = true
@@ -432,8 +452,9 @@ public class HermesGateway(
 
     /** App calls made while reconnecting wait for the connection, up to their timeout. When the connection
      *  drops under a call, the call is sent again on the next connection if Hermes never received it, or if it
-     *  only reads state ([HermesGatewayContract.readOnlyMethods]). Any other call whose response was lost fails
-     *  with [HermesGatewayException.Transport]: Hermes may or may not have run it. */
+     *  only reads state ([HermesGatewayContract.readOnlyMethods]), or if the session authority deduplicates it by
+     *  the identity the client gave it ([AUTHORITY_IDEMPOTENT_METHODS]). Any other call whose response was lost
+     *  fails with [HermesGatewayException.Transport]: Hermes may or may not have run it. */
     private suspend fun <Params : Any, Result : Any> call(
         method: String,
         params: Params,
@@ -442,16 +463,24 @@ public class HermesGateway(
         timeoutMillis: Long,
         waitsForConnection: Boolean,
     ): Result {
+        // Cadu runtime-close retirement: a refused, disconnected or suspended close must not rebind this runtime.
+        if (method == "session.close") {
+            val arguments = json.encodeToJsonElement(paramsSerializer, params) as? JsonObject
+            val id = (arguments?.get("session_id") as? JsonPrimitive)?.takeIf { it.isString }?.content
+            if (id != null) withContext(confined + NonCancellable) { forgetSession(id) }
+        }
         if (!waitsForConnection) {
-            return try { attemptCall(method, params, paramsSerializer, resultSerializer, timeoutMillis, false) }
+            return try { attemptCall(method, params, paramsSerializer, resultSerializer, timeoutMillis, false, "") }
             catch (loss: ConnectionLoss) { throw loss.error }
         }
+        // One identity per app call: an authority retry of it is recognised as the same intent.
+        val intent = UUID.randomUUID().toString()
         return try {
             withTimeout(timeoutMillis) {
                 var attempt = 1
                 while (true) {
                     try {
-                        return@withTimeout attemptCall(method, params, paramsSerializer, resultSerializer, timeoutMillis, true)
+                        return@withTimeout attemptCall(method, params, paramsSerializer, resultSerializer, timeoutMillis, true, intent)
                     } catch (loss: ConnectionLoss) {
                         val repeatable = !loss.delivered || method in HermesGatewayContract.readOnlyMethods
                         if (!repeatable || attempt >= 6) throw loss.error
@@ -464,10 +493,13 @@ public class HermesGateway(
             }
         } catch (_: TimeoutCancellationException) {
             throw HermesGatewayException.Timeout(method)
+        } finally {
+            withContext(confined + NonCancellable) { authority.intentFinished(intent) }
         }
     }
 
-    /** A call the connection dropped under; [delivered] is false when the frame never left. */
+    /** A call the connection dropped under; [delivered] is false when the frame never left, or when the session
+     *  authority would recognise its repetition. */
     private class ConnectionLoss(val delivered: Boolean, val error: HermesGatewayException) : Exception(error.message)
 
     private suspend fun <Params : Any, Result : Any> attemptCall(
@@ -477,40 +509,35 @@ public class HermesGateway(
         resultSerializer: KSerializer<Result>,
         timeoutMillis: Long,
         waitsForConnection: Boolean,
+        intent: String,
     ): Result {
         if (waitsForConnection && !withContext(confined) { ready }) {
             if (!withContext(confined) { wantsConnection }) throw HermesGatewayException.Transport("Gateway is disconnected")
             awaitConnection(timeoutMillis)
         }
         val encodedParams = json.encodeToJsonElement(paramsSerializer, params)
-        val deferred = CompletableDeferred<JsonElement>()
-        val (id, connection, current) = withContext(confined) {
+        val (connection, current, onAuthority) = withContext(confined) {
             val active = socket ?: throw HermesGatewayException.Transport("Gateway is disconnected")
-            val assigned = nextID++
-            pending[assigned] = deferred
-            Triple(assigned, active, generation)
+            Triple(active, generation, authorityConnection)
         }
         try {
-            val frame = buildJsonObject {
-                put("jsonrpc", "2.0")
-                put("id", id)
-                put("method", method)
-                put("params", encodedParams)
-            }
-            try { connection.send(frame.toString()) }
-            catch (error: CancellationException) { throw error }
-            catch (error: Exception) {
-                // A socket that cannot send is dead even if its reader has not noticed yet.
-                val lost = gatewayError(error)
-                withContext(confined) { connectionLost(lost, current) }
-                throw ConnectionLoss(delivered = false, error = lost)
-            }
-            val result = try { withTimeout(timeoutMillis) { deferred.await() } }
-            catch (_: TimeoutCancellationException) { throw HermesGatewayException.Timeout(method) }
-            catch (error: HermesGatewayException.Transport) {
-                // The socket this call went out on is gone: the response was lost with it.
-                if (withContext(confined) { generation } != current) throw ConnectionLoss(delivered = true, error = error)
-                throw error
+            val result = if (onAuthority && encodedParams is JsonObject && method !in AUTHORITY_NATIVE_METHODS) {
+                try {
+                    withContext(confined) {
+                        val answered = answerLiveRequest(method, encodedParams, connection, current)
+                            ?: authority.call(method, encodedParams, wireOn(connection, current, timeoutMillis), intent)
+                        // An answer from elsewhere in the app (a notification, say) ends the handler still asking.
+                        if (method in PROMPT_ANSWER_METHODS) {
+                            val id = encodedParams.string("request_id") ?: encodedParams.string("prompt_id") ?: encodedParams.string("id")
+                            if (id != null && authority.isAnswered(id)) serverJobs.remove(id)?.cancel()
+                        }
+                        answered
+                    }
+                } catch (loss: ConnectionLoss) {
+                    throw ConnectionLoss(loss.delivered && method !in AUTHORITY_IDEMPOTENT_METHODS, loss.error)
+                }
+            } else {
+                exchange(method, encodedParams, timeoutMillis, connection, current)
             }
             validateContract(result)
             val decoded = try { json.decodeFromJsonElement(resultSerializer, result) }
@@ -528,10 +555,50 @@ public class HermesGateway(
                 withContext(confined) { connectionLost(HermesGatewayException.Transport("Hermes backend is retiring"), current) }
             }
             throw error
+        }
+    }
+
+    /** Sends one JSON-RPC call on [connection] and waits for its answer. Throws [ConnectionLoss] when that
+     *  connection is gone before or while the call is out. */
+    private suspend fun exchange(method: String, params: JsonElement, timeoutMillis: Long, connection: GatewayConnection, current: Int): JsonElement {
+        val deferred = CompletableDeferred<JsonElement>()
+        val id = withContext(confined) {
+            if (socket !== connection || current != generation) {
+                throw ConnectionLoss(delivered = false, error = HermesGatewayException.Transport("Gateway is disconnected"))
+            }
+            val assigned = nextID++
+            pending[assigned] = deferred
+            assigned
+        }
+        try {
+            val frame = buildJsonObject {
+                put("jsonrpc", "2.0")
+                put("id", id)
+                put("method", method)
+                put("params", params)
+            }
+            try { connection.send(frame.toString()) }
+            catch (error: CancellationException) { throw error }
+            catch (error: Exception) {
+                // A socket that cannot send is dead even if its reader has not noticed yet.
+                val lost = gatewayError(error)
+                withContext(confined) { connectionLost(lost, current) }
+                throw ConnectionLoss(delivered = false, error = lost)
+            }
+            return try { withTimeout(timeoutMillis) { deferred.await() } }
+            catch (_: TimeoutCancellationException) { throw HermesGatewayException.Timeout(method) }
+            catch (error: HermesGatewayException.Transport) {
+                // The socket this call went out on is gone: the response was lost with it.
+                if (withContext(confined) { generation } != current) throw ConnectionLoss(delivered = true, error = error)
+                throw error
+            }
         } finally {
             withContext(confined + NonCancellable) { pending.remove(id) }
         }
     }
+
+    private fun wireOn(connection: GatewayConnection, current: Int, timeoutMillis: Long) =
+        AuthorityWire { method, params -> exchange(method, params, timeoutMillis, connection, current) }
 
     private fun gatewayError(error: Throwable): HermesGatewayException = when (error) {
         is HermesGatewayException -> error
@@ -634,15 +701,24 @@ public class HermesGateway(
         if (!replayed && sessionId != null && seq != null) {
             replayHold[sessionId]?.let { it.add(params); return }
         }
+        if (type == "gateway.ready") {
+            authorityConnection = ((params["payload"] as? JsonObject)?.get("session_authority") as? JsonPrimitive)?.booleanOrNull == true
+        }
+        if (authorityConnection && sessionId != null) adoptEventEpoch(sessionId, params)
         if (sessionId != null && seq != null && seq <= (lastSequence[sessionId] ?: 0)) return
-        val rawPayload = params["payload"] ?: JsonObject(emptyMap())
+        var rawPayload = params["payload"] ?: JsonObject(emptyMap())
+        val synthesized = mutableListOf<GatewayEvent>()
+        if (authorityConnection && sessionId != null) {
+            rawPayload = authorityEvent(type, sessionId, params, rawPayload, replayed, synthesized)
+        }
         // A payload the generated model rejects must not tear down the socket: reconnect replay
         // would deliver the same frame again. Callers still receive the raw payload.
         val payload = try { GatewayEventPayload.decode(type, rawPayload, json) }
         catch (_: IllegalArgumentException) { GatewayEventPayload.Unknown(type, rawPayload) }
         when (payload) {
             is GatewayEventPayload.GatewayReady -> {
-                if (replayEpoch != null && replayEpoch != payload.payload.replayEpoch) resetWatermarks()
+                // An authority session numbers its events per session epoch; this one is per process.
+                if (!authorityConnection && replayEpoch != null && replayEpoch != payload.payload.replayEpoch) resetWatermarks()
                 replayEpoch = payload.payload.replayEpoch
                 // Older backends answer gateway.ping with an error, which still proves the socket alive.
                 heartbeatMethod = if (payload.payload.heartbeat == true) "gateway.ping" else "ping"
@@ -665,6 +741,204 @@ public class HermesGateway(
         }
         if (sessionId != null && seq != null) lastSequence[sessionId] = seq
         eventBroadcast.emit(GatewayEvent(type, sessionId, seq, payload, replayed))
+        synthesized.forEach(eventBroadcast::emit)
+    }
+
+    // Session authority
+
+    /** Asks an authority socket what it serves; a gateway that does not answer `runtime.describe` keeps the
+     *  translation's built-in defaults. Legacy sockets are never asked, so their frames stay as they were. */
+    private suspend fun describeRuntime(connection: GatewayConnection, current: Int) {
+        val description = if (!authorityConnection) null else try {
+            RuntimeDescription.parse(exchange("runtime.describe", JsonObject(emptyMap()), configuration.connectTimeoutMillis, connection, current))
+        } catch (error: HermesGatewayException.RPC) {
+            // A backend that announced an authority but does not know runtime.describe is treated as legacy; one
+            // that would not describe itself keeps the translation's defaults.
+            if (error.code == -32601) authorityConnection = false
+            logger.log(GatewayLogLevel.INFO, "runtime.describe refused: ${error.message}")
+            null
+        } catch (loss: ConnectionLoss) {
+            throw loss.error
+        }
+        authority.connectionOpened(description)
+        runtime = if (!authorityConnection) GatewayRuntime.legacy else GatewayRuntime(
+            sessionAuthority = true,
+            instanceId = description?.instanceId,
+            profileId = description?.profileId,
+            authorityEpoch = description?.authorityEpoch,
+            capabilities = description?.capabilities.orEmpty(),
+            sessionCreateSources = description?.createSources.orEmpty(),
+            sessionCreateParameters = description?.createParameters.orEmpty(),
+        )
+        logger.log(GatewayLogLevel.INFO, if (authorityConnection) "Hermes session authority" else "Hermes legacy gateway")
+    }
+
+    /** Watermarks are per (session, replay epoch): a new epoch numbers its events from 1 again. */
+    private fun adoptEventEpoch(sessionId: String, params: JsonObject) {
+        val epoch = (params["replay_epoch"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: return
+        val known = sessionEpochs[sessionId]
+        if (known == epoch) return
+        if (known != null && sessionId in lastSequence) lastSequence[sessionId] = 0
+        sessionEpochs[sessionId] = epoch
+    }
+
+    /** A snapshot the app asked for already contains every event up to its `last_sequence`. */
+    private fun adoptSnapshotWatermark(snapshot: AuthoritySnapshot, explicit: Boolean) {
+        val sessionId = snapshot.sessionId
+        val epoch = snapshot.replayEpoch ?: return
+        if (!explicit && sessionId !in sessions && sessionId !in lastSequence) return
+        val latest = snapshot.lastSequence ?: 0
+        if (sessionEpochs[sessionId] != epoch) {
+            sessionEpochs[sessionId] = epoch
+            lastSequence[sessionId] = latest
+        } else {
+            lastSequence[sessionId] = maxOf(lastSequence[sessionId] ?: 0, latest)
+        }
+    }
+
+    /** Authority bookkeeping for one session event, and its payload in the legacy shape where one exists. */
+    private fun authorityEvent(type: String, sessionId: String, params: JsonObject, rawPayload: JsonElement,
+                               replayed: Boolean, synthesized: MutableList<GatewayEvent>): JsonElement {
+        val fields = rawPayload as? JsonObject ?: return rawPayload
+        val outcome = authority.event(type, sessionId, params.long("execution_generation"), fields)
+        outcome.deliver?.let { deliverPrompt(it, snapshot = replayed) }
+        outcome.settledId?.let { id ->
+            settledSnapshotRequests.add(id)
+            serverJobs.remove(id)?.let { job ->
+                // Answered elsewhere, timed out or interrupted: the legacy withdrawal, for apps that listen to it.
+                job.cancel()
+                val payload = RequestCancelPayload(id, outcome.settled?.kind ?: type.removeSuffix(".settled"), "settled")
+                synthesized += GatewayEvent("request.cancel", sessionId, null, GatewayEventPayload.RequestCancel(payload), replayed)
+            }
+        }
+        return when (type) {
+            "session.replay_gap" -> {
+                if (!replayed) scheduleGapRecovery(sessionId)
+                fields
+            }
+            "session.updated" -> {
+                val title = fields.string("title")
+                if (fields.string("operation") == "rename" && title != null) {
+                    synthesized += GatewayEvent("session.title", sessionId, null,
+                        GatewayEventPayload.SessionTitle(SessionTitlePayload(sessionId, title)), replayed)
+                }
+                fields
+            }
+            "session.usage" -> fields.with("usage" to LegacyShapes.usage(fields))
+            "message.complete" -> fields.obj("usage")?.takeIf { it.containsKey("input_tokens") }
+                ?.let { fields.with("usage" to LegacyShapes.usage(it)) } ?: fields
+            else -> fields
+        }
+    }
+
+    /** Puts an authority prompt to the server request handler as the legacy `approval` / `clarify` request,
+     *  keyed by its prompt id. The answer goes back as `approval.respond` / `clarify.respond`. A handler that
+     *  fails leaves the prompt unanswered: the next snapshot that still lists it offers it again. */
+    private fun deliverPrompt(prompt: AuthorityPrompt, snapshot: Boolean) {
+        val id = prompt.promptId
+        if (snapshot && id in settledSnapshotRequests) return
+        if (!snapshot) settledSnapshotRequests.remove(id)
+        if (id in serverJobs || authority.isAnswered(id)) return
+        val request = try { ServerRequest.decode(prompt.kind, prompt.legacyParams(), json) }
+        catch (_: IllegalArgumentException) {
+            logger.log(GatewayLogLevel.ERROR, "Dropped a ${prompt.kind} prompt the server request model rejects")
+            return
+        }
+        val currentHandler = handler ?: run {
+            logger.log(GatewayLogLevel.ERROR, "No server request handler for a ${prompt.kind} prompt")
+            return
+        }
+        serverJobs[id] = scope.launch(ServerRequestContext(id, prompt.kind)) {
+            val delivery = checkNotNull(coroutineContext[Job])
+            var answered = false
+            try {
+                val result = currentHandler(request)
+                if (!result.matches(request)) throw HermesGatewayException.Protocol("Server request result kind does not match ${prompt.kind}")
+                answerPrompt(prompt, result)
+                answered = true
+            } catch (error: Throwable) {
+                if (!coroutineContext.isActive) throw error
+                logger.log(GatewayLogLevel.ERROR, "${prompt.kind} prompt was not answered: ${error.message}")
+            } finally {
+                withContext(confined + NonCancellable) {
+                    if (serverJobs.remove(id, delivery) && answered) settledSnapshotRequests.add(id)
+                }
+            }
+        }
+    }
+
+    /** Sends the handler's answer through the translated `approval.respond` / `clarify.respond`, which waits for
+     *  a connection and attaches the session first when needed. */
+    private suspend fun answerPrompt(prompt: AuthorityPrompt, result: ServerRequestResult) {
+        val answering = withContext(confined) {
+            if (authority.isAnswered(prompt.promptId)) return@withContext false
+            // The answer is this handler's: a settled echo or another answer must not cancel it as withdrawn.
+            serverJobs.remove(prompt.promptId)
+            settledSnapshotRequests.add(prompt.promptId)
+            true
+        }
+        if (!answering) return
+        val answer = json.parseToJsonElement(result.encodedJSON(json)) as? JsonObject ?: JsonObject(emptyMap())
+        val params = if (prompt.kind == "approval") {
+            jsonObject("session_id" to JsonPrimitive(prompt.sessionId), "request_id" to JsonPrimitive(prompt.promptId),
+                "choice" to (answer["choice"] ?: JsonPrimitive("deny")))
+        } else {
+            jsonObject("session_id" to JsonPrimitive(prompt.sessionId), "prompt_id" to JsonPrimitive(prompt.promptId),
+                "answer" to JsonPrimitive(authority.clarifyAnswer(prompt.promptId, answer)))
+        }
+        try {
+            call("${prompt.kind}.respond", params, JsonObject.serializer(), JsonElement.serializer())
+        } catch (error: Throwable) {
+            // Not answered: a later snapshot that still lists the prompt offers it again.
+            withContext(confined + NonCancellable) { settledSnapshotRequests.remove(prompt.promptId) }
+            throw error
+        }
+    }
+
+    /** `request.answer` for a server request still open on this socket (`sudo`, `secret`): the authority takes
+     *  only the JSON-RPC response to the request itself, so the client sends that in the handler's place. */
+    private suspend fun answerLiveRequest(method: String, params: JsonObject, connection: GatewayConnection, current: Int): JsonElement? {
+        if (method != "request.answer") return null
+        val id = params.string("id") ?: return null
+        if (authority.prompt(id) != null) return null
+        val job = serverJobs.remove(id) ?: return null
+        job.cancel()
+        settledSnapshotRequests.add(id)
+        try {
+            connection.send(buildJsonObject {
+                put("jsonrpc", "2.0"); put("id", id)
+                put("result", params["result"] ?: JsonObject(emptyMap()))
+            }.toString())
+        } catch (error: CancellationException) { throw error }
+        catch (error: Exception) {
+            val lost = gatewayError(error)
+            connectionLost(lost, current)
+            throw ConnectionLoss(delivered = false, error = lost)
+        }
+        return jsonObject("status" to JsonPrimitive("ok"))
+    }
+
+    /** `session.replay_gap`: this socket's subscription was dropped after its backlog overflowed. Resume the
+     *  session and replay from the watermark, holding live events until then; what cannot be replayed is
+     *  reported as [GatewaySessionRecovery.ReplayTruncated]. */
+    private fun scheduleGapRecovery(sessionId: String) {
+        val connection = socket ?: return
+        if (!ready || sessionId in replayHold) return
+        val current = generation
+        replayHold[sessionId] = mutableListOf()
+        scope.launch(confined) {
+            try {
+                if (current != generation) return@launch
+                recoverOnAuthority(sessionId, sessions[sessionId] ?: TrackedSession(), connection, current)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                logger.log(GatewayLogLevel.ERROR, "Replay gap recovery failed: ${error.message}")
+                if (current == generation) recoveryBroadcast.emit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+            } finally {
+                if (current == generation) releaseHeldEvents(sessionId)
+            }
+        }
     }
 
     private fun setTurn(sessionId: String, active: Boolean) {
@@ -673,6 +947,8 @@ public class HermesGateway(
     }
 
     private suspend fun handleServerRequest(id: String, method: String, params: JsonElement, connection: GatewayConnection, current: Int, snapshot: Boolean = false) {
+        // A prompt of the session authority is answered by RPC, never by a response to this id.
+        authority.prompt(id)?.takeIf { authorityConnection }?.let { return deliverPrompt(it, snapshot) }
         if (snapshot && id in settledSnapshotRequests) return
         if (!snapshot) settledSnapshotRequests.remove(id)
         // A reconnect can deliver one request both live and through open_requests.
@@ -774,6 +1050,7 @@ public class HermesGateway(
     private fun forgetSession(sessionId: String) {
         sessions.remove(sessionId)
         lastSequence.remove(sessionId)
+        sessionEpochs.remove(sessionId)
         setTurn(sessionId, false)
     }
 
@@ -807,6 +1084,8 @@ public class HermesGateway(
         if (session.closeOnDisconnect) {
             forgetSession(sessionId)
             recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, "Closed on disconnect"))
+        } else if (authorityConnection) {
+            recoverOnAuthority(sessionId, session, connection, current)
         } else {
             val outcome = rebind(sessionId)
             logger.log(GatewayLogLevel.DEBUG, "Rebind $sessionId: $outcome")
@@ -822,6 +1101,63 @@ public class HermesGateway(
             }
         }
         releaseHeldEvents(sessionId)
+    }
+
+    /** On the session authority a session keeps its id: resuming it subscribes this socket again, then the
+     *  events since the watermark are replayed from the session's own epoch. A new epoch (the replay buffer
+     *  evicted it, or Hermes restarted) cannot be replayed and is reported as [GatewaySessionRecovery.ReplayTruncated]. */
+    private suspend fun recoverOnAuthority(sessionId: String, session: TrackedSession, connection: GatewayConnection, current: Int) {
+        val wire = wireOn(connection, current, RECOVERY_TIMEOUT_MILLIS)
+        try {
+            val snapshot = try {
+                authority.attach(sessionId, session.profile, wire, adoptWatermark = false)
+            } catch (error: HermesGatewayException.RPC) {
+                logger.log(GatewayLogLevel.INFO, "Resume of $sessionId refused: ${error.message}")
+                forgetSession(sessionId)
+                authority.forget(sessionId)
+                recoveryBroadcast.emit(GatewaySessionRecovery.Unavailable(sessionId, error.message ?: "unavailable"))
+                return
+            }
+            val epoch = sessionEpochs[sessionId]
+            val mark = lastSequence[sessionId] ?: 0
+            val latest = snapshot.lastSequence ?: 0
+            if (epoch == null || epoch == snapshot.replayEpoch) {
+                snapshot.replayEpoch?.let { sessionEpochs[sessionId] = it }
+                if (latest > mark) replayOnAuthority(sessionId, mark, snapshot, session.profile, wire)
+            } else {
+                snapshot.replayEpoch?.let { sessionEpochs[sessionId] = it }
+                lastSequence[sessionId] = latest
+                recoveryBroadcast.emit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+            }
+            for (entry in snapshot.prompts) {
+                val prompt = entry.string("prompt_id")?.let(authority::prompt) ?: continue
+                deliverPrompt(prompt, snapshot = true)
+            }
+        } catch (loss: ConnectionLoss) {
+            throw loss.error
+        }
+    }
+
+    private suspend fun replayOnAuthority(sessionId: String, mark: Long, snapshot: AuthoritySnapshot, profile: String?, wire: AuthorityWire) {
+        val result = try {
+            wire.call("session.events.since", jsonObject("session_id" to JsonPrimitive(sessionId), "profile" to json(profile),
+                "last_sequence" to JsonPrimitive(mark), "replay_epoch" to json(snapshot.replayEpoch))) as? JsonObject
+                ?: JsonObject(emptyMap())
+        } catch (error: HermesGatewayException.RPC) {
+            logger.log(GatewayLogLevel.ERROR, "Replay refused: ${error.message}")
+            lastSequence[sessionId] = snapshot.lastSequence ?: mark
+            recoveryBroadcast.emit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+            return
+        }
+        logger.log(GatewayLogLevel.DEBUG, "Replay $sessionId after $mark: ${result.array("events")?.size ?: 0} events, " +
+            "latest ${result.long("latest_seq")}, truncated ${result.bool("truncated")}, snapshot required ${result.bool("snapshot_required")}")
+        if (result.bool("snapshot_required") == true || result.bool("truncated") == true) {
+            result.string("replay_epoch")?.let { sessionEpochs[sessionId] = it }
+            lastSequence[sessionId] = result.long("latest_seq") ?: snapshot.lastSequence ?: mark
+            recoveryBroadcast.emit(GatewaySessionRecovery.ReplayTruncated(sessionId))
+        } else {
+            result.array("events")?.forEach { (it as? JsonObject)?.let { event -> handleEvent(event, true) } }
+        }
     }
 
     /** Rebinding cancels Hermes' orphan reap and routes the session's live events to this socket. */
@@ -988,5 +1324,17 @@ public class HermesGateway(
         /** How often a detached turn's replay buffer is fetched, and for how long at most. */
         const val DRAIN_INTERVAL_MILLIS = 1_000L
         const val DRAIN_LIMIT_NANOS = 900_000_000_000L
+
+        val PROMPT_ANSWER_METHODS = setOf("approval.respond", "clarify.respond", "clarify.lock", "request.answer")
+
+        /** Never translated on an authority socket. */
+        val AUTHORITY_NATIVE_METHODS = setOf("client.capabilities", "runtime.describe")
+
+        /** Translated calls the authority recognises when repeated (a retained request id, a submission id, a
+         *  prompt answered once, or a plain read), so a reply lost with the connection is safe to resend. */
+        val AUTHORITY_IDEMPOTENT_METHODS = setOf("session.create", "session.resume", "session.activate", "session.close",
+            "session.history", "session.title", "session.cwd.set", "session.workspace.move", "session.compress",
+            "session.branch", "session.usage", "session.events.since", "session.interrupt", "session.list",
+            "prompt.submit", "approval.respond", "clarify.respond", "clarify.lock", "commands.catalog")
     }
 }

@@ -317,6 +317,37 @@ the legacy sidecar unchanged; `session.list` lists only live (or `scope: stored`
 legacy `ios` / `cadu` rows answer `not_found` on resume and are readable over REST only. REST session
 mutations (`PATCH` / `DELETE /api/sessions/{id}`) are not covered here.
 
+### Kotlin specifics
+
+The Kotlin runtime (`kotlin/src/main/kotlin/hermes/api/runtime/SessionAuthority.kt`, wired in
+`HermesGateway.kt`) follows the rules above, with these differences:
+
+- `HermesGatewayClient.runtime` is a `GatewayRuntime` with what `runtime.describe` answered (instance,
+  profile home, capabilities, create sources and parameters); `sessionAuthority` reads it.
+- A snapshot keeps its open prompts as `open_requests` (legacy shape: `id` = `prompt_id`, `method`
+  `approval` / `clarify`), because apps that set `automaticallyRestoreServerRequests = false` present them
+  through `restoreServerRequests`; an answer to one is sent as `approval.respond` / `clarify.respond`.
+  `resumed` and `session_key` stay absent.
+- `session.history` is translated: the transcript of a `session.resume` snapshot, as `{count, messages}`.
+- `session.list` without `title` or `scope` asks for `scope: "stored"`, the stored history the legacy list
+  returned (the authority's default lists only live sessions).
+- `command.dispatch` (`name` + `arg`) takes the same `/model`, `/branch` and `/compress` mutations as
+  `slash.exec`.
+- A seed that does not line up with the parent's rows message by message is cut at the same user turn
+  before it is refused.
+- `session.usage` events and the `usage` of `message.complete` also carry the legacy counters, and a prompt
+  settled while its handler still runs is followed by a legacy `request.cancel`.
+- `request.answer` for a server request still open on the socket (`sudo`, `secret`) is sent as its
+  JSON-RPC response.
+- A `stale_generation` refusal does not retire the refused mutation yet (Swift retires it, see above);
+  only `revision_conflict` and `session_busy` on `rewind` / `workspace` do.
+- `kind` reads the generated `GatewayRefusalReason` classification first (for example `profile_mismatch`
+  is `forbidden` there).
+- Calls the authority deduplicates (retained request ids, submission ids, prompt answers, reads) are resent
+  after a lost connection like read-only calls.
+- `gradlew authoritySmoke` runs the legacy methods against a live authority (`HERMES_AUTHORITY_URL`, and
+  `HERMES_AUTHORITY_TICKET_COMMAND` printing a native session ticket per connection).
+
 ## How it is tested
 
 Unit tests drive both runtimes through a fake Hermes: a scripted transport,

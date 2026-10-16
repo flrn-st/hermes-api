@@ -772,6 +772,35 @@ private actor DeliveryCount {
     await gateway.disconnect()
 }
 
+@Test func resumeThatFindsTheRuntimeStillRunningKeepsItTracked() async throws {
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let third = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second, third]))
+    try await gateway.connect()
+    try await createSession(gateway, on: first, id: "runtime-1", stored: "stored-1")
+    var sent = second.sent.makeAsyncIterator()
+    await first.sever()
+    // The activate is refused, but Hermes still runs the runtime: the resume binds the same id again.
+    let (_, activateID) = try sentCall(try #require(await sent.next()))
+    await second.inject(error(activateID, code: 4001, "session not found"))
+    let (_, resumeID) = try sentCall(try #require(await sent.next()))
+    await second.inject(result(resumeID, #"{"session_id":"runtime-1","session_key":"stored-1","message_count":3,"messages":[],"info":{}}"#))
+    let replay = try #require(await sent.next())
+    let (method, replayID) = try sentCall(replay)
+    #expect(method == "session.events.since")
+    #expect(try sentParams(replay)["session_id"] as? String == "runtime-1")
+    await second.inject(result(replayID, #"{"events":[],"latest_seq":0,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"#))
+    try await state(of: gateway) { $0 == .connected }
+    // Still tracked: the next reconnect rebinds it.
+    var thirdSent = third.sent.makeAsyncIterator()
+    await second.sever()
+    let frame = try #require(await thirdSent.next())
+    #expect(try sentCall(frame).0 == "session.activate")
+    #expect(try sentParams(frame)["session_id"] as? String == "runtime-1")
+    await gateway.disconnect()
+}
+
 @Test func turnOfADroppedSessionKeepsStreamingFromTheReplayBuffer() async throws {
     let first = ScriptedGatewaySocket()
     let second = ScriptedGatewaySocket()

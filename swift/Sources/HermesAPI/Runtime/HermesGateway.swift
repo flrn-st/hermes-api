@@ -1033,7 +1033,7 @@ public actor HermesGateway: HermesGatewayClient {
                     // buffer under this id: deliver what is there before moving to a new runtime id.
                     try await replay(sessionID, socket: socket, generation: current)
                 }
-                try await resume(sessionID, session: session, reason: reason)
+                try await resume(sessionID, session: session, reason: reason, socket: socket, generation: current)
             case .settling: break
             }
         }
@@ -1063,7 +1063,14 @@ public actor HermesGateway: HermesGatewayClient {
 
     /// Hermes reclaims a session 20 s after its socket closes (and every session on restart), but keeps it
     /// in storage. Resuming by the stored id rebuilds it under a new runtime id.
-    private func resume(_ sessionID: String, session: TrackedSession, reason: String) async throws {
+    ///
+    /// A runtime Hermes still runs comes back under its own id: the resume bound it to this socket again. It
+    /// stays tracked, so the next reconnect rebinds it too, and what it sent meanwhile is replayed. Retiring
+    /// it would leave it running unseen, its subagents' results with no client to reach.
+    private func resume(
+        _ sessionID: String, session: TrackedSession, reason: String,
+        socket: any GatewayConnection, generation current: Int
+    ) async throws {
         guard configuration.resumesReclaimedSessions, let storedID = session.storedID else {
             retire(sessionID)
             recoveryBroadcast.yield(.unavailable(sessionID: sessionID, reason: reason))
@@ -1078,6 +1085,11 @@ public actor HermesGateway: HermesGatewayClient {
                 ),
                 as: SessionResumeResult.self, timeout: configuration.requestTimeout, waitsForConnection: false
             )
+            if result.sessionId == sessionID {
+                configuration.logger.info("Resumed a session Hermes still runs under its own runtime id")
+                try await replay(sessionID, socket: socket, generation: current)
+                return
+            }
             retire(sessionID)
             configuration.logger.info("Resumed a reclaimed session under a new runtime id")
             recoveryBroadcast.yield(.resumed(

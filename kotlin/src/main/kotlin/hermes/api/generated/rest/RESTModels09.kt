@@ -66,7 +66,7 @@ public data class LearningGraphMemoryCard(
     @SerialName("body")
     public val body: String,
     @SerialName("fingerprint")
-    public val fingerprint: String,
+    public val fingerprint: String? = null,
     @SerialName("source")
     public val source: LearningGraphMemoryCardSource,
     @SerialName("timestamp")
@@ -521,9 +521,9 @@ public data class LocalModelJob(
     @SerialName("bytes_per_sec")
     public val bytesPerSec: Double? = null,
     @SerialName("can_pause")
-    public val canPause: Boolean,
+    public val canPause: Boolean? = null,
     @SerialName("can_resume")
-    public val canResume: Boolean,
+    public val canResume: Boolean? = null,
     @SerialName("detail")
     public val detail: String,
     @SerialName("done_bytes")
@@ -541,7 +541,7 @@ public data class LocalModelJob(
     @SerialName("model_id")
     public val modelId: String?,
     @SerialName("pause_requested")
-    public val pauseRequested: Boolean,
+    public val pauseRequested: Boolean? = null,
     /** Only once ``total_bytes`` is known. */
     @SerialName("percent")
     public val percent: Long? = null,

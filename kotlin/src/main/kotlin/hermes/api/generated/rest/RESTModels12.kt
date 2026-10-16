@@ -317,7 +317,7 @@ public data class MessagingPlatformEnvVar(
     @SerialName("help")
     public val help: String,
     @SerialName("is_list")
-    public val isList: Boolean,
+    public val isList: Boolean? = null,
     @SerialName("is_password")
     public val isPassword: Boolean,
     @SerialName("is_set")
@@ -333,7 +333,7 @@ public data class MessagingPlatformEnvVar(
     @SerialName("url")
     public val url: String?,
     @SerialName("value")
-    public val value: String?,
+    public val value: String? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``test_messaging_platform`` — a verdict over the same payload as the platform list. A connected platform with a per-user authorization surface also carries ``auth_posture`` (``_messaging_platform_posture``); ``ok`` stays true and ``message`` says what to configure. */

@@ -956,7 +956,7 @@ public struct UpdateReceiptSummary: Codable, Sendable, Hashable {
     public var actionId: String?
     public var finishedAt: String?
     public var fleetStates: [String]
-    public var followups: [UpdateFollowup]
+    public var followups: [UpdateFollowup]?
     public var outcome: String?
     public var postSha: String?
     public var postVersion: String?
@@ -964,7 +964,7 @@ public struct UpdateReceiptSummary: Codable, Sendable, Hashable {
     public var startedAt: String?
     public var userAction: UpdateUserAction?
 
-    public init(actionId: String?, finishedAt: String?, fleetStates: [String], followups: [UpdateFollowup], outcome: String?, postSha: String?, postVersion: String?, preSha: String?, startedAt: String?, userAction: UpdateUserAction?) {
+    public init(actionId: String? = nil, finishedAt: String?, fleetStates: [String], followups: [UpdateFollowup]? = nil, outcome: String?, postSha: String?, postVersion: String?, preSha: String?, startedAt: String?, userAction: UpdateUserAction? = nil) {
         self.actionId = actionId
         self.finishedAt = finishedAt
         self.fleetStates = fleetStates
@@ -999,30 +999,30 @@ public struct UpdateReceiptSummary: Codable, Sendable, Hashable {
             }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        actionId = try container.decode(Optional<String>.self, forKey: .actionId)
+        actionId = try container.decodeIfPresent(String.self, forKey: .actionId)
         finishedAt = try container.decode(Optional<String>.self, forKey: .finishedAt)
         fleetStates = try container.decode([String].self, forKey: .fleetStates)
-        followups = try container.decode([UpdateFollowup].self, forKey: .followups)
+        followups = try container.decodeIfPresent([UpdateFollowup].self, forKey: .followups)
         outcome = try container.decode(Optional<String>.self, forKey: .outcome)
         postSha = try container.decode(Optional<String>.self, forKey: .postSha)
         postVersion = try container.decode(Optional<String>.self, forKey: .postVersion)
         preSha = try container.decode(Optional<String>.self, forKey: .preSha)
         startedAt = try container.decode(Optional<String>.self, forKey: .startedAt)
-        userAction = try container.decode(Optional<UpdateUserAction>.self, forKey: .userAction)
+        userAction = try container.decodeIfPresent(UpdateUserAction.self, forKey: .userAction)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(actionId, forKey: .actionId)
+        try container.encodeIfPresent(actionId, forKey: .actionId)
         try container.encode(finishedAt, forKey: .finishedAt)
         try container.encode(fleetStates, forKey: .fleetStates)
-        try container.encode(followups, forKey: .followups)
+        try container.encodeIfPresent(followups, forKey: .followups)
         try container.encode(outcome, forKey: .outcome)
         try container.encode(postSha, forKey: .postSha)
         try container.encode(postVersion, forKey: .postVersion)
         try container.encode(preSha, forKey: .preSha)
         try container.encode(startedAt, forKey: .startedAt)
-        try container.encode(userAction, forKey: .userAction)
+        try container.encodeIfPresent(userAction, forKey: .userAction)
     }
 }
 

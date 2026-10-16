@@ -195,7 +195,7 @@ public data class PluginCatalogEntryRow(
     @SerialName("installed_sha")
     public val installedSha: String?,
     @SerialName("known_issues")
-    public val knownIssues: List<String>,
+    public val knownIssues: List<String>? = null,
     @SerialName("maintainer")
     public val maintainer: String,
     @SerialName("name")

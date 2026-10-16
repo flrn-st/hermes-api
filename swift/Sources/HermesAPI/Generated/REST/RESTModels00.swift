@@ -1213,7 +1213,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
     public var enabled: Bool
     public var gatewayReloaded: Bool
     /// The catalog entry's known issues; empty for a non-catalog install.
-    public var knownIssues: [String]
+    public var knownIssues: [String]?
     public var missingEnv: [String]
     public var ok: Bool
     public var pluginName: String
@@ -1221,7 +1221,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
     public var restartRequired: Bool
     public var warnings: [String]
 
-    public init(activation: AgentPluginActivation?, enabled: Bool, gatewayReloaded: Bool, knownIssues: [String], missingEnv: [String], ok: Bool, pluginName: String, pythonDependencies: [String], restartRequired: Bool, warnings: [String]) {
+    public init(activation: AgentPluginActivation?, enabled: Bool, gatewayReloaded: Bool, knownIssues: [String]? = nil, missingEnv: [String], ok: Bool, pluginName: String, pythonDependencies: [String], restartRequired: Bool, warnings: [String]) {
         self.activation = activation
         self.enabled = enabled
         self.gatewayReloaded = gatewayReloaded
@@ -1259,7 +1259,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
         activation = try container.decode(Optional<AgentPluginActivation>.self, forKey: .activation)
         enabled = try container.decode(Bool.self, forKey: .enabled)
         gatewayReloaded = try container.decode(Bool.self, forKey: .gatewayReloaded)
-        knownIssues = try container.decode([String].self, forKey: .knownIssues)
+        knownIssues = try container.decodeIfPresent([String].self, forKey: .knownIssues)
         missingEnv = try container.decode([String].self, forKey: .missingEnv)
         ok = try container.decode(Bool.self, forKey: .ok)
         pluginName = try container.decode(String.self, forKey: .pluginName)
@@ -1273,7 +1273,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
         try container.encode(activation, forKey: .activation)
         try container.encode(enabled, forKey: .enabled)
         try container.encode(gatewayReloaded, forKey: .gatewayReloaded)
-        try container.encode(knownIssues, forKey: .knownIssues)
+        try container.encodeIfPresent(knownIssues, forKey: .knownIssues)
         try container.encode(missingEnv, forKey: .missingEnv)
         try container.encode(ok, forKey: .ok)
         try container.encode(pluginName, forKey: .pluginName)

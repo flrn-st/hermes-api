@@ -1,31 +1,26 @@
-# Older Hermes releases the generated REST client still reads (spec/refs.yaml: v0.21.5, and v0.22.0 on the
-# stable channel). The reviewed contracts describe the pinned release and stay as they are; this list only
-# changes the generated models (tools/gen_rest_api.py), so `make check-rest` covers it like any other input.
+# Older Hermes releases the generated REST client still reads: `floor` (v0.21.5) and every release up to the
+# pinned one (v0.22.0 is the stable channel). The reviewed contracts describe the pinned release and stay as
+# they are; tools/gen_rest_api.py relaxes only the generated models, so `make check-rest` covers this file.
 #
-# optional: fields the pinned release requires but an older release does not send. They decode as optional
-#   (Swift `T?`, Kotlin `T? = null`), in strict and tolerant decoding alike.
-# retired: fields an older release sends that the pinned release dropped from a closed object. They are
-#   declared as optional so strict decoding of an older release's response does not fail on them.
+# Derived mechanically (tools/gen_rest_api.py `older_release_fields`): for every schema a success response
+# reaches that the floor's contract (spec/out/<floor>/openapi.json) defines under the same name, a field the
+# pinned release requires that the floor does not declare, does not require, or allows to be null decodes
+# as optional (Swift `T?`, Kotlin `T? = null`), in strict and tolerant decoding alike. A variant of an
+# untagged union (CronJobRunSession) keeps the fields the floor already declared, which tell it from its
+# siblings; only the fields the floor never sent are relaxed there.
 #
-# Every entry must still name a required field (optional) or an undeclared one (retired) of the pinned
-# release's contract, or generation fails, so the list cannot go stale silently. Covered by
-# `olderReleaseRESTResponsesDecode` (Swift and Kotlin), which decodes fixtures/v0.21.5.
+# The entries below are the manual extras the derivation cannot see:
+# optional: required fields of a schema the floor names differently (it then has no counterpart).
+# retired: fields the floor sends that the pinned release dropped from a closed object, declared as
+#   optional so strict decoding of the floor's responses does not fail on them.
+#
+# Generation fails when an extra no longer names a required field (optional), names one the derivation
+# already covers, or names a declared field (retired). `olderReleaseRESTResponsesDecode` (Swift and Kotlin)
+# decodes every REST response in fixtures/<floor>.
 floor: v0.21.5
 optional:
-  CronBlueprint: [plugin, source]
-  CronJobExecution: [progress_at]
-  CronJobRunSession: [auto_archived, created_source, runtime_generation, runtime_revision, scheduler_owned]
-  ProfileCreateResponse: [soul_set]
-  ProfileProjectTreeNode: [mergeKey]
-  ProfileProjectTreeSession: [_branched_from, _reset_from]
+  # v0.21.5 answered bulk-delete with SessionDeletedCountResponse.
   SessionBulkDeleteResponse: [skipped_active]
-  SessionDetailResponse: [auto_archived, created_source, runtime_generation, runtime_revision]
-  SessionDisplayMessage: [absorbed_message_uids, message_uid, tool_call_uid, tool_call_uids]
-  SessionExportResponse: [auto_archived, created_source, runtime_generation, runtime_revision]
-  SessionImportResponse: [execution_generation, operation, revision, session_id]
-  SessionListRow: [auto_archived, created_source, runtime_generation, runtime_revision]
-  SessionMessage: [absorbed_message_uids, message_uid, tool_call_uid, tool_call_uids]
-  SessionRenameResponse: [execution_generation, operation, revision, session_id]
 retired:
   ProfileSummary:
     role:

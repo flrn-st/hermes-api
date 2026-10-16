@@ -248,7 +248,7 @@ public struct PluginCatalogEntryRow: Codable, Sendable, Hashable {
     public var image: String
     public var installed: Bool
     public var installedSha: String?
-    public var knownIssues: [String]
+    public var knownIssues: [String]?
     public var maintainer: String
     public var name: String
     public var onboarding: Bool
@@ -266,7 +266,7 @@ public struct PluginCatalogEntryRow: Codable, Sendable, Hashable {
     public var updateAvailable: Bool
     public var version: String
 
-    public init(capabilities: PluginCatalogCapabilities, capabilitySummary: String, category: PluginCatalogEntryRowCategory, description: String, docsUrl: String, image: String, installed: Bool, installedSha: String?, knownIssues: [String], maintainer: String, name: String, onboarding: Bool, platforms: [String], readme: Bool, repo: String, requiresHermes: String, runtimeStatus: PluginCatalogEntryRowRuntimeStatus?, screenshots: [String], sha: String, shaShort: String, subdir: String, tier: PluginCatalogEntryRowTier, title: String, updateAvailable: Bool, version: String) {
+    public init(capabilities: PluginCatalogCapabilities, capabilitySummary: String, category: PluginCatalogEntryRowCategory, description: String, docsUrl: String, image: String, installed: Bool, installedSha: String?, knownIssues: [String]? = nil, maintainer: String, name: String, onboarding: Bool, platforms: [String], readme: Bool, repo: String, requiresHermes: String, runtimeStatus: PluginCatalogEntryRowRuntimeStatus?, screenshots: [String], sha: String, shaShort: String, subdir: String, tier: PluginCatalogEntryRowTier, title: String, updateAvailable: Bool, version: String) {
         self.capabilities = capabilities
         self.capabilitySummary = capabilitySummary
         self.category = category
@@ -339,7 +339,7 @@ public struct PluginCatalogEntryRow: Codable, Sendable, Hashable {
         image = try container.decode(String.self, forKey: .image)
         installed = try container.decode(Bool.self, forKey: .installed)
         installedSha = try container.decode(Optional<String>.self, forKey: .installedSha)
-        knownIssues = try container.decode([String].self, forKey: .knownIssues)
+        knownIssues = try container.decodeIfPresent([String].self, forKey: .knownIssues)
         maintainer = try container.decode(String.self, forKey: .maintainer)
         name = try container.decode(String.self, forKey: .name)
         onboarding = try container.decode(Bool.self, forKey: .onboarding)
@@ -368,7 +368,7 @@ public struct PluginCatalogEntryRow: Codable, Sendable, Hashable {
         try container.encode(image, forKey: .image)
         try container.encode(installed, forKey: .installed)
         try container.encode(installedSha, forKey: .installedSha)
-        try container.encode(knownIssues, forKey: .knownIssues)
+        try container.encodeIfPresent(knownIssues, forKey: .knownIssues)
         try container.encode(maintainer, forKey: .maintainer)
         try container.encode(name, forKey: .name)
         try container.encode(onboarding, forKey: .onboarding)

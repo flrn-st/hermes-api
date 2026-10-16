@@ -651,7 +651,7 @@ public data class ToolsetConfigProvider(
     public val isActive: Boolean,
     /** The Nous Subscription feature a managed row rides ("web", "tts", ...); null on BYOK rows. */
     @SerialName("managed_nous_feature")
-    public val managedNousFeature: String?,
+    public val managedNousFeature: String? = null,
     @SerialName("name")
     public val name: String,
     @SerialName("post_setup")

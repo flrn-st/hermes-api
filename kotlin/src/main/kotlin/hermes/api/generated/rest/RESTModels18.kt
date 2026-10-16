@@ -881,7 +881,7 @@ public data class StatusResponse(
     @SerialName("restart_drain_timeout")
     public val restartDrainTimeout: Double,
     @SerialName("shared_profile_warning")
-    public val sharedProfileWarning: Boolean,
+    public val sharedProfileWarning: Boolean? = null,
     @SerialName("version")
     public val version: String,
 )

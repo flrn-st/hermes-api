@@ -1000,7 +1000,7 @@ public struct KanbanTask: Codable, Sendable, Hashable {
     public var workspaceKind: String
     public var workspacePath: String?
 
-    public init(age: KanbanTaskAge, assignee: String?, blockKind: String?, blockRecurrences: Int, body: String?, branchName: String?, claimExpires: Int?, claimLock: String?, completedAt: Int?, completionContract: String?, consecutiveFailures: Int, createdAt: Int?, createdBy: String?, currentRunId: Int?, currentRunStartedAt: Int?, currentStepKey: String?, goalMaxTurns: Int?, goalMode: Bool, id: String, idempotencyKey: String?, lastFailureError: String?, lastHeartbeatAt: Int?, latestSummary: String?, maxRetries: Int?, maxRuntimeSeconds: Int?, modelOverride: String?, priority: Int, projectId: String?, providerOverride: String?, reasoningEffort: String?, result: String?, sessionId: String?, skills: [String]?, startedAt: Int?, status: String, tenant: String?, title: String, workerPid: Int?, workflowTemplateId: String?, workspaceKind: String, workspacePath: String?) {
+    public init(age: KanbanTaskAge, assignee: String?, blockKind: String?, blockRecurrences: Int, body: String?, branchName: String?, claimExpires: Int?, claimLock: String?, completedAt: Int?, completionContract: String?, consecutiveFailures: Int, createdAt: Int?, createdBy: String?, currentRunId: Int?, currentRunStartedAt: Int? = nil, currentStepKey: String?, goalMaxTurns: Int?, goalMode: Bool, id: String, idempotencyKey: String?, lastFailureError: String?, lastHeartbeatAt: Int?, latestSummary: String?, maxRetries: Int?, maxRuntimeSeconds: Int?, modelOverride: String?, priority: Int, projectId: String?, providerOverride: String?, reasoningEffort: String?, result: String?, sessionId: String?, skills: [String]?, startedAt: Int?, status: String, tenant: String?, title: String, workerPid: Int?, workflowTemplateId: String?, workspaceKind: String, workspacePath: String?) {
         self.age = age
         self.assignee = assignee
         self.blockKind = blockKind
@@ -1111,7 +1111,7 @@ public struct KanbanTask: Codable, Sendable, Hashable {
         createdAt = try container.decode(Optional<Int>.self, forKey: .createdAt)
         createdBy = try container.decode(Optional<String>.self, forKey: .createdBy)
         currentRunId = try container.decode(Optional<Int>.self, forKey: .currentRunId)
-        currentRunStartedAt = try container.decode(Optional<Int>.self, forKey: .currentRunStartedAt)
+        currentRunStartedAt = try container.decodeIfPresent(Int.self, forKey: .currentRunStartedAt)
         currentStepKey = try container.decode(Optional<String>.self, forKey: .currentStepKey)
         goalMaxTurns = try container.decode(Optional<Int>.self, forKey: .goalMaxTurns)
         goalMode = try container.decode(Bool.self, forKey: .goalMode)
@@ -1156,7 +1156,7 @@ public struct KanbanTask: Codable, Sendable, Hashable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(createdBy, forKey: .createdBy)
         try container.encode(currentRunId, forKey: .currentRunId)
-        try container.encode(currentRunStartedAt, forKey: .currentRunStartedAt)
+        try container.encodeIfPresent(currentRunStartedAt, forKey: .currentRunStartedAt)
         try container.encode(currentStepKey, forKey: .currentStepKey)
         try container.encode(goalMaxTurns, forKey: .goalMaxTurns)
         try container.encode(goalMode, forKey: .goalMode)
@@ -1623,7 +1623,7 @@ public struct KanbanTaskWithDiagnostics: Codable, Sendable, Hashable {
     public var workspaceKind: String
     public var workspacePath: String?
 
-    public init(age: KanbanTaskAge, assignee: String?, blockKind: String?, blockRecurrences: Int, body: String?, branchName: String?, claimExpires: Int?, claimLock: String?, completedAt: Int?, completionContract: String?, consecutiveFailures: Int, createdAt: Int?, createdBy: String?, currentRunId: Int?, currentRunStartedAt: Int?, currentStepKey: String?, diagnostics: [KanbanDiagnostic]? = nil, goalMaxTurns: Int?, goalMode: Bool, id: String, idempotencyKey: String?, lastFailureError: String?, lastHeartbeatAt: Int?, latestSummary: String?, maxRetries: Int?, maxRuntimeSeconds: Int?, modelOverride: String?, priority: Int, projectId: String?, providerOverride: String?, reasoningEffort: String?, result: String?, sessionId: String?, skills: [String]?, startedAt: Int?, status: String, tenant: String?, title: String, warnings: KanbanWarningsSummary? = nil, workerPid: Int?, workflowTemplateId: String?, workspaceKind: String, workspacePath: String?) {
+    public init(age: KanbanTaskAge, assignee: String?, blockKind: String?, blockRecurrences: Int, body: String?, branchName: String?, claimExpires: Int?, claimLock: String?, completedAt: Int?, completionContract: String?, consecutiveFailures: Int, createdAt: Int?, createdBy: String?, currentRunId: Int?, currentRunStartedAt: Int? = nil, currentStepKey: String?, diagnostics: [KanbanDiagnostic]? = nil, goalMaxTurns: Int?, goalMode: Bool, id: String, idempotencyKey: String?, lastFailureError: String?, lastHeartbeatAt: Int?, latestSummary: String?, maxRetries: Int?, maxRuntimeSeconds: Int?, modelOverride: String?, priority: Int, projectId: String?, providerOverride: String?, reasoningEffort: String?, result: String?, sessionId: String?, skills: [String]?, startedAt: Int?, status: String, tenant: String?, title: String, warnings: KanbanWarningsSummary? = nil, workerPid: Int?, workflowTemplateId: String?, workspaceKind: String, workspacePath: String?) {
         self.age = age
         self.assignee = assignee
         self.blockKind = blockKind
@@ -1738,7 +1738,7 @@ public struct KanbanTaskWithDiagnostics: Codable, Sendable, Hashable {
         createdAt = try container.decode(Optional<Int>.self, forKey: .createdAt)
         createdBy = try container.decode(Optional<String>.self, forKey: .createdBy)
         currentRunId = try container.decode(Optional<Int>.self, forKey: .currentRunId)
-        currentRunStartedAt = try container.decode(Optional<Int>.self, forKey: .currentRunStartedAt)
+        currentRunStartedAt = try container.decodeIfPresent(Int.self, forKey: .currentRunStartedAt)
         currentStepKey = try container.decode(Optional<String>.self, forKey: .currentStepKey)
         diagnostics = try container.decodeIfPresent([KanbanDiagnostic].self, forKey: .diagnostics)
         goalMaxTurns = try container.decode(Optional<Int>.self, forKey: .goalMaxTurns)
@@ -1785,7 +1785,7 @@ public struct KanbanTaskWithDiagnostics: Codable, Sendable, Hashable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(createdBy, forKey: .createdBy)
         try container.encode(currentRunId, forKey: .currentRunId)
-        try container.encode(currentRunStartedAt, forKey: .currentRunStartedAt)
+        try container.encodeIfPresent(currentRunStartedAt, forKey: .currentRunStartedAt)
         try container.encode(currentStepKey, forKey: .currentStepKey)
         try container.encodeIfPresent(diagnostics, forKey: .diagnostics)
         try container.encode(goalMaxTurns, forKey: .goalMaxTurns)

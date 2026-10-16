@@ -821,19 +821,99 @@ def _symbols(ops: list[Operation]) -> list[dict]:
             for op in ops]
 
 
-def with_older_releases(document: dict, compat: dict) -> dict:
-    """``document`` with the fields ``compat`` lists relaxed for older releases (spec/rest-compat.yaml)."""
+def _response_schemas(document: dict) -> set[str]:
+    """Components the reviewed operations' success responses reach."""
+    schemas = document.get("components", {}).get("schemas", {})
+    roots, requests = _roots(document)
+    seen: set[str] = set()
+
+    def walk(value: object) -> None:
+        if isinstance(value, dict):
+            if "$ref" in value:
+                name = value["$ref"].rsplit("/", 1)[-1]
+                if name not in seen:
+                    seen.add(name)
+                    walk(schemas[name])
+                return
+            for item in value.values():
+                walk(item)
+        elif isinstance(value, list):
+            for item in value:
+                walk(item)
+
+    walk(roots[:len(roots) - len(requests)])
+    return seen
+
+
+def _union_variants(document: dict) -> set[str]:
+    """Components that are variants of an untagged union: a decoder tells them apart by the keys they require."""
+    variants: set[str] = set()
+
+    def walk(value: object) -> None:
+        if isinstance(value, dict):
+            for key in ("anyOf", "oneOf"):
+                refs = [item["$ref"].rsplit("/", 1)[-1] for item in value.get(key, []) if "$ref" in item]
+                if len(refs) > 1 and "discriminator" not in value:
+                    variants.update(refs)
+            for item in value.values():
+                walk(item)
+        elif isinstance(value, list):
+            for item in value:
+                walk(item)
+
+    walk(document)
+    return variants
+
+
+def _nullable(schema: dict) -> bool:
+    return schema.get("type") == "null" or any(item.get("type") == "null" for item in schema.get("anyOf", []))
+
+
+def older_release_fields(document: dict, older: dict) -> dict[str, list[str]]:
+    """Fields of response models that ``older`` (the oldest release the client reads) may leave out.
+
+    For every schema a success response reaches that ``older`` defines under the same name: a field the
+    pinned release requires that ``older`` does not declare, does not require, or allows to be null. A
+    variant of an untagged union keeps the fields ``older`` already declared: relaxing them would let it
+    decode its siblings' rows (a cron run's session row would take a script-only row).
+    """
+    schemas = document.get("components", {}).get("schemas", {})
+    previous = older.get("components", {}).get("schemas", {})
+    relaxed: dict[str, list[str]] = {}
+    variants = _union_variants(document)
+    for name in sorted(_response_schemas(document)):
+        if name not in previous:
+            continue
+        before = previous[name]
+        declared, required = before.get("properties", {}), set(before.get("required", []))
+        properties = schemas[name].get("properties", {})
+        fields = [field for field in schemas[name].get("required", [])
+                  if field not in declared or (name not in variants and (
+                      field not in required or (_nullable(declared[field]) and not _nullable(properties.get(field, {})))))]
+        if fields:
+            relaxed[name] = fields
+    return relaxed
+
+
+def with_older_releases(document: dict, compat: dict, older: dict | None = None) -> dict:
+    """``document`` with the response fields older releases leave out relaxed to optional: those
+    ``older_release_fields`` derives from ``older``, and the extras ``compat`` lists (spec/rest-compat.yaml)."""
+    derived = older_release_fields(document, older) if older is not None else {}
     document = copy.deepcopy(document)
     schemas = document.get("components", {}).get("schemas", {})
+    relaxed = {name: set(fields) for name, fields in derived.items()}
     for name, fields in (compat.get("optional") or {}).items():
         schema = schemas.get(name)
         if schema is None:
             raise ValueError(f"rest-compat: unknown schema {name}")
-        required = schema.get("required", [])
         for field in fields:
-            if field not in required:
+            if field not in schema.get("required", []):
                 raise ValueError(f"rest-compat: {name}.{field} is not required in the contract")
-        schema["required"] = [field for field in required if field not in fields]
+            if field in derived.get(name, []):
+                raise ValueError(f"rest-compat: {name}.{field} is already derived from the older release")
+            relaxed.setdefault(name, set()).add(field)
+    for name, fields in relaxed.items():
+        schemas[name]["required"] = [field for field in schemas[name].get("required", []) if field not in fields]
     for name, fields in (compat.get("retired") or {}).items():
         schema = schemas.get(name)
         if schema is None:
@@ -845,9 +925,15 @@ def with_older_releases(document: dict, compat: dict) -> dict:
     return document
 
 
+def _older_release(compat: dict) -> dict | None:
+    floor = compat.get("floor")
+    return json.loads((ROOT / "spec/out" / floor / "openapi.json").read_text(encoding="utf-8")) if floor else None
+
+
 def outputs(ref: str) -> tuple[dict, list[Operation]]:
     document = json.loads((ROOT / "spec/out" / ref / "openapi.json").read_text(encoding="utf-8"))
-    document = with_older_releases(document, yaml.safe_load(COMPAT.read_text(encoding="utf-8")) or {})
+    compat = yaml.safe_load(COMPAT.read_text(encoding="utf-8")) or {}
+    document = with_older_releases(document, compat, _older_release(compat))
     gateway = set(json.loads((ROOT / "spec/out" / ref / "generated-model-symbols.json").read_text()))
     graph, ops = build(document, gateway)
     models = declarations(graph, ORIGIN)

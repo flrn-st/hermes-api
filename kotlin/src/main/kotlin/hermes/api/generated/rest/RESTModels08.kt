@@ -316,7 +316,7 @@ public data class KanbanTask(
     public val currentRunId: Long?,
     /** Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start). */
     @SerialName("current_run_started_at")
-    public val currentRunStartedAt: Long?,
+    public val currentRunStartedAt: Long? = null,
     @SerialName("current_step_key")
     public val currentStepKey: String?,
     @SerialName("goal_max_turns")
@@ -511,7 +511,7 @@ public data class KanbanTaskWithDiagnostics(
     public val currentRunId: Long?,
     /** Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start). */
     @SerialName("current_run_started_at")
-    public val currentRunStartedAt: Long?,
+    public val currentRunStartedAt: Long? = null,
     @SerialName("current_step_key")
     public val currentStepKey: String?,
     @SerialName("diagnostics")

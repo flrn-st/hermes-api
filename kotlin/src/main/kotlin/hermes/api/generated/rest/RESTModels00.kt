@@ -576,7 +576,7 @@ public data class AgentPluginInstallResponse(
     public val gatewayReloaded: Boolean,
     /** The catalog entry's known issues; empty for a non-catalog install. */
     @SerialName("known_issues")
-    public val knownIssues: List<String>,
+    public val knownIssues: List<String>? = null,
     @SerialName("missing_env")
     public val missingEnv: List<String>,
     @SerialName("ok")

@@ -107,12 +107,12 @@ public struct LearningGraphEdge: Codable, Sendable, Hashable {
 /// ``agent/learning_graph.py::_memory_cards``.
 public struct LearningGraphMemoryCard: Codable, Sendable, Hashable {
     public var body: String
-    public var fingerprint: String
+    public var fingerprint: String?
     public var source: LearningGraphMemoryCardSource
     public var timestamp: Int?
     public var title: String
 
-    public init(body: String, fingerprint: String, source: LearningGraphMemoryCardSource, timestamp: Int?, title: String) {
+    public init(body: String, fingerprint: String? = nil, source: LearningGraphMemoryCardSource, timestamp: Int?, title: String) {
         self.body = body
         self.fingerprint = fingerprint
         self.source = source
@@ -138,7 +138,7 @@ public struct LearningGraphMemoryCard: Codable, Sendable, Hashable {
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         body = try container.decode(String.self, forKey: .body)
-        fingerprint = try container.decode(String.self, forKey: .fingerprint)
+        fingerprint = try container.decodeIfPresent(String.self, forKey: .fingerprint)
         source = try container.decode(LearningGraphMemoryCardSource.self, forKey: .source)
         timestamp = try container.decode(Optional<Int>.self, forKey: .timestamp)
         title = try container.decode(String.self, forKey: .title)
@@ -147,7 +147,7 @@ public struct LearningGraphMemoryCard: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(body, forKey: .body)
-        try container.encode(fingerprint, forKey: .fingerprint)
+        try container.encodeIfPresent(fingerprint, forKey: .fingerprint)
         try container.encode(source, forKey: .source)
         try container.encode(timestamp, forKey: .timestamp)
         try container.encode(title, forKey: .title)
@@ -949,8 +949,8 @@ public struct LocalModelCatalogRow: Codable, Sendable, Hashable {
 public struct LocalModelJob: Codable, Sendable, Hashable {
     /// Only while running and measurable.
     public var bytesPerSec: Double?
-    public var canPause: Bool
-    public var canResume: Bool
+    public var canPause: Bool?
+    public var canResume: Bool?
     public var detail: String
     public var doneBytes: Int
     public var error: String?
@@ -960,7 +960,7 @@ public struct LocalModelJob: Codable, Sendable, Hashable {
     public var kind: LocalModelJobKind
     /// Catalog/variant id for download-type jobs.
     public var modelId: String?
-    public var pauseRequested: Bool
+    public var pauseRequested: Bool?
     /// Only once ``total_bytes`` is known.
     public var percent: Int?
     /// Current step name (``starting``, ``downloading``, ``done``, ...).
@@ -972,7 +972,7 @@ public struct LocalModelJob: Codable, Sendable, Hashable {
     public var target: String
     public var totalBytes: Int?
 
-    public init(bytesPerSec: Double? = nil, canPause: Bool, canResume: Bool, detail: String, doneBytes: Int, error: String?, etaSeconds: Int? = nil, jobId: String, kind: LocalModelJobKind, modelId: String?, pauseRequested: Bool, percent: Int? = nil, phase: String, ranges: [String: [[Int]]]? = nil, startedAt: Double, status: LocalModelJobStatus, target: String, totalBytes: Int?) {
+    public init(bytesPerSec: Double? = nil, canPause: Bool? = nil, canResume: Bool? = nil, detail: String, doneBytes: Int, error: String?, etaSeconds: Int? = nil, jobId: String, kind: LocalModelJobKind, modelId: String?, pauseRequested: Bool? = nil, percent: Int? = nil, phase: String, ranges: [String: [[Int]]]? = nil, startedAt: Double, status: LocalModelJobStatus, target: String, totalBytes: Int?) {
         self.bytesPerSec = bytesPerSec
         self.canPause = canPause
         self.canResume = canResume
@@ -1024,8 +1024,8 @@ public struct LocalModelJob: Codable, Sendable, Hashable {
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         bytesPerSec = try container.decodeIfPresent(Double.self, forKey: .bytesPerSec)
-        canPause = try container.decode(Bool.self, forKey: .canPause)
-        canResume = try container.decode(Bool.self, forKey: .canResume)
+        canPause = try container.decodeIfPresent(Bool.self, forKey: .canPause)
+        canResume = try container.decodeIfPresent(Bool.self, forKey: .canResume)
         detail = try container.decode(String.self, forKey: .detail)
         doneBytes = try container.decode(Int.self, forKey: .doneBytes)
         error = try container.decode(Optional<String>.self, forKey: .error)
@@ -1033,7 +1033,7 @@ public struct LocalModelJob: Codable, Sendable, Hashable {
         jobId = try container.decode(String.self, forKey: .jobId)
         kind = try container.decode(LocalModelJobKind.self, forKey: .kind)
         modelId = try container.decode(Optional<String>.self, forKey: .modelId)
-        pauseRequested = try container.decode(Bool.self, forKey: .pauseRequested)
+        pauseRequested = try container.decodeIfPresent(Bool.self, forKey: .pauseRequested)
         percent = try container.decodeIfPresent(Int.self, forKey: .percent)
         phase = try container.decode(String.self, forKey: .phase)
         ranges = try container.decodeIfPresent([String: [[Int]]].self, forKey: .ranges)
@@ -1046,8 +1046,8 @@ public struct LocalModelJob: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(bytesPerSec, forKey: .bytesPerSec)
-        try container.encode(canPause, forKey: .canPause)
-        try container.encode(canResume, forKey: .canResume)
+        try container.encodeIfPresent(canPause, forKey: .canPause)
+        try container.encodeIfPresent(canResume, forKey: .canResume)
         try container.encode(detail, forKey: .detail)
         try container.encode(doneBytes, forKey: .doneBytes)
         try container.encode(error, forKey: .error)
@@ -1055,7 +1055,7 @@ public struct LocalModelJob: Codable, Sendable, Hashable {
         try container.encode(jobId, forKey: .jobId)
         try container.encode(kind, forKey: .kind)
         try container.encode(modelId, forKey: .modelId)
-        try container.encode(pauseRequested, forKey: .pauseRequested)
+        try container.encodeIfPresent(pauseRequested, forKey: .pauseRequested)
         try container.encodeIfPresent(percent, forKey: .percent)
         try container.encode(phase, forKey: .phase)
         try container.encodeIfPresent(ranges, forKey: .ranges)

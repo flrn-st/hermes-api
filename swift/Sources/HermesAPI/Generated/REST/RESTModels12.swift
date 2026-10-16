@@ -573,7 +573,7 @@ public struct MessagingPlatformEnvVar: Codable, Sendable, Hashable {
     public var advanced: Bool
     public var description: String
     public var help: String
-    public var isList: Bool
+    public var isList: Bool?
     public var isPassword: Bool
     public var isSet: Bool
     public var key: String
@@ -583,7 +583,7 @@ public struct MessagingPlatformEnvVar: Codable, Sendable, Hashable {
     public var url: String?
     public var value: String?
 
-    public init(advanced: Bool, description: String, help: String, isList: Bool, isPassword: Bool, isSet: Bool, key: String, prompt: String, redactedValue: String?, required: Bool, url: String?, value: String?) {
+    public init(advanced: Bool, description: String, help: String, isList: Bool? = nil, isPassword: Bool, isSet: Bool, key: String, prompt: String, redactedValue: String?, required: Bool, url: String?, value: String? = nil) {
         self.advanced = advanced
         self.description = description
         self.help = help
@@ -625,7 +625,7 @@ public struct MessagingPlatformEnvVar: Codable, Sendable, Hashable {
         advanced = try container.decode(Bool.self, forKey: .advanced)
         description = try container.decode(String.self, forKey: .description)
         help = try container.decode(String.self, forKey: .help)
-        isList = try container.decode(Bool.self, forKey: .isList)
+        isList = try container.decodeIfPresent(Bool.self, forKey: .isList)
         isPassword = try container.decode(Bool.self, forKey: .isPassword)
         isSet = try container.decode(Bool.self, forKey: .isSet)
         key = try container.decode(String.self, forKey: .key)
@@ -633,7 +633,7 @@ public struct MessagingPlatformEnvVar: Codable, Sendable, Hashable {
         redactedValue = try container.decode(Optional<String>.self, forKey: .redactedValue)
         required = try container.decode(Bool.self, forKey: .required)
         url = try container.decode(Optional<String>.self, forKey: .url)
-        value = try container.decode(Optional<String>.self, forKey: .value)
+        value = try container.decodeIfPresent(String.self, forKey: .value)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -641,7 +641,7 @@ public struct MessagingPlatformEnvVar: Codable, Sendable, Hashable {
         try container.encode(advanced, forKey: .advanced)
         try container.encode(description, forKey: .description)
         try container.encode(help, forKey: .help)
-        try container.encode(isList, forKey: .isList)
+        try container.encodeIfPresent(isList, forKey: .isList)
         try container.encode(isPassword, forKey: .isPassword)
         try container.encode(isSet, forKey: .isSet)
         try container.encode(key, forKey: .key)
@@ -649,7 +649,7 @@ public struct MessagingPlatformEnvVar: Codable, Sendable, Hashable {
         try container.encode(redactedValue, forKey: .redactedValue)
         try container.encode(required, forKey: .required)
         try container.encode(url, forKey: .url)
-        try container.encode(value, forKey: .value)
+        try container.encodeIfPresent(value, forKey: .value)
     }
 }
 

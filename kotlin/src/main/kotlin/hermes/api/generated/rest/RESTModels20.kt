@@ -587,13 +587,13 @@ public data class UpdateReceiptStep(
 @Serializable
 public data class UpdateReceiptSummary(
     @SerialName("action_id")
-    public val actionId: String?,
+    public val actionId: String? = null,
     @SerialName("finished_at")
     public val finishedAt: String?,
     @SerialName("fleet_states")
     public val fleetStates: List<String>,
     @SerialName("followups")
-    public val followups: List<UpdateFollowup>,
+    public val followups: List<UpdateFollowup>? = null,
     @SerialName("outcome")
     public val outcome: String?,
     @SerialName("post_sha")
@@ -605,7 +605,7 @@ public data class UpdateReceiptSummary(
     @SerialName("started_at")
     public val startedAt: String?,
     @SerialName("user_action")
-    public val userAction: UpdateUserAction?,
+    public val userAction: UpdateUserAction? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. */

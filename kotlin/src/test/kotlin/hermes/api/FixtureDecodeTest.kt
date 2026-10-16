@@ -230,27 +230,29 @@ class FixtureDecodeTest {
         assertTrue(restSeen.size >= 4)
     }
 
-    /** Hermes before the pinned release (v0.21.5; v0.22.0 on the stable channel) still reads: its session, message,
-     *  profile and cron responses decode, strictly, with the generated models (spec/rest-compat.yaml). */
+    /** Hermes before the pinned release (v0.21.5; v0.22.0 on the stable channel) still reads: every REST response
+     *  recorded from it decodes, strictly, with the generated models (spec/rest-compat.yaml). */
     @Test
     fun olderReleaseRESTResponsesDecodeInKotlin() {
         val json = Json { ignoreUnknownKeys = false }
-        val prefixes = listOf("/api/sessions", "/api/profiles", "/api/cron")
         var decoded = 0
         for (line in Files.readAllLines(Path.of("../fixtures/v0.21.5/liveness.jsonl"))) {
             val record = json.parseToJsonElement(line).jsonObject
             if (record.getValue("kind").jsonPrimitive.content != "rest") continue
             val name = record.getValue("name").jsonPrimitive.content
-            if (prefixes.none { name.substringAfter(' ').startsWith(it) }) continue
             val frame = record.getValue("frame").jsonObject
-            val body = frame["body"] ?: continue
             assertTrue(name in RESTOperations.all, "Unknown REST operation $name")
-            val headers = frame["media"]?.jsonPrimitive?.contentOrNull?.let { mapOf("content-type" to it) } ?: emptyMap()
+            val headers = buildMap {
+                frame["media"]?.jsonPrimitive?.contentOrNull?.let { put("content-type", it) }
+                frame["location"]?.jsonPrimitive?.contentOrNull?.let { put("location", it) }
+            }
+            val bytes = frame["body"]?.toString()?.encodeToByteArray()
+                ?: frame["text"]?.jsonPrimitive?.contentOrNull?.encodeToByteArray() ?: ByteArray(0)
             val status = frame.getValue("status").jsonPrimitive.int
-            runCatching { RESTOperations.decode(name, RESTResponse(status, headers, body.toString().encodeToByteArray()), json) }
+            runCatching { RESTOperations.decode(name, RESTResponse(status, headers, bytes), json) }
                 .onFailure { throw AssertionError("$name from v0.21.5 does not decode: ${it.message}", it) }
             decoded++
         }
-        assertTrue(decoded >= 20, "Only $decoded v0.21.5 responses decoded")
+        assertTrue(decoded >= 250, "Only $decoded v0.21.5 responses decoded")
     }
 }

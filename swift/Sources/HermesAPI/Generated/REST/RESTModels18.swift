@@ -1458,10 +1458,10 @@ public struct StatusResponse: Codable, Sendable, Hashable {
     public var profiles: [String]
     public var releaseDate: String
     public var restartDrainTimeout: Double
-    public var sharedProfileWarning: Bool
+    public var sharedProfileWarning: Bool?
     public var version: String
 
-    public init(activeAgents: Int, activeSessions: Int, authFlows: [StatusResponseAuthFlowsItem], authProviders: [String], authRequired: Bool, canUpdateHermes: Bool, components: StatusComponents, configPath: String? = nil, configVersion: Int, disk: StatusDiskPressure, envPath: String? = nil, ftsRebuild: StatusFtsRebuild? = nil, gatewayBusy: Bool, gatewayDrainable: Bool, gatewayExitReason: String?, gatewayHealthUrl: String? = nil, gatewayHeartbeatStaleS: Int?, gatewayMode: StatusResponseGatewayMode, gatewayPid: Int? = nil, gatewayPlatforms: [String: StatusGatewayPlatform], gatewayRunning: Bool, gatewaySharedWith: [String]?, gatewayState: String?, gatewayUpdatedAt: String?, gateways: [StatusGatewayTopologyEntry]? = nil, hermesHome: String? = nil, installId: String? = nil, latestConfigVersion: Int, memory: StatusMemoryPressure, multiplexStandaloneReason: String?, nousSessionValid: StatusResponseNousSessionValid, overall: StatusResponseOverall, parkedProfiles: [String], profiles: [String], releaseDate: String, restartDrainTimeout: Double, sharedProfileWarning: Bool, version: String) {
+    public init(activeAgents: Int, activeSessions: Int, authFlows: [StatusResponseAuthFlowsItem], authProviders: [String], authRequired: Bool, canUpdateHermes: Bool, components: StatusComponents, configPath: String? = nil, configVersion: Int, disk: StatusDiskPressure, envPath: String? = nil, ftsRebuild: StatusFtsRebuild? = nil, gatewayBusy: Bool, gatewayDrainable: Bool, gatewayExitReason: String?, gatewayHealthUrl: String? = nil, gatewayHeartbeatStaleS: Int?, gatewayMode: StatusResponseGatewayMode, gatewayPid: Int? = nil, gatewayPlatforms: [String: StatusGatewayPlatform], gatewayRunning: Bool, gatewaySharedWith: [String]?, gatewayState: String?, gatewayUpdatedAt: String?, gateways: [StatusGatewayTopologyEntry]? = nil, hermesHome: String? = nil, installId: String? = nil, latestConfigVersion: Int, memory: StatusMemoryPressure, multiplexStandaloneReason: String?, nousSessionValid: StatusResponseNousSessionValid, overall: StatusResponseOverall, parkedProfiles: [String], profiles: [String], releaseDate: String, restartDrainTimeout: Double, sharedProfileWarning: Bool? = nil, version: String) {
         self.activeAgents = activeAgents
         self.activeSessions = activeSessions
         self.authFlows = authFlows
@@ -1588,7 +1588,7 @@ public struct StatusResponse: Codable, Sendable, Hashable {
         profiles = try container.decode([String].self, forKey: .profiles)
         releaseDate = try container.decode(String.self, forKey: .releaseDate)
         restartDrainTimeout = try container.decode(Double.self, forKey: .restartDrainTimeout)
-        sharedProfileWarning = try container.decode(Bool.self, forKey: .sharedProfileWarning)
+        sharedProfileWarning = try container.decodeIfPresent(Bool.self, forKey: .sharedProfileWarning)
         version = try container.decode(String.self, forKey: .version)
     }
 
@@ -1630,7 +1630,7 @@ public struct StatusResponse: Codable, Sendable, Hashable {
         try container.encode(profiles, forKey: .profiles)
         try container.encode(releaseDate, forKey: .releaseDate)
         try container.encode(restartDrainTimeout, forKey: .restartDrainTimeout)
-        try container.encode(sharedProfileWarning, forKey: .sharedProfileWarning)
+        try container.encodeIfPresent(sharedProfileWarning, forKey: .sharedProfileWarning)
         try container.encode(version, forKey: .version)
     }
 }

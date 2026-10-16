@@ -497,10 +497,10 @@ public data class EnvVarInfo(
     @SerialName("provider_label")
     public val providerLabel: String,
     @SerialName("provider_primary")
-    public val providerPrimary: Boolean,
+    public val providerPrimary: Boolean? = null,
     /** Every built-in provider this credential serves; [] when only one does. */
     @SerialName("provider_profiles")
-    public val providerProfiles: List<EnvProviderProfile>,
+    public val providerProfiles: List<EnvProviderProfile>? = null,
     @SerialName("redacted_value")
     public val redactedValue: String?,
     @SerialName("tools")

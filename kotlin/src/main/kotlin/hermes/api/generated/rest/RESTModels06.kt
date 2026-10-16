@@ -204,9 +204,9 @@ public data class HealthResponse(
     @SerialName("auth_required")
     public val authRequired: Boolean,
     @SerialName("commit")
-    public val commit: String?,
+    public val commit: String? = null,
     @SerialName("displayVersion")
-    public val displayVersion: String,
+    public val displayVersion: String? = null,
     @SerialName("ok")
     public val ok: Boolean,
     @SerialName("version")
@@ -688,7 +688,7 @@ public data class KanbanBoardCard(
     public val currentRunId: Long?,
     /** Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start). */
     @SerialName("current_run_started_at")
-    public val currentRunStartedAt: Long?,
+    public val currentRunStartedAt: Long? = null,
     @SerialName("current_step_key")
     public val currentStepKey: String?,
     @SerialName("diagnostics")

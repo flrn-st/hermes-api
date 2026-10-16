@@ -438,11 +438,11 @@ public enum HealthIdleResponseReason: Codable, Sendable, Hashable, RawRepresenta
 public struct HealthResponse: Codable, Sendable, Hashable {
     public var authRequired: Bool
     public var commit: String?
-    public var displayVersion: String
+    public var displayVersion: String?
     public var ok: Bool
     public var version: String
 
-    public init(authRequired: Bool, commit: String?, displayVersion: String, ok: Bool, version: String) {
+    public init(authRequired: Bool, commit: String? = nil, displayVersion: String? = nil, ok: Bool, version: String) {
         self.authRequired = authRequired
         self.commit = commit
         self.displayVersion = displayVersion
@@ -468,8 +468,8 @@ public struct HealthResponse: Codable, Sendable, Hashable {
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         authRequired = try container.decode(Bool.self, forKey: .authRequired)
-        commit = try container.decode(Optional<String>.self, forKey: .commit)
-        displayVersion = try container.decode(String.self, forKey: .displayVersion)
+        commit = try container.decodeIfPresent(String.self, forKey: .commit)
+        displayVersion = try container.decodeIfPresent(String.self, forKey: .displayVersion)
         ok = try container.decode(Bool.self, forKey: .ok)
         version = try container.decode(String.self, forKey: .version)
     }
@@ -477,8 +477,8 @@ public struct HealthResponse: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(authRequired, forKey: .authRequired)
-        try container.encode(commit, forKey: .commit)
-        try container.encode(displayVersion, forKey: .displayVersion)
+        try container.encodeIfPresent(commit, forKey: .commit)
+        try container.encodeIfPresent(displayVersion, forKey: .displayVersion)
         try container.encode(ok, forKey: .ok)
         try container.encode(version, forKey: .version)
     }
@@ -1588,7 +1588,7 @@ public struct KanbanBoardCard: Codable, Sendable, Hashable {
     public var workspaceKind: String
     public var workspacePath: String?
 
-    public init(age: KanbanTaskAge, assignee: String?, blockKind: String?, blockRecurrences: Int, body: String?, branchName: String?, claimExpires: Int?, claimLock: String?, commentCount: Int, completedAt: Int?, completionContract: String?, consecutiveFailures: Int, createdAt: Int?, createdBy: String?, currentRunId: Int?, currentRunStartedAt: Int?, currentStepKey: String?, diagnostics: [KanbanDiagnostic]? = nil, goalMaxTurns: Int?, goalMode: Bool, id: String, idempotencyKey: String?, lastFailureError: String?, lastHeartbeatAt: Int?, latestSummary: String?, linkCounts: KanbanLinkCounts, maxRetries: Int?, maxRuntimeSeconds: Int?, modelOverride: String?, priority: Int, progress: KanbanChildProgress?, projectId: String?, providerOverride: String?, reasoningEffort: String?, result: String?, sessionId: String?, skills: [String]?, startedAt: Int?, status: String, tenant: String?, title: String, warnings: KanbanWarningsSummary? = nil, workerPid: Int?, workflowTemplateId: String?, workspaceKind: String, workspacePath: String?) {
+    public init(age: KanbanTaskAge, assignee: String?, blockKind: String?, blockRecurrences: Int, body: String?, branchName: String?, claimExpires: Int?, claimLock: String?, commentCount: Int, completedAt: Int?, completionContract: String?, consecutiveFailures: Int, createdAt: Int?, createdBy: String?, currentRunId: Int?, currentRunStartedAt: Int? = nil, currentStepKey: String?, diagnostics: [KanbanDiagnostic]? = nil, goalMaxTurns: Int?, goalMode: Bool, id: String, idempotencyKey: String?, lastFailureError: String?, lastHeartbeatAt: Int?, latestSummary: String?, linkCounts: KanbanLinkCounts, maxRetries: Int?, maxRuntimeSeconds: Int?, modelOverride: String?, priority: Int, progress: KanbanChildProgress?, projectId: String?, providerOverride: String?, reasoningEffort: String?, result: String?, sessionId: String?, skills: [String]?, startedAt: Int?, status: String, tenant: String?, title: String, warnings: KanbanWarningsSummary? = nil, workerPid: Int?, workflowTemplateId: String?, workspaceKind: String, workspacePath: String?) {
         self.age = age
         self.assignee = assignee
         self.blockKind = blockKind
@@ -1710,7 +1710,7 @@ public struct KanbanBoardCard: Codable, Sendable, Hashable {
         createdAt = try container.decode(Optional<Int>.self, forKey: .createdAt)
         createdBy = try container.decode(Optional<String>.self, forKey: .createdBy)
         currentRunId = try container.decode(Optional<Int>.self, forKey: .currentRunId)
-        currentRunStartedAt = try container.decode(Optional<Int>.self, forKey: .currentRunStartedAt)
+        currentRunStartedAt = try container.decodeIfPresent(Int.self, forKey: .currentRunStartedAt)
         currentStepKey = try container.decode(Optional<String>.self, forKey: .currentStepKey)
         diagnostics = try container.decodeIfPresent([KanbanDiagnostic].self, forKey: .diagnostics)
         goalMaxTurns = try container.decode(Optional<Int>.self, forKey: .goalMaxTurns)
@@ -1760,7 +1760,7 @@ public struct KanbanBoardCard: Codable, Sendable, Hashable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(createdBy, forKey: .createdBy)
         try container.encode(currentRunId, forKey: .currentRunId)
-        try container.encode(currentRunStartedAt, forKey: .currentRunStartedAt)
+        try container.encodeIfPresent(currentRunStartedAt, forKey: .currentRunStartedAt)
         try container.encode(currentStepKey, forKey: .currentStepKey)
         try container.encodeIfPresent(diagnostics, forKey: .diagnostics)
         try container.encode(goalMaxTurns, forKey: .goalMaxTurns)

@@ -1253,7 +1253,7 @@ public struct ToolsetConfigProvider: Codable, Sendable, Hashable {
     /// ``web`` rows with a backend key only.
     public var webBackend: String?
 
-    public init(badge: String, capabilities: [ToolsetConfigProviderCapabilitiesItem]? = nil, envVars: [ToolsetConfigEnvVar], isActive: Bool, managedNousFeature: String?, name: String, postSetup: String?, requiresNousAuth: Bool, status: ToolsetConfigProviderStatus, tag: String, ttsProvider: String? = nil, webBackend: String? = nil) {
+    public init(badge: String, capabilities: [ToolsetConfigProviderCapabilitiesItem]? = nil, envVars: [ToolsetConfigEnvVar], isActive: Bool, managedNousFeature: String? = nil, name: String, postSetup: String?, requiresNousAuth: Bool, status: ToolsetConfigProviderStatus, tag: String, ttsProvider: String? = nil, webBackend: String? = nil) {
         self.badge = badge
         self.capabilities = capabilities
         self.envVars = envVars
@@ -1296,7 +1296,7 @@ public struct ToolsetConfigProvider: Codable, Sendable, Hashable {
         capabilities = try container.decodeIfPresent([ToolsetConfigProviderCapabilitiesItem].self, forKey: .capabilities)
         envVars = try container.decode([ToolsetConfigEnvVar].self, forKey: .envVars)
         isActive = try container.decode(Bool.self, forKey: .isActive)
-        managedNousFeature = try container.decode(Optional<String>.self, forKey: .managedNousFeature)
+        managedNousFeature = try container.decodeIfPresent(String.self, forKey: .managedNousFeature)
         name = try container.decode(String.self, forKey: .name)
         postSetup = try container.decode(Optional<String>.self, forKey: .postSetup)
         requiresNousAuth = try container.decode(Bool.self, forKey: .requiresNousAuth)
@@ -1312,7 +1312,7 @@ public struct ToolsetConfigProvider: Codable, Sendable, Hashable {
         try container.encodeIfPresent(capabilities, forKey: .capabilities)
         try container.encode(envVars, forKey: .envVars)
         try container.encode(isActive, forKey: .isActive)
-        try container.encode(managedNousFeature, forKey: .managedNousFeature)
+        try container.encodeIfPresent(managedNousFeature, forKey: .managedNousFeature)
         try container.encode(name, forKey: .name)
         try container.encode(postSetup, forKey: .postSetup)
         try container.encode(requiresNousAuth, forKey: .requiresNousAuth)

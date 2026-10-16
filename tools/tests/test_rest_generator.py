@@ -8,7 +8,14 @@ from copy import deepcopy
 import pytest
 
 from tools.fetch_spec import ROOT
-from tools.gen_rest_api import _kotlin_method, _swift_method, build, generate, with_older_releases
+from tools.gen_rest_api import (
+    _kotlin_method,
+    _swift_method,
+    build,
+    generate,
+    older_release_fields,
+    with_older_releases,
+)
 from tools.ref_policy import current_release
 
 CURRENT = current_release()
@@ -187,3 +194,47 @@ def test_older_releases_relax_required_and_accept_retired_fields() -> None:
     for stale in ({"optional": {"Row": ["old"]}}, {"optional": {"Gone": ["id"]}}, {"retired": {"Row": {"id": {}}}}):
         with pytest.raises(ValueError, match="rest-compat"):
             with_older_releases(document, stale)
+
+
+def test_older_release_fields_are_derived_from_the_floor_contract() -> None:
+    def contract(row: dict, request: dict | None = None) -> dict:
+        operation = {"x-handler-hash": "reviewed", "responses": {"200": {"content": {"application/json": {
+            "schema": {"$ref": "#/components/schemas/Row"}}}}}}
+        if request is not None:
+            operation["requestBody"] = {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Body"}}}}
+        return {"paths": {"/api/rows": {"get": operation}},
+                "components": {"schemas": {"Row": row, **({"Body": request} if request else {})}}}
+
+    row = {"type": "object", "required": ["id", "added", "was_optional", "was_nullable", "nullable_now"], "properties": {
+        "id": {"type": "string"}, "added": {"type": "integer"}, "was_optional": {"type": "string"},
+        "was_nullable": {"type": "string"}, "nullable_now": {"anyOf": [{"type": "string"}, {"type": "null"}]}}}
+    floor = {"type": "object", "required": ["id", "was_nullable", "nullable_now"], "properties": {
+        "id": {"type": "string"}, "was_optional": {"type": "string"},
+        "was_nullable": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "nullable_now": {"anyOf": [{"type": "string"}, {"type": "null"}]}}}
+    pinned = contract(row, request={"type": "object", "required": ["only"], "properties": {"only": {"type": "string"}}})
+    older = contract(floor, request={"type": "object", "properties": {"only": {"type": "string"}}})
+    assert older_release_fields(pinned, older) == {"Row": ["added", "was_optional", "was_nullable"]}
+    relaxed = with_older_releases(pinned, {}, older)["components"]["schemas"]
+    assert relaxed["Row"]["required"] == ["id", "nullable_now"]
+    # Request bodies are encoded, never decoded: they keep what they require.
+    assert relaxed["Body"]["required"] == ["only"]
+    with pytest.raises(ValueError, match="already derived"):
+        with_older_releases(pinned, {"optional": {"Row": ["added"]}}, older)
+
+
+def test_union_variants_keep_the_fields_the_floor_declared() -> None:
+    def contract(session: dict) -> dict:
+        return {"paths": {"/api/runs": {"get": {"x-handler-hash": "reviewed", "responses": {"200": {"content": {
+            "application/json": {"schema": {"items": {"anyOf": [{"$ref": "#/components/schemas/Session"},
+                                                                {"$ref": "#/components/schemas/Output"}]},
+                                            "type": "array"}}}}}}}},
+                "components": {"schemas": {"Session": session, "Output": {
+                    "type": "object", "required": ["id"], "properties": {"id": {"type": "string"}}}}}}
+
+    pinned = contract({"type": "object", "required": ["id", "user_id", "added"], "properties": {
+        "id": {"type": "string"}, "user_id": {"type": "string"}, "added": {"type": "integer"}}})
+    older = contract({"type": "object", "required": ["id"], "properties": {
+        "id": {"type": "string"}, "user_id": {"type": "string"}}})
+    # user_id tells a session row from an output row; only the field the floor never sent is relaxed.
+    assert older_release_fields(pinned, older) == {"Session": ["added"]}

@@ -810,7 +810,7 @@ public data class MemoryProviderSetupInfo(
     @SerialName("pip_dependencies")
     public val pipDependencies: List<String>,
     @SerialName("python_dependencies_declared")
-    public val pythonDependenciesDeclared: Boolean,
+    public val pythonDependenciesDeclared: Boolean? = null,
     @SerialName("required_env")
     public val requiredEnv: List<String>,
 )

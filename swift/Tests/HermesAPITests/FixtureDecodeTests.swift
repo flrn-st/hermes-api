@@ -194,30 +194,36 @@ private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task",
     #expect(restSeen.count >= 4)
 }
 
-/// Hermes before the pinned release (v0.21.5; v0.22.0 on the stable channel) still reads: its session, message,
-/// profile and cron responses decode, strictly, with the generated models (spec/rest-compat.yaml).
+/// Hermes before the pinned release (v0.21.5; v0.22.0 on the stable channel) still reads: every REST response
+/// recorded from it decodes, strictly, with the generated models (spec/rest-compat.yaml).
 @Test func olderReleaseRESTResponsesDecodeInSwift() throws {
     let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     let lines = try String(contentsOf: root.appending(path: "fixtures/v0.21.5/liveness.jsonl"), encoding: .utf8)
         .split(separator: "\n")
-    let prefixes = ["/api/sessions", "/api/profiles", "/api/cron"]
     var decoded = 0
     for line in lines {
         let record = try JSONDecoder().decode(FixtureRecord.self, from: Data(line.utf8))
-        guard record.kind == "rest", case .object(let frame) = record.frame, let body = frame["body"] else { continue }
-        let path = record.name.split(separator: " ", maxSplits: 1).last.map(String.init) ?? ""
-        guard prefixes.contains(where: { path.hasPrefix($0) }) else { continue }
+        guard record.kind == "rest", case .object(let frame) = record.frame else { continue }
         guard case .integer(let status)? = frame["status"] else { throw HermesRESTError.decoding("No status") }
         #expect(RESTOperations.all.contains(record.name), "Unknown REST operation \(record.name)")
         var headers: [String: String] = [:]
         if case .string(let media)? = frame["media"] { headers["content-type"] = media }
+        if case .string(let location)? = frame["location"] { headers["location"] = location }
+        let body: Data
+        if let json = frame["body"] {
+            body = try JSONEncoder().encode(json)
+        } else if case .string(let text)? = frame["text"] {
+            body = Data(text.utf8)
+        } else {
+            body = Data()
+        }
         do {
-            _ = try RESTOperations.decode(record.name, RESTResponse(status: status, headers: headers, body: try JSONEncoder().encode(body)))
+            _ = try RESTOperations.decode(record.name, RESTResponse(status: status, headers: headers, body: body))
             decoded += 1
         } catch {
             Issue.record("\(record.name) from v0.21.5 does not decode: \(error)")
         }
     }
-    #expect(decoded >= 20, "Only \(decoded) v0.21.5 responses decoded")
+    #expect(decoded >= 250, "Only \(decoded) v0.21.5 responses decoded")
 }

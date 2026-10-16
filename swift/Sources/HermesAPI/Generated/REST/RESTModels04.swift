@@ -1068,14 +1068,14 @@ public struct EnvVarInfo: Codable, Sendable, Hashable {
     public var isSet: Bool
     public var provider: String
     public var providerLabel: String
-    public var providerPrimary: Bool
+    public var providerPrimary: Bool?
     /// Every built-in provider this credential serves; [] when only one does.
-    public var providerProfiles: [EnvProviderProfile]
+    public var providerProfiles: [EnvProviderProfile]?
     public var redactedValue: String?
     public var tools: [String]
     public var url: String?
 
-    public init(advanced: Bool, category: String, channelManaged: Bool, custom: Bool, description: String, isPassword: Bool, isSet: Bool, provider: String, providerLabel: String, providerPrimary: Bool, providerProfiles: [EnvProviderProfile], redactedValue: String?, tools: [String], url: String?) {
+    public init(advanced: Bool, category: String, channelManaged: Bool, custom: Bool, description: String, isPassword: Bool, isSet: Bool, provider: String, providerLabel: String, providerPrimary: Bool? = nil, providerProfiles: [EnvProviderProfile]? = nil, redactedValue: String?, tools: [String], url: String?) {
         self.advanced = advanced
         self.category = category
         self.channelManaged = channelManaged
@@ -1127,8 +1127,8 @@ public struct EnvVarInfo: Codable, Sendable, Hashable {
         isSet = try container.decode(Bool.self, forKey: .isSet)
         provider = try container.decode(String.self, forKey: .provider)
         providerLabel = try container.decode(String.self, forKey: .providerLabel)
-        providerPrimary = try container.decode(Bool.self, forKey: .providerPrimary)
-        providerProfiles = try container.decode([EnvProviderProfile].self, forKey: .providerProfiles)
+        providerPrimary = try container.decodeIfPresent(Bool.self, forKey: .providerPrimary)
+        providerProfiles = try container.decodeIfPresent([EnvProviderProfile].self, forKey: .providerProfiles)
         redactedValue = try container.decode(Optional<String>.self, forKey: .redactedValue)
         tools = try container.decode([String].self, forKey: .tools)
         url = try container.decode(Optional<String>.self, forKey: .url)
@@ -1145,8 +1145,8 @@ public struct EnvVarInfo: Codable, Sendable, Hashable {
         try container.encode(isSet, forKey: .isSet)
         try container.encode(provider, forKey: .provider)
         try container.encode(providerLabel, forKey: .providerLabel)
-        try container.encode(providerPrimary, forKey: .providerPrimary)
-        try container.encode(providerProfiles, forKey: .providerProfiles)
+        try container.encodeIfPresent(providerPrimary, forKey: .providerPrimary)
+        try container.encodeIfPresent(providerProfiles, forKey: .providerProfiles)
         try container.encode(redactedValue, forKey: .redactedValue)
         try container.encode(tools, forKey: .tools)
         try container.encode(url, forKey: .url)

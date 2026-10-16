@@ -1577,10 +1577,10 @@ public struct MemoryProviderSetupInfo: Codable, Sendable, Hashable {
     public var dependenciesInstalled: Bool
     public var externalDependencies: [MemoryProviderExternalDependency]
     public var pipDependencies: [String]
-    public var pythonDependenciesDeclared: Bool
+    public var pythonDependenciesDeclared: Bool?
     public var requiredEnv: [String]
 
-    public init(dependenciesInstalled: Bool, externalDependencies: [MemoryProviderExternalDependency], pipDependencies: [String], pythonDependenciesDeclared: Bool, requiredEnv: [String]) {
+    public init(dependenciesInstalled: Bool, externalDependencies: [MemoryProviderExternalDependency], pipDependencies: [String], pythonDependenciesDeclared: Bool? = nil, requiredEnv: [String]) {
         self.dependenciesInstalled = dependenciesInstalled
         self.externalDependencies = externalDependencies
         self.pipDependencies = pipDependencies
@@ -1608,7 +1608,7 @@ public struct MemoryProviderSetupInfo: Codable, Sendable, Hashable {
         dependenciesInstalled = try container.decode(Bool.self, forKey: .dependenciesInstalled)
         externalDependencies = try container.decode([MemoryProviderExternalDependency].self, forKey: .externalDependencies)
         pipDependencies = try container.decode([String].self, forKey: .pipDependencies)
-        pythonDependenciesDeclared = try container.decode(Bool.self, forKey: .pythonDependenciesDeclared)
+        pythonDependenciesDeclared = try container.decodeIfPresent(Bool.self, forKey: .pythonDependenciesDeclared)
         requiredEnv = try container.decode([String].self, forKey: .requiredEnv)
     }
 
@@ -1617,7 +1617,7 @@ public struct MemoryProviderSetupInfo: Codable, Sendable, Hashable {
         try container.encode(dependenciesInstalled, forKey: .dependenciesInstalled)
         try container.encode(externalDependencies, forKey: .externalDependencies)
         try container.encode(pipDependencies, forKey: .pipDependencies)
-        try container.encode(pythonDependenciesDeclared, forKey: .pythonDependenciesDeclared)
+        try container.encodeIfPresent(pythonDependenciesDeclared, forKey: .pythonDependenciesDeclared)
         try container.encode(requiredEnv, forKey: .requiredEnv)
     }
 }

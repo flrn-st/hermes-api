@@ -36,6 +36,11 @@ public interface HermesGatewayClient : GatewayCaller {
     /** The current connection is served by the Hermes session authority; see [GatewayRuntime]. */
     public val sessionAuthority: Boolean get() = runtime?.sessionAuthority == true
 
+    /** The id this client holds [storedSessionId] live under (the id `session.create`, `session.resume` or
+     *  `session.activate` answered with), or `null` when no session of this client is stored under it. [profile]
+     *  `null` or empty matches the default profile. */
+    public suspend fun liveSessionId(storedSessionId: String, profile: String?): String? = null
+
     public fun setServerRequestHandler(value: suspend (ServerRequest) -> ServerRequestResult)
 
     /** Re-delivers pending requests from a session snapshot after the app has registered its session

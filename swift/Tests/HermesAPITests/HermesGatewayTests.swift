@@ -1115,3 +1115,18 @@ private func expectNothingRebound(_ gateway: HermesGateway, sent: inout AsyncStr
     #expect(gateway.connectionState == .suspended)
     await gateway.disconnect()
 }
+
+@Test func reportsTheLiveIdOfAStoredSession() async throws {
+    let socket = ScriptedGatewaySocket()
+    let gateway = client(socket: socket)
+    try await gateway.connect()
+    try await createSession(gateway, on: socket, id: "rt-1", stored: "stored-1")
+    #expect(await gateway.liveSessionID(storedSessionID: "stored-1", profile: nil) == "rt-1")
+    #expect(await gateway.liveSessionID(storedSessionID: "stored-1", profile: "default") == "rt-1")
+    #expect(await gateway.liveSessionID(storedSessionID: "rt-1", profile: "") == "rt-1")
+    #expect(await gateway.liveSessionID(storedSessionID: "stored-1", profile: "work") == nil)
+    #expect(await gateway.liveSessionID(storedSessionID: "other", profile: nil) == nil)
+    let client: any HermesGatewayClient = gateway
+    #expect(await client.liveSessionID(storedSessionID: "stored-1", profile: nil) == "rt-1")
+    await gateway.disconnect()
+}

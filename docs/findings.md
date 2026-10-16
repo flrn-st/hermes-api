@@ -215,6 +215,54 @@ The Swift client re-runs a clarification that reaches it again after it answered
 times; Kotlin keeps answered ids (`settledSnapshotRequests`). Until the Swift runtime does the same,
 `make record` writes the fixture but not the coverage evidence, which needs both clients.
 
+## Session edits behind a standalone dashboard (v0.22.1)
+
+Read at the tag (`297552a9d6`), then checked live on 2026-10-16 against a v0.22.1 canary. The test was
+a throwaway `hermes dashboard` on loopback and the gateway's authority listener, with throwaway
+sessions only.
+
+- `PATCH` / `DELETE /api/sessions/{id}` and the import go through `_mutate_session_request`
+  (`hermes_cli/web_server_sessions.py:182-219`). Without a composed gateway (`app.state.session_authority`
+  is `None`, lines 103-109: "its owner cutover is a follow-up") it writes offline under
+  `exclusive_maintenance` (lines 222-234). That raises `OwnershipConflict` while a runtime holds the
+  profile's `gateway.lock` (`gateway/runtime_ownership.py:165, 235-237`). The answer is 409 with
+  `{"detail": "Exclusive maintenance refused: Gateway runtime already owns profile <home>. Drain and stop
+  the gateway, then retry."}`, with no code field. The identity check comes first (line 197), so a request
+  without `request_id` / `expected_revision` answers `mutation_identity_required` instead.
+- The dashboard's `/api/ws` (`hermes_cli/web_routers/chat_ws.py:702-736`) runs the legacy dispatcher in
+  process. Without a composed authority it neither proxies nor upgrades, and its REST never forwards.
+  `/api/status` reports only `gateway_state`. Session tickets come from the `session-ticket` verb of the
+  owner-only control socket (`gateway/control_socket.py:281-323`, `gateway/runtime_bootstrap.py:34-50`),
+  and the listener accepts them from loopback peers only (`gateway/run_api.py:296-326`;
+  `hermes_cli/dashboard_auth/native_http.py:133-147`). So an app behind the dashboard cannot reach
+  the authority.
+- The gateway's listener mounts the same dashboard with `session_authority` set
+  (`gateway/run_api.py:63-72`), so its REST mutations go through the authority. Desktop uses that
+  listener as its REST and WebSocket base (`apps/desktop/electron/local-gateway.ts:197`) and edits
+  sessions over REST (`apps/desktop/src/api/sessions.ts:398-427`).
+- The legacy dispatcher's own writers still work on the dashboard socket while a runtime owns the
+  profile: `session.title` for a live session, `session.archive`, `session.set_hidden` and
+  `session.delete` (`tui_gateway/methods_session.py:1172-1300`). They are unfenced, and `runtime_revision`
+  does not move. Pin and unread have no legacy verb. On an authority socket Hermes refuses these writers
+  (`tui_gateway/ws_legacy_fallback.py:26-36`).
+- Canonical verbs take no `profile` parameter, but `AuthorityConnection.dispatch` reads `profile` off
+  every frame first (`gateway/session_controls.py:148-160`). The own profile is stripped; another one
+  goes to its sibling authority only for a host-scoped grant (lines 61-82), and is refused with
+  `profile_mismatch` otherwise. Without it, the session is looked up in the socket's own profile.
+  Live results:
+  - own profile, with and without `profile`: applied;
+  - another profile on a profile-scoped ticket: `profile_mismatch`;
+  - another profile's session without `profile`: `not_found`, on both ticket scopes;
+  - host-scoped ticket naming the other profile: applied (`rename`, `sidebar`);
+  - a home path as `profile`: `profile_mismatch`.
+
+  Desktop puts `profile` on the envelope of every canonical frame
+  (`apps/desktop/src/api/canonical-protocol.ts:271-275`).
+- Deleting a session of a served secondary profile through the authority answers
+  `runtime_coordination_required` (`gateway/session_mutations.py:128-132`). A duplicate title on
+  `rename` crashes the handler (`ValueError` in `hermes_state_titles.py`) and answers `-32603 internal
+  error` on the canary.
+
 ## Remaining validation
 
 - Verify the exact `hermes web` flags and health endpoint in a running

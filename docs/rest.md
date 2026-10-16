@@ -54,10 +54,52 @@ repeats the stored receipt, so a retry after a lost answer is safe, but a differ
 used id is refused. Each answers a receipt (`operation`, `revision`, `execution_generation`). A deleted id
 is retired and cannot be imported again, and importing a session that exists skips it.
 
-A standalone dashboard applies these offline and refuses them (409, exclusive maintenance) while a
-gateway runtime owns the profile; the same goes for `POST /api/sessions/bulk-delete`, `DELETE
-/api/sessions/empty`, `POST /api/sessions/owner-backfill` and `POST /api/sessions/prune`. The gateway's
-own session methods (`canonical.session.mutate`) are the path that works while it runs.
+A standalone dashboard applies these offline and refuses them while a gateway runtime owns the profile:
+409 with `detail` "Exclusive maintenance refused: Gateway runtime already owns profile `<home>`. Drain and
+stop the gateway, then retry." The same goes for `POST /api/sessions/bulk-delete`, `DELETE
+/api/sessions/empty`, `POST /api/sessions/owner-backfill` and `POST /api/sessions/prune`. Hermes checks the
+identity first, so a request without `request_id` / `expected_revision` answers
+`mutation_identity_required` whether or not a runtime runs. v0.22.1 offers no route from the dashboard to
+the runtime: its `/api/ws` is the legacy dispatcher, its REST does not forward, and session tickets for the
+gateway's own listener come only from the owner-only control socket (`gateway.sock`). The gateway's own
+listener serves the same REST routes through the session authority, which is how Hermes Desktop edits
+sessions (its base URL is the runtime's `api_origin`).
+
+`error.sessionMutationRefusal` (Kotlin: `HermesRESTException.HTTP.sessionMutationRefusal`) reads these
+refusals: `.runtimeOwnsProfile(home:)`, `.identityRequired`, `.revisionConflict`, `.sessionBusy`, or
+`.other(reason)`.
+
+`HermesSessionEditor` does the whole edit: rename, pin, archive, unread, hide and delete.
+
+```swift
+let editor = HermesSessionEditor(rest: rest, gateway: gateway)
+let receipt = try await editor.setPinned(true, for: sessionID, profile: "work")
+```
+
+```kotlin
+val editor = HermesSessionEditor(rest, gateway)
+val receipt = editor.setPinned(sessionId, true, profile = "work")
+```
+
+It reads the mutation snapshot and sends the edit with a fresh `request_id` and the snapshot's revision
+(and generation, for a delete). It sends the same request again when the answer was lost, and reads the
+snapshot again once after `revision_conflict`. When the dashboard answers `runtimeOwnsProfile`, the
+editor applies the edit through `gateway`, and `receipt.route` says which path did it:
+
+- **The gateway is a session authority (`authority`).** The edit goes as `session.mutate` (`sidebar`,
+  or `delete`), with `profile` on the envelope (see [the gateway guide](gateway.md#profiles)).
+- **The gateway is the dashboard's own socket (`legacyGateway`).** The edit goes through the legacy
+  dispatcher's writers: `session.archive`, `session.set_hidden`, `session.delete` (refused for a session
+  live in that dispatcher), and `session.title` for a session this gateway holds live
+  (`liveSessionID(storedSessionID:profile:)`). These write `state.db` beside the runtime without its
+  revision fence or receipt, the way the dashboard's chats already do. Hermes refuses the same writers
+  on an authority socket for that reason (`tui_gateway/ws_legacy_fallback.py`).
+- **The edit has no route.** Pin and unread have no legacy verb, a rename needs the session live, and an
+  editor without a gateway has no fallback at all. These throw `HermesSessionEditError.runtimeOwnsProfile`
+  (Kotlin: `HermesSessionEditException.RuntimeOwnsProfile`).
+
+An authority refuses deleting a session of a profile it serves as a secondary with
+`runtime_coordination_required`. That refusal reaches the caller unchanged.
 
 ## Timeouts, retries and cancellation
 

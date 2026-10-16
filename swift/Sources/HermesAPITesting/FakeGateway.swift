@@ -20,6 +20,10 @@ public actor FakeGateway: HermesGatewayClient {
     public private(set) var lifecycle: [String] = []
     /// What `connect()` throws, if anything; otherwise it moves to `.connected`.
     public var connectFailure: HermesGatewayError?
+    /// What `sessionAuthority` reports; see `setSessionAuthority(_:)`.
+    public private(set) var sessionAuthority = false
+    /// Live session ids by `[profile or "default", stored id]`; see `setLiveSession(_:storedSessionID:profile:)`.
+    private var liveSessions: [[String]: String] = [:]
 
     public init(backendContract: Int? = HermesGatewayContract.desktopContract, _ respond: @escaping Responder = { method, _ in
         throw HermesGatewayError.rpc(code: -32601, message: "Method not found: \(method)", data: nil)
@@ -90,6 +94,22 @@ public actor FakeGateway: HermesGatewayClient {
     // MARK: Driving the fake
 
     public func setBackendContract(_ contract: Int?) { backendContract = contract }
+
+    /// Makes the fake report a session authority connection (`true`) or a legacy one.
+    public func setSessionAuthority(_ authority: Bool) { sessionAuthority = authority }
+
+    /// Makes `liveSessionID(storedSessionID:profile:)` answer `liveID` (or nothing, for `nil`).
+    public func setLiveSession(_ liveID: String?, storedSessionID: String, profile: String? = nil) {
+        liveSessions[[Self.profileName(profile), storedSessionID]] = liveID
+    }
+
+    public func liveSessionID(storedSessionID: String, profile: String?) -> String? {
+        liveSessions[[Self.profileName(profile), storedSessionID]]
+    }
+
+    private static func profileName(_ profile: String?) -> String {
+        profile.flatMap { $0.isEmpty ? nil : $0 } ?? "default"
+    }
 
     /// Delivers an event to every `events()` subscriber.
     public func emit(_ event: GatewayEvent) { eventFanout.yield(event) }

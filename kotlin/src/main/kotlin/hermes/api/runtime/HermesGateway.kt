@@ -146,6 +146,14 @@ public class HermesGateway(
 
     override val sessionAuthority: Boolean get() = runtime?.sessionAuthority == true
 
+    override suspend fun liveSessionId(storedSessionId: String, profile: String?): String? = withContext(confined) {
+        fun name(value: String?) = value?.takeIf { it.isNotEmpty() } ?: "default"
+        val candidates = sessions.filter { (id, session) ->
+            (id == storedSessionId || session.storedId == storedSessionId) && name(session.profile) == name(profile)
+        }
+        if (storedSessionId in candidates) storedSessionId else candidates.keys.minOrNull()
+    }
+
     // Every collector buffers independently and without bound, so a slow collector delays only itself and
     // never stalls the socket (and with it heartbeat replies).
     private val eventBroadcast = Broadcast<GatewayEvent>()

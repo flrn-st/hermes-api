@@ -121,6 +121,33 @@ the 237 methods take `profile`, as Hermes' desktop client sends it (`session.cre
 the others act on the dashboard's active profile or on none. The gateway resumes a reclaimed session in the
 profile it was created or resumed with.
 
+### Profiles on a session authority
+
+An authority socket is bound to the profile its ticket names. Hermes reads `profile` off the envelope of
+every frame before it validates the method's parameters (`gateway/session_controls.py`,
+`AuthorityConnection.dispatch`), so the canonical parameter types have no `profile` field. What a call
+reaches depends on the profile it names:
+
+- **No profile, or the socket's own.** The call acts on the socket's own profile. Another profile's
+  session id answers `4001 not_found`; the call never lands in the wrong profile.
+- **Another profile.** The call goes to that profile's authority when the socket is host-scoped: a
+  `scope: host` ticket, as Desktop mints, or the dashboard gate on the gateway's own listener. Otherwise
+  the authority answers `4001 profile_mismatch`.
+
+`profile` is a name (`"work"`, `"default"`), not a home path; a path also answers `profile_mismatch`.
+The translated legacy calls already carry it. For the canonical namespace, route the catalog:
+
+```swift
+_ = try await gateway.canonical(profile: "work").session.mutate(SessionMutateParams(...))
+```
+
+```kotlin
+gateway.canonical("work").session.mutate(SessionMutateParams(...))
+```
+
+`ProfileRoutedGatewayCaller` does the same for any `GatewayCalling` (Kotlin: `GatewayCaller`). It adds
+`profile` to calls whose parameters name none, as Desktop's `CanonicalProtocol.prepare` does.
+
 ## Backend versions
 
 Session results carry Hermes' desktop contract, a number Hermes raises whenever clients need something new
@@ -317,7 +344,8 @@ an authority session), a fork whose seed does not match the parent's stored rows
 Desktop sends it, and the authority answers `-32601` (use the snapshot's `messages` or REST); `clarify.lock` / `request.answer` for a prompt this socket never saw go to
 the legacy sidecar unchanged; `session.list` lists only live (or `scope: stored` gui/cli/tui) sessions;
 legacy `ios` / `cadu` rows answer `not_found` on resume and are readable over REST only. REST session
-mutations (`PATCH` / `DELETE /api/sessions/{id}`) are not covered here.
+mutations (`PATCH` / `DELETE /api/sessions/{id}`) are not translated; `HermesSessionEditor` routes them
+through the gateway when a standalone dashboard refuses them (see [the REST guide](rest.md#session-mutations)).
 
 ### Kotlin specifics
 

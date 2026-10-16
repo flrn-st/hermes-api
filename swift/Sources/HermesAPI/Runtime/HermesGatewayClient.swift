@@ -14,6 +14,10 @@ public protocol HermesGatewayClient: GatewayCalling, AnyObject {
     var backendContract: Int? { get async }
     /// Whether the current connection is a Hermes session authority, whose calls the gateway translates.
     var sessionAuthority: Bool { get async }
+    /// The id this client holds `storedSessionID` live under (the id `session.create`, `session.resume` or
+    /// `session.activate` answered with), or `nil` when no session of this client is stored under it.
+    /// `profile` `nil` or empty matches the default profile.
+    func liveSessionID(storedSessionID: String, profile: String?) async -> String?
 
     func setServerRequestHandler(_ handler: @escaping @Sendable (ServerRequest) async throws -> ServerRequestResult) async
     func connect() async throws
@@ -30,4 +34,7 @@ public extension HermesGatewayClient {
 
     /// A client that never speaks to a session authority.
     var sessionAuthority: Bool { false }
+
+    /// A client that tracks no sessions.
+    func liveSessionID(storedSessionID: String, profile: String?) -> String? { nil }
 }

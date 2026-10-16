@@ -120,6 +120,15 @@ public actor HermesGateway: HermesGatewayClient {
     /// docs/gateway.md, "Unified runtime".
     public var sessionAuthority: Bool { isAuthority }
 
+    public func liveSessionID(storedSessionID: String, profile: String?) -> String? {
+        func name(_ profile: String?) -> String { profile.flatMap { $0.isEmpty ? nil : $0 } ?? "default" }
+        let candidates = sessions.filter { id, session in
+            (id == storedSessionID || session.storedID == storedSessionID) && name(session.profile) == name(profile)
+        }
+        if candidates[storedSessionID] != nil { return storedSessionID }
+        return candidates.keys.sorted().first
+    }
+
     public init(configuration: HermesGatewayConfiguration) {
         self.configuration = configuration
     }

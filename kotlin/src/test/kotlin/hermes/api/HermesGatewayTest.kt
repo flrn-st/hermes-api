@@ -40,6 +40,7 @@ import hermes.api.runtime.GatewayTransport
 import hermes.api.runtime.HermesAuth
 import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGateway
+import hermes.api.runtime.HermesGatewayClient
 import hermes.api.runtime.HermesGatewayConfiguration
 import hermes.api.runtime.HermesGatewayException
 import hermes.api.runtime.LocalTokenAuth
@@ -1181,6 +1182,22 @@ class HermesGatewayTest {
         delay(60_000)
         assertFalse(call.isCompleted)
         assertIs<HermesGatewayException.Timeout>(call.await().exceptionOrNull())
+        gateway.disconnect()
+    }
+
+    @Test
+    fun reportsTheLiveIdOfAStoredSession() = runTest {
+        val socket = ScriptedGatewaySocket()
+        val gateway = client(sockets(socket))
+        gateway.connect()
+        createSession(gateway, socket, "rt-1", "stored-1")
+        assertEquals("rt-1", gateway.liveSessionId("stored-1", null))
+        assertEquals("rt-1", gateway.liveSessionId("stored-1", "default"))
+        assertEquals("rt-1", gateway.liveSessionId("rt-1", ""))
+        assertEquals(null, gateway.liveSessionId("stored-1", "work"))
+        assertEquals(null, gateway.liveSessionId("other", null))
+        val client: HermesGatewayClient = gateway
+        assertEquals("rt-1", client.liveSessionId("stored-1", null))
         gateway.disconnect()
     }
 }

@@ -56,6 +56,20 @@ public class FakeGateway(
 
     @Volatile override var backendContract: Int? = backendContract
 
+    /** What [sessionAuthority] reports: `true` makes the fake a session authority connection. */
+    @Volatile override var sessionAuthority: Boolean = false
+
+    private val liveSessions = mutableMapOf<Pair<String, String>, String>()
+
+    /** Makes [liveSessionId] answer [liveId] (or nothing, for `null`) for [storedSessionId] in [profile]. */
+    public fun setLiveSession(liveId: String?, storedSessionId: String, profile: String? = null) {
+        val key = (profile?.takeIf { it.isNotEmpty() } ?: "default") to storedSessionId
+        synchronized(liveSessions) { if (liveId == null) liveSessions.remove(key) else liveSessions[key] = liveId }
+    }
+
+    override suspend fun liveSessionId(storedSessionId: String, profile: String?): String? =
+        synchronized(liveSessions) { liveSessions[(profile?.takeIf { it.isNotEmpty() } ?: "default") to storedSessionId] }
+
     // HermesGatewayClient
 
     override val events: Flow<GatewayEvent> = eventFanout.flow

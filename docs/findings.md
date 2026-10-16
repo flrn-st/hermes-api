@@ -184,6 +184,37 @@ The gateway contract declares no errors. Read from the tagged handlers, the 237 
   validation error.
 - 20 methods relay codes from a compute host, plugin or connector service; those have no fixed meaning.
 
+## REST at v0.22.1
+
+The contracts come from the fork's `feat/dashboard-rest-response-models-v0.22.1` (`000b6ee1cc`): the
+tag plus one commit, every handler body byte-identical to the tag. 333 of 344 operations import from
+it; ten stay hand-written for what the contracts still get wrong at the tag: six undeclared JSON
+request bodies (the session import's now carries the fence), four file routes that serve any media
+type, plugin manifest values Hermes copies unchecked (numbers, null), and the session table's
+nullable counters. `POST /api/providers/oauth/{provider_id}/submit` still always answers 400.
+
+The unified runtime changes what the dashboard can do on its own:
+
+- Session reads never initialize the store; they answer 503 until a gateway runtime has created
+  `state.db`. The dashboard's `/api/ws` starts that runtime as a process of its own (`gateway run
+  --idle-exit`), which ends after ten idle minutes and is not stopped with the dashboard.
+- Session mutations are fenced (`request_id`, `expected_revision`, and `expected_generation` for a
+  delete, from `GET /api/sessions/{session_id}/mutation-snapshot`); a deleted id is retired and its
+  import refused. A standalone dashboard applies them, and the bulk session maintenance routes, only
+  while no gateway runtime owns the profile (otherwise 409, exclusive maintenance). A cron trigger
+  starts such a runtime.
+- `PUT /api/config/raw` refuses duplicate keys (ruamel.yaml replaced PyYAML).
+- `POST /api/audio/tts-lease` installs the provider's SDK (edge-tts) on demand; the scenario no longer
+  calls it.
+- No bundled memory provider declares a config schema or an OAuth flow (holographic and honcho left
+  the bundle), and disconnecting an OAuth provider with nothing stored answers 409.
+- The subagent roster lists only running children.
+
+The Swift client re-runs a clarification that reaches it again after it answered (the rebind's
+`open_requests` and the live re-delivery both carry it), so the reconnect scenario sees it three
+times; Kotlin keeps answered ids (`settledSnapshotRequests`). Until the Swift runtime does the same,
+`make record` writes the fixture but not the coverage evidence, which needs both clients.
+
 ## Remaining validation
 
 - Verify the exact `hermes web` flags and health endpoint in a running

@@ -11,6 +11,7 @@ public enum RESTOperations {
         "GET /api/analytics/usage",
         "GET /api/audio/elevenlabs/voices",
         "POST /api/audio/speak",
+        "POST /api/audio/stt-lease",
         "POST /api/audio/transcribe",
         "POST /api/audio/tts-lease",
         "GET /api/audio/voice-config",
@@ -125,6 +126,8 @@ public enum RESTOperations {
         "GET /api/local-models/catalog",
         "POST /api/local-models/download",
         "POST /api/local-models/download-browsed",
+        "POST /api/local-models/download/pause",
+        "POST /api/local-models/download/resume",
         "POST /api/local-models/eject",
         "GET /api/local-models/hardware",
         "GET /api/local-models/jobs",
@@ -151,6 +154,7 @@ public enum RESTOperations {
         "PUT /api/mcp/servers/{name}/enabled",
         "POST /api/mcp/servers/{name}/test",
         "GET /api/media",
+        "GET /api/media/proxy",
         "GET /api/memory",
         "PUT /api/memory/provider",
         "GET /api/memory/providers/{name}/config",
@@ -248,6 +252,7 @@ public enum RESTOperations {
         "POST /api/plugins/kanban/tasks/{task_id}/reclaim",
         "POST /api/plugins/kanban/tasks/{task_id}/specify",
         "GET /api/plugins/kanban/workers/active",
+        "GET /api/plugins/kanban/workflow",
         "GET /api/portal",
         "GET /api/profiles",
         "POST /api/profiles",
@@ -296,7 +301,10 @@ public enum RESTOperations {
         "GET /api/sessions/{session_id}/latest-descendant",
         "GET /api/sessions/{session_id}/messages",
         "GET /api/sessions/{session_id}/messages/around",
+        "GET /api/sessions/{session_id}/mutation-snapshot",
         "GET /api/sessions/{session_id}/timeline",
+        "GET /api/shared-metrics/consent",
+        "PUT /api/shared-metrics/consent",
         "GET /api/skills",
         "POST /api/skills",
         "GET /api/skills/content",
@@ -361,6 +369,9 @@ public enum RESTOperations {
             return try RESTArguments.encode(result)
         case "POST /api/audio/speak":
             let result = try await rest.audio.speak(body: try arguments.body(TTSSpeakRequest.self), profile: try arguments.optionalString("profile", in: .query))
+            return try RESTArguments.encode(result)
+        case "POST /api/audio/stt-lease":
+            let result = try await rest.audio.sttLease(body: try arguments.body(STTLeaseRequest.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/audio/transcribe":
             let result = try await rest.audio.transcribe(body: try arguments.body(AudioTranscriptionRequest.self), profile: try arguments.optionalString("profile", in: .query))
@@ -504,7 +515,7 @@ public enum RESTOperations {
             let result = try await rest.dashboard.pluginsCatalog()
             return try RESTArguments.encode(result)
         case "GET /api/dashboard/plugins/hub":
-            let result = try await rest.dashboard.pluginsHub()
+            let result = try await rest.dashboard.pluginsHub(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/dashboard/plugins/rescan":
             let result = try await rest.dashboard.pluginsRescan()
@@ -561,25 +572,25 @@ public enum RESTOperations {
             let result = try await rest.files.uploadStream(file: try arguments.file("file", in: .form), path: try arguments.string("path", in: .form), overwrite: try arguments.optionalBool("overwrite", in: .form))
             return try RESTArguments.encode(result)
         case "GET /api/fs/default-cwd":
-            let result = try await rest.fs.defaultCwd()
+            let result = try await rest.fs.defaultCwd(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/fs/download":
             let result = try await rest.fs.download(path: try arguments.string("path", in: .query), profile: try arguments.optionalString("profile", in: .query), sessionId: try arguments.optionalString("session_id", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/fs/git-root":
-            let result = try await rest.fs.gitRoot(path: try arguments.string("path", in: .query))
+            let result = try await rest.fs.gitRoot(path: try arguments.string("path", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/fs/list":
-            let result = try await rest.fs.list(path: try arguments.string("path", in: .query))
+            let result = try await rest.fs.list(path: try arguments.string("path", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/fs/read-data-url":
             let result = try await rest.fs.readDataUrl(path: try arguments.string("path", in: .query), profile: try arguments.optionalString("profile", in: .query), sessionId: try arguments.optionalString("session_id", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/fs/read-text":
-            let result = try await rest.fs.readText(path: try arguments.string("path", in: .query))
+            let result = try await rest.fs.readText(path: try arguments.string("path", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/fs/write-text":
-            let result = try await rest.fs.writeText(body: try arguments.body(FsWriteText.self))
+            let result = try await rest.fs.writeText(body: try arguments.body(FsWriteText.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/gateway/drain":
             let result = try await rest.gateway.drain(body: try arguments.optionalBody(GatewayDrainRequest.self))
@@ -690,10 +701,10 @@ public enum RESTOperations {
             let result = try await rest.learning.node(id: try arguments.string("id", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "PUT /api/learning/node":
-            let result = try await rest.learning.updateNode(body: try arguments.body(LearningNodeEdit.self))
+            let result = try await rest.learning.updateNode(body: try arguments.body(LearningNodeEdit.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "DELETE /api/learning/node":
-            let result = try await rest.learning.deleteNode(body: try arguments.body(LearningNodeRef.self))
+            let result = try await rest.learning.deleteNode(body: try arguments.body(LearningNodeRef.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/local-models/activate":
             let result = try await rest.localModels.activate(body: try arguments.body(ModelActivateBody.self), profile: try arguments.optionalString("profile", in: .query))
@@ -706,6 +717,12 @@ public enum RESTOperations {
             return try RESTArguments.encode(result)
         case "POST /api/local-models/download-browsed":
             let result = try await rest.localModels.downloadBrowsed(body: try arguments.body(BrowsedDownloadBody.self))
+            return try RESTArguments.encode(result)
+        case "POST /api/local-models/download/pause":
+            let result = try await rest.localModels.downloadPause(body: try arguments.body(JobIdBody.self))
+            return try RESTArguments.encode(result)
+        case "POST /api/local-models/download/resume":
+            let result = try await rest.localModels.downloadResume(body: try arguments.body(JobIdBody.self))
             return try RESTArguments.encode(result)
         case "POST /api/local-models/eject":
             let result = try await rest.localModels.eject(body: try arguments.body(ModelEjectBody.self))
@@ -747,7 +764,7 @@ public enum RESTOperations {
             let result = try await rest.logs.get(file: try arguments.optionalString("file", in: .query), lines: try arguments.optionalInt("lines", in: .query), level: try arguments.optionalString("level", in: .query), component: try arguments.optionalString("component", in: .query), search: try arguments.optionalString("search", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/mcp/catalog":
-            let result = try await rest.mcp.catalog(profile: try arguments.optionalString("profile", in: .query), detectApps: try arguments.optionalBool("detect_apps", in: .query))
+            let result = try await rest.mcp.catalog(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/mcp/catalog/install":
             let result = try await rest.mcp.catalogInstall(body: try arguments.body(MCPCatalogInstall.self), profile: try arguments.optionalString("profile", in: .query))
@@ -784,6 +801,9 @@ public enum RESTOperations {
             return try RESTArguments.encode(result)
         case "GET /api/media":
             let result = try await rest.media.get(path: try arguments.string("path", in: .query))
+            return try RESTArguments.encode(result)
+        case "GET /api/media/proxy":
+            let result = try await rest.media.proxy(url: try arguments.string("url", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/memory":
             let result = try await rest.memory.get(profile: try arguments.optionalString("profile", in: .query))
@@ -921,160 +941,163 @@ public enum RESTOperations {
             let result = try await rest.pairing.revoke(body: try arguments.body(PairingRevoke.self))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/hermes-achievements/achievements":
-            let result = try await rest.hermesAchievements.achievements()
+            let result = try await rest.hermesAchievements.achievements(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/hermes-achievements/recent-unlocks":
-            let result = try await rest.hermesAchievements.recentUnlocks()
+            let result = try await rest.hermesAchievements.recentUnlocks(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/hermes-achievements/rescan":
-            let result = try await rest.hermesAchievements.rescan()
+            let result = try await rest.hermesAchievements.rescan(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/hermes-achievements/reset-state":
-            let result = try await rest.hermesAchievements.resetState()
+            let result = try await rest.hermesAchievements.resetState(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/hermes-achievements/scan-status":
-            let result = try await rest.hermesAchievements.scanStatus()
+            let result = try await rest.hermesAchievements.scanStatus(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/hermes-achievements/sessions/{session_id}/badges":
-            let result = try await rest.hermesAchievements.sessionsBadges(sessionId: try arguments.string("session_id", in: .path))
+            let result = try await rest.hermesAchievements.sessionsBadges(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/assignees":
-            let result = try await rest.kanban.assignees(board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.assignees(board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/attachments/{attachment_id}":
-            let result = try await rest.kanban.attachments(attachmentId: try arguments.int("attachment_id", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.attachments(attachmentId: try arguments.int("attachment_id", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "DELETE /api/plugins/kanban/attachments/{attachment_id}":
-            let result = try await rest.kanban.deleteAttachments(attachmentId: try arguments.int("attachment_id", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.deleteAttachments(attachmentId: try arguments.int("attachment_id", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/board":
-            let result = try await rest.kanban.board(tenant: try arguments.optionalString("tenant", in: .query), includeArchived: try arguments.optionalBool("include_archived", in: .query), board: try arguments.optionalString("board", in: .query), workflowTemplateId: try arguments.optionalString("workflow_template_id", in: .query), currentStepKey: try arguments.optionalString("current_step_key", in: .query))
+            let result = try await rest.kanban.board(tenant: try arguments.optionalString("tenant", in: .query), includeArchived: try arguments.optionalBool("include_archived", in: .query), board: try arguments.optionalString("board", in: .query), workflowTemplateId: try arguments.optionalString("workflow_template_id", in: .query), currentStepKey: try arguments.optionalString("current_step_key", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/boards":
-            let result = try await rest.kanban.boards(includeArchived: try arguments.optionalBool("include_archived", in: .query))
+            let result = try await rest.kanban.boards(includeArchived: try arguments.optionalBool("include_archived", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/boards":
-            let result = try await rest.kanban.setBoards(body: try arguments.body(CreateBoardBody.self))
+            let result = try await rest.kanban.setBoards(body: try arguments.body(CreateBoardBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/boards/import":
-            let result = try await rest.kanban.boardsImport(body: try arguments.body(ImportBoardBody.self))
+            let result = try await rest.kanban.boardsImport(body: try arguments.body(ImportBoardBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "PATCH /api/plugins/kanban/boards/{slug}":
-            let result = try await rest.kanban.patchBoards(slug: try arguments.string("slug", in: .path), body: try arguments.body(RenameBoardBody.self))
+            let result = try await rest.kanban.patchBoards(slug: try arguments.string("slug", in: .path), body: try arguments.body(RenameBoardBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "DELETE /api/plugins/kanban/boards/{slug}":
-            let result = try await rest.kanban.deleteBoards(slug: try arguments.string("slug", in: .path), delete: try arguments.optionalBool("delete", in: .query))
+            let result = try await rest.kanban.deleteBoards(slug: try arguments.string("slug", in: .path), delete: try arguments.optionalBool("delete", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/boards/{slug}/export":
-            let result = try await rest.kanban.boardsExport(slug: try arguments.string("slug", in: .path), body: try arguments.body(ExportBoardBody.self))
+            let result = try await rest.kanban.boardsExport(slug: try arguments.string("slug", in: .path), body: try arguments.body(ExportBoardBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/boards/{slug}/switch":
-            let result = try await rest.kanban.boardsSwitch(slug: try arguments.string("slug", in: .path))
+            let result = try await rest.kanban.boardsSwitch(slug: try arguments.string("slug", in: .path), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/config":
-            let result = try await rest.kanban.config()
+            let result = try await rest.kanban.config(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/diagnostics":
-            let result = try await rest.kanban.diagnostics(board: try arguments.optionalString("board", in: .query), severity: try arguments.optionalString("severity", in: .query))
+            let result = try await rest.kanban.diagnostics(board: try arguments.optionalString("board", in: .query), severity: try arguments.optionalString("severity", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/dispatch":
-            let result = try await rest.kanban.dispatch(dryRun: try arguments.optionalBool("dry_run", in: .query), max: try arguments.optionalInt("max", in: .query), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.dispatch(dryRun: try arguments.optionalBool("dry_run", in: .query), max: try arguments.optionalInt("max", in: .query), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/estimate":
-            let result = try await rest.kanban.estimate(body: try arguments.body(EstimateBody.self))
+            let result = try await rest.kanban.estimate(body: try arguments.body(EstimateBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/home-channels":
-            let result = try await rest.kanban.homeChannels(taskId: try arguments.optionalString("task_id", in: .query), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.homeChannels(taskId: try arguments.optionalString("task_id", in: .query), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/links":
-            let result = try await rest.kanban.links(body: try arguments.body(LinkBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.links(body: try arguments.body(LinkBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "DELETE /api/plugins/kanban/links":
-            let result = try await rest.kanban.deleteLinks(parentId: try arguments.string("parent_id", in: .query), childId: try arguments.string("child_id", in: .query), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.deleteLinks(parentId: try arguments.string("parent_id", in: .query), childId: try arguments.string("child_id", in: .query), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/model-options":
-            let result = try await rest.kanban.modelOptions()
+            let result = try await rest.kanban.modelOptions(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/orchestration":
-            let result = try await rest.kanban.orchestration()
+            let result = try await rest.kanban.orchestration(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "PUT /api/plugins/kanban/orchestration":
-            let result = try await rest.kanban.updateOrchestration(body: try arguments.body(OrchestrationSettingsBody.self))
+            let result = try await rest.kanban.updateOrchestration(body: try arguments.body(OrchestrationSettingsBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/profiles":
-            let result = try await rest.kanban.profiles()
+            let result = try await rest.kanban.profiles(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "PATCH /api/plugins/kanban/profiles/{profile_name}":
-            let result = try await rest.kanban.patchProfiles(profileName: try arguments.string("profile_name", in: .path), body: try arguments.body(DescribeBody.self))
+            let result = try await rest.kanban.patchProfiles(profileName: try arguments.string("profile_name", in: .path), body: try arguments.body(DescribeBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/profiles/{profile_name}/describe-auto":
-            let result = try await rest.kanban.profilesDescribeAuto(profileName: try arguments.string("profile_name", in: .path), body: try arguments.body(DescribeAutoBody.self))
+            let result = try await rest.kanban.profilesDescribeAuto(profileName: try arguments.string("profile_name", in: .path), body: try arguments.body(DescribeAutoBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/projects":
-            let result = try await rest.kanban.projects()
+            let result = try await rest.kanban.projects(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/runs/{run_id}":
-            let result = try await rest.kanban.runs(runId: try arguments.int("run_id", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.runs(runId: try arguments.int("run_id", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/runs/{run_id}/inspect":
-            let result = try await rest.kanban.runsInspect(runId: try arguments.int("run_id", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.runsInspect(runId: try arguments.int("run_id", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/runs/{run_id}/terminate":
-            let result = try await rest.kanban.runsTerminate(runId: try arguments.int("run_id", in: .path), body: try arguments.body(TerminateRunBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.runsTerminate(runId: try arguments.int("run_id", in: .path), body: try arguments.body(TerminateRunBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/stats":
-            let result = try await rest.kanban.stats(board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.stats(board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks":
-            let result = try await rest.kanban.setTasks(body: try arguments.body(CreateTaskBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.setTasks(body: try arguments.body(CreateTaskBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/bulk":
-            let result = try await rest.kanban.tasksBulk(body: try arguments.body(BulkTaskBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksBulk(body: try arguments.body(BulkTaskBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/tasks/{task_id}":
-            let result = try await rest.kanban.tasks(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query), runStateType: try arguments.optionalString("run_state_type", in: .query), runStateName: try arguments.optionalString("run_state_name", in: .query))
+            let result = try await rest.kanban.tasks(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query), runStateType: try arguments.optionalString("run_state_type", in: .query), runStateName: try arguments.optionalString("run_state_name", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "PATCH /api/plugins/kanban/tasks/{task_id}":
-            let result = try await rest.kanban.patchTasks(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(UpdateTaskBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.patchTasks(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(UpdateTaskBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "DELETE /api/plugins/kanban/tasks/{task_id}":
-            let result = try await rest.kanban.deleteTasks(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.deleteTasks(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/tasks/{task_id}/attachments":
-            let result = try await rest.kanban.tasksAttachments(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksAttachments(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/attachments":
-            let result = try await rest.kanban.setTasksAttachments(taskId: try arguments.string("task_id", in: .path), file: try arguments.file("file", in: .form), board: try arguments.optionalString("board", in: .query), uploadedBy: try arguments.optionalString("uploaded_by", in: .form))
+            let result = try await rest.kanban.setTasksAttachments(taskId: try arguments.string("task_id", in: .path), file: try arguments.file("file", in: .form), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query), uploadedBy: try arguments.optionalString("uploaded_by", in: .form))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/comments":
-            let result = try await rest.kanban.tasksComments(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(CommentBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksComments(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(CommentBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/decompose":
-            let result = try await rest.kanban.tasksDecompose(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(DecomposeBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksDecompose(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(DecomposeBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/estimate":
-            let result = try await rest.kanban.tasksEstimate(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksEstimate(taskId: try arguments.string("task_id", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}":
-            let result = try await rest.kanban.tasksHomeSubscribe(taskId: try arguments.string("task_id", in: .path), platform: try arguments.string("platform", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksHomeSubscribe(taskId: try arguments.string("task_id", in: .path), platform: try arguments.string("platform", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "DELETE /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}":
-            let result = try await rest.kanban.deleteTasksHomeSubscribe(taskId: try arguments.string("task_id", in: .path), platform: try arguments.string("platform", in: .path), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.deleteTasksHomeSubscribe(taskId: try arguments.string("task_id", in: .path), platform: try arguments.string("platform", in: .path), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/tasks/{task_id}/log":
-            let result = try await rest.kanban.tasksLog(taskId: try arguments.string("task_id", in: .path), tail: try arguments.optionalInt("tail", in: .query), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksLog(taskId: try arguments.string("task_id", in: .path), tail: try arguments.optionalInt("tail", in: .query), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/reassign":
-            let result = try await rest.kanban.tasksReassign(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(ReassignBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksReassign(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(ReassignBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/reclaim":
-            let result = try await rest.kanban.tasksReclaim(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(ReclaimBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksReclaim(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(ReclaimBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/plugins/kanban/tasks/{task_id}/specify":
-            let result = try await rest.kanban.tasksSpecify(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(SpecifyBody.self), board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.tasksSpecify(taskId: try arguments.string("task_id", in: .path), body: try arguments.body(SpecifyBody.self), board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/plugins/kanban/workers/active":
-            let result = try await rest.kanban.workersActive(board: try arguments.optionalString("board", in: .query))
+            let result = try await rest.kanban.workersActive(board: try arguments.optionalString("board", in: .query), profile: try arguments.optionalString("profile", in: .query))
+            return try RESTArguments.encode(result)
+        case "GET /api/plugins/kanban/workflow":
+            let result = try await rest.kanban.workflow(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/portal":
             let result = try await rest.portal.get(profile: try arguments.optionalString("profile", in: .query))
@@ -1095,13 +1118,13 @@ public enum RESTOperations {
             let result = try await rest.profiles.`import`(body: try arguments.body(ProfileImport.self))
             return try RESTArguments.encode(result)
         case "GET /api/profiles/projects/tree":
-            let result = try await rest.profiles.projectsTree(previewLimit: try arguments.optionalInt("preview_limit", in: .query), sessionLimit: try arguments.optionalInt("session_limit", in: .query))
+            let result = try await rest.profiles.projectsTree(previewLimit: try arguments.optionalInt("preview_limit", in: .query), sessionLimit: try arguments.optionalInt("session_limit", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/profiles/sessions":
             let result = try await rest.profiles.sessions(limit: try arguments.optionalInt("limit", in: .query), offset: try arguments.optionalInt("offset", in: .query), minMessages: try arguments.optionalInt("min_messages", in: .query), archived: try arguments.optionalString("archived", in: .query), order: try arguments.optionalString("order", in: .query), profile: try arguments.optionalString("profile", in: .query), source: try arguments.optionalString("source", in: .query), sources: try arguments.optionalString("sources", in: .query), excludeSources: try arguments.optionalString("exclude_sources", in: .query), full: try arguments.optionalBool("full", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/profiles/sessions/pull-requests":
-            let result = try await rest.profiles.sessionsPullRequests(body: try arguments.body(SessionPrScanBody.self))
+            let result = try await rest.profiles.sessionsPullRequests(body: try arguments.body(SessionPrScanBody.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/profiles/sessions/sidebar":
             let result = try await rest.profiles.sessionsSidebar(recentsProfile: try arguments.optionalString("recents_profile", in: .query), recentsLimit: try arguments.optionalInt("recents_limit", in: .query), recentsExclude: try arguments.optionalString("recents_exclude", in: .query), cronLimit: try arguments.optionalInt("cron_limit", in: .query), messagingLimit: try arguments.optionalInt("messaging_limit", in: .query), messagingExclude: try arguments.optionalString("messaging_exclude", in: .query))
@@ -1206,7 +1229,7 @@ public enum RESTOperations {
             let result = try await rest.sessions.patch(sessionId: try arguments.string("session_id", in: .path), body: try arguments.body(SessionRename.self))
             return try RESTArguments.encode(result)
         case "DELETE /api/sessions/{session_id}":
-            let result = try await rest.sessions.delete(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query))
+            let result = try await rest.sessions.delete(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query), requestId: try arguments.optionalString("request_id", in: .query), expectedRevision: try arguments.optionalInt("expected_revision", in: .query), expectedGeneration: try arguments.optionalInt("expected_generation", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/sessions/{session_id}/export":
             let result = try await rest.sessions.export(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query))
@@ -1215,25 +1238,34 @@ public enum RESTOperations {
             let result = try await rest.sessions.latestDescendant(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/sessions/{session_id}/messages":
-            let result = try await rest.sessions.messages(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query), limit: try arguments.optionalInt("limit", in: .query), offset: try arguments.optionalInt("offset", in: .query), order: try arguments.optionalString("order", in: .query), includeCompacted: try arguments.optionalBool("include_compacted", in: .query))
+            let result = try await rest.sessions.messages(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query), limit: try arguments.optionalInt("limit", in: .query), offset: try arguments.optionalInt("offset", in: .query), order: try arguments.optionalString("order", in: .query), includeCompacted: try arguments.optionalBool("include_compacted", in: .query), inlineImages: try arguments.optionalBool("inline_images", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/sessions/{session_id}/messages/around":
             let result = try await rest.sessions.messagesAround(sessionId: try arguments.string("session_id", in: .path), rowId: try arguments.int("row_id", in: .query), profile: try arguments.optionalString("profile", in: .query), limit: try arguments.optionalInt("limit", in: .query))
             return try RESTArguments.encode(result)
+        case "GET /api/sessions/{session_id}/mutation-snapshot":
+            let result = try await rest.sessions.mutationSnapshot(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query))
+            return try RESTArguments.encode(result)
         case "GET /api/sessions/{session_id}/timeline":
             let result = try await rest.sessions.timeline(sessionId: try arguments.string("session_id", in: .path), profile: try arguments.optionalString("profile", in: .query), limit: try arguments.optionalInt("limit", in: .query), afterRowId: try arguments.optionalInt("after_row_id", in: .query))
+            return try RESTArguments.encode(result)
+        case "GET /api/shared-metrics/consent":
+            let result = try await rest.sharedMetrics.consent(profile: try arguments.optionalString("profile", in: .query))
+            return try RESTArguments.encode(result)
+        case "PUT /api/shared-metrics/consent":
+            let result = try await rest.sharedMetrics.updateConsent(body: try arguments.body(ConsentAnswer.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/skills":
             let result = try await rest.skills.get(profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/skills":
-            let result = try await rest.skills.create(body: try arguments.body(SkillCreate.self))
+            let result = try await rest.skills.create(body: try arguments.body(SkillCreate.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "GET /api/skills/content":
             let result = try await rest.skills.content(name: try arguments.string("name", in: .query), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "PUT /api/skills/content":
-            let result = try await rest.skills.updateContent(body: try arguments.body(SkillContentUpdate.self))
+            let result = try await rest.skills.updateContent(body: try arguments.body(SkillContentUpdate.self), profile: try arguments.optionalString("profile", in: .query))
             return try RESTArguments.encode(result)
         case "POST /api/skills/hub/install":
             let result = try await rest.skills.hubInstall(body: try arguments.body(SkillInstallRequest.self), profile: try arguments.optionalString("profile", in: .query))
@@ -1375,6 +1407,8 @@ public enum RESTOperations {
             return try RESTArguments.encode(try response.json(ElevenLabsVoicesResponse.self, status: 200))
         case "POST /api/audio/speak":
             return try RESTArguments.encode(try response.json(AudioSpeakResponse.self, status: 200))
+        case "POST /api/audio/stt-lease":
+            return try RESTArguments.encode(try response.json(SttLeaseResponse.self, status: 200))
         case "POST /api/audio/transcribe":
             return try RESTArguments.encode(try response.json(AudioTranscriptionResponse.self, status: 200))
         case "POST /api/audio/tts-lease":
@@ -1608,6 +1642,10 @@ public enum RESTOperations {
             return try RESTArguments.encode(try response.json(LocalModelsDownloadResponse.self, status: 200))
         case "POST /api/local-models/download-browsed":
             return try RESTArguments.encode(try response.json(LocalModelsDownloadResponse.self, status: 200))
+        case "POST /api/local-models/download/pause":
+            return try RESTArguments.encode(try response.json(LocalModelsDownloadPauseResponse.self, status: 200))
+        case "POST /api/local-models/download/resume":
+            return try RESTArguments.encode(try response.json(LocalModelsDownloadResumeResponse.self, status: 200))
         case "POST /api/local-models/eject":
             return try RESTArguments.encode(try response.json(OkResponse.self, status: 200))
         case "GET /api/local-models/hardware":
@@ -1659,6 +1697,8 @@ public enum RESTOperations {
         case "POST /api/mcp/servers/{name}/test":
             return try RESTArguments.encode(try response.json(McpServerTestResponse.self, status: 200))
         case "GET /api/media":
+            return try RESTArguments.encode(try response.json(MediaDataUrlResponse.self, status: 200))
+        case "GET /api/media/proxy":
             return try RESTArguments.encode(try response.json(MediaDataUrlResponse.self, status: 200))
         case "GET /api/memory":
             return try RESTArguments.encode(try response.json(MemoryStatusResponse.self, status: 200))
@@ -1854,6 +1894,8 @@ public enum RESTOperations {
             return try RESTArguments.encode(try response.json(KanbanSpecifyResponse.self, status: 200))
         case "GET /api/plugins/kanban/workers/active":
             return try RESTArguments.encode(try response.json(KanbanActiveWorkersResponse.self, status: 200))
+        case "GET /api/plugins/kanban/workflow":
+            return try RESTArguments.encode(try response.json(KanbanWorkflowResponse.self, status: 200))
         case "GET /api/portal":
             return try RESTArguments.encode(try response.json(PortalStatusResponse.self, status: 200))
         case "GET /api/profiles":
@@ -1921,7 +1963,7 @@ public enum RESTOperations {
         case "GET /api/sessions":
             return try RESTArguments.encode(try response.json(SessionListResponse.self, status: 200))
         case "POST /api/sessions/bulk-delete":
-            return try RESTArguments.encode(try response.json(SessionDeletedCountResponse.self, status: 200))
+            return try RESTArguments.encode(try response.json(SessionBulkDeleteResponse.self, status: 200))
         case "DELETE /api/sessions/empty":
             return try RESTArguments.encode(try response.json(SessionDeletedCountResponse.self, status: 200))
         case "GET /api/sessions/empty/count":
@@ -1950,8 +1992,14 @@ public enum RESTOperations {
             return try RESTArguments.encode(try response.json(SessionMessagesResponse.self, status: 200))
         case "GET /api/sessions/{session_id}/messages/around":
             return try RESTArguments.encode(try response.json(SessionMessagesAroundResponse.self, status: 200))
+        case "GET /api/sessions/{session_id}/mutation-snapshot":
+            return try RESTArguments.encode(try response.json(SessionMutationSnapshotResponse.self, status: 200))
         case "GET /api/sessions/{session_id}/timeline":
             return try RESTArguments.encode(try response.json(SessionTimelineResponse.self, status: 200))
+        case "GET /api/shared-metrics/consent":
+            return try RESTArguments.encode(try response.json(SharedMetricsConsentResponse.self, status: 200))
+        case "PUT /api/shared-metrics/consent":
+            return try RESTArguments.encode(try response.json(SharedMetricsConsentResponse.self, status: 200))
         case "GET /api/skills":
             return try RESTArguments.encode(try response.json([SkillListRow].self, status: 200))
         case "POST /api/skills":

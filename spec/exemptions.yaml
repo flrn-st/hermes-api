@@ -45,9 +45,6 @@ proposed:
   name: "error"
   reason: "Emitted on turn failures; the recorder treats an error event as a failed recording."
 - kind: event
-  name: "layout.apply"
-  reason: "Emitted by desktop, screen, browser or audio features on the host."
-- kind: event
   name: "message.interim"
   reason: "Not provoked yet: needs turns that produce interim messages, reviews, risky tool output or notices. Could be covered with more scripted turns."
 - kind: event

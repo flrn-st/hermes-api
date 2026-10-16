@@ -1,22 +1,66 @@
 # Drafted by tools/import_contracts.py from the response contracts named in x-contract;
 # re-run the importer rather than editing, and review changes like any overlay.
 components:
+  SessionBulkDeleteResponse:
+    additionalProperties: false
+    description: '``bulk_delete_sessions_endpoint``: ``deleted`` counts the selected rows (compression chains are
+
+      deleted whole); ``skipped_active`` lists ids a live turn or compression still owns, which stay.'
+    properties:
+      deleted:
+        type: integer
+      ok:
+        type: boolean
+      skipped_active:
+        items:
+          type: string
+        type: array
+    required:
+    - ok
+    - deleted
+    - skipped_active
+    type: object
   SessionDeleteResponse:
     additionalProperties: false
-    description: '``delete_session_endpoint``; ``already_absent`` marks the idempotent no-op.'
+    description: '``delete_session_endpoint``: the ``delete`` mutation receipt (``deleted_ids``: every retired
+
+      row of the compression chain), or ``{ok, already_absent: true}`` when the id is already gone.'
     properties:
       already_absent:
         anyOf:
         - type: boolean
         - type: 'null'
+      deleted_ids:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      execution_generation:
+        anyOf:
+        - type: integer
+        - type: 'null'
       ok:
         type: boolean
+      operation:
+        anyOf:
+        - const: delete
+          type: string
+        - type: 'null'
+      revision:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      session_id:
+        anyOf:
+        - type: string
+        - type: 'null'
     required:
     - ok
     type: object
   SessionDeletedCountResponse:
     additionalProperties: false
-    description: '``bulk_delete_sessions_endpoint`` / ``delete_empty_sessions_endpoint``.'
+    description: '``delete_empty_sessions_endpoint``.'
     properties:
       deleted:
         type: integer
@@ -37,6 +81,10 @@ components:
       _compressed_summary:
         anyOf:
         - type: boolean
+        - type: 'null'
+      absorbed_message_uids:
+        anyOf:
+        - type: string
         - type: 'null'
       active:
         type: integer
@@ -85,6 +133,11 @@ components:
         - type: 'null'
       id:
         type: integer
+      message_uid:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Stable message identity; null on legacy rows until backfilled.
       observed:
         type: integer
       platform_message_id:
@@ -125,6 +178,14 @@ components:
             type: array
           type: object
         - type: 'null'
+      tool_call_uid:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_call_uids:
+        anyOf:
+        - type: string
+        - type: 'null'
       tool_calls:
         description: Decoded tool-call list (``[]`` when undecodable), or null.
       tool_name:
@@ -154,6 +215,10 @@ components:
     - compacted
     - api_content
     - display_metadata
+    - message_uid
+    - absorbed_message_uids
+    - tool_call_uids
+    - tool_call_uid
     type: object
   SessionEmptyCountResponse:
     additionalProperties: false
@@ -166,7 +231,11 @@ components:
     type: object
   SessionImportResponse:
     additionalProperties: false
-    description: '``SessionDB.import_sessions`` success result (``ok: false`` is raised as a 400).'
+    description: '``import_sessions_endpoint``: the receipt of an ``import`` mutation anchored on the payload''s
+
+      first session, with ``hermes_state_mutations._import``''s projection (validation failures are a
+
+      400, a conflicting retry a 409).'
     properties:
       detached:
         type: integer
@@ -175,6 +244,10 @@ components:
           additionalProperties: true
           type: object
         type: array
+      execution_generation:
+        anyOf:
+        - type: integer
+        - type: 'null'
       imported:
         type: integer
       imported_ids:
@@ -183,6 +256,13 @@ components:
         type: array
       ok:
         type: boolean
+      operation:
+        const: import
+        type: string
+      revision:
+        type: integer
+      session_id:
+        type: string
       skipped:
         type: integer
       skipped_ids:
@@ -191,6 +271,10 @@ components:
         type: array
     required:
     - ok
+    - session_id
+    - revision
+    - execution_generation
+    - operation
     - imported
     - skipped
     - detached
@@ -217,6 +301,166 @@ components:
     - session_id
     - path
     - changed
+    type: object
+  SessionListResponse:
+    additionalProperties: false
+    description: '``get_sessions``. ``storage`` maps the serving profile to ``"corrupt"`` when its store is
+
+      latched unreadable, else ``{}``.'
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      sessions:
+        items:
+          $ref: '#/components/schemas/SessionListRow'
+        type: array
+      storage:
+        additionalProperties:
+          const: corrupt
+          type: string
+        type: object
+      total:
+        type: integer
+    required:
+    - sessions
+    - total
+    - limit
+    - offset
+    - storage
+    type: object
+  SessionMessage:
+    additionalProperties: true
+    description: '``SessionDB._row_to_message_dict``: a ``messages`` row with ``content`` / ``tool_calls`` /
+
+      ``display_metadata`` decoded and the display-index columns dropped. ``content`` is text or the
+
+      decoded multimodal parts; the reasoning sidecars stay JSON text.'
+    properties:
+      _compressed_summary:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      absorbed_message_uids:
+        anyOf:
+        - type: string
+        - type: 'null'
+      active:
+        type: integer
+      api_content:
+        anyOf:
+        - type: string
+        - type: 'null'
+      codex_message_items:
+        anyOf:
+        - type: string
+        - type: 'null'
+      codex_reasoning_items:
+        anyOf:
+        - type: string
+        - type: 'null'
+      compacted:
+        type: integer
+      content: {}
+      display_kind:
+        anyOf:
+        - type: string
+        - type: 'null'
+      display_metadata:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      effect_disposition:
+        anyOf:
+        - type: string
+        - type: 'null'
+      finish_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      id:
+        type: integer
+      message_uid:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: Stable message identity; null on legacy rows until backfilled.
+      observed:
+        type: integer
+      platform_message_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_content:
+        anyOf:
+        - type: string
+        - type: 'null'
+      reasoning_details:
+        anyOf:
+        - type: string
+        - type: 'null'
+      role:
+        type: string
+      session_id:
+        type: string
+      timestamp:
+        type: number
+      token_count:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      tool_call_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_call_uid:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_call_uids:
+        anyOf:
+        - type: string
+        - type: 'null'
+      tool_calls:
+        description: Decoded tool-call list (``[]`` when undecodable), or null.
+      tool_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - id
+    - session_id
+    - role
+    - content
+    - tool_call_id
+    - tool_calls
+    - tool_name
+    - effect_disposition
+    - timestamp
+    - token_count
+    - finish_reason
+    - reasoning
+    - reasoning_content
+    - reasoning_details
+    - codex_reasoning_items
+    - codex_message_items
+    - platform_message_id
+    - observed
+    - active
+    - compacted
+    - api_content
+    - display_kind
+    - display_metadata
+    - message_uid
+    - absorbed_message_uids
+    - tool_call_uids
+    - tool_call_uid
     type: object
   SessionMessagesAroundPagination:
     additionalProperties: false
@@ -310,6 +554,30 @@ components:
     - messages
     - pagination
     type: object
+  SessionMutationSnapshotResponse:
+    additionalProperties: false
+    description: '``get_session_mutation_snapshot``: the fencing counters a mutation must quote
+
+      (``expected_revision`` / ``expected_generation``). An absent session reads revision ``0`` and
+
+      generation ``null`` (the anchor of an import).'
+    properties:
+      exists:
+        type: boolean
+      runtime_generation:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      runtime_revision:
+        type: integer
+      session_id:
+        type: string
+    required:
+    - session_id
+    - exists
+    - runtime_revision
+    - runtime_generation
+    type: object
   SessionOwnerBackfillResponse:
     additionalProperties: false
     description: '``backfill_session_owner_profiles``.'
@@ -401,11 +669,17 @@ components:
     type: object
   SessionRenameResponse:
     additionalProperties: false
-    description: '``rename_session_endpoint``; each flag is echoed only when the request set it.'
+    description: '``rename_session_endpoint``: the receipt of a ``sidebar`` mutation. ``title`` (as stored, null
+
+      when cleared) and each flag are echoed only when the request set them.'
     properties:
       archived:
         anyOf:
         - type: boolean
+        - type: 'null'
+      execution_generation:
+        anyOf:
+        - type: integer
         - type: 'null'
       hidden:
         anyOf:
@@ -413,19 +687,31 @@ components:
         - type: 'null'
       ok:
         type: boolean
+      operation:
+        const: sidebar
+        type: string
       pinned:
         anyOf:
         - type: boolean
         - type: 'null'
-      title:
+      revision:
+        type: integer
+      session_id:
         type: string
+      title:
+        anyOf:
+        - type: string
+        - type: 'null'
       unread:
         anyOf:
         - type: boolean
         - type: 'null'
     required:
     - ok
-    - title
+    - session_id
+    - revision
+    - execution_generation
+    - operation
     type: object
   SessionSearchResponse:
     additionalProperties: false
@@ -651,10 +937,10 @@ components:
 operations:
 - method: DELETE
   path: /api/sessions/empty
-  x-source: hermes_cli/web_routers/sessions.py:463
-  x-handler-hash: 840ee02ba661ce3c41b83be8b67cd90fbbcc55f1415ac62de0b5b3693f06228f
+  x-source: hermes_cli/web_routers/sessions.py:519
+  x-handler-hash: c652c2879e7dba653459d6646f9f629f82ed21f9c29d640a83e61e44e0bf2677
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionDeletedCountResponse
   responses:
     '200':
@@ -665,10 +951,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/sessions/{session_id}
-  x-source: hermes_cli/web_routers/sessions.py:696
-  x-handler-hash: d43016de1a4777b2ad8d4a1a307afa7bc87e8e2717b664c64207e3dc12c9cf21
+  x-source: hermes_cli/web_routers/sessions.py:843
+  x-handler-hash: b82bb8275bfc32915aedd037d16ea0a9fbf9e69b0d96e2cd189367e192e153b9
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionDeleteResponse
   responses:
     '200':
@@ -678,11 +964,25 @@ operations:
             $ref: '#/components/schemas/SessionDeleteResponse'
       description: Successful Response
 - method: GET
+  path: /api/sessions
+  x-source: hermes_cli/web_routers/sessions.py:182
+  x-handler-hash: 6ba526b1fa59e357c2aead992b629e664ff536a2a46dcfd8d21b843b3154fd29
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SessionListResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionListResponse'
+      description: Successful Response
+- method: GET
   path: /api/sessions/empty/count
-  x-source: hermes_cli/web_routers/sessions.py:455
+  x-source: hermes_cli/web_routers/sessions.py:511
   x-handler-hash: 15b13fa34f08f74e31cc05412efa4f2fc76de2e331b2a62e5d88cd43faf33d12
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionEmptyCountResponse
   responses:
     '200':
@@ -693,10 +993,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/sessions/search
-  x-source: hermes_cli/web_routers/sessions.py:268
-  x-handler-hash: 31838f76aa9f93f50a701daa895a010113c7b7e784ccf39bb556e569c67a6bd6
+  x-source: hermes_cli/web_routers/sessions.py:286
+  x-handler-hash: 0698c30a4b6cda1e77a13b1f924291f815609c7230ca57d62b9d461a6f989936
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionSearchResponse
   responses:
     '200':
@@ -707,10 +1007,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/sessions/stats
-  x-source: hermes_cli/web_routers/sessions.py:481
-  x-handler-hash: 2c04d10b20ddc975276fd77a81a1be70319c6b0d8b89860eeef31ed191948918
+  x-source: hermes_cli/web_routers/sessions.py:538
+  x-handler-hash: 400406febd19235b32168201b8643e739d0d16e6d58595c0711e249e9f3acb33
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionStatsResponse
   responses:
     '200':
@@ -721,10 +1021,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/sessions/{session_id}
-  x-source: hermes_cli/web_routers/sessions.py:500
-  x-handler-hash: 895c80527d69d4f56a53145df0a9e2f36acd85d2efc25b81a1fb550cc166e3dd
+  x-source: hermes_cli/web_routers/sessions.py:560
+  x-handler-hash: 3923e8f09d8898857e5001ff5323e188bded3c04c2d31ca4d2bc876a02eb69b4
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionDetailResponse
   responses:
     '200':
@@ -734,11 +1034,25 @@ operations:
             $ref: '#/components/schemas/SessionDetailResponse'
       description: Successful Response
 - method: GET
+  path: /api/sessions/{session_id}/export
+  x-source: hermes_cli/web_routers/sessions.py:938
+  x-handler-hash: 30b177aaff1d59eb8490f9d0837901374d89d8c7c906e2e37a2bfa7157af69ce
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SessionExportResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionExportResponse'
+      description: Successful Response
+- method: GET
   path: /api/sessions/{session_id}/latest-descendant
-  x-source: hermes_cli/web_routers/sessions.py:516
+  x-source: hermes_cli/web_routers/sessions.py:598
   x-handler-hash: 62ed068b030749e53ff2c380da0ec2a07353ba8f007b3bea8978e729b0c6fc99
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionLatestDescendantResponse
   responses:
     '200':
@@ -749,10 +1063,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/sessions/{session_id}/messages
-  x-source: hermes_cli/web_routers/sessions.py:596
-  x-handler-hash: d818238825e4a289f8ee17eba4826770853440d32d9493e8ebab783f74c25363
+  x-source: hermes_cli/web_routers/sessions.py:736
+  x-handler-hash: e29e94c900b4c67260f70824b0c1dababc9386e95b7c85d793a1b537378818dc
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionMessagesResponse
   responses:
     '200':
@@ -763,10 +1077,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/sessions/{session_id}/messages/around
-  x-source: hermes_cli/web_routers/sessions.py:673
+  x-source: hermes_cli/web_routers/sessions.py:820
   x-handler-hash: 143e50c05baa568ff6449e9b081d7b054714107b3c036a659e3d4eaf1c6f499b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionMessagesAroundResponse
   responses:
     '200':
@@ -776,11 +1090,25 @@ operations:
             $ref: '#/components/schemas/SessionMessagesAroundResponse'
       description: Successful Response
 - method: GET
+  path: /api/sessions/{session_id}/mutation-snapshot
+  x-source: hermes_cli/web_routers/sessions.py:583
+  x-handler-hash: 6b65b8d8fa82b14c7d97096669fd53e5c2063763c01243018f9a628219f3f1a3
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SessionMutationSnapshotResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionMutationSnapshotResponse'
+      description: Successful Response
+- method: GET
   path: /api/sessions/{session_id}/timeline
-  x-source: hermes_cli/web_routers/sessions.py:651
+  x-source: hermes_cli/web_routers/sessions.py:798
   x-handler-hash: dd5d54f981df5eaad233e4a461a5515ccc3b1b37a8d4b66352565184b17cdfd2
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionTimelineResponse
   responses:
     '200':
@@ -791,10 +1119,10 @@ operations:
       description: Successful Response
 - method: PATCH
   path: /api/sessions/{session_id}
-  x-source: hermes_cli/web_routers/sessions.py:750
-  x-handler-hash: 651bd6523759141cfdb424760b9be753bbe233f57101989571d9bb97d4ae3da6
+  x-source: hermes_cli/web_routers/sessions.py:923
+  x-handler-hash: 4bc6c4ba07ff78099ab467c267fff9e9ecebc1b55226b34da5ddd2bc41839f70
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionRenameResponse
   responses:
     '200':
@@ -805,24 +1133,24 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/sessions/bulk-delete
-  x-source: hermes_cli/web_routers/sessions.py:414
-  x-handler-hash: 6486d7a3f0b6b61761da3ff44a939418432f65d83aa9c6483b6be566cda78019
+  x-source: hermes_cli/web_routers/sessions.py:466
+  x-handler-hash: f89439b9c4dc09877eb12f217eb2fd6957a722b6a39a09a4721984e2aa7fe6d8
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
-    model: SessionDeletedCountResponse
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SessionBulkDeleteResponse
   responses:
     '200':
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SessionDeletedCountResponse'
+            $ref: '#/components/schemas/SessionBulkDeleteResponse'
       description: Successful Response
 - method: POST
   path: /api/sessions/owner-backfill
-  x-source: hermes_cli/web_routers/sessions.py:711
-  x-handler-hash: f6ad28a3e92663f9a18a40807ff18a28bc27e1726778cb9c142b61fdc512a571
+  x-source: hermes_cli/web_routers/sessions.py:887
+  x-handler-hash: a11e45e4fc10c082d812985eddbd103036e85e542d21db6b15454dbf2f0180b5
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionOwnerBackfillResponse
   responses:
     '200':
@@ -833,10 +1161,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/sessions/prune
-  x-source: hermes_cli/web_routers/sessions.py:822
-  x-handler-hash: 6b1b5548a8864544e2efea9c18ee61fb4fbb63f6d3455dac9f4f096a70eb2837
+  x-source: hermes_cli/web_routers/sessions.py:974
+  x-handler-hash: 0f81a4872e63c904c0d260deeb60cfe942b060067ac19b5e4c25fc495279a19c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SessionPruneResponse
   responses:
     '200':

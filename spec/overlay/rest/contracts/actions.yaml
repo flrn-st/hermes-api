@@ -178,6 +178,231 @@ components:
     - kind
     - system
     type: object
+  HermesUpdateCheckResponse:
+    additionalProperties: false
+    description: '``check_hermes_update``. ``behind``: commits behind, ``0`` up to date, ``-1`` behind by an
+
+      unknown count, ``null`` when the check could not run or does not apply. ``commits`` only when
+
+      an update is available, together with ``channel`` / ``branch`` / ``source_version`` (the release
+
+      channel and release that pick its notes source; each null when the source check names none);
+
+      ``rollback_to`` only when that "update" is a stable release older than this build.'
+    properties:
+      behind:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      branch:
+        anyOf:
+        - type: string
+        - type: 'null'
+      can_apply:
+        type: boolean
+      channel:
+        anyOf:
+        - type: string
+        - type: 'null'
+      commits:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/HermesUpdateCommit'
+          type: array
+        - type: 'null'
+      current_version:
+        type: string
+      install_method:
+        type: string
+      message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      rollback_to:
+        anyOf:
+        - type: string
+        - type: 'null'
+      source_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+      update_available:
+        type: boolean
+      update_command:
+        type: string
+    required:
+    - install_method
+    - current_version
+    - behind
+    - update_available
+    - can_apply
+    - update_command
+    - message
+    type: object
+  HermesUpdateCommit:
+    additionalProperties: false
+    description: '``hermes_cli/source_check.py::_commits`` row, reshaped by ``check_hermes_update``: ``sha``
+
+      shortened to 7 chars, ``at`` in epoch seconds.'
+    properties:
+      at:
+        type: integer
+      author:
+        type: string
+      sha:
+        type: string
+      summary:
+        type: string
+    required:
+    - sha
+    - summary
+    - author
+    - at
+    type: object
+  HermesUpdateStartResponse:
+    additionalProperties: false
+    description: '``update_hermes``: a refusal (``ok: false`` + ``error``/``message``/``update_command``,
+
+      via ``_update_refused``), the already-running update, or the freshly spawned one.'
+    properties:
+      action_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      already_running:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      name:
+        type: string
+      ok:
+        type: boolean
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      update_command:
+        anyOf:
+        - type: string
+        - type: 'null'
+    required:
+    - ok
+    - pid
+    - name
+    type: object
+  UpdateFollowup:
+    additionalProperties: false
+    description: A post-commit step a committed update still owes (``update_receipt`` follow-up).
+    properties:
+      reason:
+        type: string
+      step:
+        type: string
+    required:
+    - step
+    - reason
+    type: object
+  UpdateReceiptRecord:
+    additionalProperties: true
+    description: '``latest.json`` as ``hermes_cli/update_receipt.py`` wrote it, returned verbatim. The file
+
+      outlives the code that wrote it, so every key may be absent; ``finalize_update_receipt`` also
+
+      embeds ``pm_*`` sync sections, ``update_cmd_fleet`` adds ``runtime_outcomes``.'
+    properties:
+      argv:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      exit_code:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      finished_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fleet:
+        anyOf:
+        - items:
+            additionalProperties: true
+            type: object
+          type: array
+        - type: 'null'
+      gateway_restart:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      outcome:
+        anyOf:
+        - type: string
+        - type: 'null'
+      pending_manual_serves:
+        anyOf:
+        - items:
+            additionalProperties: true
+            type: object
+          type: array
+        - type: 'null'
+      pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      plan:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      post_update:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      pre_update:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+      schema:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      skips:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/UpdateReceiptSkip'
+          type: array
+        - type: 'null'
+      started_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      steps:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/UpdateReceiptStep'
+          type: array
+        - type: 'null'
+      stop_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      update_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
   UpdateReceiptResponse:
     additionalProperties: false
     description: '``get_update_receipt``: the full latest receipt plus its compact summary.'
@@ -229,8 +454,12 @@ components:
     additionalProperties: false
     description: '``_latest_update_receipt_summary``; values are copied out of the receipt file, so any may be
 
-      ``null`` when that receipt lacks them.'
+      ``null`` when that receipt lacks them. ``action_id`` names the run the receipt belongs to.'
     properties:
+      action_id:
+        anyOf:
+        - type: string
+        - type: 'null'
       finished_at:
         anyOf:
         - type: string
@@ -238,6 +467,10 @@ components:
       fleet_states:
         items:
           type: string
+        type: array
+      followups:
+        items:
+          $ref: '#/components/schemas/UpdateFollowup'
         type: array
       outcome:
         anyOf:
@@ -259,22 +492,43 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      user_action:
+        anyOf:
+        - $ref: '#/components/schemas/UpdateUserAction'
+        - type: 'null'
     required:
     - outcome
     - started_at
     - finished_at
+    - action_id
     - pre_sha
     - post_sha
     - post_version
     - fleet_states
+    - followups
+    - user_action
+    type: object
+  UpdateUserAction:
+    additionalProperties: true
+    description: '``update_receipt.record_user_action``: something only the user can do is still owed; copied
+
+      from the receipt file as stored.'
+    properties:
+      reason:
+        type: string
+      step:
+        type: string
+    required:
+    - step
+    - reason
     type: object
 operations:
 - method: GET
   path: /api/actions/{name}/status
-  x-source: hermes_cli/web_routers/actions.py:331
-  x-handler-hash: 3cf6be3f92507578262c7ea33bd083361b01281f332d40c10015098a1362f370
+  x-source: hermes_cli/web_routers/actions.py:373
+  x-handler-hash: 71cc4314e4e3ffdefbc7a084252e7bf7b7ea2026dd62d59b6a529f1961a66693
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionStatusResponse
   responses:
     '200':
@@ -285,10 +539,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/gateway/migrate/plan
-  x-source: hermes_cli/web_routers/actions.py:147
+  x-source: hermes_cli/web_routers/actions.py:168
   x-handler-hash: e993d554561559e632733a8663af8fc785c67338b3f45a67362564fae2bce4d3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: GatewayMigrationPlanResponse
   responses:
     '200':
@@ -298,11 +552,25 @@ operations:
             $ref: '#/components/schemas/GatewayMigrationPlanResponse'
       description: Successful Response
 - method: GET
+  path: /api/hermes/update/check
+  x-source: hermes_cli/web_routers/actions.py:283
+  x-handler-hash: 97333e9b11f9b7aab0a35380b91e6e87b068f23c0d17ad8d973c552fa1955354
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: HermesUpdateCheckResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HermesUpdateCheckResponse'
+      description: Successful Response
+- method: GET
   path: /api/hermes/update/receipt
-  x-source: hermes_cli/web_routers/actions.py:413
+  x-source: hermes_cli/web_routers/actions.py:479
   x-handler-hash: b175b85754a47e14209d3512537067bc55a34445fd2eba29c45543c927430336
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: UpdateReceiptResponse
   responses:
     '200':
@@ -313,10 +581,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/gateway/migrate
-  x-source: hermes_cli/web_routers/actions.py:155
+  x-source: hermes_cli/web_routers/actions.py:176
   x-handler-hash: 076985975d5723e479c5a6298ee002edecec52510c237c54b655071d77b4269e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -327,10 +595,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/gateway/restart
-  x-source: hermes_cli/web_routers/actions.py:139
+  x-source: hermes_cli/web_routers/actions.py:160
   x-handler-hash: 09b24d4e47d9c486aeef81c751059085f73401209bcfdbc320465771f9bd30ec
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -338,4 +606,18 @@ operations:
         application/json:
           schema:
             $ref: '#/components/schemas/ActionSpawnResponse'
+      description: Successful Response
+- method: POST
+  path: /api/hermes/update
+  x-source: hermes_cli/web_routers/actions.py:240
+  x-handler-hash: 86d65aca4065fa79b28210858ca3260d603f3536735190865b37a1a362ac6efc
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: HermesUpdateStartResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HermesUpdateStartResponse'
       description: Successful Response

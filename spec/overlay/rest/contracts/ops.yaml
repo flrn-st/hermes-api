@@ -559,10 +559,10 @@ components:
 operations:
 - method: DELETE
   path: /api/credentials/pool/{provider}/{index}
-  x-source: hermes_cli/web_routers/ops.py:421
-  x-handler-hash: 046c87a86ea7cb059639ad191cc8d3c191bdf33e0d7de1685467208021dc1901
+  x-source: hermes_cli/web_routers/ops.py:431
+  x-handler-hash: fced577705aa3383dca0ccf990fbd751a8b3622b59f7bba6f0b184088d67976b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CredentialPoolRemoveResponse
   responses:
     '200':
@@ -573,10 +573,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/ops/hooks
-  x-source: hermes_cli/web_routers/ops.py:756
+  x-source: hermes_cli/web_routers/ops.py:766
   x-handler-hash: 4f9de7d9db0ec8bac2bedd1492c5f92acb2a66f16dfa60b8031ba0a9a5a72403
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -587,10 +587,10 @@ operations:
       description: Successful Response
 - method: DELETE
   path: /api/webhooks/{name}
-  x-source: hermes_cli/web_routers/ops.py:251
-  x-handler-hash: 5394123de3bd34446e908d495c871d0bcccbd8096e7d92b6245a575b419bf9c5
+  x-source: hermes_cli/web_routers/ops.py:254
+  x-handler-hash: be723a92601c0452b187cd5d5348737a237a4b16ecfaee0bec372671a8f29d1e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -601,10 +601,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/credentials/pool
-  x-source: hermes_cli/web_routers/ops.py:334
+  x-source: hermes_cli/web_routers/ops.py:344
   x-handler-hash: b5228c5e248394626d8435b65a454189d765d3f92856c533dfc1fe47b2af1ffe
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CredentialPoolListResponse
   responses:
     '200':
@@ -615,10 +615,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/memory
-  x-source: hermes_cli/web_routers/ops.py:481
+  x-source: hermes_cli/web_routers/ops.py:491
   x-handler-hash: c94513cf59b42f5f964c41f1a933f75ea5044a85bcf8c9600fd0c30e4a9d2653
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MemoryStatusResponse
   responses:
     '200':
@@ -629,10 +629,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/ops/backup/download
-  x-source: hermes_cli/web_routers/ops.py:585
+  x-source: hermes_cli/web_routers/ops.py:595
   x-handler-hash: 547ef8fe75a0d4813f3ddd375df7cc38379ce91de168736915f8630625219713
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: 200 application/zip
   responses:
     '200':
@@ -644,10 +644,10 @@ operations:
       description: The backup archive.
 - method: GET
   path: /api/ops/checkpoints
-  x-source: hermes_cli/web_routers/ops.py:791
+  x-source: hermes_cli/web_routers/ops.py:801
   x-handler-hash: 7b7a6ad7dec0339d68635843bd7d051139a0c3b15b6c935039cafcab039eb990
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OpsCheckpointListResponse
   responses:
     '200':
@@ -658,10 +658,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/ops/hooks
-  x-source: hermes_cli/web_routers/ops.py:656
+  x-source: hermes_cli/web_routers/ops.py:666
   x-handler-hash: c8d62701e0be910a1e3fbce266ef41023687d3fdc6922b42fd2842a7d5969f37
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OpsShellHookListResponse
   responses:
     '200':
@@ -675,7 +675,7 @@ operations:
   x-source: hermes_cli/web_routers/ops.py:84
   x-handler-hash: 0d8005f425f1edd70f5ad6dd81a24d40ec972bad523b0c0e36d69e7bc516eaf3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: UserPairingListResponse
   responses:
     '200':
@@ -689,7 +689,7 @@ operations:
   x-source: hermes_cli/web_routers/ops.py:154
   x-handler-hash: fc31ec4fd90a7a5ca491572fb36ff4894e4bad30399e3e431522109b420187e4
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: WebhookListResponse
   responses:
     '200':
@@ -700,10 +700,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/credentials/pool
-  x-source: hermes_cli/web_routers/ops.py:363
+  x-source: hermes_cli/web_routers/ops.py:373
   x-handler-hash: 2f7ceb14ddeef560a8253ea42b2c2dc4abc79cefc7e95bb7546dff86c2df5201
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CredentialPoolAddResponse
   responses:
     '200':
@@ -714,10 +714,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/gateway/start
-  x-source: hermes_cli/web_routers/ops.py:282
+  x-source: hermes_cli/web_routers/ops.py:292
   x-handler-hash: 7bab0601ca1510bbd7ed0a2f8d663d0e27708091111e18193638189facbbf259
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -728,10 +728,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/gateway/stop
-  x-source: hermes_cli/web_routers/ops.py:295
+  x-source: hermes_cli/web_routers/ops.py:305
   x-handler-hash: 31adc99a7ee3b9e8f1c69e423d0c8c4a47cf81905e5a219c2f3166f3c89e6421
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -742,10 +742,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/memory/reset
-  x-source: hermes_cli/web_routers/ops.py:518
+  x-source: hermes_cli/web_routers/ops.py:528
   x-handler-hash: 33a6d8c6fe63d3c2f53bacf9066bc02af03231950bb06efe9e2306a8c3e85e9d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MemoryResetResponse
   responses:
     '200':
@@ -756,10 +756,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/backup
-  x-source: hermes_cli/web_routers/ops.py:566
+  x-source: hermes_cli/web_routers/ops.py:576
   x-handler-hash: 0c1592d06c92b239e3701ecb814332f5d926f6e23593dadfc58f9a9ba8d31103
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OpsBackupResponse
   responses:
     '200':
@@ -770,10 +770,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/checkpoints/prune
-  x-source: hermes_cli/web_routers/ops.py:821
+  x-source: hermes_cli/web_routers/ops.py:831
   x-handler-hash: 77d6a892d5e0d1eed57a37c01155f50c7fa2dc4220b77aa5907e41f9e93ebb69
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -784,10 +784,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/doctor
-  x-source: hermes_cli/web_routers/ops.py:546
+  x-source: hermes_cli/web_routers/ops.py:556
   x-handler-hash: 0b2aa16fdbd03ff88fa78239f5718cd4b3a7bea5a7110951082e9c3debc1aa6d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -798,10 +798,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/hooks
-  x-source: hermes_cli/web_routers/ops.py:705
-  x-handler-hash: 8caab405d2221195963d6b99cb7ad33782bbec265a4740897bb8351e6229325e
+  x-source: hermes_cli/web_routers/ops.py:715
+  x-handler-hash: 1383b10f5c1d1ab1f60133bf93f5014f4bb7ca34a997d5bca2496534ab3b2bba
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OpsShellHookCreateResponse
   responses:
     '200':
@@ -812,10 +812,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/import
-  x-source: hermes_cli/web_routers/ops.py:612
+  x-source: hermes_cli/web_routers/ops.py:622
   x-handler-hash: 33928e5399b221ee7dbb31c35e2118a73baa53d588674868ec0949d457b68293
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -826,10 +826,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/import-upload
-  x-source: hermes_cli/web_routers/ops.py:631
-  x-handler-hash: 3f432aae9837cf5b38eee1c737dcc2559ddd578350e6c36d6df5b875a645ff20
+  x-source: hermes_cli/web_routers/ops.py:641
+  x-handler-hash: f021c39cdb59320c733e035ca614fa6bed0c81982b94edd2d7d52655184baafe
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OpsImportUploadResponse
   responses:
     '200':
@@ -840,10 +840,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/security-audit
-  x-source: hermes_cli/web_routers/ops.py:552
+  x-source: hermes_cli/web_routers/ops.py:562
   x-handler-hash: b061c0db67a02b08f47894d7316e6c7844c0ab778241e345cb6a2d0a9c7ca326
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -857,7 +857,7 @@ operations:
   x-source: hermes_cli/web_routers/ops.py:90
   x-handler-hash: f53f4ad9d594e397bbad063d2a567f819b3007410107093cc7651c751770769c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: UserPairingApproveResponse
   responses:
     '200':
@@ -871,7 +871,7 @@ operations:
   x-source: hermes_cli/web_routers/ops.py:127
   x-handler-hash: a9e0e67a86113702f6a08aa0f6a9f351b3cd8ae30b0f2cf530df181595218e9a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: UserPairingClearResponse
   responses:
     '200':
@@ -885,7 +885,7 @@ operations:
   x-source: hermes_cli/web_routers/ops.py:116
   x-handler-hash: 232307be3c388332ad44b1a7f9083ab6d2ef6346a96189ed32e52d88a1c87ac9
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':
@@ -897,9 +897,9 @@ operations:
 - method: POST
   path: /api/webhooks
   x-source: hermes_cli/web_routers/ops.py:190
-  x-handler-hash: 7b8bc1b960d4808d4e4fbf880a8cc8f34a8add9edd85f6bb08e7a12654726659
+  x-handler-hash: 2f4cc4f01ee0cd8a72771073b14a368c4d5afba5f861075e4f38d7083bc97aec
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: WebhookCreateResponse
   responses:
     '200':
@@ -913,7 +913,7 @@ operations:
   x-source: hermes_cli/web_routers/ops.py:172
   x-handler-hash: a88a42a894c933ec6119ae1583ebb1fe9bc60aa28024e0e7dd8c36d0ab5f8a24
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: WebhookEnableResponse
   responses:
     '200':
@@ -924,10 +924,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/memory/provider
-  x-source: hermes_cli/web_routers/ops.py:497
+  x-source: hermes_cli/web_routers/ops.py:507
   x-handler-hash: 41dfb0e0f8d9382588515a108d4b46cf1ce3d0295fe7a04eb411781794fc3838
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MemoryProviderSelectResponse
   responses:
     '200':
@@ -938,10 +938,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/webhooks/{name}/enabled
-  x-source: hermes_cli/web_routers/ops.py:264
-  x-handler-hash: 9ddf6cb6f5dcfbbe00323682d74c4d0eeeb5c7cd8f25d64e68efa6aaca2f2f1a
+  x-source: hermes_cli/web_routers/ops.py:270
+  x-handler-hash: a26f258c8cb6ae53a4ac8462c7aa26cd0103cfc14b05b883119288332ccc37c5
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: WebhookEnabledToggleResponse
   responses:
     '200':

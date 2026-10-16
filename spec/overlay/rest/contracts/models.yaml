@@ -1,9 +1,26 @@
 # Drafted by tools/import_contracts.py from the response contracts named in x-contract;
 # re-run the importer rather than editing, and review changes like any overlay.
 components:
+  AuxiliaryEffectiveRoute:
+    additionalProperties: false
+    description: The route an inheriting plugin task resolves to right now (``_get_auxiliary_task_config``).
+    properties:
+      base_url:
+        type: string
+      model:
+        type: string
+      provider:
+        type: string
+    required:
+    - provider
+    - model
+    - base_url
+    type: object
   AuxiliaryModelsResponse:
     additionalProperties: false
-    description: '``get_auxiliary_models`` — one row per ``_AUX_TASK_SLOTS`` entry.'
+    description: '``get_auxiliary_models`` — one row per ``_AUX_TASK_SLOTS`` entry, then one per
+
+      plugin-registered auxiliary task of the profile.'
     properties:
       main:
         $ref: '#/components/schemas/MainModelAssignment'
@@ -17,13 +34,38 @@ components:
     type: object
   AuxiliaryTaskAssignment:
     additionalProperties: false
+    description: 'One slot''s own stored assignment. Plugin-registered tasks follow the built-in slots and add
+
+      ``label``/``hint``/``plugin`` and ``inherit_from`` (base slot key or null); an inheriting row also
+
+      carries ``effective``.'
     properties:
       base_url:
         type: string
+      effective:
+        anyOf:
+        - $ref: '#/components/schemas/AuxiliaryEffectiveRoute'
+        - type: 'null'
+      hint:
+        anyOf:
+        - type: string
+        - type: 'null'
+      inherit_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+      label:
+        anyOf:
+        - type: string
+        - type: 'null'
       local_endpoint:
         type: boolean
       model:
         type: string
+      plugin:
+        anyOf:
+        - type: string
+        - type: 'null'
       provider:
         type: string
       reasoning_effort:
@@ -303,6 +345,30 @@ components:
     - ok
     - scope
     type: object
+  ModelInfoResponse:
+    additionalProperties: false
+    description: '``get_model_info``.'
+    properties:
+      auto_context_length:
+        type: integer
+      capabilities:
+        $ref: '#/components/schemas/ModelsDevCapabilities'
+      config_context_length:
+        type: integer
+      effective_context_length:
+        type: integer
+      model:
+        type: string
+      provider:
+        type: string
+    required:
+    - model
+    - provider
+    - auto_context_length
+    - config_context_length
+    - effective_context_length
+    - capabilities
+    type: object
   ModelOptionCapabilities:
     additionalProperties: false
     description: '``hermes_cli/inventory.py::_apply_capabilities``.'
@@ -315,9 +381,38 @@ components:
         type: boolean
       reasoning:
         type: boolean
+      ultrafast:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+        description: Only ever ``true``; absent when not offered.
     required:
     - fast
     - reasoning
+    type: object
+  ModelOptionLimit:
+    additionalProperties: false
+    description: '``hermes_cli/inventory.py::_apply_limits``: ``account`` — the whole login is rate-limited until
+
+      ``resets_at`` (ISO); ``models`` — only these models are, each until its ISO time.'
+    properties:
+      models:
+        anyOf:
+        - additionalProperties:
+            type: string
+          type: object
+        - type: 'null'
+      resets_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      scope:
+        enum:
+        - account
+        - models
+        type: string
+    required:
+    - scope
     type: object
   ModelOptionPricing:
     additionalProperties: false
@@ -414,6 +509,10 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      limit:
+        anyOf:
+        - $ref: '#/components/schemas/ModelOptionLimit'
+        - type: 'null'
       models:
         items:
           type: string
@@ -446,6 +545,10 @@ components:
             type: string
           type: array
         - type: 'null'
+      usage:
+        anyOf:
+        - $ref: '#/components/schemas/ModelOptionUsage'
+        - type: 'null'
       warning:
         anyOf:
         - type: string
@@ -453,6 +556,84 @@ components:
     required:
     - slug
     - name
+    type: object
+  ModelOptionUsage:
+    additionalProperties: false
+    description: '``hermes_cli/inventory.py::_apply_usage`` (cache only): single-account providers carry
+
+      ``windows``, multi-entry credential pools ``accounts`` instead.'
+    properties:
+      accounts:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/ModelOptionUsageAccount'
+          type: array
+        - type: 'null'
+      windows:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/ModelOptionUsageWindow'
+          type: array
+        - type: 'null'
+    type: object
+  ModelOptionUsageAccount:
+    additionalProperties: false
+    description: 'One account of a multi-entry credential pool (``hermes_cli/inventory.py::_pool_usage_accounts``).
+
+      ``id`` is a stable non-secret identity; ``windows`` is empty while usage is unknown; ``resets_at``
+
+      is when a limited account is whole again (null when unknown).'
+    properties:
+      id:
+        type: string
+      label:
+        type: string
+      resets_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      state:
+        enum:
+        - ready
+        - limited
+        - unknown
+        - unavailable
+        type: string
+      windows:
+        items:
+          $ref: '#/components/schemas/ModelOptionUsageWindow'
+        type: array
+    required:
+    - id
+    - label
+    - windows
+    - state
+    - resets_at
+    type: object
+  ModelOptionUsageWindow:
+    additionalProperties: false
+    description: 'One subscription usage window (``agent/account_usage.py::AccountUsageWindow``): how much is
+
+      spent and when it rolls over (ISO). ``model``-scoped windows cap one model family only.'
+    properties:
+      label:
+        type: string
+      resets_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      scope:
+        enum:
+        - account
+        - model
+        type: string
+      used_percent:
+        type: number
+    required:
+    - label
+    - used_percent
+    - resets_at
+    - scope
     type: object
   ModelOptionsResponse:
     additionalProperties: false
@@ -539,10 +720,10 @@ components:
 operations:
 - method: GET
   path: /api/model/auxiliary
-  x-source: hermes_cli/web_routers/models.py:176
-  x-handler-hash: 6cd5169b8be9dda083e5938483904d7c92015e693ed594cefb4c513918abdbbf
+  x-source: hermes_cli/web_routers/models.py:219
+  x-handler-hash: 25cc1369410aa287b5a2d1bca4c5b2a4486d37ae4b8970e6318e000b21308f9a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AuxiliaryModelsResponse
   responses:
     '200':
@@ -552,11 +733,25 @@ operations:
             $ref: '#/components/schemas/AuxiliaryModelsResponse'
       description: Successful Response
 - method: GET
+  path: /api/model/info
+  x-source: hermes_cli/web_routers/models.py:90
+  x-handler-hash: 28d1c26d975128088ccccb7c784c57d015a6d4c4047448791c97a60a7facfdd4
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: ModelInfoResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ModelInfoResponse'
+      description: Successful Response
+- method: GET
   path: /api/model/moa
-  x-source: hermes_cli/web_routers/models.py:204
+  x-source: hermes_cli/web_routers/models.py:272
   x-handler-hash: 106e167f6ffd4d68fef15be885545fdf2d11fe61ff97155c5d8e645f99fb46b3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MoaConfigResponse
   responses:
     '200':
@@ -567,10 +762,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/model/options
-  x-source: hermes_cli/web_routers/models.py:101
+  x-source: hermes_cli/web_routers/models.py:138
   x-handler-hash: cdd326e27167d58b9971c8a62757d5c1e4f38d61cce67ab3f820c793d65fdc3f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ModelOptionsResponse
   responses:
     '200':
@@ -581,10 +776,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/model/recommended-default
-  x-source: hermes_cli/web_routers/models.py:139
-  x-handler-hash: dc3f82081719656c1235e39aa6ea584e8260c1bcc2c1d128dd2760d2f941f9e6
+  x-source: hermes_cli/web_routers/models.py:176
+  x-handler-hash: aa2ac77e3e47c8d3ce83c27340fa7bcc6c5d63388e049497293120c05e318322
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: RecommendedDefaultModelResponse
   responses:
     '200':
@@ -595,10 +790,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/model/set
-  x-source: hermes_cli/web_routers/models.py:275
-  x-handler-hash: 679d4809381ee90f69a2693d99276ee4feae595075b2f428e8e5e4d9c62f998b
+  x-source: hermes_cli/web_routers/models.py:376
+  x-handler-hash: a3788f853c46919235444d43620ccbcdb9b1e38ccff3e05d2436a9029d5dc477
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ModelAssignmentResponse
   responses:
     '200':
@@ -609,10 +804,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/model/moa
-  x-source: hermes_cli/web_routers/models.py:235
-  x-handler-hash: 5dd4477d502c609621ff19767684532a04f962cce5c1445f83a96413def94019
+  x-source: hermes_cli/web_routers/models.py:303
+  x-handler-hash: 8bc6ddd95e56aa38803e5e751e9c1e4d9c9277521feb0db86ff4f6c462fb30fa
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: MoaConfigSaveResponse
   responses:
     '200':

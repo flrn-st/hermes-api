@@ -371,8 +371,9 @@ public enum LiveScenarios {
                                               prompt: Fixture.clarifyPrompt, tool: "clarify")
             try clarified.expect(reply: Fixture.clarifyReply)
             try clarified.expectContiguousSequence()
-            guard await clarifications.value == 2 else {
-                throw LiveScenarioError("The open clarification was not re-delivered after reconnect")
+            let asked = await clarifications.value
+            guard asked == 2 else {
+                throw LiveScenarioError("The open clarification was not re-delivered once after reconnect (asked \(asked) times)")
             }
 
             // A restart loses every live session; the gateway resumes this one from Hermes' storage.

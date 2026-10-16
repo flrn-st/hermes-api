@@ -122,10 +122,10 @@ components:
 operations:
 - method: GET
   path: /api/chat/workspaces
-  x-source: hermes_cli/web_routers/chat_workspaces.py:64
+  x-source: hermes_cli/web_routers/chat_workspaces.py:72
   x-handler-hash: c14e426dd2489b456c563f91c316b034efe13e707ed1470fe70d9ba46bd3f5b2
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ChatWorkspacesResponse
   responses:
     '200':

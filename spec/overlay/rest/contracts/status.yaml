@@ -106,6 +106,31 @@ components:
     - idle
     - reason
     type: object
+  HealthResponse:
+    additionalProperties: false
+    description: '``get_health``. ``commit`` is the code the process booted from (``VersionInfo.commit``;
+
+      ``null`` when the install cannot name one).'
+    properties:
+      auth_required:
+        type: boolean
+      commit:
+        anyOf:
+        - type: string
+        - type: 'null'
+      displayVersion:
+        type: string
+      ok:
+        type: boolean
+      version:
+        type: string
+    required:
+    - ok
+    - version
+    - displayVersion
+    - commit
+    - auth_required
+    type: object
   HealthRetirementResponse:
     additionalProperties: false
     description: '``post_health_retirement`` — ``hermes_cli/backend_retirement.py::RetirementFence``
@@ -170,6 +195,32 @@ components:
     required:
     - source
     - target
+    type: object
+  LearningGraphMemoryCard:
+    additionalProperties: false
+    description: '``agent/learning_graph.py::_memory_cards``.'
+    properties:
+      body:
+        type: string
+      fingerprint:
+        type: string
+      source:
+        enum:
+        - memory
+        - profile
+        type: string
+      timestamp:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      title:
+        type: string
+    required:
+    - source
+    - timestamp
+    - title
+    - body
+    - fingerprint
     type: object
   LearningGraphNode:
     additionalProperties: false
@@ -417,13 +468,618 @@ components:
     - protocolVersion
     - runtimeIntact
     type: object
+  StatusApiServerMetrics:
+    additionalProperties: false
+    description: '``gateway/platforms/api_server.py::_api_server_status_payload`` — the only platform that
+
+      publishes ``metrics`` today (``last_*`` are ISO timestamps).'
+    properties:
+      active_runs:
+        type: integer
+      host:
+        type: string
+      last_heartbeat:
+        anyOf:
+        - type: string
+        - type: 'null'
+      last_request_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      metrics_today:
+        $ref: '#/components/schemas/StatusApiServerMetricsToday'
+      port:
+        type: integer
+      stored_runs:
+        type: integer
+    required:
+    - host
+    - port
+    - active_runs
+    - stored_runs
+    - last_request_at
+    - last_heartbeat
+    - metrics_today
+    type: object
+  StatusApiServerMetricsToday:
+    additionalProperties: false
+    description: UTC-day counters; ``latency_p95_ms`` is null before the first request of the day.
+    properties:
+      day:
+        type: string
+      latency_p95_ms:
+        anyOf:
+        - type: number
+        - type: 'null'
+      messages:
+        type: integer
+      requests:
+        type: integer
+      tokens:
+        type: integer
+    required:
+    - day
+    - requests
+    - messages
+    - tokens
+    - latency_p95_ms
+    type: object
+  StatusComponents:
+    additionalProperties: false
+    description: '``_component_health``.'
+    properties:
+      dashboard:
+        $ref: '#/components/schemas/StatusDashboardComponent'
+      gateway:
+        $ref: '#/components/schemas/StatusGatewayComponent'
+      platforms:
+        $ref: '#/components/schemas/StatusPlatformsComponent'
+      storage:
+        $ref: '#/components/schemas/StatusStorageComponent'
+    required:
+    - gateway
+    - dashboard
+    - storage
+    - platforms
+    type: object
+  StatusDashboardComponent:
+    additionalProperties: false
+    description: '``hermes_cli/web_server.py::DashboardHealth.snapshot``.'
+    properties:
+      last_error_at:
+        anyOf:
+        - type: number
+        - type: 'null'
+      recent_unhandled_errors:
+        type: integer
+      selftest:
+        enum:
+        - unknown
+        - ok
+        - failing
+        type: string
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    - recent_unhandled_errors
+    - last_error_at
+    - selftest
+    type: object
+  StatusDiskPressure:
+    additionalProperties: false
+    description: '``gateway/disk_status.py::collect_disk_status``; only ``pressure`` when the collector
+
+      raised.'
+    properties:
+      free_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      pressure:
+        enum:
+        - ok
+        - elevated
+        - critical
+        - unknown
+        type: string
+      total_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      used_percent:
+        anyOf:
+        - type: number
+        - type: 'null'
+    required:
+    - pressure
+    type: object
+  StatusFtsRebuild:
+    additionalProperties: false
+    description: '``hermes_state_search.py::_rebuild_status``.'
+    properties:
+      indexed:
+        type: integer
+      pending:
+        type: boolean
+      percent:
+        type: integer
+      total:
+        type: integer
+    required:
+    - pending
+    - total
+    - indexed
+    - percent
+    type: object
+  StatusGatewayComponent:
+    additionalProperties: false
+    properties:
+      state:
+        type: string
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    - state
+    type: object
+  StatusGatewayPlatform:
+    additionalProperties: true
+    description: 'One runtime platform entry (``gateway/status.py::_prepare_runtime_status_update``) with the
+
+      writer-identity stamps stripped; mirrored api_server/webhook entries of a served profile add
+
+      ``ingress_url`` / ``mirrored_from`` (``shared_listener_mirror_platforms``).'
+    properties:
+      error_code:
+        anyOf:
+        - type: string
+        - type: 'null'
+      error_message:
+        anyOf:
+        - type: string
+        - type: 'null'
+      ingress_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      listener_base:
+        anyOf:
+        - type: string
+        - type: 'null'
+      metrics:
+        anyOf:
+        - $ref: '#/components/schemas/StatusApiServerMetrics'
+        - type: 'null'
+      mirrored_from:
+        anyOf:
+        - type: string
+        - type: 'null'
+      needs_attention:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+      retrying_since:
+        anyOf:
+        - type: string
+        - type: 'null'
+      state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      updated_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+    type: object
+  StatusGatewayTopologyEntry:
+    additionalProperties: false
+    description: One live gateway from ``hermes_cli/web_server_gateway.py::_collect_profile_gateway_topology``.
+    properties:
+      ports:
+        additionalProperties:
+          type: integer
+        type: object
+      profile:
+        type: string
+      served_profiles:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+    required:
+    - profile
+    - ports
+    type: object
+  StatusMemoryPressure:
+    additionalProperties: false
+    description: '``gateway/memory_status.py::collect_memory_status``; only ``pressure`` when the collector
+
+      raised.'
+    properties:
+      boot_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_rss_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      last_boot_suspected_oom:
+        default: false
+        type: boolean
+      last_boot_unclean:
+        default: false
+        type: boolean
+      pressure:
+        enum:
+        - ok
+        - elevated
+        - critical
+        - unknown
+        type: string
+      sampled_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      swap_used_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      system_available_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      system_total_mb:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - pressure
+    type: object
+  StatusPlatformsComponent:
+    additionalProperties: false
+    properties:
+      configured:
+        type: integer
+      connected:
+        type: integer
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    - configured
+    - connected
+    type: object
+  StatusResponse:
+    additionalProperties: false
+    description: '``get_status`` — the public liveness probe. The host-recon keys (``hermes_home`` …
+
+      ``gateways``) are present only when the auth gate is off; ``install_id`` only when it could be
+
+      persisted; ``fts_rebuild`` only while a deferred FTS rebuild is pending.'
+    properties:
+      active_agents:
+        type: integer
+      active_sessions:
+        type: integer
+      auth_flows:
+        items:
+          enum:
+          - cookie
+          - native_pkce
+          type: string
+        type: array
+      auth_providers:
+        items:
+          type: string
+        type: array
+      auth_required:
+        type: boolean
+      can_update_hermes:
+        type: boolean
+      components:
+        $ref: '#/components/schemas/StatusComponents'
+      config_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+      config_version:
+        type: integer
+      disk:
+        $ref: '#/components/schemas/StatusDiskPressure'
+      env_path:
+        anyOf:
+        - type: string
+        - type: 'null'
+      fts_rebuild:
+        anyOf:
+        - $ref: '#/components/schemas/StatusFtsRebuild'
+        - type: 'null'
+      gateway_busy:
+        type: boolean
+      gateway_drainable:
+        type: boolean
+      gateway_exit_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_health_url:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_heartbeat_stale_s:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      gateway_mode:
+        enum:
+        - multiplex
+        - single
+        - multiple
+        - none
+        - unknown
+        type: string
+      gateway_pid:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      gateway_platforms:
+        additionalProperties:
+          $ref: '#/components/schemas/StatusGatewayPlatform'
+        description: Plain platform names plus validated "<profile>:<platform>" keys.
+        type: object
+      gateway_running:
+        type: boolean
+      gateway_shared_with:
+        anyOf:
+        - items:
+            type: string
+          type: array
+        - type: 'null'
+      gateway_state:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateway_updated_at:
+        anyOf:
+        - type: string
+        - type: 'null'
+      gateways:
+        anyOf:
+        - items:
+            $ref: '#/components/schemas/StatusGatewayTopologyEntry'
+          type: array
+        - type: 'null'
+      hermes_home:
+        anyOf:
+        - type: string
+        - type: 'null'
+      install_id:
+        anyOf:
+        - type: string
+        - type: 'null'
+      latest_config_version:
+        type: integer
+      memory:
+        $ref: '#/components/schemas/StatusMemoryPressure'
+      multiplex_standalone_reason:
+        anyOf:
+        - type: string
+        - type: 'null'
+      nous_session_valid:
+        enum:
+        - valid
+        - terminal
+        - unknown
+        type: string
+      overall:
+        enum:
+        - ok
+        - degraded
+        type: string
+      parked_profiles:
+        items:
+          type: string
+        type: array
+      profiles:
+        items:
+          type: string
+        type: array
+      release_date:
+        type: string
+      restart_drain_timeout:
+        type: number
+      shared_profile_warning:
+        type: boolean
+      version:
+        type: string
+    required:
+    - version
+    - release_date
+    - config_version
+    - latest_config_version
+    - can_update_hermes
+    - gateway_running
+    - gateway_state
+    - gateway_platforms
+    - gateway_exit_reason
+    - gateway_updated_at
+    - gateway_heartbeat_stale_s
+    - gateway_shared_with
+    - active_agents
+    - gateway_busy
+    - gateway_drainable
+    - restart_drain_timeout
+    - active_sessions
+    - auth_required
+    - auth_providers
+    - auth_flows
+    - nous_session_valid
+    - shared_profile_warning
+    - components
+    - overall
+    - memory
+    - disk
+    - profiles
+    - parked_profiles
+    - gateway_mode
+    - multiplex_standalone_reason
+    type: object
+  StatusStorageComponent:
+    additionalProperties: false
+    description: '``gateway/readiness.py::_probe_state_db`` reduced to its status enum.'
+    properties:
+      reason:
+        anyOf:
+        - const: corrupt
+          type: string
+        - type: 'null'
+      status:
+        enum:
+        - ok
+        - degraded
+        type: string
+    required:
+    - status
+    type: object
+  SystemStatsDisk:
+    additionalProperties: false
+    properties:
+      free:
+        type: integer
+      percent:
+        type: number
+      total:
+        type: integer
+      used:
+        type: integer
+    required:
+    - total
+    - used
+    - free
+    - percent
+    type: object
+  SystemStatsMemory:
+    additionalProperties: false
+    properties:
+      available:
+        type: integer
+      percent:
+        type: number
+      total:
+        type: integer
+      used:
+        type: integer
+    required:
+    - total
+    - available
+    - used
+    - percent
+    type: object
+  SystemStatsProcess:
+    additionalProperties: false
+    properties:
+      create_time:
+        type: integer
+      num_threads:
+        type: integer
+      pid:
+        type: integer
+      rss:
+        type: integer
+    required:
+    - pid
+    - rss
+    - create_time
+    - num_threads
+    type: object
+  SystemStatsResponse:
+    additionalProperties: false
+    description: '``get_system_stats``; every psutil-derived key is absent when psutil (or that probe) is
+
+      unavailable.'
+    properties:
+      arch:
+        type: string
+      cpu_count:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      cpu_percent:
+        anyOf:
+        - type: number
+        - type: 'null'
+      disk:
+        anyOf:
+        - $ref: '#/components/schemas/SystemStatsDisk'
+        - type: 'null'
+      hermes_version:
+        type: string
+      hostname:
+        type: string
+      load_avg:
+        anyOf:
+        - items:
+            type: number
+          type: array
+        - type: 'null'
+      memory:
+        anyOf:
+        - $ref: '#/components/schemas/SystemStatsMemory'
+        - type: 'null'
+      os:
+        type: string
+      os_release:
+        type: string
+      os_version:
+        type: string
+      platform:
+        type: string
+      process:
+        anyOf:
+        - $ref: '#/components/schemas/SystemStatsProcess'
+        - type: 'null'
+      psutil:
+        type: boolean
+      python_impl:
+        type: string
+      python_version:
+        type: string
+      uptime_seconds:
+        anyOf:
+        - type: integer
+        - type: 'null'
+    required:
+    - os
+    - os_release
+    - os_version
+    - platform
+    - arch
+    - hostname
+    - python_version
+    - python_impl
+    - hermes_version
+    - cpu_count
+    - psutil
+    type: object
 operations:
 - method: DELETE
   path: /api/learning/node
-  x-source: hermes_cli/web_routers/status.py:695
-  x-handler-hash: 0e092211a366c83688a28c6bcb8ebfa980766921a445453ee8d9a79d82b48f4e
+  x-source: hermes_cli/web_routers/status.py:711
+  x-handler-hash: 500317c3b5e7a4a5da336deb5fd0b118e782db8422081eb026c8db9d84fc3980
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LearningNodeMutationResponse
   responses:
     '200':
@@ -434,10 +1090,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/curator
-  x-source: hermes_cli/web_routers/status.py:615
+  x-source: hermes_cli/web_routers/status.py:629
   x-handler-hash: 0d1136ec5e3066aa6d5c845a99056a00259eeb1ae2d3c45363b66cfb1457aaf6
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CuratorStatusResponse
   responses:
     '200':
@@ -447,11 +1103,25 @@ operations:
             $ref: '#/components/schemas/CuratorStatusResponse'
       description: Successful Response
 - method: GET
+  path: /api/health
+  x-source: hermes_cli/web_routers/status.py:116
+  x-handler-hash: d7a6f9a316dd769730739bc6e60c3668164bf0f7f9284be92b7106a4331206fc
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: HealthResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthResponse'
+      description: Successful Response
+- method: GET
   path: /api/health/idle
-  x-source: hermes_cli/web_routers/status.py:141
+  x-source: hermes_cli/web_routers/status.py:149
   x-handler-hash: 0d35deca838280b99572dd1a57a2a697ae0439642ac388246b93e56dca1b90c0
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: HealthIdleResponse
   responses:
     '200':
@@ -462,10 +1132,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/host/identity
-  x-source: hermes_cli/web_routers/status.py:122
+  x-source: hermes_cli/web_routers/status.py:130
   x-handler-hash: ba05393e6a67c494481b8605f5a4599ed0318023ab18911b2fb3c04dbdbcf316
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: HostIdentityResponse
   responses:
     '200':
@@ -476,10 +1146,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/learning/graph
-  x-source: hermes_cli/web_routers/status.py:663
-  x-handler-hash: ab76b5467d73fccc49aec4cae29337798609083a90488ceb143a50a1afdf778e
+  x-source: hermes_cli/web_routers/status.py:677
+  x-handler-hash: 3ba06917d7fc7001230531dc3111b19ea74939f8031007db55eba50c16999ab7
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LearningGraphResponse
   responses:
     '200':
@@ -490,10 +1160,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/learning/node
-  x-source: hermes_cli/web_routers/status.py:688
+  x-source: hermes_cli/web_routers/status.py:704
   x-handler-hash: b8458a11216d80571f7e8e0e4653c4b534c04b9152511cd705c74e8e7b8268ab
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LearningNodeDetailResponse
   responses:
     '200':
@@ -504,10 +1174,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/logs
-  x-source: hermes_cli/web_routers/status.py:801
+  x-source: hermes_cli/web_routers/status.py:825
   x-handler-hash: aba2019bac9e605edd62701b65a5ea191fd056a3054be0266b12cfef84ae676a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LogsResponse
   responses:
     '200':
@@ -518,10 +1188,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/portal
-  x-source: hermes_cli/web_routers/status.py:714
+  x-source: hermes_cli/web_routers/status.py:733
   x-handler-hash: 995af2868007f6cd33adbb9069751229d927a6e44d1f25dd00244a2cfd3a87a4
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: PortalStatusResponse
   responses:
     '200':
@@ -532,10 +1202,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/ssh/ownership
-  x-source: hermes_cli/web_routers/status.py:105
+  x-source: hermes_cli/web_routers/status.py:106
   x-handler-hash: 985ff366261691ea4bd7507c45ee383085c0328eff75ed9426b09f541ee8b2da
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SshOwnershipResponse
   responses:
     '200':
@@ -544,12 +1214,40 @@ operations:
           schema:
             $ref: '#/components/schemas/SshOwnershipResponse'
       description: Successful Response
+- method: GET
+  path: /api/status
+  x-source: hermes_cli/web_routers/status.py:466
+  x-handler-hash: 894559a420b86cbe2343094ecec041313559c0e13c9dbbbfd63a3325ffc81c8a
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: StatusResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StatusResponse'
+      description: Successful Response
+- method: GET
+  path: /api/system/stats
+  x-source: hermes_cli/web_routers/status.py:569
+  x-handler-hash: a76a601b48084c134826b124ca2019b02ddfcf4781504593f0101ca5778b2c1f
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SystemStatsResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SystemStatsResponse'
+      description: Successful Response
 - method: POST
   path: /api/curator/run
-  x-source: hermes_cli/web_routers/status.py:654
+  x-source: hermes_cli/web_routers/status.py:668
   x-handler-hash: 1ec6b7d123c6c107af57d776565f6085ac6c7c851c2a3771ea37bbd90a2b14d5
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -560,10 +1258,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/config-migrate
-  x-source: hermes_cli/web_routers/status.py:774
+  x-source: hermes_cli/web_routers/status.py:793
   x-handler-hash: 9a1f3ddfec8b66432e785300d9acdbca7befe1a88805283cf5066c2cbc6b4b17
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -574,10 +1272,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/debug-share
-  x-source: hermes_cli/web_routers/status.py:779
-  x-handler-hash: 9d5817e962bac2127440f7b450040e1b65283fb32e0445d79b272b8924e973d3
+  x-source: hermes_cli/web_routers/status.py:798
+  x-handler-hash: 4afaccf54dbf6e965d233ed33695e75540ef26050fe3d184cd9fe112977aee4c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: DebugShareResponse
   responses:
     '200':
@@ -588,10 +1286,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/dump
-  x-source: hermes_cli/web_routers/status.py:769
+  x-source: hermes_cli/web_routers/status.py:788
   x-handler-hash: a0c520864f5ecc7e1993fae91a20f8ac86c462f63a68cd48408d35bad18c15b2
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -602,10 +1300,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/ops/prompt-size
-  x-source: hermes_cli/web_routers/status.py:764
+  x-source: hermes_cli/web_routers/status.py:783
   x-handler-hash: 6dcac00cf6c90e2c19cfb6d8de71378d718693844940cd058c371d4fe40ce231
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -616,10 +1314,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/curator/paused
-  x-source: hermes_cli/web_routers/status.py:635
+  x-source: hermes_cli/web_routers/status.py:649
   x-handler-hash: 56ce985454676030b6f7c83d2ba8cd2697e465d44a122e36c458fc10e175fca2
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: CuratorPausedResponse
   responses:
     '200':
@@ -630,10 +1328,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/learning/node
-  x-source: hermes_cli/web_routers/status.py:703
-  x-handler-hash: 8d4abedea59670228d6cf6977252d4f859f1a34435891f3ff876340f4756de2d
+  x-source: hermes_cli/web_routers/status.py:722
+  x-handler-hash: 92974c9e5dadcee78d633eed9ca96a334a1320e10c2fd7923407e3da12ef0d56
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: LearningNodeMutationResponse
   responses:
     '200':

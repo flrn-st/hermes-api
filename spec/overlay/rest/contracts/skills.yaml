@@ -1,20 +1,29 @@
 # Drafted by tools/import_contracts.py from the response contracts named in x-contract;
 # re-run the importer rather than editing, and review changes like any overlay.
 components:
+  SkillContentResponse:
+    additionalProperties: false
+    description: '``get_skill_content`` — raw SKILL.md text and its absolute path.'
+    properties:
+      content:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+    required:
+    - name
+    - content
+    - path
+    type: object
   SkillContentUpdateResponse:
     additionalProperties: false
-    description: '``tools/skill_manager_tool.py::_edit_skill`` success payload (failures become a 400/404).
-
-      ``org_sharing`` only when an org-mirror edit was auto-proposed.'
+    description: '``tools/skill_manager_tool.py::_edit_skill`` success payload (failures become a 400/404).'
     properties:
       _change:
         $ref: '#/components/schemas/SkillWriteChange'
       message:
         type: string
-      org_sharing:
-        anyOf:
-        - type: string
-        - type: 'null'
       path:
         type: string
       success:
@@ -451,6 +460,40 @@ components:
     - rule
     - message
     type: object
+  SkillListRow:
+    additionalProperties: false
+    description: '``get_skills`` row: ``tools/skills_tool.py::_find_all_skills`` (``category`` is ``null``
+
+      for a top-level skill) annotated with enabled state, usage count and provenance.'
+    properties:
+      category:
+        anyOf:
+        - type: string
+        - type: 'null'
+      description:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      provenance:
+        description: '"external": mounted from ``skills.external_dirs`` (externally authored, not learned).'
+        enum:
+        - hub
+        - bundled
+        - external
+        - agent
+        type: string
+      usage:
+        type: integer
+    required:
+    - name
+    - description
+    - category
+    - enabled
+    - usage
+    - provenance
+    type: object
   SkillToggleResponse:
     additionalProperties: false
     description: '``toggle_skill``.'
@@ -477,11 +520,41 @@ components:
     type: object
 operations:
 - method: GET
+  path: /api/skills
+  x-source: hermes_cli/web_routers/skills.py:343
+  x-handler-hash: bc9d1bb4506ab05c43cd5fece99bc737d17f4dc0ece5f21060cc0424b980d18b
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: '{"items": {"$ref": "#/components/schemas/SkillListRow"}, "type": "array"}'
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/SkillListRow'
+            type: array
+      description: Successful Response
+- method: GET
+  path: /api/skills/content
+  x-source: hermes_cli/web_routers/skills.py:397
+  x-handler-hash: 4fad202c658c953695550bfa9152abac977b07105edf9fce7b0e10fd2fa2eec6
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SkillContentResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SkillContentResponse'
+      description: Successful Response
+- method: GET
   path: /api/skills/hub/official
   x-source: hermes_cli/web_routers/skills.py:123
   x-handler-hash: 7e327b92e29332d3535f17fdddec25c7b435e862e86a983153761b61c55748ca
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillHubOfficialResponse
   responses:
     '200':
@@ -495,7 +568,7 @@ operations:
   x-source: hermes_cli/web_routers/skills.py:227
   x-handler-hash: 38efc9c26a56583fe3302cfb16ca7e0ee0c9545fd4c58e5952cff77c4499524a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillHubPreviewResponse
   responses:
     '200':
@@ -509,7 +582,7 @@ operations:
   x-source: hermes_cli/web_routers/skills.py:265
   x-handler-hash: 705ae67c26ff65a7872392338a99549a78e7f09b7679f977ab027bc75d657f64
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillHubScanResponse
   responses:
     '200':
@@ -523,7 +596,7 @@ operations:
   x-source: hermes_cli/web_routers/skills.py:185
   x-handler-hash: 67649bc690e2f538d7089ee9611421051c000e35416f0f8045f51445ae37222a
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillHubSearchResponse
   responses:
     '200':
@@ -537,7 +610,7 @@ operations:
   x-source: hermes_cli/web_routers/skills.py:147
   x-handler-hash: cf048ad71e8641065913d4144bb44c39d39ba0baebe223d0057ffb6de1288334
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillHubSourcesResponse
   responses:
     '200':
@@ -548,10 +621,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/skills
-  x-source: hermes_cli/web_routers/skills.py:413
-  x-handler-hash: 441cd1860c252387eb6300597bfdc48e3baeb829e9cd14fae02c73f78a7625d5
+  x-source: hermes_cli/web_routers/skills.py:418
+  x-handler-hash: 3108fba60d72b25571620ac4e42657728c6f3fe131d44d12348c80cd668b3cba
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillCreateResponse
   responses:
     '200':
@@ -565,7 +638,7 @@ operations:
   x-source: hermes_cli/web_routers/skills.py:97
   x-handler-hash: cd29e5b536e4cfc4b88365f3607b1790ee5639070e165fbd9558990d56b81488
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -579,7 +652,7 @@ operations:
   x-source: hermes_cli/web_routers/skills.py:106
   x-handler-hash: b54fee062dccc8b8e733513ab02eee15404f7f005a4f80e5b28e4d1a37d95d3d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -593,7 +666,7 @@ operations:
   x-source: hermes_cli/web_routers/skills.py:115
   x-handler-hash: 47623d7a3000f00cec6f5efb8e5ef722ced5087dfe6eda7c55733da2c5897906
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -604,10 +677,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/skills/content
-  x-source: hermes_cli/web_routers/skills.py:427
-  x-handler-hash: ae89a8890da11f4d68746e0253c613efe43aacca49e1c8ae7625d31e74c4784e
+  x-source: hermes_cli/web_routers/skills.py:433
+  x-handler-hash: 3a740a502460ee98f34092fdc8100e4bf61d5fe375d432a03050fa622237e47b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillContentUpdateResponse
   responses:
     '200':
@@ -618,10 +691,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/skills/toggle
-  x-source: hermes_cli/web_routers/skills.py:374
+  x-source: hermes_cli/web_routers/skills.py:379
   x-handler-hash: 2886812fa2e1c2a7a9b5f79328070a4e4715f358ddc4a1aae855f4e23698be71
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: SkillToggleResponse
   responses:
     '200':

@@ -26,6 +26,18 @@ components:
     - expires_in
     - poll_interval
     type: object
+  OAuthDisconnectResponse:
+    additionalProperties: false
+    description: '``disconnect_oauth_provider``; ``ok`` is whether any credential was actually cleared.'
+    properties:
+      ok:
+        type: boolean
+      provider:
+        type: string
+    required:
+    - ok
+    - provider
+    type: object
   OAuthProviderListResponse:
     additionalProperties: false
     description: '``list_oauth_providers``.'
@@ -214,10 +226,10 @@ components:
 operations:
 - method: DELETE
   path: /api/providers/oauth/sessions/{session_id}
-  x-source: hermes_cli/web_routers/oauth.py:775
-  x-handler-hash: 6972d4511a781e4d906b3eb36c6b4e55528d5d8cd0686671fd306c77b2143ac4
+  x-source: hermes_cli/web_routers/oauth.py:897
+  x-handler-hash: ae2db4d759d4ee56bceedb7e0cb9ae7e408464304309bebbf2472221793b85f7
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OAuthSessionCancelResponse
   responses:
     '200':
@@ -226,12 +238,26 @@ operations:
           schema:
             $ref: '#/components/schemas/OAuthSessionCancelResponse'
       description: Successful Response
+- method: DELETE
+  path: /api/providers/oauth/{provider_id}
+  x-source: hermes_cli/web_routers/oauth.py:744
+  x-handler-hash: 3c038104d39b51d675ec6a6f058f2f4eedf32516e3c786000e7ec123f3172918
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: OAuthDisconnectResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OAuthDisconnectResponse'
+      description: Successful Response
 - method: GET
   path: /api/providers/oauth
-  x-source: hermes_cli/web_routers/oauth.py:619
+  x-source: hermes_cli/web_routers/oauth.py:688
   x-handler-hash: 7db275b51f0b9a3906f88b3b4b1dc8e9a2d2d60d05ecd037a8b2326ac7f72153
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OAuthProviderListResponse
   responses:
     '200':
@@ -242,10 +268,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/providers/oauth/{provider_id}/poll/{session_id}
-  x-source: hermes_cli/web_routers/oauth.py:751
+  x-source: hermes_cli/web_routers/oauth.py:873
   x-handler-hash: 28dd787a5bc480878a21c89c5b9382ba1a4c9a7a316a9f7f516a8abbb7e3239c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OAuthSessionPollResponse
   responses:
     '200':
@@ -256,10 +282,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/providers/oauth/{provider_id}/start
-  x-source: hermes_cli/web_routers/oauth.py:720
-  x-handler-hash: aa7f4de1b4eb597b57bf923c8c0984fd2e92b1134cfd1bcc153dc889c0461e4a
+  x-source: hermes_cli/web_routers/oauth.py:811
+  x-handler-hash: 9999adb4183d7720bf46b020f02be3c7e38d03ce379657ab41010d7ead41af8e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OAuthDeviceCodeStartResponse
   responses:
     '200':

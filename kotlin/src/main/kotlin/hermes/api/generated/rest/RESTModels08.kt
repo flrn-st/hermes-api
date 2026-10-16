@@ -9,6 +9,115 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.subscribe_home`` / ``unsubscribe_home``. */
+@Serializable
+public data class KanbanHomeSubscriptionResponse(
+    @SerialName("home_channel")
+    public val homeChannel: KanbanHomeChannel,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("task_id")
+    public val taskId: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.add_link``; ``gated`` = the link demoted a ready child back to ``todo``. */
+@Serializable
+public data class KanbanLinkAddResponse(
+    @SerialName("gated")
+    public val gated: Boolean,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class KanbanLinkCounts(
+    @SerialName("children")
+    public val children: Long,
+    @SerialName("parents")
+    public val parents: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api._link_tasks`` row. */
+@Serializable
+public data class KanbanLinkedTask(
+    @SerialName("id")
+    public val id: String,
+    @SerialName("status")
+    public val status: String,
+    @SerialName("title")
+    public val title: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class KanbanModelOptionProvider(
+    @SerialName("label")
+    public val label: String,
+    @SerialName("models")
+    public val models: List<String>,
+    @SerialName("slug")
+    public val slug: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.model_options``; ``providers`` is ``[]`` when the catalog fails to load. */
+@Serializable
+public data class KanbanModelOptionsResponse(
+    @SerialName("providers")
+    public val providers: List<KanbanModelOptionProvider>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.get_orchestration_settings`` (PUT returns the same); an unset profile is ``""`` while its ``resolved_*`` twin falls back to ``active_profile``. */
+@Serializable
+public data class KanbanOrchestrationResponse(
+    @SerialName("active_profile")
+    public val activeProfile: String,
+    @SerialName("auto_decompose")
+    public val autoDecompose: Boolean,
+    @SerialName("auto_promote_children")
+    public val autoPromoteChildren: Boolean,
+    @SerialName("default_assignee")
+    public val defaultAssignee: String,
+    @SerialName("orchestrator_profile")
+    public val orchestratorProfile: String,
+    @SerialName("resolved_default_assignee")
+    public val resolvedDefaultAssignee: String,
+    @SerialName("resolved_orchestrator_profile")
+    public val resolvedOrchestratorProfile: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.list_profile_roster`` row; empty strings for unset fields. */
+@Serializable
+public data class KanbanProfile(
+    @SerialName("description")
+    public val description: String,
+    @SerialName("description_auto")
+    public val descriptionAuto: Boolean,
+    @SerialName("is_default")
+    public val isDefault: Boolean,
+    @SerialName("model")
+    public val model: String,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("provider")
+    public val provider: String,
+    @SerialName("skill_count")
+    public val skillCount: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.auto_describe_profile`` (``profile_describer.DescribeOutcome``); non-OK is 200. */
+@Serializable
+public data class KanbanProfileAutoDescribeResponse(
+    @SerialName("description")
+    public val description: String?,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("profile")
+    public val profile: String,
+    @SerialName("reason")
+    public val reason: String,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.update_profile_description``; ``profile`` is the canonical name. */
 @Serializable
 public data class KanbanProfileDescriptionResponse(
@@ -200,11 +309,14 @@ public data class KanbanTask(
     @SerialName("consecutive_failures")
     public val consecutiveFailures: Long,
     @SerialName("created_at")
-    public val createdAt: Long,
+    public val createdAt: Long?,
     @SerialName("created_by")
     public val createdBy: String?,
     @SerialName("current_run_id")
     public val currentRunId: Long?,
+    /** Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start). */
+    @SerialName("current_run_started_at")
+    public val currentRunStartedAt: Long?,
     @SerialName("current_step_key")
     public val currentStepKey: String?,
     @SerialName("goal_max_turns")
@@ -284,7 +396,6 @@ public data class KanbanTaskAge(
 public data class KanbanTaskCreateResponse(
     @SerialName("task")
     public val task: KanbanTask?,
-    /** Present only when a ready, assigned task has no running dispatcher. */
     @SerialName("warning")
     public val warning: String? = null,
 )
@@ -393,14 +504,16 @@ public data class KanbanTaskWithDiagnostics(
     @SerialName("consecutive_failures")
     public val consecutiveFailures: Long,
     @SerialName("created_at")
-    public val createdAt: Long,
+    public val createdAt: Long?,
     @SerialName("created_by")
     public val createdBy: String?,
     @SerialName("current_run_id")
     public val currentRunId: Long?,
+    /** Start of the run ``current_run_id`` points at (``started_at`` is the first-ever start). */
+    @SerialName("current_run_started_at")
+    public val currentRunStartedAt: Long?,
     @SerialName("current_step_key")
     public val currentStepKey: String?,
-    /** Present only when the task has active diagnostics (never empty, never null). */
     @SerialName("diagnostics")
     public val diagnostics: List<KanbanDiagnostic>? = null,
     @SerialName("goal_max_turns")
@@ -513,269 +626,26 @@ public sealed interface KanbanWarningsSummaryHighestSeverity {
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``kanban_workflow.Column``: board order is list order. */
 @Serializable
-public data class LearningGraphCluster(
-    @SerialName("category")
-    public val category: String,
-    @SerialName("count")
-    public val count: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class LearningGraphEdge(
-    @SerialName("source")
-    public val source: String,
-    @SerialName("target")
-    public val target: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``agent/learning_graph.py::_memory_cards``: one non-empty ``\n§\n`` chunk of ``MEMORY.md`` (``memory``) or ``USER.md`` (``profile``); ``body`` is truncated to 1200 characters. */
-@Serializable
-public data class LearningGraphMemoryCard(
-    @SerialName("body")
-    public val body: String,
-    @SerialName("source")
-    public val source: LearningGraphMemoryCardSource,
-    @SerialName("timestamp")
-    public val timestamp: Long?,
-    @SerialName("title")
-    public val title: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = LearningGraphMemoryCardSource.Serializer::class)
-public sealed interface LearningGraphMemoryCardSource {
-    public data object Memory : LearningGraphMemoryCardSource
-    public data object Profile : LearningGraphMemoryCardSource
-    public data class Unknown(public val raw: kotlin.String) : LearningGraphMemoryCardSource
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Memory -> "memory"
-            Profile -> "profile"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): LearningGraphMemoryCardSource = when (raw) {
-            "memory" -> Memory
-            "profile" -> Profile
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<LearningGraphMemoryCardSource> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphMemoryCardSource", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): LearningGraphMemoryCardSource = when (val raw = decoder.decodeString()) {
-            "memory" -> Memory
-            "profile" -> Profile
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningGraphMemoryCardSource value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: LearningGraphMemoryCardSource) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A learned skill or a memory card; ``memorySource`` only on memory nodes. */
-@Serializable
-public data class LearningGraphNode(
-    @SerialName("category")
-    public val category: String,
-    @SerialName("createdBy")
-    public val createdBy: String?,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("kind")
-    public val kind: LearningGraphNodeKind,
+public data class KanbanWorkflowColumn(
+    @SerialName("drag_target")
+    public val dragTarget: Boolean,
+    @SerialName("icon")
+    public val icon: String,
+    @SerialName("key")
+    public val key: String,
     @SerialName("label")
     public val label: String,
-    @SerialName("memorySource")
-    public val memorySource: LearningGraphNodeMemorySource? = null,
-    @SerialName("pinned")
-    public val pinned: Boolean,
-    @SerialName("state")
-    public val state: String,
-    @SerialName("timestamp")
-    public val timestamp: Long?,
-    @SerialName("useCount")
-    public val useCount: Long,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = LearningGraphNodeKind.Serializer::class)
-public sealed interface LearningGraphNodeKind {
-    public data object Skill : LearningGraphNodeKind
-    public data object Memory : LearningGraphNodeKind
-    public data class Unknown(public val raw: kotlin.String) : LearningGraphNodeKind
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Skill -> "skill"
-            Memory -> "memory"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): LearningGraphNodeKind = when (raw) {
-            "skill" -> Skill
-            "memory" -> Memory
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<LearningGraphNodeKind> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphNodeKind", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): LearningGraphNodeKind = when (val raw = decoder.decodeString()) {
-            "skill" -> Skill
-            "memory" -> Memory
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningGraphNodeKind value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: LearningGraphNodeKind) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = LearningGraphNodeMemorySource.Serializer::class)
-public sealed interface LearningGraphNodeMemorySource {
-    public data object Memory : LearningGraphNodeMemorySource
-    public data object Profile : LearningGraphNodeMemorySource
-    public data class Unknown(public val raw: kotlin.String) : LearningGraphNodeMemorySource
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Memory -> "memory"
-            Profile -> "profile"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): LearningGraphNodeMemorySource = when (raw) {
-            "memory" -> Memory
-            "profile" -> Profile
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<LearningGraphNodeMemorySource> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LearningGraphNodeMemorySource", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): LearningGraphNodeMemorySource = when (val raw = decoder.decodeString()) {
-            "memory" -> Memory
-            "profile" -> Profile
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected LearningGraphNodeMemorySource value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: LearningGraphNodeMemorySource) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``agent/learning_graph.py::build_learning_graph``. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``plugin_api.get_workflow``: ``kanban_workflow.Workflow.to_dict()`` of the default workflow. ``manual`` maps a source column key (or ``archived``) to the column keys a human may move to. */
 @Serializable
-public data class LearningGraphResponse(
-    @SerialName("clusters")
-    public val clusters: List<LearningGraphCluster>,
-    @SerialName("edges")
-    public val edges: List<LearningGraphEdge>,
-    @SerialName("memory")
-    public val memory: List<LearningGraphMemoryCard>,
-    @SerialName("nodes")
-    public val nodes: List<LearningGraphNode>,
-    @SerialName("stats")
-    public val stats: LearningGraphStats,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``agent/learning_graph.py::density_stats`` plus the memory counts. */
-@Serializable
-public data class LearningGraphStats(
-    @SerialName("agent_created")
-    public val agentCreated: Long,
-    @SerialName("categories")
-    public val categories: Long,
-    @SerialName("edges_per_node")
-    public val edgesPerNode: Double,
-    @SerialName("isolated_pct")
-    public val isolatedPct: Double,
-    @SerialName("learned_skills")
-    public val learnedSkills: Long,
-    @SerialName("linked_nodes")
-    public val linkedNodes: Long,
-    @SerialName("memory_nodes")
-    public val memoryNodes: Long,
-    @SerialName("memory_skill_edges")
-    public val memorySkillEdges: Long,
-    @SerialName("nodes")
-    public val nodes: Long,
-    @SerialName("related_edges")
-    public val relatedEdges: Long,
-    /** Up to 8 ``[category, count]`` pairs. */
-    @SerialName("top_categories")
-    public val topCategories: List<LearningGraphStatsTopCategoriesItem>,
-    @SerialName("used")
-    public val used: Long,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A JSON array of exactly 2 items. */
-@Serializable(with = LearningGraphStatsTopCategoriesItem.Serializer::class)
-public data class LearningGraphStatsTopCategoriesItem(
-    public val item0: String,
-    public val item1: Long,
-) {
-    public object Serializer : KSerializer<LearningGraphStatsTopCategoriesItem> {
-        override val descriptor: SerialDescriptor = JsonArray.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): LearningGraphStatsTopCategoriesItem {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("LearningGraphStatsTopCategoriesItem requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonArray
-                ?: throw SerializationException("LearningGraphStatsTopCategoriesItem requires an array")
-            if (input.size != 2) throw SerializationException("LearningGraphStatsTopCategoriesItem requires 2 items")
-            return LearningGraphStatsTopCategoriesItem(
-                json.decodeFromJsonElement<String>(input[0]),
-                json.decodeFromJsonElement<Long>(input[1]),
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: LearningGraphStatsTopCategoriesItem) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("LearningGraphStatsTopCategoriesItem requires JSON")
-            val json = jsonEncoder.json
-            jsonEncoder.encodeJsonElement(JsonArray(listOf(
-                json.encodeToJsonElement(value.item0),
-                json.encodeToJsonElement(value.item1),
-            )))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``agent/learning_mutations.py::node_detail`` (the non-ok results become a 404). */
-@Serializable
-public data class LearningNodeDetailResponse(
-    @SerialName("content")
-    public val content: String,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("kind")
-    public val kind: LearningNodeDetailResponseKind,
-    @SerialName("label")
-    public val label: String,
-    @SerialName("ok")
-    public val ok: Boolean,
+public data class KanbanWorkflowResponse(
+    @SerialName("archived")
+    public val archived: KanbanWorkflowResponseArchived,
+    @SerialName("columns")
+    public val columns: List<KanbanWorkflowColumn>,
+    @SerialName("manual")
+    public val manual: Map<String, List<String>>,
 )

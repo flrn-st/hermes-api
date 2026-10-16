@@ -47,6 +47,7 @@ public class RESTMethodCatalog(private val caller: RESTCaller) {
     public val profiles: ProfilesRESTMethods = ProfilesRESTMethods(caller)
     public val providers: ProvidersRESTMethods = ProvidersRESTMethods(caller)
     public val sessions: SessionsRESTMethods = SessionsRESTMethods(caller)
+    public val sharedMetrics: SharedMetricsRESTMethods = SharedMetricsRESTMethods(caller)
     public val skills: SkillsRESTMethods = SkillsRESTMethods(caller)
     public val ssh: SshRESTMethods = SshRESTMethods(caller)
     public val status: StatusRESTMethods = StatusRESTMethods(caller)
@@ -114,6 +115,15 @@ public class AudioRESTMethods(private val caller: RESTCaller) {
         }
         val response = caller.send(RESTRequest("POST", "/api/audio/speak", query, caller.json.encodeToString(serializer<TTSSpeakRequest>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<AudioSpeakResponse>(), 200)
+    }
+
+    /** `POST /api/audio/stt-lease` */
+    public suspend fun sttLease(body: STTLeaseRequest, profile: String? = null): SttLeaseResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
+        val response = caller.send(RESTRequest("POST", "/api/audio/stt-lease", query, caller.json.encodeToString(serializer<STTLeaseRequest>(), body).encodeToByteArray(), "application/json"))
+        return response.json(caller.json, serializer<SttLeaseResponse>(), 200)
     }
 
     /** `POST /api/audio/transcribe` */
@@ -520,8 +530,10 @@ public class DashboardRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `GET /api/dashboard/plugins/hub` */
-    public suspend fun pluginsHub(): PluginsHubResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun pluginsHub(profile: String? = null): PluginsHubResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/dashboard/plugins/hub", query))
         return response.json(caller.json, serializer<PluginsHubResponse>(), 200)
     }
@@ -700,8 +712,10 @@ public class FilesRESTMethods(private val caller: RESTCaller) {
 
 public class FsRESTMethods(private val caller: RESTCaller) {
     /** `GET /api/fs/default-cwd` */
-    public suspend fun defaultCwd(): FsDefaultCwdResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun defaultCwd(profile: String? = null): FsDefaultCwdResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/fs/default-cwd", query))
         return response.json(caller.json, serializer<FsDefaultCwdResponse>(), 200)
     }
@@ -718,18 +732,20 @@ public class FsRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `GET /api/fs/git-root` */
-    public suspend fun gitRoot(path: String): FsGitRootResponse {
+    public suspend fun gitRoot(path: String, profile: String? = null): FsGitRootResponse {
         val query = buildMap<String, String> {
             put("path", path)
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/fs/git-root", query))
         return response.json(caller.json, serializer<FsGitRootResponse>(), 200)
     }
 
     /** `GET /api/fs/list` */
-    public suspend fun list(path: String): FsListResponse {
+    public suspend fun list(path: String, profile: String? = null): FsListResponse {
         val query = buildMap<String, String> {
             put("path", path)
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/fs/list", query))
         return response.json(caller.json, serializer<FsListResponse>(), 200)
@@ -747,17 +763,20 @@ public class FsRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `GET /api/fs/read-text` */
-    public suspend fun readText(path: String): FsReadTextResponse {
+    public suspend fun readText(path: String, profile: String? = null): FsReadTextResponse {
         val query = buildMap<String, String> {
             put("path", path)
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/fs/read-text", query))
         return response.json(caller.json, serializer<FsReadTextResponse>(), 200)
     }
 
     /** `POST /api/fs/write-text` */
-    public suspend fun writeText(body: FsWriteText): FsWriteTextResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun writeText(body: FsWriteText, profile: String? = null): FsWriteTextResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/fs/write-text", query, caller.json.encodeToString(serializer<FsWriteText>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<FsWriteTextResponse>(), 200)
     }
@@ -1043,43 +1062,55 @@ public class HermesRESTMethods(private val caller: RESTCaller) {
 
 public class HermesAchievementsRESTMethods(private val caller: RESTCaller) {
     /** `GET /api/plugins/hermes-achievements/achievements` */
-    public suspend fun achievements(): AchievementsResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun achievements(profile: String? = null): AchievementsResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/hermes-achievements/achievements", query))
         return response.json(caller.json, serializer<AchievementsResponse>(), 200)
     }
 
     /** `GET /api/plugins/hermes-achievements/recent-unlocks` */
-    public suspend fun recentUnlocks(): List<AchievementItem> {
-        val query = emptyMap<String, String>()
+    public suspend fun recentUnlocks(profile: String? = null): List<AchievementItem> {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/hermes-achievements/recent-unlocks", query))
         return response.json(caller.json, serializer<List<AchievementItem>>(), 200)
     }
 
     /** `POST /api/plugins/hermes-achievements/rescan` */
-    public suspend fun rescan(): AchievementRescanResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun rescan(profile: String? = null): AchievementRescanResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/hermes-achievements/rescan", query))
         return response.json(caller.json, serializer<AchievementRescanResponse>(), 200)
     }
 
     /** `POST /api/plugins/hermes-achievements/reset-state` */
-    public suspend fun resetState(): AchievementResetResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun resetState(profile: String? = null): AchievementResetResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/hermes-achievements/reset-state", query))
         return response.json(caller.json, serializer<AchievementResetResponse>(), 200)
     }
 
     /** `GET /api/plugins/hermes-achievements/scan-status` */
-    public suspend fun scanStatus(): AchievementScanStatus {
-        val query = emptyMap<String, String>()
+    public suspend fun scanStatus(profile: String? = null): AchievementScanStatus {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/hermes-achievements/scan-status", query))
         return response.json(caller.json, serializer<AchievementScanStatus>(), 200)
     }
 
     /** `GET /api/plugins/hermes-achievements/sessions/{session_id}/badges` */
-    public suspend fun sessionsBadges(sessionId: String): AchievementSessionBadgesResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun sessionsBadges(sessionId: String, profile: String? = null): AchievementSessionBadgesResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/hermes-achievements/sessions/${RESTPath.segment(sessionId)}/badges", query))
         return response.json(caller.json, serializer<AchievementSessionBadgesResponse>(), 200)
     }
@@ -1096,272 +1127,317 @@ public class HostRESTMethods(private val caller: RESTCaller) {
 
 public class KanbanRESTMethods(private val caller: RESTCaller) {
     /** `GET /api/plugins/kanban/assignees` */
-    public suspend fun assignees(board: String? = null): KanbanAssigneesResponse {
+    public suspend fun assignees(board: String? = null, profile: String? = null): KanbanAssigneesResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/assignees", query))
         return response.json(caller.json, serializer<KanbanAssigneesResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/attachments/{attachment_id}` */
-    public suspend fun attachments(attachmentId: Long, board: String? = null): RESTBinary {
+    public suspend fun attachments(attachmentId: Long, board: String? = null, profile: String? = null): RESTBinary {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/attachments/${RESTPath.segment(attachmentId.toString())}", query))
         return response.binary(200)
     }
 
     /** `GET /api/plugins/kanban/board` */
-    public suspend fun board(tenant: String? = null, includeArchived: Boolean? = null, board: String? = null, workflowTemplateId: String? = null, currentStepKey: String? = null): KanbanBoardResponse {
+    public suspend fun board(tenant: String? = null, includeArchived: Boolean? = null, board: String? = null, workflowTemplateId: String? = null, currentStepKey: String? = null, profile: String? = null): KanbanBoardResponse {
         val query = buildMap<String, String> {
             tenant?.let { put("tenant", it) }
             includeArchived?.let { put("include_archived", it.toString()) }
             board?.let { put("board", it) }
             workflowTemplateId?.let { put("workflow_template_id", it) }
             currentStepKey?.let { put("current_step_key", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/board", query))
         return response.json(caller.json, serializer<KanbanBoardResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/boards` */
-    public suspend fun boards(includeArchived: Boolean? = null): KanbanBoardListResponse {
+    public suspend fun boards(includeArchived: Boolean? = null, profile: String? = null): KanbanBoardListResponse {
         val query = buildMap<String, String> {
             includeArchived?.let { put("include_archived", it.toString()) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/boards", query))
         return response.json(caller.json, serializer<KanbanBoardListResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/boards/{slug}/export` */
-    public suspend fun boardsExport(slug: String, body: ExportBoardBody): KanbanBoardExportResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun boardsExport(slug: String, body: ExportBoardBody, profile: String? = null): KanbanBoardExportResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/boards/${RESTPath.segment(slug)}/export", query, caller.json.encodeToString(serializer<ExportBoardBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanBoardExportResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/boards/import` */
-    public suspend fun boardsImport(body: ImportBoardBody): KanbanBoardImportResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun boardsImport(body: ImportBoardBody, profile: String? = null): KanbanBoardImportResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/boards/import", query, caller.json.encodeToString(serializer<ImportBoardBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanBoardImportResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/boards/{slug}/switch` */
-    public suspend fun boardsSwitch(slug: String): KanbanBoardSwitchResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun boardsSwitch(slug: String, profile: String? = null): KanbanBoardSwitchResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/boards/${RESTPath.segment(slug)}/switch", query))
         return response.json(caller.json, serializer<KanbanBoardSwitchResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/config` */
-    public suspend fun config(): KanbanDashboardConfigResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun config(profile: String? = null): KanbanDashboardConfigResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/config", query))
         return response.json(caller.json, serializer<KanbanDashboardConfigResponse>(), 200)
     }
 
     /** `DELETE /api/plugins/kanban/attachments/{attachment_id}` */
-    public suspend fun deleteAttachments(attachmentId: Long, board: String? = null): KanbanAttachmentDeleteResponse {
+    public suspend fun deleteAttachments(attachmentId: Long, board: String? = null, profile: String? = null): KanbanAttachmentDeleteResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("DELETE", "/api/plugins/kanban/attachments/${RESTPath.segment(attachmentId.toString())}", query))
         return response.json(caller.json, serializer<KanbanAttachmentDeleteResponse>(), 200)
     }
 
     /** `DELETE /api/plugins/kanban/boards/{slug}` */
-    public suspend fun deleteBoards(slug: String, delete: Boolean? = null): KanbanBoardDeleteResponse {
+    public suspend fun deleteBoards(slug: String, delete: Boolean? = null, profile: String? = null): KanbanBoardDeleteResponse {
         val query = buildMap<String, String> {
             delete?.let { put("delete", it.toString()) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("DELETE", "/api/plugins/kanban/boards/${RESTPath.segment(slug)}", query))
         return response.json(caller.json, serializer<KanbanBoardDeleteResponse>(), 200)
     }
 
     /** `DELETE /api/plugins/kanban/links` */
-    public suspend fun deleteLinks(parentId: String, childId: String, board: String? = null): OkResponse {
+    public suspend fun deleteLinks(parentId: String, childId: String, board: String? = null, profile: String? = null): OkResponse {
         val query = buildMap<String, String> {
             put("parent_id", parentId)
             put("child_id", childId)
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("DELETE", "/api/plugins/kanban/links", query))
         return response.json(caller.json, serializer<OkResponse>(), 200)
     }
 
     /** `DELETE /api/plugins/kanban/tasks/{task_id}` */
-    public suspend fun deleteTasks(taskId: String, board: String? = null): KanbanTaskDeleteResponse {
+    public suspend fun deleteTasks(taskId: String, board: String? = null, profile: String? = null): KanbanTaskDeleteResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("DELETE", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}", query))
         return response.json(caller.json, serializer<KanbanTaskDeleteResponse>(), 200)
     }
 
     /** `DELETE /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}` */
-    public suspend fun deleteTasksHomeSubscribe(taskId: String, platform: String, board: String? = null): KanbanHomeSubscriptionResponse {
+    public suspend fun deleteTasksHomeSubscribe(taskId: String, platform: String, board: String? = null, profile: String? = null): KanbanHomeSubscriptionResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("DELETE", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/home-subscribe/${RESTPath.segment(platform)}", query))
         return response.json(caller.json, serializer<KanbanHomeSubscriptionResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/diagnostics` */
-    public suspend fun diagnostics(board: String? = null, severity: String? = null): KanbanDiagnosticsResponse {
+    public suspend fun diagnostics(board: String? = null, severity: String? = null, profile: String? = null): KanbanDiagnosticsResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
             severity?.let { put("severity", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/diagnostics", query))
         return response.json(caller.json, serializer<KanbanDiagnosticsResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/dispatch` */
-    public suspend fun dispatch(dryRun: Boolean? = null, max: Long? = null, board: String? = null): KanbanDispatchResponse {
+    public suspend fun dispatch(dryRun: Boolean? = null, max: Long? = null, board: String? = null, profile: String? = null): KanbanDispatchResponse {
         val query = buildMap<String, String> {
             dryRun?.let { put("dry_run", it.toString()) }
             max?.let { put("max", it.toString()) }
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/dispatch", query))
         return response.json(caller.json, serializer<KanbanDispatchResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/estimate` */
-    public suspend fun estimate(body: EstimateBody): KanbanEstimateResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun estimate(body: EstimateBody, profile: String? = null): KanbanEstimateResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/estimate", query, caller.json.encodeToString(serializer<EstimateBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanEstimateResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/home-channels` */
-    public suspend fun homeChannels(taskId: String? = null, board: String? = null): KanbanHomeChannelsResponse {
+    public suspend fun homeChannels(taskId: String? = null, board: String? = null, profile: String? = null): KanbanHomeChannelsResponse {
         val query = buildMap<String, String> {
             taskId?.let { put("task_id", it) }
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/home-channels", query))
         return response.json(caller.json, serializer<KanbanHomeChannelsResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/links` */
-    public suspend fun links(body: LinkBody, board: String? = null): KanbanLinkAddResponse {
+    public suspend fun links(body: LinkBody, board: String? = null, profile: String? = null): KanbanLinkAddResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/links", query, caller.json.encodeToString(serializer<LinkBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanLinkAddResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/model-options` */
-    public suspend fun modelOptions(): KanbanModelOptionsResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun modelOptions(profile: String? = null): KanbanModelOptionsResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/model-options", query))
         return response.json(caller.json, serializer<KanbanModelOptionsResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/orchestration` */
-    public suspend fun orchestration(): KanbanOrchestrationResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun orchestration(profile: String? = null): KanbanOrchestrationResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/orchestration", query))
         return response.json(caller.json, serializer<KanbanOrchestrationResponse>(), 200)
     }
 
     /** `PATCH /api/plugins/kanban/boards/{slug}` */
-    public suspend fun patchBoards(slug: String, body: RenameBoardBody): KanbanBoardUpdateResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun patchBoards(slug: String, body: RenameBoardBody, profile: String? = null): KanbanBoardUpdateResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("PATCH", "/api/plugins/kanban/boards/${RESTPath.segment(slug)}", query, caller.json.encodeToString(serializer<RenameBoardBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanBoardUpdateResponse>(), 200)
     }
 
     /** `PATCH /api/plugins/kanban/profiles/{profile_name}` */
-    public suspend fun patchProfiles(profileName: String, body: DescribeBody): KanbanProfileDescriptionResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun patchProfiles(profileName: String, body: DescribeBody, profile: String? = null): KanbanProfileDescriptionResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("PATCH", "/api/plugins/kanban/profiles/${RESTPath.segment(profileName)}", query, caller.json.encodeToString(serializer<DescribeBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanProfileDescriptionResponse>(), 200)
     }
 
     /** `PATCH /api/plugins/kanban/tasks/{task_id}` */
-    public suspend fun patchTasks(taskId: String, body: UpdateTaskBody, board: String? = null): KanbanTaskUpdateResponse {
+    public suspend fun patchTasks(taskId: String, body: UpdateTaskBody, board: String? = null, profile: String? = null): KanbanTaskUpdateResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("PATCH", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}", query, caller.json.encodeToString(serializer<UpdateTaskBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanTaskUpdateResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/profiles` */
-    public suspend fun profiles(): KanbanProfilesResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun profiles(profile: String? = null): KanbanProfilesResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/profiles", query))
         return response.json(caller.json, serializer<KanbanProfilesResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/profiles/{profile_name}/describe-auto` */
-    public suspend fun profilesDescribeAuto(profileName: String, body: DescribeAutoBody): KanbanProfileAutoDescribeResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun profilesDescribeAuto(profileName: String, body: DescribeAutoBody, profile: String? = null): KanbanProfileAutoDescribeResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/profiles/${RESTPath.segment(profileName)}/describe-auto", query, caller.json.encodeToString(serializer<DescribeAutoBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanProfileAutoDescribeResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/projects` */
-    public suspend fun projects(): KanbanProjectsResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun projects(profile: String? = null): KanbanProjectsResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/projects", query))
         return response.json(caller.json, serializer<KanbanProjectsResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/runs/{run_id}` */
-    public suspend fun runs(runId: Long, board: String? = null): KanbanRunResponse {
+    public suspend fun runs(runId: Long, board: String? = null, profile: String? = null): KanbanRunResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/runs/${RESTPath.segment(runId.toString())}", query))
         return response.json(caller.json, serializer<KanbanRunResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/runs/{run_id}/inspect` */
-    public suspend fun runsInspect(runId: Long, board: String? = null): KanbanRunInspectResponse {
+    public suspend fun runsInspect(runId: Long, board: String? = null, profile: String? = null): KanbanRunInspectResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/runs/${RESTPath.segment(runId.toString())}/inspect", query))
         return response.json(caller.json, serializer<KanbanRunInspectResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/runs/{run_id}/terminate` */
-    public suspend fun runsTerminate(runId: Long, body: TerminateRunBody, board: String? = null): KanbanRunTerminateResponse {
+    public suspend fun runsTerminate(runId: Long, body: TerminateRunBody, board: String? = null, profile: String? = null): KanbanRunTerminateResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/runs/${RESTPath.segment(runId.toString())}/terminate", query, caller.json.encodeToString(serializer<TerminateRunBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanRunTerminateResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/boards` */
-    public suspend fun setBoards(body: CreateBoardBody): KanbanBoardCreateResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun setBoards(body: CreateBoardBody, profile: String? = null): KanbanBoardCreateResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/boards", query, caller.json.encodeToString(serializer<CreateBoardBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanBoardCreateResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks` */
-    public suspend fun setTasks(body: CreateTaskBody, board: String? = null): KanbanTaskCreateResponse {
+    public suspend fun setTasks(body: CreateTaskBody, board: String? = null, profile: String? = null): KanbanTaskCreateResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks", query, caller.json.encodeToString(serializer<CreateTaskBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanTaskCreateResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/attachments` */
-    public suspend fun setTasksAttachments(taskId: String, file: RESTFile, board: String? = null, uploadedBy: String? = null): KanbanAttachmentUploadResponse {
+    public suspend fun setTasksAttachments(taskId: String, file: RESTFile, board: String? = null, profile: String? = null, uploadedBy: String? = null): KanbanAttachmentUploadResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val form = RESTMultipart()
         form.file("file", file)
@@ -1371,74 +1447,82 @@ public class KanbanRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `GET /api/plugins/kanban/stats` */
-    public suspend fun stats(board: String? = null): KanbanStatsResponse {
+    public suspend fun stats(board: String? = null, profile: String? = null): KanbanStatsResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/stats", query))
         return response.json(caller.json, serializer<KanbanStatsResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/tasks/{task_id}` */
-    public suspend fun tasks(taskId: String, board: String? = null, runStateType: String? = null, runStateName: String? = null): KanbanTaskDetailResponse {
+    public suspend fun tasks(taskId: String, board: String? = null, runStateType: String? = null, runStateName: String? = null, profile: String? = null): KanbanTaskDetailResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
             runStateType?.let { put("run_state_type", it) }
             runStateName?.let { put("run_state_name", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}", query))
         return response.json(caller.json, serializer<KanbanTaskDetailResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/tasks/{task_id}/attachments` */
-    public suspend fun tasksAttachments(taskId: String, board: String? = null): KanbanAttachmentListResponse {
+    public suspend fun tasksAttachments(taskId: String, board: String? = null, profile: String? = null): KanbanAttachmentListResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/attachments", query))
         return response.json(caller.json, serializer<KanbanAttachmentListResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/bulk` */
-    public suspend fun tasksBulk(body: BulkTaskBody, board: String? = null): KanbanBulkUpdateResponse {
+    public suspend fun tasksBulk(body: BulkTaskBody, board: String? = null, profile: String? = null): KanbanBulkUpdateResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/bulk", query, caller.json.encodeToString(serializer<BulkTaskBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanBulkUpdateResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/comments` */
-    public suspend fun tasksComments(taskId: String, body: CommentBody, board: String? = null): OkResponse {
+    public suspend fun tasksComments(taskId: String, body: CommentBody, board: String? = null, profile: String? = null): OkResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/comments", query, caller.json.encodeToString(serializer<CommentBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<OkResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/decompose` */
-    public suspend fun tasksDecompose(taskId: String, body: DecomposeBody, board: String? = null): KanbanDecomposeResponse {
+    public suspend fun tasksDecompose(taskId: String, body: DecomposeBody, board: String? = null, profile: String? = null): KanbanDecomposeResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/decompose", query, caller.json.encodeToString(serializer<DecomposeBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanDecomposeResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/estimate` */
-    public suspend fun tasksEstimate(taskId: String, board: String? = null): KanbanEstimateResponse {
+    public suspend fun tasksEstimate(taskId: String, board: String? = null, profile: String? = null): KanbanEstimateResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/estimate", query))
         return response.json(caller.json, serializer<KanbanEstimateResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/home-subscribe/{platform}` */
-    public suspend fun tasksHomeSubscribe(taskId: String, platform: String, board: String? = null): KanbanHomeSubscriptionResponse {
+    public suspend fun tasksHomeSubscribe(taskId: String, platform: String, board: String? = null, profile: String? = null): KanbanHomeSubscriptionResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/home-subscribe/${RESTPath.segment(platform)}", query))
         return response.json(caller.json, serializer<KanbanHomeSubscriptionResponse>(), 200)
@@ -1449,63 +1533,81 @@ public class KanbanRESTMethods(private val caller: RESTCaller) {
      *
      * @param tail 1 to 2000000.
      */
-    public suspend fun tasksLog(taskId: String, tail: Long? = null, board: String? = null): KanbanTaskLogResponse {
+    public suspend fun tasksLog(taskId: String, tail: Long? = null, board: String? = null, profile: String? = null): KanbanTaskLogResponse {
         val query = buildMap<String, String> {
             tail?.let { put("tail", it.toString()) }
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/log", query))
         return response.json(caller.json, serializer<KanbanTaskLogResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/reassign` */
-    public suspend fun tasksReassign(taskId: String, body: ReassignBody, board: String? = null): KanbanReassignResponse {
+    public suspend fun tasksReassign(taskId: String, body: ReassignBody, board: String? = null, profile: String? = null): KanbanReassignResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/reassign", query, caller.json.encodeToString(serializer<ReassignBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanReassignResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/reclaim` */
-    public suspend fun tasksReclaim(taskId: String, body: ReclaimBody, board: String? = null): KanbanTaskAckResponse {
+    public suspend fun tasksReclaim(taskId: String, body: ReclaimBody, board: String? = null, profile: String? = null): KanbanTaskAckResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/reclaim", query, caller.json.encodeToString(serializer<ReclaimBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanTaskAckResponse>(), 200)
     }
 
     /** `POST /api/plugins/kanban/tasks/{task_id}/specify` */
-    public suspend fun tasksSpecify(taskId: String, body: SpecifyBody, board: String? = null): KanbanSpecifyResponse {
+    public suspend fun tasksSpecify(taskId: String, body: SpecifyBody, board: String? = null, profile: String? = null): KanbanSpecifyResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("POST", "/api/plugins/kanban/tasks/${RESTPath.segment(taskId)}/specify", query, caller.json.encodeToString(serializer<SpecifyBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanSpecifyResponse>(), 200)
     }
 
     /** `PUT /api/plugins/kanban/orchestration` */
-    public suspend fun updateOrchestration(body: OrchestrationSettingsBody): KanbanOrchestrationResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun updateOrchestration(body: OrchestrationSettingsBody, profile: String? = null): KanbanOrchestrationResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("PUT", "/api/plugins/kanban/orchestration", query, caller.json.encodeToString(serializer<OrchestrationSettingsBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<KanbanOrchestrationResponse>(), 200)
     }
 
     /** `GET /api/plugins/kanban/workers/active` */
-    public suspend fun workersActive(board: String? = null): KanbanActiveWorkersResponse {
+    public suspend fun workersActive(board: String? = null, profile: String? = null): KanbanActiveWorkersResponse {
         val query = buildMap<String, String> {
             board?.let { put("board", it) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/workers/active", query))
         return response.json(caller.json, serializer<KanbanActiveWorkersResponse>(), 200)
+    }
+
+    /** `GET /api/plugins/kanban/workflow` */
+    public suspend fun workflow(profile: String? = null): KanbanWorkflowResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
+        val response = caller.send(RESTRequest("GET", "/api/plugins/kanban/workflow", query))
+        return response.json(caller.json, serializer<KanbanWorkflowResponse>(), 200)
     }
 }
 
 public class LearningRESTMethods(private val caller: RESTCaller) {
     /** `DELETE /api/learning/node` */
-    public suspend fun deleteNode(body: LearningNodeRef): LearningNodeMutationResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun deleteNode(body: LearningNodeRef, profile: String? = null): LearningNodeMutationResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("DELETE", "/api/learning/node", query, caller.json.encodeToString(serializer<LearningNodeRef>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<LearningNodeMutationResponse>(), 200)
     }
@@ -1530,8 +1632,10 @@ public class LearningRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `PUT /api/learning/node` */
-    public suspend fun updateNode(body: LearningNodeEdit): LearningNodeMutationResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun updateNode(body: LearningNodeEdit, profile: String? = null): LearningNodeMutationResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("PUT", "/api/learning/node", query, caller.json.encodeToString(serializer<LearningNodeEdit>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<LearningNodeMutationResponse>(), 200)
     }
@@ -1566,6 +1670,20 @@ public class LocalModelsRESTMethods(private val caller: RESTCaller) {
         val query = emptyMap<String, String>()
         val response = caller.send(RESTRequest("POST", "/api/local-models/download-browsed", query, caller.json.encodeToString(serializer<BrowsedDownloadBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<LocalModelsDownloadResponse>(), 200)
+    }
+
+    /** `POST /api/local-models/download/pause` */
+    public suspend fun downloadPause(body: JobIdBody): LocalModelsDownloadPauseResponse {
+        val query = emptyMap<String, String>()
+        val response = caller.send(RESTRequest("POST", "/api/local-models/download/pause", query, caller.json.encodeToString(serializer<JobIdBody>(), body).encodeToByteArray(), "application/json"))
+        return response.json(caller.json, serializer<LocalModelsDownloadPauseResponse>(), 200)
+    }
+
+    /** `POST /api/local-models/download/resume` */
+    public suspend fun downloadResume(body: JobIdBody): LocalModelsDownloadResumeResponse {
+        val query = emptyMap<String, String>()
+        val response = caller.send(RESTRequest("POST", "/api/local-models/download/resume", query, caller.json.encodeToString(serializer<JobIdBody>(), body).encodeToByteArray(), "application/json"))
+        return response.json(caller.json, serializer<LocalModelsDownloadResumeResponse>(), 200)
     }
 
     /** `POST /api/local-models/eject` */
@@ -1680,10 +1798,9 @@ public class LogsRESTMethods(private val caller: RESTCaller) {
 
 public class McpRESTMethods(private val caller: RESTCaller) {
     /** `GET /api/mcp/catalog` */
-    public suspend fun catalog(profile: String? = null, detectApps: Boolean? = null): McpCatalogResponse {
+    public suspend fun catalog(profile: String? = null): McpCatalogResponse {
         val query = buildMap<String, String> {
             profile?.let { put("profile", it) }
-            detectApps?.let { put("detect_apps", it.toString()) }
         }
         val response = caller.send(RESTRequest("GET", "/api/mcp/catalog", query))
         return response.json(caller.json, serializer<McpCatalogResponse>(), 200)
@@ -1795,6 +1912,15 @@ public class MediaRESTMethods(private val caller: RESTCaller) {
             put("path", path)
         }
         val response = caller.send(RESTRequest("GET", "/api/media", query))
+        return response.json(caller.json, serializer<MediaDataUrlResponse>(), 200)
+    }
+
+    /** `GET /api/media/proxy` */
+    public suspend fun proxy(url: String): MediaDataUrlResponse {
+        val query = buildMap<String, String> {
+            put("url", url)
+        }
+        val response = caller.send(RESTRequest("GET", "/api/media/proxy", query))
         return response.json(caller.json, serializer<MediaDataUrlResponse>(), 200)
     }
 }
@@ -2305,10 +2431,11 @@ public class ProfilesRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `GET /api/profiles/projects/tree` */
-    public suspend fun projectsTree(previewLimit: Long? = null, sessionLimit: Long? = null): ProfileProjectsTreeResponse {
+    public suspend fun projectsTree(previewLimit: Long? = null, sessionLimit: Long? = null, profile: String? = null): ProfileProjectsTreeResponse {
         val query = buildMap<String, String> {
             previewLimit?.let { put("preview_limit", it.toString()) }
             sessionLimit?.let { put("session_limit", it.toString()) }
+            profile?.let { put("profile", it) }
         }
         val response = caller.send(RESTRequest("GET", "/api/profiles/projects/tree", query))
         return response.json(caller.json, serializer<ProfileProjectsTreeResponse>(), 200)
@@ -2338,8 +2465,10 @@ public class ProfilesRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `POST /api/profiles/sessions/pull-requests` */
-    public suspend fun sessionsPullRequests(body: SessionPrScanBody): ProfileSessionPullRequestsResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun sessionsPullRequests(body: SessionPrScanBody, profile: String? = null): ProfileSessionPullRequestsResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/profiles/sessions/pull-requests", query, caller.json.encodeToString(serializer<SessionPrScanBody>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<ProfileSessionPullRequestsResponse>(), 200)
     }
@@ -2486,16 +2615,19 @@ public class ProvidersRESTMethods(private val caller: RESTCaller) {
 
 public class SessionsRESTMethods(private val caller: RESTCaller) {
     /** `POST /api/sessions/bulk-delete` */
-    public suspend fun bulkDelete(body: BulkDeleteSessions): SessionDeletedCountResponse {
+    public suspend fun bulkDelete(body: BulkDeleteSessions): SessionBulkDeleteResponse {
         val query = emptyMap<String, String>()
         val response = caller.send(RESTRequest("POST", "/api/sessions/bulk-delete", query, caller.json.encodeToString(serializer<BulkDeleteSessions>(), body).encodeToByteArray(), "application/json"))
-        return response.json(caller.json, serializer<SessionDeletedCountResponse>(), 200)
+        return response.json(caller.json, serializer<SessionBulkDeleteResponse>(), 200)
     }
 
     /** `DELETE /api/sessions/{session_id}` */
-    public suspend fun delete(sessionId: String, profile: String? = null): SessionDeleteResponse {
+    public suspend fun delete(sessionId: String, profile: String? = null, requestId: String? = null, expectedRevision: Long? = null, expectedGeneration: Long? = null): SessionDeleteResponse {
         val query = buildMap<String, String> {
             profile?.let { put("profile", it) }
+            requestId?.let { put("request_id", it) }
+            expectedRevision?.let { put("expected_revision", it.toString()) }
+            expectedGeneration?.let { put("expected_generation", it.toString()) }
         }
         val response = caller.send(RESTRequest("DELETE", "/api/sessions/${RESTPath.segment(sessionId)}", query))
         return response.json(caller.json, serializer<SessionDeleteResponse>(), 200)
@@ -2583,13 +2715,14 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
      * @param limit at least 0.
      * @param offset at least 0.
      */
-    public suspend fun messages(sessionId: String, profile: String? = null, limit: Long? = null, offset: Long? = null, order: String? = null, includeCompacted: Boolean? = null): SessionMessagesResponse {
+    public suspend fun messages(sessionId: String, profile: String? = null, limit: Long? = null, offset: Long? = null, order: String? = null, includeCompacted: Boolean? = null, inlineImages: Boolean? = null): SessionMessagesResponse {
         val query = buildMap<String, String> {
             profile?.let { put("profile", it) }
             limit?.let { put("limit", it.toString()) }
             offset?.let { put("offset", it.toString()) }
             order?.let { put("order", it) }
             includeCompacted?.let { put("include_compacted", it.toString()) }
+            inlineImages?.let { put("inline_images", it.toString()) }
         }
         val response = caller.send(RESTRequest("GET", "/api/sessions/${RESTPath.segment(sessionId)}/messages", query))
         return response.json(caller.json, serializer<SessionMessagesResponse>(), 200)
@@ -2609,6 +2742,15 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
         }
         val response = caller.send(RESTRequest("GET", "/api/sessions/${RESTPath.segment(sessionId)}/messages/around", query))
         return response.json(caller.json, serializer<SessionMessagesAroundResponse>(), 200)
+    }
+
+    /** `GET /api/sessions/{session_id}/mutation-snapshot` */
+    public suspend fun mutationSnapshot(sessionId: String, profile: String? = null): SessionMutationSnapshotResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
+        val response = caller.send(RESTRequest("GET", "/api/sessions/${RESTPath.segment(sessionId)}/mutation-snapshot", query))
+        return response.json(caller.json, serializer<SessionMutationSnapshotResponse>(), 200)
     }
 
     /** `POST /api/sessions/owner-backfill` */
@@ -2672,6 +2814,26 @@ public class SessionsRESTMethods(private val caller: RESTCaller) {
     }
 }
 
+public class SharedMetricsRESTMethods(private val caller: RESTCaller) {
+    /** `GET /api/shared-metrics/consent` */
+    public suspend fun consent(profile: String? = null): SharedMetricsConsentResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
+        val response = caller.send(RESTRequest("GET", "/api/shared-metrics/consent", query))
+        return response.json(caller.json, serializer<SharedMetricsConsentResponse>(), 200)
+    }
+
+    /** `PUT /api/shared-metrics/consent` */
+    public suspend fun updateConsent(body: ConsentAnswer, profile: String? = null): SharedMetricsConsentResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
+        val response = caller.send(RESTRequest("PUT", "/api/shared-metrics/consent", query, caller.json.encodeToString(serializer<ConsentAnswer>(), body).encodeToByteArray(), "application/json"))
+        return response.json(caller.json, serializer<SharedMetricsConsentResponse>(), 200)
+    }
+}
+
 public class SkillsRESTMethods(private val caller: RESTCaller) {
     /** `GET /api/skills/content` */
     public suspend fun content(name: String, profile: String? = null): SkillContentResponse {
@@ -2684,8 +2846,10 @@ public class SkillsRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `POST /api/skills` */
-    public suspend fun create(body: SkillCreate): SkillCreateResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun create(body: SkillCreate, profile: String? = null): SkillCreateResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("POST", "/api/skills", query, caller.json.encodeToString(serializer<SkillCreate>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<SkillCreateResponse>(), 200)
     }
@@ -2786,8 +2950,10 @@ public class SkillsRESTMethods(private val caller: RESTCaller) {
     }
 
     /** `PUT /api/skills/content` */
-    public suspend fun updateContent(body: SkillContentUpdate): SkillContentUpdateResponse {
-        val query = emptyMap<String, String>()
+    public suspend fun updateContent(body: SkillContentUpdate, profile: String? = null): SkillContentUpdateResponse {
+        val query = buildMap<String, String> {
+            profile?.let { put("profile", it) }
+        }
         val response = caller.send(RESTRequest("PUT", "/api/skills/content", query, caller.json.encodeToString(serializer<SkillContentUpdate>(), body).encodeToByteArray(), "application/json"))
         return response.json(caller.json, serializer<SkillContentUpdateResponse>(), 200)
     }

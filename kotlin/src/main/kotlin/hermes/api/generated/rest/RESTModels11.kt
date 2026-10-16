@@ -9,6 +9,324 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``mcp_oauth_flow_status`` — the flow snapshot plus the tools probed once approved (``[]`` until then). */
+@Serializable
+public data class McpOAuthFlowStatusResponse(
+    @SerialName("authorization_url")
+    public val authorizationUrl: String?,
+    @SerialName("error")
+    public val error: String?,
+    @SerialName("flow_id")
+    public val flowId: String,
+    @SerialName("server_name")
+    public val serverName: String,
+    @SerialName("status")
+    public val status: McpOAuthFlowStatusResponseStatus,
+    @SerialName("tools")
+    public val tools: List<McpToolSummary>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = McpOAuthFlowStatusResponseStatus.Serializer::class)
+public sealed interface McpOAuthFlowStatusResponseStatus {
+    public data object Starting : McpOAuthFlowStatusResponseStatus
+    public data object AuthorizationRequired : McpOAuthFlowStatusResponseStatus
+    public data object Approved : McpOAuthFlowStatusResponseStatus
+    public data object Error : McpOAuthFlowStatusResponseStatus
+    public data class Unknown(public val raw: kotlin.String) : McpOAuthFlowStatusResponseStatus
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Starting -> "starting"
+            AuthorizationRequired -> "authorization_required"
+            Approved -> "approved"
+            Error -> "error"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpOAuthFlowStatusResponseStatus = when (raw) {
+            "starting" -> Starting
+            "authorization_required" -> AuthorizationRequired
+            "approved" -> Approved
+            "error" -> Error
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<McpOAuthFlowStatusResponseStatus> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpOAuthFlowStatusResponseStatus", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): McpOAuthFlowStatusResponseStatus = when (val raw = decoder.decodeString()) {
+            "starting" -> Starting
+            "authorization_required" -> AuthorizationRequired
+            "approved" -> Approved
+            "error" -> Error
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpOAuthFlowStatusResponseStatus value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: McpOAuthFlowStatusResponseStatus) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``add_mcp_server`` — the summary of the server just saved (always ``source: "config"``). */
+@Serializable
+public data class McpServerAddResponse(
+    @SerialName("args")
+    public val args: List<String>,
+    /** ``mcp_servers.<name>.auth`` as written, or ``"header"`` when an Authorization header is configured. */
+    @SerialName("auth")
+    public val auth: String?,
+    @SerialName("command")
+    public val command: String?,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    /** Env var name -> redacted value (``redact_key``). */
+    @SerialName("env")
+    public val env: Map<String, String>,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("plugin")
+    public val plugin: String?,
+    @SerialName("source")
+    public val source: McpServerAddResponseSource,
+    /** ``mcp_servers.<name>.tools`` as written (include/exclude filter); ``null`` = all tools. */
+    @SerialName("tools")
+    public val tools: JsonElement?,
+    @SerialName("transport")
+    public val transport: McpServerAddResponseTransport,
+    @SerialName("url")
+    public val url: String?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = McpServerAddResponseSource.Serializer::class)
+public sealed interface McpServerAddResponseSource {
+    public data object Config : McpServerAddResponseSource
+    public data object Plugin : McpServerAddResponseSource
+    public data class Unknown(public val raw: kotlin.String) : McpServerAddResponseSource
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Config -> "config"
+            Plugin -> "plugin"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpServerAddResponseSource = when (raw) {
+            "config" -> Config
+            "plugin" -> Plugin
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<McpServerAddResponseSource> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerAddResponseSource", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): McpServerAddResponseSource = when (val raw = decoder.decodeString()) {
+            "config" -> Config
+            "plugin" -> Plugin
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerAddResponseSource value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: McpServerAddResponseSource) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = McpServerAddResponseTransport.Serializer::class)
+public sealed interface McpServerAddResponseTransport {
+    public data object Http : McpServerAddResponseTransport
+    public data object Stdio : McpServerAddResponseTransport
+    public data object KnownUnknown : McpServerAddResponseTransport
+    public data class Unknown(public val raw: kotlin.String) : McpServerAddResponseTransport
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Http -> "http"
+            Stdio -> "stdio"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpServerAddResponseTransport = when (raw) {
+            "http" -> Http
+            "stdio" -> Stdio
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<McpServerAddResponseTransport> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerAddResponseTransport", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): McpServerAddResponseTransport = when (val raw = decoder.decodeString()) {
+            "http" -> Http
+            "stdio" -> Stdio
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerAddResponseTransport value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: McpServerAddResponseTransport) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_mcp.py::_mcp_server_summary`` — a configured server with stdio ``env`` values redacted. Sibling of the ``mcp.servers.list`` JSON-RPC row (``tui_gateway/contracts/tools_mcp_plugins.py::McpServerSummary``), which lists env key names instead of redacted values. */
+@Serializable
+public data class McpServerConfigSummary(
+    @SerialName("args")
+    public val args: List<String>,
+    /** ``mcp_servers.<name>.auth`` as written, or ``"header"`` when an Authorization header is configured. */
+    @SerialName("auth")
+    public val auth: String?,
+    @SerialName("command")
+    public val command: String?,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    /** Env var name -> redacted value (``redact_key``). */
+    @SerialName("env")
+    public val env: Map<String, String>,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("plugin")
+    public val plugin: String?,
+    @SerialName("source")
+    public val source: McpServerConfigSummarySource,
+    /** ``mcp_servers.<name>.tools`` as written (include/exclude filter); ``null`` = all tools. */
+    @SerialName("tools")
+    public val tools: JsonElement?,
+    @SerialName("transport")
+    public val transport: McpServerConfigSummaryTransport,
+    @SerialName("url")
+    public val url: String?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = McpServerConfigSummarySource.Serializer::class)
+public sealed interface McpServerConfigSummarySource {
+    public data object Config : McpServerConfigSummarySource
+    public data object Plugin : McpServerConfigSummarySource
+    public data class Unknown(public val raw: kotlin.String) : McpServerConfigSummarySource
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Config -> "config"
+            Plugin -> "plugin"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpServerConfigSummarySource = when (raw) {
+            "config" -> Config
+            "plugin" -> Plugin
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<McpServerConfigSummarySource> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerConfigSummarySource", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): McpServerConfigSummarySource = when (val raw = decoder.decodeString()) {
+            "config" -> Config
+            "plugin" -> Plugin
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerConfigSummarySource value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: McpServerConfigSummarySource) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = McpServerConfigSummaryTransport.Serializer::class)
+public sealed interface McpServerConfigSummaryTransport {
+    public data object Http : McpServerConfigSummaryTransport
+    public data object Stdio : McpServerConfigSummaryTransport
+    public data object KnownUnknown : McpServerConfigSummaryTransport
+    public data class Unknown(public val raw: kotlin.String) : McpServerConfigSummaryTransport
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Http -> "http"
+            Stdio -> "stdio"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): McpServerConfigSummaryTransport = when (raw) {
+            "http" -> Http
+            "stdio" -> Stdio
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<McpServerConfigSummaryTransport> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("McpServerConfigSummaryTransport", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): McpServerConfigSummaryTransport = when (val raw = decoder.decodeString()) {
+            "http" -> Http
+            "stdio" -> Stdio
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected McpServerConfigSummaryTransport value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: McpServerConfigSummaryTransport) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_mcp_server_enabled``. */
+@Serializable
+public data class McpServerEnabledResponse(
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_mcp_servers`` — sorted by name. */
+@Serializable
+public data class McpServerListResponse(
+    @SerialName("servers")
+    public val servers: List<McpServerConfigSummary>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class McpServerProbeTool(
+    @SerialName("description")
+    public val description: String,
+    @SerialName("name")
+    public val name: String,
+    /** Size of the registered tool schema; omitted when it could not be measured. */
+    @SerialName("schema_chars")
+    public val schemaChars: Long? = null,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``test_mcp_server`` — ``ok: false`` carries ``error`` and an empty ``tools``; the prompt and resource counts are only reported on success. */
 @Serializable
 public data class McpServerTestResponse(
@@ -33,7 +351,7 @@ public data class McpToolSummary(
     public val name: String,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_media``: an allowlisted image under the media roots as a base64 ``data:`` URL; ``proxy_remote_media``: an image fetched from an allowlisted remote CDN, in the same shape. */
 @Serializable
 public data class MediaDataUrlResponse(
     @SerialName("data_url")
@@ -482,7 +800,7 @@ public data class MemoryProviderSelectResponse(
     public val ok: Boolean,
 )
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_memory.py::_memory_provider_setup_info``: the manifest's ``pip_dependencies`` / ``external_dependencies`` / ``requires_env`` plus ``dependencies_installed`` (every pip dependency importable and every external ``check`` command exits 0). */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_memory.py::_memory_provider_setup_info``. */
 @Serializable
 public data class MemoryProviderSetupInfo(
     @SerialName("dependencies_installed")
@@ -491,6 +809,8 @@ public data class MemoryProviderSetupInfo(
     public val externalDependencies: List<MemoryProviderExternalDependency>,
     @SerialName("pip_dependencies")
     public val pipDependencies: List<String>,
+    @SerialName("python_dependencies_declared")
+    public val pythonDependenciesDeclared: Boolean,
     @SerialName("required_env")
     public val requiredEnv: List<String>,
 )
@@ -500,302 +820,4 @@ public data class MemoryProviderSetupInfo(
 public data class MemoryProviderSetupRequest(
     @SerialName("values")
     public val values: Map<String, JsonElement>? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``setup_memory_provider`` → ``_install_memory_provider_setup``; ``status`` is ``None`` when discovery no longer lists the provider. */
-@Serializable
-public data class MemoryProviderSetupResponse(
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("provider")
-    public val provider: String,
-    @SerialName("results")
-    public val results: List<MemoryProviderSetupStepResult>,
-    @SerialName("status")
-    public val status: MemoryProviderStatusRow?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_command_result``; ``returncode`` is ``None`` when no process ran. */
-@Serializable
-public data class MemoryProviderSetupStepResult(
-    @SerialName("command")
-    public val command: String,
-    @SerialName("kind")
-    public val kind: MemoryProviderSetupStepResultKind,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("returncode")
-    public val returncode: Long?,
-    @SerialName("status")
-    public val status: String,
-    @SerialName("stderr")
-    public val stderr: String,
-    @SerialName("stdout")
-    public val stdout: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = MemoryProviderSetupStepResultKind.Serializer::class)
-public sealed interface MemoryProviderSetupStepResultKind {
-    public data object Pip : MemoryProviderSetupStepResultKind
-    public data object Setup : MemoryProviderSetupStepResultKind
-    public data object ExternalCheck : MemoryProviderSetupStepResultKind
-    public data object ExternalInstall : MemoryProviderSetupStepResultKind
-    public data class Unknown(public val raw: kotlin.String) : MemoryProviderSetupStepResultKind
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Pip -> "pip"
-            Setup -> "setup"
-            ExternalCheck -> "external_check"
-            ExternalInstall -> "external_install"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): MemoryProviderSetupStepResultKind = when (raw) {
-            "pip" -> Pip
-            "setup" -> Setup
-            "external_check" -> ExternalCheck
-            "external_install" -> ExternalInstall
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<MemoryProviderSetupStepResultKind> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderSetupStepResultKind", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): MemoryProviderSetupStepResultKind = when (val raw = decoder.decodeString()) {
-            "pip" -> Pip
-            "setup" -> Setup
-            "external_check" -> ExternalCheck
-            "external_install" -> ExternalInstall
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryProviderSetupStepResultKind value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: MemoryProviderSetupStepResultKind) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``hermes_cli/web_server_memory.py::_discover_memory_provider_statuses`` row. */
-@Serializable
-public data class MemoryProviderStatusRow(
-    @SerialName("available")
-    public val available: Boolean,
-    @SerialName("configured")
-    public val configured: Boolean,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("setup")
-    public val setup: MemoryProviderSetupInfo,
-    @SerialName("status")
-    public val status: MemoryProviderStatusRowStatus,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = MemoryProviderStatusRowStatus.Serializer::class)
-public sealed interface MemoryProviderStatusRowStatus {
-    public data object Missing : MemoryProviderStatusRowStatus
-    public data object Unavailable : MemoryProviderStatusRowStatus
-    public data object NeedsConfig : MemoryProviderStatusRowStatus
-    public data object Ready : MemoryProviderStatusRowStatus
-    public data class Unknown(public val raw: kotlin.String) : MemoryProviderStatusRowStatus
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Missing -> "missing"
-            Unavailable -> "unavailable"
-            NeedsConfig -> "needs_config"
-            Ready -> "ready"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): MemoryProviderStatusRowStatus = when (raw) {
-            "missing" -> Missing
-            "unavailable" -> Unavailable
-            "needs_config" -> NeedsConfig
-            "ready" -> Ready
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<MemoryProviderStatusRowStatus> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemoryProviderStatusRowStatus", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): MemoryProviderStatusRowStatus = when (val raw = decoder.decodeString()) {
-            "missing" -> Missing
-            "unavailable" -> Unavailable
-            "needs_config" -> NeedsConfig
-            "ready" -> Ready
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected MemoryProviderStatusRowStatus value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: MemoryProviderStatusRowStatus) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = MemoryProvidersConfigResponse.Serializer::class)
-public sealed interface MemoryProvidersConfigResponse {
-    public data class MemoryProviderDeclaredConfigResponseValue(public val value: MemoryProviderDeclaredConfigResponse) : MemoryProvidersConfigResponse
-    public data class MemoryProviderLegacyConfigResponseValue(public val value: MemoryProviderLegacyConfigResponse) : MemoryProvidersConfigResponse
-
-    public object Serializer : KSerializer<MemoryProvidersConfigResponse> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): MemoryProvidersConfigResponse {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("MemoryProvidersConfigResponse requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            try {
-                return MemoryProviderDeclaredConfigResponseValue(json.decodeFromJsonElement<MemoryProviderDeclaredConfigResponse>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            try {
-                return MemoryProviderLegacyConfigResponseValue(json.decodeFromJsonElement<MemoryProviderLegacyConfigResponse>(input))
-            } catch (_: SerializationException) {
-                // Try the next contract variant.
-            }
-            throw SerializationException("No MemoryProvidersConfigResponse variant matched")
-        }
-
-        override fun serialize(encoder: Encoder, value: MemoryProvidersConfigResponse) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("MemoryProvidersConfigResponse requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is MemoryProviderDeclaredConfigResponseValue -> json.encodeToJsonElement(value.value)
-                is MemoryProviderLegacyConfigResponseValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class MemoryReset(
-    @SerialName("target")
-    public val target: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``reset_memory`` — the file names actually deleted. */
-@Serializable
-public data class MemoryResetResponse(
-    @SerialName("deleted")
-    public val deleted: List<String>,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_memory_status``; ``active`` is ``""`` for the built-in provider. */
-@Serializable
-public data class MemoryStatusResponse(
-    @SerialName("active")
-    public val active: String,
-    @SerialName("builtin_files")
-    public val builtinFiles: MemoryBuiltinFileSizes,
-    @SerialName("providers")
-    public val providers: List<MemoryProviderStatusRow>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/config.py::HomeChannel.to_dict``; profile-scoped reads pass the config.yaml ``platforms.<id>.home_channel`` mapping through as written. */
-@Serializable(with = MessagingHomeChannel.Serializer::class)
-public data class MessagingHomeChannel(
-    public val chatId: String? = null,
-    public val name: String? = null,
-    public val platform: String? = null,
-    public val scopeId: String? = null,
-    public val threadId: String? = null,
-    public val userId: String? = null,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<MessagingHomeChannel> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): MessagingHomeChannel {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("MessagingHomeChannel requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("MessagingHomeChannel requires an object")
-            return MessagingHomeChannel(
-                chatId = input["chat_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                name = input["name"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                platform = input["platform"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                scopeId = input["scope_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                threadId = input["thread_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                userId = input["user_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("chat_id", "name", "platform", "scope_id", "thread_id", "user_id") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: MessagingHomeChannel) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("MessagingHomeChannel requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("chat_id", "name", "platform", "scope_id", "thread_id", "user_id")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            value.chatId?.let { output["chat_id"] = json.encodeToJsonElement(it) }
-            value.name?.let { output["name"] = json.encodeToJsonElement(it) }
-            value.platform?.let { output["platform"] = json.encodeToJsonElement(it) }
-            value.scopeId?.let { output["scope_id"] = json.encodeToJsonElement(it) }
-            value.threadId?.let { output["thread_id"] = json.encodeToJsonElement(it) }
-            value.userId?.let { output["user_id"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_messaging_platform_payload`` for one ``_messaging_platform_catalog`` entry. */
-@Serializable
-public data class MessagingPlatform(
-    @SerialName("configured")
-    public val configured: Boolean,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("docs_url")
-    public val docsUrl: String,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("env_vars")
-    public val envVars: List<MessagingPlatformEnvVar>,
-    @SerialName("error_code")
-    public val errorCode: String?,
-    @SerialName("error_message")
-    public val errorMessage: String?,
-    @SerialName("gateway_running")
-    public val gatewayRunning: Boolean,
-    @SerialName("home_channel")
-    public val homeChannel: MessagingHomeChannel?,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("ingress_url")
-    public val ingressUrl: String?,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("state")
-    public val state: String,
-    @SerialName("updated_at")
-    public val updatedAt: String?,
-    @SerialName("whatsapp_setup")
-    public val whatsappSetup: MessagingWhatsAppSetup? = null,
 )

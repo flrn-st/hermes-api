@@ -401,7 +401,8 @@ public object LiveScenarios {
             clarified.expectReply(Fixture.CLARIFY_REPLY)
             clarified.expectContiguousSequence()
             if (clarifications.get() != 2) {
-                throw LiveScenarioFailure("The open clarification was not re-delivered after reconnect")
+                throw LiveScenarioFailure(
+                    "The open clarification was not re-delivered once after reconnect (asked ${clarifications.get()} times)")
             }
 
             // A restart loses every live session; the gateway resumes this one from Hermes' storage.

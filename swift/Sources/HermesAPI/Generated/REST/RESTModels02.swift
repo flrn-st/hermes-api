@@ -2,6 +2,61 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum ConfigSchemaFieldType: Codable, Sendable, Hashable, RawRepresentable {
+    case boolean
+    case number
+    case list
+    case string
+    case select
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "boolean": self = .boolean
+        case "number": self = .number
+        case "list": self = .list
+        case "string": self = .string
+        case "select": self = .select
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .boolean: "boolean"
+        case .number: "number"
+        case .list: "list"
+        case .string: "string"
+        case .select: "select"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "boolean": self = .boolean
+        case "number": self = .number
+        case "list": self = .list
+        case "string": self = .string
+        case "select": self = .select
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected ConfigSchemaFieldType value: \(raw)")
+            }
+            self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 /// ``get_schema`` — ``_schema_with_dynamic_provider_options`` keyed by dotted config path.
 public struct ConfigSchemaResponse: Codable, Sendable, Hashable {
     public var categoryOrder: [String]
@@ -79,6 +134,41 @@ public struct ConfigUpdate: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .profile)
         case .value(let value): try container.encode(value, forKey: .profile)
         }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct ConsentAnswer: Codable, Sendable, Hashable {
+    public var enabled: Bool
+    public var send: Bool?
+
+    public init(enabled: Bool, send: Bool? = nil) {
+        self.enabled = enabled
+        self.send = send
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case enabled = "enabled"
+        case send = "send"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["enabled", "send"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        enabled = try container.decode(Bool.self, forKey: .enabled)
+        send = try container.decodeIfPresent(Bool.self, forKey: .send)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(enabled, forKey: .enabled)
+        try container.encodeIfPresent(send, forKey: .send)
     }
 }
 
@@ -737,7 +827,7 @@ public struct CredentialPoolRemoveResponse: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``cron/blueprint_catalog.py::blueprint_catalog_entry``.
+/// ``cron/blueprint_catalog.py::blueprint_catalog_entry``: built-ins, plus the profile's plugin blueprints (``key`` is ``<plugin>:<key>``).
 public struct CronBlueprint: Codable, Sendable, Hashable {
     /// ``hermes://blueprint/...`` deep link.
     public var appUrl: String
@@ -747,21 +837,26 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
     public var description: String
     public var fields: [CronBlueprintField]
     public var key: String
+    /// The registering plugin; null for a built-in.
+    public var plugin: String?
     /// Cron expression template with ``{slot}`` placeholders.
     public var schedule: String
     public var scheduleHuman: String
+    public var source: CronBlueprintSource
     public var tags: [String]
     public var title: String
 
-    public init(appUrl: String, category: String, command: String, description: String, fields: [CronBlueprintField], key: String, schedule: String, scheduleHuman: String, tags: [String], title: String) {
+    public init(appUrl: String, category: String, command: String, description: String, fields: [CronBlueprintField], key: String, plugin: String?, schedule: String, scheduleHuman: String, source: CronBlueprintSource, tags: [String], title: String) {
         self.appUrl = appUrl
         self.category = category
         self.command = command
         self.description = description
         self.fields = fields
         self.key = key
+        self.plugin = plugin
         self.schedule = schedule
         self.scheduleHuman = scheduleHuman
+        self.source = source
         self.tags = tags
         self.title = title
     }
@@ -773,8 +868,10 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
         case description = "description"
         case fields = "fields"
         case key = "key"
+        case plugin = "plugin"
         case schedule = "schedule"
         case scheduleHuman = "scheduleHuman"
+        case source = "source"
         case tags = "tags"
         case title = "title"
     }
@@ -782,7 +879,7 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["appUrl", "category", "command", "description", "fields", "key", "schedule", "scheduleHuman", "tags", "title"]
+            let known: Set<String> = ["appUrl", "category", "command", "description", "fields", "key", "plugin", "schedule", "scheduleHuman", "source", "tags", "title"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
@@ -794,8 +891,10 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
         description = try container.decode(String.self, forKey: .description)
         fields = try container.decode([CronBlueprintField].self, forKey: .fields)
         key = try container.decode(String.self, forKey: .key)
+        plugin = try container.decode(Optional<String>.self, forKey: .plugin)
         schedule = try container.decode(String.self, forKey: .schedule)
         scheduleHuman = try container.decode(String.self, forKey: .scheduleHuman)
+        source = try container.decode(CronBlueprintSource.self, forKey: .source)
         tags = try container.decode([String].self, forKey: .tags)
         title = try container.decode(String.self, forKey: .title)
     }
@@ -808,8 +907,10 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
         try container.encode(description, forKey: .description)
         try container.encode(fields, forKey: .fields)
         try container.encode(key, forKey: .key)
+        try container.encode(plugin, forKey: .plugin)
         try container.encode(schedule, forKey: .schedule)
         try container.encode(scheduleHuman, forKey: .scheduleHuman)
+        try container.encode(source, forKey: .source)
         try container.encode(tags, forKey: .tags)
         try container.encode(title, forKey: .title)
     }
@@ -922,6 +1023,49 @@ public enum CronBlueprintFieldType: Codable, Sendable, Hashable, RawRepresentabl
         default:
             guard decoder.decodesTolerantly else {
                 throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronBlueprintFieldType value: \(raw)")
+            }
+            self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum CronBlueprintSource: Codable, Sendable, Hashable, RawRepresentable {
+    case builtin
+    case plugin
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "builtin": self = .builtin
+        case "plugin": self = .plugin
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .builtin: "builtin"
+        case .plugin: "plugin"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "builtin": self = .builtin
+        case "plugin": self = .plugin
+        default:
+            guard decoder.decodesTolerantly else {
+                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronBlueprintSource value: \(raw)")
             }
             self = .unknown(raw)
         }
@@ -1124,6 +1268,8 @@ public struct CronFireResponse: Codable, Sendable, Hashable {
 public struct CronJob: Codable, Sendable, Hashable {
     public var attachToSession: Bool?
     public var baseUrl: String?
+    /// Execution ids whose completion is already recorded (``mark_job_run``); a replay is a no-op.
+    public var canonicalCompletions: [String]?
     public var contextFrom: [String]?
     public var createdAt: String?
     public var deliver: String?
@@ -1133,11 +1279,15 @@ public struct CronJob: Codable, Sendable, Hashable {
     public var failureStreak: Int?
     public var hermesHome: String
     public var id: String
+    /// Python for a ``.py`` script/monitor_script.
+    public var interpreter: String?
     public var isDefaultProfile: Bool
     public var lastDeliveryError: String?
     /// ``platform:chat_id`` targets acked without delivery evidence.
     public var lastDeliveryUnverified: [String]?
     public var lastError: String?
+    /// The latest failed run (cleared by a success); kept apart from ``last_status``.
+    public var lastFailure: CronJobFireError?
     public var lastFireError: CronJobFireError?
     public var lastRunAt: String?
     public var lastStatus: String?
@@ -1174,9 +1324,10 @@ public struct CronJob: Codable, Sendable, Hashable {
     public var workdir: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(attachToSession: Bool? = nil, baseUrl: String? = nil, contextFrom: [String]? = nil, createdAt: String? = nil, deliver: String? = nil, enabled: Bool? = nil, enabledToolsets: [String]? = nil, failureDeliver: String? = nil, failureStreak: Int? = nil, hermesHome: String, id: String, isDefaultProfile: Bool, lastDeliveryError: String? = nil, lastDeliveryUnverified: [String]? = nil, lastError: String? = nil, lastFireError: CronJobFireError? = nil, lastRunAt: String? = nil, lastStatus: String? = nil, latestExecution: CronJobExecution? = nil, manualRunAt: String? = nil, manualRunPrompt: String? = nil, model: String? = nil, monitorScript: String? = nil, monitorState: CronJobMonitorState? = nil, monitorUrl: String? = nil, name: String, nextRunAt: String? = nil, noAgent: Bool? = nil, origin: [String: JSONValue]? = nil, pausedAt: String? = nil, pausedReason: String? = nil, profile: String, profileName: String, prompt: String, provider: String? = nil, reasoningEffort: String? = nil, `repeat`: CronJobRepeat? = nil, schedule: CronJobSchedule, scheduleDisplay: String, schedulerHeartbeatAgeS: Double?, script: String? = nil, skill: String?, skills: [String], state: String, workdir: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
+    public init(attachToSession: Bool? = nil, baseUrl: String? = nil, canonicalCompletions: [String]? = nil, contextFrom: [String]? = nil, createdAt: String? = nil, deliver: String? = nil, enabled: Bool? = nil, enabledToolsets: [String]? = nil, failureDeliver: String? = nil, failureStreak: Int? = nil, hermesHome: String, id: String, interpreter: String? = nil, isDefaultProfile: Bool, lastDeliveryError: String? = nil, lastDeliveryUnverified: [String]? = nil, lastError: String? = nil, lastFailure: CronJobFireError? = nil, lastFireError: CronJobFireError? = nil, lastRunAt: String? = nil, lastStatus: String? = nil, latestExecution: CronJobExecution? = nil, manualRunAt: String? = nil, manualRunPrompt: String? = nil, model: String? = nil, monitorScript: String? = nil, monitorState: CronJobMonitorState? = nil, monitorUrl: String? = nil, name: String, nextRunAt: String? = nil, noAgent: Bool? = nil, origin: [String: JSONValue]? = nil, pausedAt: String? = nil, pausedReason: String? = nil, profile: String, profileName: String, prompt: String, provider: String? = nil, reasoningEffort: String? = nil, `repeat`: CronJobRepeat? = nil, schedule: CronJobSchedule, scheduleDisplay: String, schedulerHeartbeatAgeS: Double?, script: String? = nil, skill: String?, skills: [String], state: String, workdir: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
         self.attachToSession = attachToSession
         self.baseUrl = baseUrl
+        self.canonicalCompletions = canonicalCompletions
         self.contextFrom = contextFrom
         self.createdAt = createdAt
         self.deliver = deliver
@@ -1186,10 +1337,12 @@ public struct CronJob: Codable, Sendable, Hashable {
         self.failureStreak = failureStreak
         self.hermesHome = hermesHome
         self.id = id
+        self.interpreter = interpreter
         self.isDefaultProfile = isDefaultProfile
         self.lastDeliveryError = lastDeliveryError
         self.lastDeliveryUnverified = lastDeliveryUnverified
         self.lastError = lastError
+        self.lastFailure = lastFailure
         self.lastFireError = lastFireError
         self.lastRunAt = lastRunAt
         self.lastStatus = lastStatus
@@ -1226,6 +1379,7 @@ public struct CronJob: Codable, Sendable, Hashable {
     private enum CodingKeys: String, CodingKey {
         case attachToSession = "attach_to_session"
         case baseUrl = "base_url"
+        case canonicalCompletions = "canonical_completions"
         case contextFrom = "context_from"
         case createdAt = "created_at"
         case deliver = "deliver"
@@ -1235,10 +1389,12 @@ public struct CronJob: Codable, Sendable, Hashable {
         case failureStreak = "failure_streak"
         case hermesHome = "hermes_home"
         case id = "id"
+        case interpreter = "interpreter"
         case isDefaultProfile = "is_default_profile"
         case lastDeliveryError = "last_delivery_error"
         case lastDeliveryUnverified = "last_delivery_unverified"
         case lastError = "last_error"
+        case lastFailure = "last_failure"
         case lastFireError = "last_fire_error"
         case lastRunAt = "last_run_at"
         case lastStatus = "last_status"
@@ -1275,6 +1431,7 @@ public struct CronJob: Codable, Sendable, Hashable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         attachToSession = try container.decodeIfPresent(Bool.self, forKey: .attachToSession)
         baseUrl = try container.decodeIfPresent(String.self, forKey: .baseUrl)
+        canonicalCompletions = try container.decodeIfPresent([String].self, forKey: .canonicalCompletions)
         contextFrom = try container.decodeIfPresent([String].self, forKey: .contextFrom)
         createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         deliver = try container.decodeIfPresent(String.self, forKey: .deliver)
@@ -1284,10 +1441,12 @@ public struct CronJob: Codable, Sendable, Hashable {
         failureStreak = try container.decodeIfPresent(Int.self, forKey: .failureStreak)
         hermesHome = try container.decode(String.self, forKey: .hermesHome)
         id = try container.decode(String.self, forKey: .id)
+        interpreter = try container.decodeIfPresent(String.self, forKey: .interpreter)
         isDefaultProfile = try container.decode(Bool.self, forKey: .isDefaultProfile)
         lastDeliveryError = try container.decodeIfPresent(String.self, forKey: .lastDeliveryError)
         lastDeliveryUnverified = try container.decodeIfPresent([String].self, forKey: .lastDeliveryUnverified)
         lastError = try container.decodeIfPresent(String.self, forKey: .lastError)
+        lastFailure = try container.decodeIfPresent(CronJobFireError.self, forKey: .lastFailure)
         lastFireError = try container.decodeIfPresent(CronJobFireError.self, forKey: .lastFireError)
         lastRunAt = try container.decodeIfPresent(String.self, forKey: .lastRunAt)
         lastStatus = try container.decodeIfPresent(String.self, forKey: .lastStatus)
@@ -1319,7 +1478,7 @@ public struct CronJob: Codable, Sendable, Hashable {
         state = try container.decode(String.self, forKey: .state)
         workdir = try container.decodeIfPresent(String.self, forKey: .workdir)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["attach_to_session", "base_url", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir"]
+        let known: Set<String> = ["attach_to_session", "base_url", "canonical_completions", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "interpreter", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_failure", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir"]
         var extra: [String: JSONValue] = [:]
         for key in dynamic.allKeys where !known.contains(key.stringValue) {
             extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
@@ -1331,6 +1490,7 @@ public struct CronJob: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(attachToSession, forKey: .attachToSession)
         try container.encodeIfPresent(baseUrl, forKey: .baseUrl)
+        try container.encodeIfPresent(canonicalCompletions, forKey: .canonicalCompletions)
         try container.encodeIfPresent(contextFrom, forKey: .contextFrom)
         try container.encodeIfPresent(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(deliver, forKey: .deliver)
@@ -1340,10 +1500,12 @@ public struct CronJob: Codable, Sendable, Hashable {
         try container.encodeIfPresent(failureStreak, forKey: .failureStreak)
         try container.encode(hermesHome, forKey: .hermesHome)
         try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(interpreter, forKey: .interpreter)
         try container.encode(isDefaultProfile, forKey: .isDefaultProfile)
         try container.encodeIfPresent(lastDeliveryError, forKey: .lastDeliveryError)
         try container.encodeIfPresent(lastDeliveryUnverified, forKey: .lastDeliveryUnverified)
         try container.encodeIfPresent(lastError, forKey: .lastError)
+        try container.encodeIfPresent(lastFailure, forKey: .lastFailure)
         try container.encodeIfPresent(lastFireError, forKey: .lastFireError)
         try container.encodeIfPresent(lastRunAt, forKey: .lastRunAt)
         try container.encodeIfPresent(lastStatus, forKey: .lastStatus)
@@ -1375,7 +1537,7 @@ public struct CronJob: Codable, Sendable, Hashable {
         try container.encode(state, forKey: .state)
         try container.encodeIfPresent(workdir, forKey: .workdir)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["attach_to_session", "base_url", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir"]
+        let known: Set<String> = ["attach_to_session", "base_url", "canonical_completions", "context_from", "created_at", "deliver", "enabled", "enabled_toolsets", "failure_deliver", "failure_streak", "hermes_home", "id", "interpreter", "is_default_profile", "last_delivery_error", "last_delivery_unverified", "last_error", "last_failure", "last_fire_error", "last_run_at", "last_status", "latest_execution", "manual_run_at", "manual_run_prompt", "model", "monitor_script", "monitor_state", "monitor_url", "name", "next_run_at", "no_agent", "origin", "paused_at", "paused_reason", "profile", "profile_name", "prompt", "provider", "reasoning_effort", "repeat", "schedule", "schedule_display", "scheduler_heartbeat_age_s", "script", "skill", "skills", "state", "workdir"]
         for (key, value) in additionalProperties {
             guard !known.contains(key) else {
                 throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
@@ -1398,12 +1560,13 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
     public var pausedReason: Patch<String>
     public var prompt: String?
     public var provider: Patch<String>
+    public var `repeat`: Patch<CronJobCreateRepeat>
     public var schedule: String
     public var script: Patch<String>
     public var skills: Patch<[String]>
     public var workdir: Patch<String>
 
-    public init(baseUrl: Patch<String> = .absent, contextFrom: Patch<JSONValue> = .absent, deliver: String? = nil, enabledToolsets: Patch<[String]> = .absent, model: Patch<String> = .absent, name: String? = nil, noAgent: Bool? = nil, paused: Bool? = nil, pausedReason: Patch<String> = .absent, prompt: String? = nil, provider: Patch<String> = .absent, schedule: String, script: Patch<String> = .absent, skills: Patch<[String]> = .absent, workdir: Patch<String> = .absent) {
+    public init(baseUrl: Patch<String> = .absent, contextFrom: Patch<JSONValue> = .absent, deliver: String? = nil, enabledToolsets: Patch<[String]> = .absent, model: Patch<String> = .absent, name: String? = nil, noAgent: Bool? = nil, paused: Bool? = nil, pausedReason: Patch<String> = .absent, prompt: String? = nil, provider: Patch<String> = .absent, `repeat`: Patch<CronJobCreateRepeat> = .absent, schedule: String, script: Patch<String> = .absent, skills: Patch<[String]> = .absent, workdir: Patch<String> = .absent) {
         self.baseUrl = baseUrl
         self.contextFrom = contextFrom
         self.deliver = deliver
@@ -1415,6 +1578,7 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
         self.pausedReason = pausedReason
         self.prompt = prompt
         self.provider = provider
+        self.`repeat` = `repeat`
         self.schedule = schedule
         self.script = script
         self.skills = skills
@@ -1433,6 +1597,7 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
         case pausedReason = "paused_reason"
         case prompt = "prompt"
         case provider = "provider"
+        case `repeat` = "repeat"
         case schedule = "schedule"
         case script = "script"
         case skills = "skills"
@@ -1442,7 +1607,7 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "schedule", "script", "skills", "workdir"]
+            let known: Set<String> = ["base_url", "context_from", "deliver", "enabled_toolsets", "model", "name", "no_agent", "paused", "paused_reason", "prompt", "provider", "repeat", "schedule", "script", "skills", "workdir"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
@@ -1494,6 +1659,13 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
             provider = .null
         } else {
             provider = .value(try container.decode(String.self, forKey: .provider))
+        }
+        if !container.contains(.`repeat`) {
+            `repeat` = .absent
+        } else if try container.decodeNil(forKey: .`repeat`) {
+            `repeat` = .null
+        } else {
+            `repeat` = .value(try container.decode(CronJobCreateRepeat.self, forKey: .`repeat`))
         }
         schedule = try container.decode(String.self, forKey: .schedule)
         if !container.contains(.script) {
@@ -1556,6 +1728,11 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .provider)
         case .value(let value): try container.encode(value, forKey: .provider)
         }
+        switch `repeat` {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .`repeat`)
+        case .value(let value): try container.encode(value, forKey: .`repeat`)
+        }
         try container.encode(schedule, forKey: .schedule)
         switch script {
         case .absent: break
@@ -1576,6 +1753,33 @@ public struct CronJobCreate: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum CronJobCreateRepeat: Codable, Sendable, Hashable {
+    case long(Int)
+    case string(String)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(Int.self) {
+            self = .long(value)
+            return
+        }
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .long(let value): try container.encode(value)
+        case .string(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 /// One ``executions`` row of ``cron/executions.db`` (``cron/executions.py::latest_executions``).
 public struct CronJobExecution: Codable, Sendable, Hashable {
     public var claimedAt: String
@@ -1589,12 +1793,14 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
     public var pid: Int
     public var processId: String
     public var processStartedAt: Int?
+    /// Last liveness stamp of a running attempt; staleness counts from it.
+    public var progressAt: String?
     public var scheduledInstant: String?
     public var source: String
     public var startedAt: String?
     public var status: CronJobExecutionStatus
 
-    public init(claimedAt: String, deliveryOutcome: String?, error: String?, finishedAt: String?, handoffPending: Int, handoffStartedAt: Double?, id: String, jobId: String, pid: Int, processId: String, processStartedAt: Int?, scheduledInstant: String?, source: String, startedAt: String?, status: CronJobExecutionStatus) {
+    public init(claimedAt: String, deliveryOutcome: String?, error: String?, finishedAt: String?, handoffPending: Int, handoffStartedAt: Double?, id: String, jobId: String, pid: Int, processId: String, processStartedAt: Int?, progressAt: String?, scheduledInstant: String?, source: String, startedAt: String?, status: CronJobExecutionStatus) {
         self.claimedAt = claimedAt
         self.deliveryOutcome = deliveryOutcome
         self.error = error
@@ -1606,6 +1812,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
         self.pid = pid
         self.processId = processId
         self.processStartedAt = processStartedAt
+        self.progressAt = progressAt
         self.scheduledInstant = scheduledInstant
         self.source = source
         self.startedAt = startedAt
@@ -1624,6 +1831,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
         case pid = "pid"
         case processId = "process_id"
         case processStartedAt = "process_started_at"
+        case progressAt = "progress_at"
         case scheduledInstant = "scheduled_instant"
         case source = "source"
         case startedAt = "started_at"
@@ -1633,7 +1841,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["claimed_at", "delivery_outcome", "error", "finished_at", "handoff_pending", "handoff_started_at", "id", "job_id", "pid", "process_id", "process_started_at", "scheduled_instant", "source", "started_at", "status"]
+            let known: Set<String> = ["claimed_at", "delivery_outcome", "error", "finished_at", "handoff_pending", "handoff_started_at", "id", "job_id", "pid", "process_id", "process_started_at", "progress_at", "scheduled_instant", "source", "started_at", "status"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
@@ -1650,6 +1858,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
         pid = try container.decode(Int.self, forKey: .pid)
         processId = try container.decode(String.self, forKey: .processId)
         processStartedAt = try container.decode(Optional<Int>.self, forKey: .processStartedAt)
+        progressAt = try container.decode(Optional<String>.self, forKey: .progressAt)
         scheduledInstant = try container.decode(Optional<String>.self, forKey: .scheduledInstant)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Optional<String>.self, forKey: .startedAt)
@@ -1669,6 +1878,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
         try container.encode(pid, forKey: .pid)
         try container.encode(processId, forKey: .processId)
         try container.encode(processStartedAt, forKey: .processStartedAt)
+        try container.encode(progressAt, forKey: .progressAt)
         try container.encode(scheduledInstant, forKey: .scheduledInstant)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)
@@ -1804,6 +2014,140 @@ public struct CronJobMonitorState: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``_cron_output_run_row``: an execution with no session (a script-only fire, or one whose session is gone), built from its output doc, the execution ledger or ``last_run_at``.
+/// Omits `cwd`, `model`, which Hermes always sends as null.
+public struct CronJobOutputRun: Codable, Sendable, Hashable {
+    public var archived: Bool
+    public var endedAt: Double
+    /// "cron_output:<job>:<doc stem>", "…:exec:<n>" or "…:latest".
+    public var id: String
+    public var inputTokens: Int
+    public var isActive: Bool
+    public var lastActive: Double
+    public var messageCount: Int
+    public var outputTokens: Int
+    public var preview: String?
+    public var source: CronJobOutputRunSource
+    public var startedAt: Double
+    public var title: String
+    public var toolCallCount: Int
+
+    public init(archived: Bool, endedAt: Double, id: String, inputTokens: Int, isActive: Bool, lastActive: Double, messageCount: Int, outputTokens: Int, preview: String?, source: CronJobOutputRunSource, startedAt: Double, title: String, toolCallCount: Int) {
+        self.archived = archived
+        self.endedAt = endedAt
+        self.id = id
+        self.inputTokens = inputTokens
+        self.isActive = isActive
+        self.lastActive = lastActive
+        self.messageCount = messageCount
+        self.outputTokens = outputTokens
+        self.preview = preview
+        self.source = source
+        self.startedAt = startedAt
+        self.title = title
+        self.toolCallCount = toolCallCount
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case archived = "archived"
+        case endedAt = "ended_at"
+        case id = "id"
+        case inputTokens = "input_tokens"
+        case isActive = "is_active"
+        case lastActive = "last_active"
+        case messageCount = "message_count"
+        case outputTokens = "output_tokens"
+        case preview = "preview"
+        case source = "source"
+        case startedAt = "started_at"
+        case title = "title"
+        case toolCallCount = "tool_call_count"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["archived", "ended_at", "id", "input_tokens", "is_active", "last_active", "message_count", "output_tokens", "preview", "source", "started_at", "title", "tool_call_count", "cwd", "model"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+            guard keys.contains(DynamicCodingKey("cwd")), try keys.decodeNil(forKey: DynamicCodingKey("cwd")) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Field cwd must be present and null"))
+            }
+            guard keys.contains(DynamicCodingKey("model")), try keys.decodeNil(forKey: DynamicCodingKey("model")) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Field model must be present and null"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        archived = try container.decode(Bool.self, forKey: .archived)
+        endedAt = try container.decode(Double.self, forKey: .endedAt)
+        id = try container.decode(String.self, forKey: .id)
+        inputTokens = try container.decode(Int.self, forKey: .inputTokens)
+        isActive = try container.decode(Bool.self, forKey: .isActive)
+        lastActive = try container.decode(Double.self, forKey: .lastActive)
+        messageCount = try container.decode(Int.self, forKey: .messageCount)
+        outputTokens = try container.decode(Int.self, forKey: .outputTokens)
+        preview = try container.decode(Optional<String>.self, forKey: .preview)
+        source = try container.decode(CronJobOutputRunSource.self, forKey: .source)
+        startedAt = try container.decode(Double.self, forKey: .startedAt)
+        title = try container.decode(String.self, forKey: .title)
+        toolCallCount = try container.decode(Int.self, forKey: .toolCallCount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(archived, forKey: .archived)
+        try container.encode(endedAt, forKey: .endedAt)
+        try container.encode(id, forKey: .id)
+        try container.encode(inputTokens, forKey: .inputTokens)
+        try container.encode(isActive, forKey: .isActive)
+        try container.encode(lastActive, forKey: .lastActive)
+        try container.encode(messageCount, forKey: .messageCount)
+        try container.encode(outputTokens, forKey: .outputTokens)
+        try container.encode(preview, forKey: .preview)
+        try container.encode(source, forKey: .source)
+        try container.encode(startedAt, forKey: .startedAt)
+        try container.encode(title, forKey: .title)
+        try container.encode(toolCallCount, forKey: .toolCallCount)
+        var nulls = encoder.container(keyedBy: DynamicCodingKey.self)
+        try nulls.encodeNil(forKey: DynamicCodingKey("cwd"))
+        try nulls.encodeNil(forKey: DynamicCodingKey("model"))
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum CronJobOutputRunSource: Codable, Sendable, Hashable, RawRepresentable {
+    case cronOutput
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "cron_output": self = .cronOutput
+        default: return nil
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .cronOutput: "cron_output"
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "cron_output": self = .cronOutput
+        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 public struct CronJobRepeat: Codable, Sendable, Hashable {
     public var completed: Int
     /// None = forever.
@@ -1840,11 +2184,17 @@ public struct CronJobRepeat: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1. A script-only fire with no session is a ``_cron_output_run_row`` (``source`` ``cron_output``, id ``cron_output:<job>:<stem>``) and carries only the required fields.
+/// One ``SessionDB.list_cron_job_runs`` row (the ``list_sessions_rich`` shape, compression lineage skipped) annotated by ``_list_cron_job_runs_sync``: ``archived`` becomes a bool, ``pinned`` stays SQLite 0/1. The sessions table's counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count`` and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows can hold null.
 public struct CronJobRunSession: Codable, Sendable, Hashable {
+    /// Lifted from ``model_config`` when set: a /branch fork.
+    public var branchedFrom: String?
+    /// Lifted from ``model_config`` when set: a /new sibling.
+    public var resetFrom: String?
     public var actualCostUsd: Double?
     public var apiCallCount: Int?
     public var archived: Bool
+    /// SQLite 0/1: archived by the idle sweep, not by hand.
+    public var autoArchived: Int
     public var billingBaseUrl: String?
     public var billingMode: String?
     public var billingProvider: String?
@@ -1854,11 +2204,13 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var chatType: String?
     public var compressionFailureCooldownUntil: Double?
     public var compressionFailureError: String?
-    public var compressionFallbackStreak: Int?
-    public var compressionIneffectiveCount: Int?
+    public var compressionFallbackStreak: Int
+    public var compressionIneffectiveCount: Int
     public var compressionRecoveryDeadline: Double?
     public var costSource: String?
     public var costStatus: String?
+    /// The source the row was created under; null on rows that predate it.
+    public var createdSource: String?
     public var cwd: String?
     public var displayName: String?
     public var endReason: String?
@@ -1866,12 +2218,12 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var estimatedCostUsd: Double?
     public var expiryFinalized: Int?
     public var gitBranch: String?
-    public var gitMetadataGeneration: Int?
+    public var gitMetadataGeneration: Int
     public var gitRepoRoot: String?
     public var handoffError: String?
     public var handoffPlatform: String?
     public var handoffState: String?
-    public var hidden: Int?
+    public var hidden: Int
     public var id: String
     public var inputTokens: Int?
     public var isActive: Bool
@@ -1887,14 +2239,20 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var originJson: String?
     public var outputTokens: Int?
     public var parentSessionId: String?
-    public var pinned: Int?
-    public var preview: String?
+    public var pinned: Int
+    public var preview: String
     public var pricingVersion: String?
     /// Absent when no profile holds the job.
     public var profile: String?
     public var profileName: String?
     public var reasoningTokens: Int?
-    public var rewindCount: Int?
+    public var rewindCount: Int
+    /// Execution generation a turn-affecting mutation must quote.
+    public var runtimeGeneration: Int
+    /// Mutation fence: bumped by every committed session mutation.
+    public var runtimeRevision: Int
+    /// The scheduler still owns this run (``_run_owned_by``): live even past the activity window.
+    public var schedulerOwned: Bool
     public var sessionKey: String?
     public var source: String
     public var startedAt: Double
@@ -1909,10 +2267,13 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(actualCostUsd: Double? = nil, apiCallCount: Int? = nil, archived: Bool, billingBaseUrl: String? = nil, billingMode: String? = nil, billingProvider: String? = nil, cacheReadTokens: Int? = nil, cacheWriteTokens: Int? = nil, chatId: String? = nil, chatType: String? = nil, compressionFailureCooldownUntil: Double? = nil, compressionFailureError: String? = nil, compressionFallbackStreak: Int? = nil, compressionIneffectiveCount: Int? = nil, compressionRecoveryDeadline: Double? = nil, costSource: String? = nil, costStatus: String? = nil, cwd: String?, displayName: String? = nil, endReason: String? = nil, endedAt: Double?, estimatedCostUsd: Double? = nil, expiryFinalized: Int? = nil, gitBranch: String? = nil, gitMetadataGeneration: Int? = nil, gitRepoRoot: String? = nil, handoffError: String? = nil, handoffPlatform: String? = nil, handoffState: String? = nil, hidden: Int? = nil, id: String, inputTokens: Int?, isActive: Bool, lastActive: Double, lastActivityAt: Double? = nil, lastActivityDescription: String? = nil, lastActivityProvenance: String? = nil, lastReadAt: Double? = nil, messageCount: Int?, model: String?, modelConfig: String? = nil, originJson: String? = nil, outputTokens: Int?, parentSessionId: String? = nil, pinned: Int? = nil, preview: String?, pricingVersion: String? = nil, profile: String? = nil, profileName: String? = nil, reasoningTokens: Int? = nil, rewindCount: Int? = nil, sessionKey: String? = nil, source: String, startedAt: Double, systemPrompt: String? = nil, systemPromptHash: String? = nil, threadId: String? = nil, title: String?, titleSource: String? = nil, toolCallCount: Int?, toolNames: String? = nil, transportProfile: String? = nil, userId: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
+    public init(branchedFrom: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, autoArchived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, createdSource: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, preview: String, pricingVersion: String?, profile: String? = nil, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int, runtimeRevision: Int, schedulerOwned: Bool, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+        self.branchedFrom = branchedFrom
+        self.resetFrom = resetFrom
         self.actualCostUsd = actualCostUsd
         self.apiCallCount = apiCallCount
         self.archived = archived
+        self.autoArchived = autoArchived
         self.billingBaseUrl = billingBaseUrl
         self.billingMode = billingMode
         self.billingProvider = billingProvider
@@ -1927,6 +2288,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         self.compressionRecoveryDeadline = compressionRecoveryDeadline
         self.costSource = costSource
         self.costStatus = costStatus
+        self.createdSource = createdSource
         self.cwd = cwd
         self.displayName = displayName
         self.endReason = endReason
@@ -1961,6 +2323,9 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         self.profileName = profileName
         self.reasoningTokens = reasoningTokens
         self.rewindCount = rewindCount
+        self.runtimeGeneration = runtimeGeneration
+        self.runtimeRevision = runtimeRevision
+        self.schedulerOwned = schedulerOwned
         self.sessionKey = sessionKey
         self.source = source
         self.startedAt = startedAt
@@ -1977,9 +2342,12 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     }
 
     private enum CodingKeys: String, CodingKey {
+        case branchedFrom = "_branched_from"
+        case resetFrom = "_reset_from"
         case actualCostUsd = "actual_cost_usd"
         case apiCallCount = "api_call_count"
         case archived = "archived"
+        case autoArchived = "auto_archived"
         case billingBaseUrl = "billing_base_url"
         case billingMode = "billing_mode"
         case billingProvider = "billing_provider"
@@ -1994,6 +2362,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         case compressionRecoveryDeadline = "compression_recovery_deadline"
         case costSource = "cost_source"
         case costStatus = "cost_status"
+        case createdSource = "created_source"
         case cwd = "cwd"
         case displayName = "display_name"
         case endReason = "end_reason"
@@ -2028,6 +2397,9 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         case profileName = "profile_name"
         case reasoningTokens = "reasoning_tokens"
         case rewindCount = "rewind_count"
+        case runtimeGeneration = "runtime_generation"
+        case runtimeRevision = "runtime_revision"
+        case schedulerOwned = "scheduler_owned"
         case sessionKey = "session_key"
         case source = "source"
         case startedAt = "started_at"
@@ -2044,71 +2416,78 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        actualCostUsd = try container.decodeIfPresent(Double.self, forKey: .actualCostUsd)
-        apiCallCount = try container.decodeIfPresent(Int.self, forKey: .apiCallCount)
+        branchedFrom = try container.decodeIfPresent(String.self, forKey: .branchedFrom)
+        resetFrom = try container.decodeIfPresent(String.self, forKey: .resetFrom)
+        actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
+        apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
         archived = try container.decode(Bool.self, forKey: .archived)
-        billingBaseUrl = try container.decodeIfPresent(String.self, forKey: .billingBaseUrl)
-        billingMode = try container.decodeIfPresent(String.self, forKey: .billingMode)
-        billingProvider = try container.decodeIfPresent(String.self, forKey: .billingProvider)
-        cacheReadTokens = try container.decodeIfPresent(Int.self, forKey: .cacheReadTokens)
-        cacheWriteTokens = try container.decodeIfPresent(Int.self, forKey: .cacheWriteTokens)
-        chatId = try container.decodeIfPresent(String.self, forKey: .chatId)
-        chatType = try container.decodeIfPresent(String.self, forKey: .chatType)
-        compressionFailureCooldownUntil = try container.decodeIfPresent(Double.self, forKey: .compressionFailureCooldownUntil)
-        compressionFailureError = try container.decodeIfPresent(String.self, forKey: .compressionFailureError)
-        compressionFallbackStreak = try container.decodeIfPresent(Int.self, forKey: .compressionFallbackStreak)
-        compressionIneffectiveCount = try container.decodeIfPresent(Int.self, forKey: .compressionIneffectiveCount)
-        compressionRecoveryDeadline = try container.decodeIfPresent(Double.self, forKey: .compressionRecoveryDeadline)
-        costSource = try container.decodeIfPresent(String.self, forKey: .costSource)
-        costStatus = try container.decodeIfPresent(String.self, forKey: .costStatus)
+        autoArchived = try container.decode(Int.self, forKey: .autoArchived)
+        billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
+        billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
+        billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
+        cacheReadTokens = try container.decode(Optional<Int>.self, forKey: .cacheReadTokens)
+        cacheWriteTokens = try container.decode(Optional<Int>.self, forKey: .cacheWriteTokens)
+        chatId = try container.decode(Optional<String>.self, forKey: .chatId)
+        chatType = try container.decode(Optional<String>.self, forKey: .chatType)
+        compressionFailureCooldownUntil = try container.decode(Optional<Double>.self, forKey: .compressionFailureCooldownUntil)
+        compressionFailureError = try container.decode(Optional<String>.self, forKey: .compressionFailureError)
+        compressionFallbackStreak = try container.decode(Int.self, forKey: .compressionFallbackStreak)
+        compressionIneffectiveCount = try container.decode(Int.self, forKey: .compressionIneffectiveCount)
+        compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
+        costSource = try container.decode(Optional<String>.self, forKey: .costSource)
+        costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
+        createdSource = try container.decode(Optional<String>.self, forKey: .createdSource)
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
-        displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
-        endReason = try container.decodeIfPresent(String.self, forKey: .endReason)
+        displayName = try container.decode(Optional<String>.self, forKey: .displayName)
+        endReason = try container.decode(Optional<String>.self, forKey: .endReason)
         endedAt = try container.decode(Optional<Double>.self, forKey: .endedAt)
-        estimatedCostUsd = try container.decodeIfPresent(Double.self, forKey: .estimatedCostUsd)
-        expiryFinalized = try container.decodeIfPresent(Int.self, forKey: .expiryFinalized)
-        gitBranch = try container.decodeIfPresent(String.self, forKey: .gitBranch)
-        gitMetadataGeneration = try container.decodeIfPresent(Int.self, forKey: .gitMetadataGeneration)
-        gitRepoRoot = try container.decodeIfPresent(String.self, forKey: .gitRepoRoot)
-        handoffError = try container.decodeIfPresent(String.self, forKey: .handoffError)
-        handoffPlatform = try container.decodeIfPresent(String.self, forKey: .handoffPlatform)
-        handoffState = try container.decodeIfPresent(String.self, forKey: .handoffState)
-        hidden = try container.decodeIfPresent(Int.self, forKey: .hidden)
+        estimatedCostUsd = try container.decode(Optional<Double>.self, forKey: .estimatedCostUsd)
+        expiryFinalized = try container.decode(Optional<Int>.self, forKey: .expiryFinalized)
+        gitBranch = try container.decode(Optional<String>.self, forKey: .gitBranch)
+        gitMetadataGeneration = try container.decode(Int.self, forKey: .gitMetadataGeneration)
+        gitRepoRoot = try container.decode(Optional<String>.self, forKey: .gitRepoRoot)
+        handoffError = try container.decode(Optional<String>.self, forKey: .handoffError)
+        handoffPlatform = try container.decode(Optional<String>.self, forKey: .handoffPlatform)
+        handoffState = try container.decode(Optional<String>.self, forKey: .handoffState)
+        hidden = try container.decode(Int.self, forKey: .hidden)
         id = try container.decode(String.self, forKey: .id)
         inputTokens = try container.decode(Optional<Int>.self, forKey: .inputTokens)
         isActive = try container.decode(Bool.self, forKey: .isActive)
         lastActive = try container.decode(Double.self, forKey: .lastActive)
-        lastActivityAt = try container.decodeIfPresent(Double.self, forKey: .lastActivityAt)
-        lastActivityDescription = try container.decodeIfPresent(String.self, forKey: .lastActivityDescription)
-        lastActivityProvenance = try container.decodeIfPresent(String.self, forKey: .lastActivityProvenance)
-        lastReadAt = try container.decodeIfPresent(Double.self, forKey: .lastReadAt)
+        lastActivityAt = try container.decode(Optional<Double>.self, forKey: .lastActivityAt)
+        lastActivityDescription = try container.decode(Optional<String>.self, forKey: .lastActivityDescription)
+        lastActivityProvenance = try container.decode(Optional<String>.self, forKey: .lastActivityProvenance)
+        lastReadAt = try container.decode(Optional<Double>.self, forKey: .lastReadAt)
         messageCount = try container.decode(Optional<Int>.self, forKey: .messageCount)
         model = try container.decode(Optional<String>.self, forKey: .model)
-        modelConfig = try container.decodeIfPresent(String.self, forKey: .modelConfig)
-        originJson = try container.decodeIfPresent(String.self, forKey: .originJson)
+        modelConfig = try container.decode(Optional<String>.self, forKey: .modelConfig)
+        originJson = try container.decode(Optional<String>.self, forKey: .originJson)
         outputTokens = try container.decode(Optional<Int>.self, forKey: .outputTokens)
-        parentSessionId = try container.decodeIfPresent(String.self, forKey: .parentSessionId)
-        pinned = try container.decodeIfPresent(Int.self, forKey: .pinned)
-        preview = try container.decode(Optional<String>.self, forKey: .preview)
-        pricingVersion = try container.decodeIfPresent(String.self, forKey: .pricingVersion)
+        parentSessionId = try container.decode(Optional<String>.self, forKey: .parentSessionId)
+        pinned = try container.decode(Int.self, forKey: .pinned)
+        preview = try container.decode(String.self, forKey: .preview)
+        pricingVersion = try container.decode(Optional<String>.self, forKey: .pricingVersion)
         profile = try container.decodeIfPresent(String.self, forKey: .profile)
-        profileName = try container.decodeIfPresent(String.self, forKey: .profileName)
-        reasoningTokens = try container.decodeIfPresent(Int.self, forKey: .reasoningTokens)
-        rewindCount = try container.decodeIfPresent(Int.self, forKey: .rewindCount)
-        sessionKey = try container.decodeIfPresent(String.self, forKey: .sessionKey)
+        profileName = try container.decode(Optional<String>.self, forKey: .profileName)
+        reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
+        rewindCount = try container.decode(Int.self, forKey: .rewindCount)
+        runtimeGeneration = try container.decode(Int.self, forKey: .runtimeGeneration)
+        runtimeRevision = try container.decode(Int.self, forKey: .runtimeRevision)
+        schedulerOwned = try container.decode(Bool.self, forKey: .schedulerOwned)
+        sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Double.self, forKey: .startedAt)
-        systemPrompt = try container.decodeIfPresent(String.self, forKey: .systemPrompt)
-        systemPromptHash = try container.decodeIfPresent(String.self, forKey: .systemPromptHash)
-        threadId = try container.decodeIfPresent(String.self, forKey: .threadId)
+        systemPrompt = try container.decode(Optional<String>.self, forKey: .systemPrompt)
+        systemPromptHash = try container.decode(Optional<String>.self, forKey: .systemPromptHash)
+        threadId = try container.decode(Optional<String>.self, forKey: .threadId)
         title = try container.decode(Optional<String>.self, forKey: .title)
-        titleSource = try container.decodeIfPresent(String.self, forKey: .titleSource)
+        titleSource = try container.decode(Optional<String>.self, forKey: .titleSource)
         toolCallCount = try container.decode(Optional<Int>.self, forKey: .toolCallCount)
-        toolNames = try container.decodeIfPresent(String.self, forKey: .toolNames)
-        transportProfile = try container.decodeIfPresent(String.self, forKey: .transportProfile)
-        userId = try container.decodeIfPresent(String.self, forKey: .userId)
+        toolNames = try container.decode(Optional<String>.self, forKey: .toolNames)
+        transportProfile = try container.decode(Optional<String>.self, forKey: .transportProfile)
+        userId = try container.decode(Optional<String>.self, forKey: .userId)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
+        let known: Set<String> = ["_branched_from", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "scheduler_owned", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
         var extra: [String: JSONValue] = [:]
         for key in dynamic.allKeys where !known.contains(key.stringValue) {
             extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
@@ -2118,71 +2497,78 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(actualCostUsd, forKey: .actualCostUsd)
-        try container.encodeIfPresent(apiCallCount, forKey: .apiCallCount)
+        try container.encodeIfPresent(branchedFrom, forKey: .branchedFrom)
+        try container.encodeIfPresent(resetFrom, forKey: .resetFrom)
+        try container.encode(actualCostUsd, forKey: .actualCostUsd)
+        try container.encode(apiCallCount, forKey: .apiCallCount)
         try container.encode(archived, forKey: .archived)
-        try container.encodeIfPresent(billingBaseUrl, forKey: .billingBaseUrl)
-        try container.encodeIfPresent(billingMode, forKey: .billingMode)
-        try container.encodeIfPresent(billingProvider, forKey: .billingProvider)
-        try container.encodeIfPresent(cacheReadTokens, forKey: .cacheReadTokens)
-        try container.encodeIfPresent(cacheWriteTokens, forKey: .cacheWriteTokens)
-        try container.encodeIfPresent(chatId, forKey: .chatId)
-        try container.encodeIfPresent(chatType, forKey: .chatType)
-        try container.encodeIfPresent(compressionFailureCooldownUntil, forKey: .compressionFailureCooldownUntil)
-        try container.encodeIfPresent(compressionFailureError, forKey: .compressionFailureError)
-        try container.encodeIfPresent(compressionFallbackStreak, forKey: .compressionFallbackStreak)
-        try container.encodeIfPresent(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
-        try container.encodeIfPresent(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
-        try container.encodeIfPresent(costSource, forKey: .costSource)
-        try container.encodeIfPresent(costStatus, forKey: .costStatus)
+        try container.encode(autoArchived, forKey: .autoArchived)
+        try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
+        try container.encode(billingMode, forKey: .billingMode)
+        try container.encode(billingProvider, forKey: .billingProvider)
+        try container.encode(cacheReadTokens, forKey: .cacheReadTokens)
+        try container.encode(cacheWriteTokens, forKey: .cacheWriteTokens)
+        try container.encode(chatId, forKey: .chatId)
+        try container.encode(chatType, forKey: .chatType)
+        try container.encode(compressionFailureCooldownUntil, forKey: .compressionFailureCooldownUntil)
+        try container.encode(compressionFailureError, forKey: .compressionFailureError)
+        try container.encode(compressionFallbackStreak, forKey: .compressionFallbackStreak)
+        try container.encode(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
+        try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
+        try container.encode(costSource, forKey: .costSource)
+        try container.encode(costStatus, forKey: .costStatus)
+        try container.encode(createdSource, forKey: .createdSource)
         try container.encode(cwd, forKey: .cwd)
-        try container.encodeIfPresent(displayName, forKey: .displayName)
-        try container.encodeIfPresent(endReason, forKey: .endReason)
+        try container.encode(displayName, forKey: .displayName)
+        try container.encode(endReason, forKey: .endReason)
         try container.encode(endedAt, forKey: .endedAt)
-        try container.encodeIfPresent(estimatedCostUsd, forKey: .estimatedCostUsd)
-        try container.encodeIfPresent(expiryFinalized, forKey: .expiryFinalized)
-        try container.encodeIfPresent(gitBranch, forKey: .gitBranch)
-        try container.encodeIfPresent(gitMetadataGeneration, forKey: .gitMetadataGeneration)
-        try container.encodeIfPresent(gitRepoRoot, forKey: .gitRepoRoot)
-        try container.encodeIfPresent(handoffError, forKey: .handoffError)
-        try container.encodeIfPresent(handoffPlatform, forKey: .handoffPlatform)
-        try container.encodeIfPresent(handoffState, forKey: .handoffState)
-        try container.encodeIfPresent(hidden, forKey: .hidden)
+        try container.encode(estimatedCostUsd, forKey: .estimatedCostUsd)
+        try container.encode(expiryFinalized, forKey: .expiryFinalized)
+        try container.encode(gitBranch, forKey: .gitBranch)
+        try container.encode(gitMetadataGeneration, forKey: .gitMetadataGeneration)
+        try container.encode(gitRepoRoot, forKey: .gitRepoRoot)
+        try container.encode(handoffError, forKey: .handoffError)
+        try container.encode(handoffPlatform, forKey: .handoffPlatform)
+        try container.encode(handoffState, forKey: .handoffState)
+        try container.encode(hidden, forKey: .hidden)
         try container.encode(id, forKey: .id)
         try container.encode(inputTokens, forKey: .inputTokens)
         try container.encode(isActive, forKey: .isActive)
         try container.encode(lastActive, forKey: .lastActive)
-        try container.encodeIfPresent(lastActivityAt, forKey: .lastActivityAt)
-        try container.encodeIfPresent(lastActivityDescription, forKey: .lastActivityDescription)
-        try container.encodeIfPresent(lastActivityProvenance, forKey: .lastActivityProvenance)
-        try container.encodeIfPresent(lastReadAt, forKey: .lastReadAt)
+        try container.encode(lastActivityAt, forKey: .lastActivityAt)
+        try container.encode(lastActivityDescription, forKey: .lastActivityDescription)
+        try container.encode(lastActivityProvenance, forKey: .lastActivityProvenance)
+        try container.encode(lastReadAt, forKey: .lastReadAt)
         try container.encode(messageCount, forKey: .messageCount)
         try container.encode(model, forKey: .model)
-        try container.encodeIfPresent(modelConfig, forKey: .modelConfig)
-        try container.encodeIfPresent(originJson, forKey: .originJson)
+        try container.encode(modelConfig, forKey: .modelConfig)
+        try container.encode(originJson, forKey: .originJson)
         try container.encode(outputTokens, forKey: .outputTokens)
-        try container.encodeIfPresent(parentSessionId, forKey: .parentSessionId)
-        try container.encodeIfPresent(pinned, forKey: .pinned)
+        try container.encode(parentSessionId, forKey: .parentSessionId)
+        try container.encode(pinned, forKey: .pinned)
         try container.encode(preview, forKey: .preview)
-        try container.encodeIfPresent(pricingVersion, forKey: .pricingVersion)
+        try container.encode(pricingVersion, forKey: .pricingVersion)
         try container.encodeIfPresent(profile, forKey: .profile)
-        try container.encodeIfPresent(profileName, forKey: .profileName)
-        try container.encodeIfPresent(reasoningTokens, forKey: .reasoningTokens)
-        try container.encodeIfPresent(rewindCount, forKey: .rewindCount)
-        try container.encodeIfPresent(sessionKey, forKey: .sessionKey)
+        try container.encode(profileName, forKey: .profileName)
+        try container.encode(reasoningTokens, forKey: .reasoningTokens)
+        try container.encode(rewindCount, forKey: .rewindCount)
+        try container.encode(runtimeGeneration, forKey: .runtimeGeneration)
+        try container.encode(runtimeRevision, forKey: .runtimeRevision)
+        try container.encode(schedulerOwned, forKey: .schedulerOwned)
+        try container.encode(sessionKey, forKey: .sessionKey)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)
-        try container.encodeIfPresent(systemPrompt, forKey: .systemPrompt)
-        try container.encodeIfPresent(systemPromptHash, forKey: .systemPromptHash)
-        try container.encodeIfPresent(threadId, forKey: .threadId)
+        try container.encode(systemPrompt, forKey: .systemPrompt)
+        try container.encode(systemPromptHash, forKey: .systemPromptHash)
+        try container.encode(threadId, forKey: .threadId)
         try container.encode(title, forKey: .title)
-        try container.encodeIfPresent(titleSource, forKey: .titleSource)
+        try container.encode(titleSource, forKey: .titleSource)
         try container.encode(toolCallCount, forKey: .toolCallCount)
-        try container.encodeIfPresent(toolNames, forKey: .toolNames)
-        try container.encodeIfPresent(transportProfile, forKey: .transportProfile)
-        try container.encodeIfPresent(userId, forKey: .userId)
+        try container.encode(toolNames, forKey: .toolNames)
+        try container.encode(transportProfile, forKey: .transportProfile)
+        try container.encode(userId, forKey: .userId)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["actual_cost_usd", "api_call_count", "archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
+        let known: Set<String> = ["_branched_from", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "scheduler_owned", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "user_id"]
         for (key, value) in additionalProperties {
             guard !known.contains(key) else {
                 throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
@@ -2193,12 +2579,12 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``_list_cron_job_runs_sync`` — the job's run sessions (``SessionDB.list_cron_job_runs``), newest first, annotated with ``is_active``/``archived`` and ``profile`` when a profile holds the job.
+/// ``_list_cron_job_runs_sync`` — run sessions merged with output-doc rows for executions no session represents (``_reconcile_cron_runs``), newest first.
 public struct CronJobRunsResponse: Codable, Sendable, Hashable {
     public var limit: Int
-    public var runs: [CronJobRunSession]
+    public var runs: [CronJobRunsResponseRunsItem]
 
-    public init(limit: Int, runs: [CronJobRunSession]) {
+    public init(limit: Int, runs: [CronJobRunsResponseRunsItem]) {
         self.limit = limit
         self.runs = runs
     }
@@ -2218,13 +2604,40 @@ public struct CronJobRunsResponse: Codable, Sendable, Hashable {
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         limit = try container.decode(Int.self, forKey: .limit)
-        runs = try container.decode([CronJobRunSession].self, forKey: .runs)
+        runs = try container.decode([CronJobRunsResponseRunsItem].self, forKey: .runs)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(limit, forKey: .limit)
         try container.encode(runs, forKey: .runs)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+public enum CronJobRunsResponseRunsItem: Codable, Sendable, Hashable {
+    case cronJobRunSession(CronJobRunSession)
+    case cronJobOutputRun(CronJobOutputRun)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(CronJobRunSession.self) {
+            self = .cronJobRunSession(value)
+            return
+        }
+        if let value = try? container.decode(CronJobOutputRun.self) {
+            self = .cronJobOutputRun(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .cronJobRunSession(let value): try container.encode(value)
+        case .cronJobOutputRun(let value): try container.encode(value)
+        }
     }
 }
 
@@ -2286,290 +2699,5 @@ public struct CronJobSchedule: Codable, Sendable, Hashable {
             }
             try dynamic.encode(value, forKey: DynamicCodingKey(key))
         }
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum CronJobScheduleKind: Codable, Sendable, Hashable, RawRepresentable {
-    case once
-    case interval
-    case cron
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "once": self = .once
-        case "interval": self = .interval
-        case "cron": self = .cron
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .once: "once"
-        case .interval: "interval"
-        case .cron: "cron"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "once": self = .once
-        case "interval": self = .interval
-        case "cron": self = .cron
-        default:
-            guard decoder.decodesTolerantly else {
-                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected CronJobScheduleKind value: \(raw)")
-            }
-            self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct CronJobUpdate: Codable, Sendable, Hashable {
-    public var updates: [String: JSONValue]
-
-    public init(updates: [String: JSONValue]) {
-        self.updates = updates
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case updates = "updates"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["updates"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        updates = try container.decode([String: JSONValue].self, forKey: .updates)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(updates, forKey: .updates)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct CuratorPause: Codable, Sendable, Hashable {
-    public var paused: Bool
-
-    public init(paused: Bool) {
-        self.paused = paused
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case paused = "paused"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["paused"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        paused = try container.decode(Bool.self, forKey: .paused)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(paused, forKey: .paused)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``set_curator_paused``.
-public struct CuratorPausedResponse: Codable, Sendable, Hashable {
-    public var ok: Bool
-    public var paused: Bool
-
-    public init(ok: Bool, paused: Bool) {
-        self.ok = ok
-        self.paused = paused
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case ok = "ok"
-        case paused = "paused"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["ok", "paused"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        paused = try container.decode(Bool.self, forKey: .paused)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(paused, forKey: .paused)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``get_curator_status``; a getter that raised reads as ``null``.
-public struct CuratorStatusResponse: Codable, Sendable, Hashable {
-    public var archiveAfterDays: Int?
-    public var enabled: Bool
-    public var intervalHours: Int?
-    public var lastRunAt: String?
-    public var minIdleHours: Double?
-    public var paused: Bool
-    public var staleAfterDays: Int?
-
-    public init(archiveAfterDays: Int?, enabled: Bool, intervalHours: Int?, lastRunAt: String?, minIdleHours: Double?, paused: Bool, staleAfterDays: Int?) {
-        self.archiveAfterDays = archiveAfterDays
-        self.enabled = enabled
-        self.intervalHours = intervalHours
-        self.lastRunAt = lastRunAt
-        self.minIdleHours = minIdleHours
-        self.paused = paused
-        self.staleAfterDays = staleAfterDays
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case archiveAfterDays = "archive_after_days"
-        case enabled = "enabled"
-        case intervalHours = "interval_hours"
-        case lastRunAt = "last_run_at"
-        case minIdleHours = "min_idle_hours"
-        case paused = "paused"
-        case staleAfterDays = "stale_after_days"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["archive_after_days", "enabled", "interval_hours", "last_run_at", "min_idle_hours", "paused", "stale_after_days"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        archiveAfterDays = try container.decode(Optional<Int>.self, forKey: .archiveAfterDays)
-        enabled = try container.decode(Bool.self, forKey: .enabled)
-        intervalHours = try container.decode(Optional<Int>.self, forKey: .intervalHours)
-        lastRunAt = try container.decode(Optional<String>.self, forKey: .lastRunAt)
-        minIdleHours = try container.decode(Optional<Double>.self, forKey: .minIdleHours)
-        paused = try container.decode(Bool.self, forKey: .paused)
-        staleAfterDays = try container.decode(Optional<Int>.self, forKey: .staleAfterDays)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(archiveAfterDays, forKey: .archiveAfterDays)
-        try container.encode(enabled, forKey: .enabled)
-        try container.encode(intervalHours, forKey: .intervalHours)
-        try container.encode(lastRunAt, forKey: .lastRunAt)
-        try container.encode(minIdleHours, forKey: .minIdleHours)
-        try container.encode(paused, forKey: .paused)
-        try container.encode(staleAfterDays, forKey: .staleAfterDays)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-/// ``activate_custom_endpoint``.
-public struct CustomEndpointActivateResponse: Codable, Sendable, Hashable {
-    public var model: String
-    public var ok: Bool
-    public var provider: String
-
-    public init(model: String, ok: Bool, provider: String) {
-        self.model = model
-        self.ok = ok
-        self.provider = provider
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case model = "model"
-        case ok = "ok"
-        case provider = "provider"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["model", "ok", "provider"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        model = try container.decode(String.self, forKey: .model)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        provider = try container.decode(String.self, forKey: .provider)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(model, forKey: .model)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(provider, forKey: .provider)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public struct CustomEndpointCurrentModel: Codable, Sendable, Hashable {
-    public var baseUrl: String
-    public var model: String
-    public var provider: String
-
-    public init(baseUrl: String, model: String, provider: String) {
-        self.baseUrl = baseUrl
-        self.model = model
-        self.provider = provider
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case baseUrl = "base_url"
-        case model = "model"
-        case provider = "provider"
-    }
-
-    public init(from decoder: Decoder) throws {
-        if !decoder.decodesTolerantly {
-            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["base_url", "model", "provider"]
-            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
-            }
-        }
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        baseUrl = try container.decode(String.self, forKey: .baseUrl)
-        model = try container.decode(String.self, forKey: .model)
-        provider = try container.decode(String.self, forKey: .provider)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(baseUrl, forKey: .baseUrl)
-        try container.encode(model, forKey: .model)
-        try container.encode(provider, forKey: .provider)
     }
 }

@@ -183,6 +183,11 @@ components:
         type: array
       is_active:
         type: boolean
+      managed_nous_feature:
+        anyOf:
+        - type: string
+        - type: 'null'
+        description: The Nous Subscription feature a managed row rides ("web", "tts", ...); null on BYOK rows.
       name:
         type: string
       post_setup:
@@ -218,6 +223,7 @@ components:
     - env_vars
     - post_setup
     - requires_nous_auth
+    - managed_nous_feature
     - is_active
     - status
     type: object
@@ -239,6 +245,11 @@ components:
         anyOf:
         - type: string
         - type: 'null'
+      extract_via_nous:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+        description: '``web`` only: the extract backend rides the Nous Tool Gateway.'
       has_category:
         type: boolean
       name:
@@ -247,6 +258,11 @@ components:
         items:
           $ref: '#/components/schemas/ToolsetConfigProvider'
         type: array
+      search_via_nous:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+        description: '``web`` only: the search backend rides the Nous Tool Gateway.'
     required:
     - name
     - has_category
@@ -475,10 +491,10 @@ components:
 operations:
 - method: GET
   path: /api/tools/computer-use/status
-  x-source: hermes_cli/web_routers/tools.py:683
+  x-source: hermes_cli/web_routers/tools.py:699
   x-handler-hash: b8d121ec009a7bd004edf26536120ba5be4df3f593af269eb6eb7544ab16ab62
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ComputerUseStatusResponse
   responses:
     '200':
@@ -489,10 +505,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/tools/terminal/backends
-  x-source: hermes_cli/web_routers/tools.py:634
+  x-source: hermes_cli/web_routers/tools.py:650
   x-handler-hash: 5fad15d13fe97162d2a23396c849627a2d857a17c46a21653fc79dd2abb28702
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: TerminalBackendsResponse
   responses:
     '200':
@@ -506,7 +522,7 @@ operations:
   x-source: hermes_cli/web_routers/tools.py:230
   x-handler-hash: 4ae278f41c8670ff79fc73c11372b4edec04e2384fa0f7704c1aff307350c36f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: '{"items": {"$ref": "#/components/schemas/ToolsetListRow"}, "type": "array"}'
   responses:
     '200':
@@ -520,9 +536,9 @@ operations:
 - method: GET
   path: /api/tools/toolsets/{name}/config
   x-source: hermes_cli/web_routers/tools.py:345
-  x-handler-hash: a8951805d82bcce14ddb4f68f942d3647aedcbd40af7dd147ef48dd9670c5935
+  x-handler-hash: 51dc1d15f121fcb23d6da9576ad77626814e5f0fe48e6222e5d212c2e7093d15
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ToolsetConfigResponse
   responses:
     '200':
@@ -533,10 +549,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/tools/toolsets/{name}/models
-  x-source: hermes_cli/web_routers/tools.py:421
+  x-source: hermes_cli/web_routers/tools.py:432
   x-handler-hash: 7afec1aafca57c60678fd26a5ca77023a52476c791d146a6bd07f203413a746c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ToolsetModelsResponse
   responses:
     '200':
@@ -547,10 +563,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/tools/computer-use/permissions/grant
-  x-source: hermes_cli/web_routers/tools.py:692
+  x-source: hermes_cli/web_routers/tools.py:708
   x-handler-hash: 53211f9ea3015d4be78539a9cea1058d81d7c3618c441ffca81ebf7307065c4c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ActionSpawnResponse
   responses:
     '200':
@@ -561,10 +577,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/tools/toolsets/{name}/post-setup
-  x-source: hermes_cli/web_routers/tools.py:615
+  x-source: hermes_cli/web_routers/tools.py:631
   x-handler-hash: ee90eacf624619e1472942ecf34642157a27768195342bce208e003d4f5feb0e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ToolsetPostSetupResponse
   responses:
     '200':
@@ -575,10 +591,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/tools/terminal/backend
-  x-source: hermes_cli/web_routers/tools.py:661
+  x-source: hermes_cli/web_routers/tools.py:677
   x-handler-hash: b1e557387ce97916724edc727a9d764736e0a898212191c238e77770a3ce4b73
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: TerminalBackendSelectResponse
   responses:
     '200':
@@ -592,7 +608,7 @@ operations:
   x-source: hermes_cli/web_routers/tools.py:280
   x-handler-hash: aec92387649ce3d544a6b832fa5d90452caccaa6225a4f3ee6e08c706716942e
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ToolsetToggleResponse
   responses:
     '200':
@@ -603,10 +619,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/tools/toolsets/{name}/env
-  x-source: hermes_cli/web_routers/tools.py:574
-  x-handler-hash: e819772c53e092672fa3b60fc96bb59e4ac3e5fc79763f006ad83310e8425d58
+  x-source: hermes_cli/web_routers/tools.py:590
+  x-handler-hash: 026fdc630145a0bf083f52d02ae98bf07946a12ab0db0c807e06aad2619cedbf
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ToolsetEnvSaveResponse
   responses:
     '200':
@@ -617,10 +633,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/tools/toolsets/{name}/model
-  x-source: hermes_cli/web_routers/tools.py:461
+  x-source: hermes_cli/web_routers/tools.py:472
   x-handler-hash: dd4edc192fe6b6944145560cbbb4dd2ac4ee334b1f388e29f40f2bc240b979e3
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ToolsetModelSelectResponse
   responses:
     '200':
@@ -631,10 +647,10 @@ operations:
       description: Successful Response
 - method: PUT
   path: /api/tools/toolsets/{name}/provider
-  x-source: hermes_cli/web_routers/tools.py:493
-  x-handler-hash: 41786cb7e69217668d3e382b3a92a080e62be5b17a9e99b72abbab6d210042d7
+  x-source: hermes_cli/web_routers/tools.py:504
+  x-handler-hash: 1bdd4cd9c794e1d7219a2356285ca59bb6db561cc2e2f1c4f9844c3b5d14fd8c
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ToolsetProviderSelectResponse
   responses:
     '200':

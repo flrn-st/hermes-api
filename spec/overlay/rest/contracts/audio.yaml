@@ -79,6 +79,73 @@ components:
     - available
     - voices
     type: object
+  SttHallucinationFilter:
+    additionalProperties: false
+    description: '``tools/voice_client_config.py::stt_hallucination_filter``: the Whisper-silence filter the
+
+      relay path applies, so a client-direct transcription agrees with a relayed one.'
+    properties:
+      phrases:
+        items:
+          type: string
+        type: array
+      repeat_regex:
+        type: string
+    required:
+    - phrases
+    - repeat_regex
+    type: object
+  SttLeaseResponse:
+    additionalProperties: false
+    description: '``stt_lease`` — the request''s ``lease`` / ``active`` plus ``tools/stt_lease.py::acquire_stt_lease``
+
+      (``warm_stt_provider``''s warm-up result and the holder count) or ``release_stt_lease`` (the count
+
+      only). A lease exception is reported in the body (``action: "error"``, ``leases: null``), never as
+
+      an HTTP error.'
+    properties:
+      action:
+        anyOf:
+        - enum:
+          - noop
+          - loaded
+          - cached
+          - error
+          type: string
+        - type: 'null'
+      active:
+        type: boolean
+      elapsed_ms:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      error:
+        anyOf:
+        - type: string
+        - type: 'null'
+      lease:
+        type: string
+      leases:
+        anyOf:
+        - type: integer
+        - type: 'null'
+      ok:
+        type: boolean
+      provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+      warmed:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+    required:
+    - ok
+    - lease
+    - active
+    - leases
+    type: object
   TtsLeaseResponse:
     additionalProperties: false
     description: '``tts_lease`` — the request''s ``lease`` / ``active`` plus
@@ -155,7 +222,13 @@ components:
     additionalProperties: false
     description: '``tools/voice_client_config.py::_resolve_stt_client_config``. ``mode: "relay"`` carries only
 
-      ``reason``; ``"direct"`` carries the provider wire and credentials.'
+      ``reason``; ``"direct"`` carries the provider wire, credentials and ``hallucination_filter``.
+
+      ``streaming`` (live dictation over ``/api/audio/transcribe-stream``) is stamped on either
+
+      verdict by ``resolve_client_voice_config``; absent when that probe fails or on the route''s own
+
+      fallback.'
     properties:
       api_key:
         anyOf:
@@ -164,6 +237,10 @@ components:
       base_url:
         anyOf:
         - type: string
+        - type: 'null'
+      hallucination_filter:
+        anyOf:
+        - $ref: '#/components/schemas/SttHallucinationFilter'
         - type: 'null'
       language:
         anyOf:
@@ -185,6 +262,10 @@ components:
       reason:
         anyOf:
         - type: string
+        - type: 'null'
+      streaming:
+        anyOf:
+        - type: boolean
         - type: 'null'
       timeout_s:
         anyOf:
@@ -333,10 +414,10 @@ components:
 operations:
 - method: GET
   path: /api/audio/elevenlabs/voices
-  x-source: hermes_cli/web_routers/audio.py:207
-  x-handler-hash: 146751c71dbcc12ea6ef809dbd696290cf8f06f8a96c8685cc309aed7b1a143e
+  x-source: hermes_cli/web_routers/audio.py:218
+  x-handler-hash: 4db25d475a3c2d566a20b4109f64e572bf7f095a2a1adaa651409cce1807c45d
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: ElevenLabsVoicesResponse
   responses:
     '200':
@@ -347,10 +428,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/audio/voice-config
-  x-source: hermes_cli/web_routers/audio.py:140
-  x-handler-hash: a57060c08c07bf57d9f990fb44448819dfecf5074cc512102aa876ee073dd2a0
+  x-source: hermes_cli/web_routers/audio.py:149
+  x-handler-hash: 120d9b93fd2f20617e8e3478dc18bf538b4b609689311ffb0bf3b710434bcc3f
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: VoiceClientConfigResponse
   responses:
     '200':
@@ -361,10 +442,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/audio/voice-live/status
-  x-source: hermes_cli/web_routers/audio.py:167
+  x-source: hermes_cli/web_routers/audio.py:178
   x-handler-hash: 035ef29e3550c9b1f06995f1155c5c681258c0c63e56a289ec76fb312dd048c7
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: VoiceLiveStatusResponse
   responses:
     '200':
@@ -375,10 +456,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/audio/speak
-  x-source: hermes_cli/web_routers/audio.py:284
+  x-source: hermes_cli/web_routers/audio.py:293
   x-handler-hash: d2754c48eb90210226f48804d2e6b030294bd8dd2cf77ea292ab082dcdf91a09
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AudioSpeakResponse
   responses:
     '200':
@@ -388,11 +469,25 @@ operations:
             $ref: '#/components/schemas/AudioSpeakResponse'
       description: Successful Response
 - method: POST
+  path: /api/audio/stt-lease
+  x-source: hermes_cli/web_routers/audio.py:482
+  x-handler-hash: 4f948dc8088809bbe0dad34f3b5614f031ee3988785e069ace135756a9ee36c0
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SttLeaseResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SttLeaseResponse'
+      description: Successful Response
+- method: POST
   path: /api/audio/transcribe
-  x-source: hermes_cli/web_routers/audio.py:77
+  x-source: hermes_cli/web_routers/audio.py:86
   x-handler-hash: 2019dcb77ffbb5348969578106993e795a06d1372800ed89097a157cd863db64
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AudioTranscriptionResponse
   responses:
     '200':
@@ -403,10 +498,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/audio/tts-lease
-  x-source: hermes_cli/web_routers/audio.py:341
-  x-handler-hash: 1fc8a4d485328fcce4ef13fe909357024c5b7ddc3b52509cd571c527615e262f
+  x-source: hermes_cli/web_routers/audio.py:350
+  x-handler-hash: 3b4f152fbca079f7b38550f626ef738d41da4ee47c4253841b7b03c0e6dab3d8
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: TtsLeaseResponse
   responses:
     '200':
@@ -417,10 +512,10 @@ operations:
       description: Successful Response
 - method: POST
   path: /api/audio/voice-live/session
-  x-source: hermes_cli/web_routers/audio.py:177
+  x-source: hermes_cli/web_routers/audio.py:188
   x-handler-hash: bc4f97cfc7663dba40f5da0f435df4693af9671890306735163f116baaa253f4
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: VoiceLiveSessionResponse
   responses:
     '200':

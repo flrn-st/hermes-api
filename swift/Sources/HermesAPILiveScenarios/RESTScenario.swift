@@ -48,7 +48,8 @@ enum RESTScenario {
                     observations: LiveObservations) async throws {
         let plain = HermesREST(configuration: .init(address: HermesDashboardAddress(baseURL), auth: auth, transport: transport))
         var native: HermesREST?
-        var captured: [String: JSONValue] = [:]
+        // Names the scenario creates carry a per-run value, as in the gateway scenario.
+        var captured: [String: JSONValue] = ["@unique": .string("swift\(Int(Date().timeIntervalSince1970))")]
         for (index, call) in calls.enumerated() {
             let rest: HermesREST
             if call.auth == "native" {

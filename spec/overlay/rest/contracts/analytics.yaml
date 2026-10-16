@@ -400,13 +400,25 @@ components:
     - total_sessions
     - total_api_calls
     type: object
+  RawConfigYamlResponse:
+    additionalProperties: false
+    description: '``get_config_raw`` — ``yaml`` is ``""`` when the profile''s ``config.yaml`` does not exist.'
+    properties:
+      path:
+        type: string
+      yaml:
+        type: string
+    required:
+    - yaml
+    - path
+    type: object
 operations:
 - method: GET
   path: /api/analytics/models
-  x-source: hermes_cli/web_routers/analytics.py:305
+  x-source: hermes_cli/web_routers/analytics.py:410
   x-handler-hash: 9bdbd136d071072249f52f7302e285a2cab8f87d9e6cae29c7c7cf288967319b
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AnalyticsModelsResponse
   responses:
     '200':
@@ -417,10 +429,10 @@ operations:
       description: Successful Response
 - method: GET
   path: /api/analytics/usage
-  x-source: hermes_cli/web_routers/analytics.py:143
+  x-source: hermes_cli/web_routers/analytics.py:145
   x-handler-hash: 885941292538372e4b0ad3b98e17f73b93d7f3cbf82433e7bfeae690bb8053b9
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: AnalyticsUsageResponse
   responses:
     '200':
@@ -429,12 +441,26 @@ operations:
           schema:
             $ref: '#/components/schemas/AnalyticsUsageResponse'
       description: Successful Response
+- method: GET
+  path: /api/config/raw
+  x-source: hermes_cli/web_routers/analytics.py:34
+  x-handler-hash: 982880acabd8cd84a78932a700d19aae5fd33debef68ae21ed5231e54befe073
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: RawConfigYamlResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RawConfigYamlResponse'
+      description: Successful Response
 - method: PUT
   path: /api/config/raw
-  x-source: hermes_cli/web_routers/analytics.py:52
+  x-source: hermes_cli/web_routers/analytics.py:53
   x-handler-hash: ae66b495686c88836db3f764b0728b8566e7c5db4da2d795a0e8d05a1647edf4
   x-contract:
-    commit: 3f5b9b1ce2562bd607281894a9e32a34dd9ba0c3
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
     model: OkResponse
   responses:
     '200':

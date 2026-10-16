@@ -9,6 +9,139 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_dashboard_plugin_entry`` tab info; ``override`` only when it is an absolute route, ``hidden`` only when true. */
+@Serializable
+public data class DashboardPluginTab(
+    @SerialName("hidden")
+    public val hidden: Boolean? = null,
+    @SerialName("override")
+    public val override: String? = null,
+    @SerialName("path")
+    public val path: String,
+    @SerialName("position")
+    public val position: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``rescan_dashboard_plugins``. */
+@Serializable
+public data class DashboardPluginsRescanResponse(
+    @SerialName("count")
+    public val count: Long,
+    @SerialName("ok")
+    public val ok: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. Only non-empty named slots are sent; ``custom`` keys are CSS identifiers. */
+@Serializable
+public data class DashboardThemeAssets(
+    @SerialName("bg")
+    public val bg: String? = null,
+    @SerialName("crest")
+    public val crest: String? = null,
+    @SerialName("custom")
+    public val custom: Map<String, String>? = null,
+    @SerialName("header")
+    public val header: String? = null,
+    @SerialName("hero")
+    public val hero: String? = null,
+    @SerialName("logo")
+    public val logo: String? = null,
+    @SerialName("sidebar")
+    public val sidebar: String? = null,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_normalise_theme_definition`` — the wire format ``ThemeProvider`` consumes. ``label`` falls back to ``name``; ``description`` is the raw YAML value (``null`` when the key is present but empty). */
+@Serializable
+public data class DashboardThemeDefinition(
+    @SerialName("assets")
+    public val assets: DashboardThemeAssets? = null,
+    @SerialName("colorOverrides")
+    public val colorOverrides: Map<String, String>? = null,
+    @SerialName("componentStyles")
+    public val componentStyles: Map<String, Map<String, String>>? = null,
+    @SerialName("customCSS")
+    public val customCSS: String? = null,
+    @SerialName("description")
+    public val description: String?,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("layout")
+    public val layout: DashboardThemeLayout,
+    @SerialName("layoutVariant")
+    public val layoutVariant: DashboardThemeDefinitionLayoutVariant,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("palette")
+    public val palette: DashboardThemePalette,
+    @SerialName("typography")
+    public val typography: DashboardThemeTypography,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = DashboardThemeDefinitionLayoutVariant.Serializer::class)
+public sealed interface DashboardThemeDefinitionLayoutVariant {
+    public data object Standard : DashboardThemeDefinitionLayoutVariant
+    public data object Cockpit : DashboardThemeDefinitionLayoutVariant
+    public data object Tiled : DashboardThemeDefinitionLayoutVariant
+    public data class Unknown(public val raw: kotlin.String) : DashboardThemeDefinitionLayoutVariant
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Standard -> "standard"
+            Cockpit -> "cockpit"
+            Tiled -> "tiled"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): DashboardThemeDefinitionLayoutVariant = when (raw) {
+            "standard" -> Standard
+            "cockpit" -> Cockpit
+            "tiled" -> Tiled
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<DashboardThemeDefinitionLayoutVariant> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeDefinitionLayoutVariant", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): DashboardThemeDefinitionLayoutVariant = when (val raw = decoder.decodeString()) {
+            "standard" -> Standard
+            "cockpit" -> Cockpit
+            "tiled" -> Tiled
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected DashboardThemeDefinitionLayoutVariant value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: DashboardThemeDefinitionLayoutVariant) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. A built-in (``_BUILTIN_DASHBOARD_THEMES``: no ``definition``, the frontend owns it) or a user theme from ``dashboard-themes/&#42;.yaml`` (with its normalised ``definition``). */
+@Serializable
+public data class DashboardThemeEntry(
+    @SerialName("definition")
+    public val definition: DashboardThemeDefinition? = null,
+    @SerialName("description")
+    public val description: String?,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("name")
+    public val name: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_parse_theme_layer`` — alpha clamped to 0..1. */
+@Serializable
+public data class DashboardThemeLayer(
+    @SerialName("alpha")
+    public val alpha: Double,
+    @SerialName("hex")
+    public val hex: String,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable
 public data class DashboardThemeLayout(
@@ -285,6 +418,21 @@ public sealed interface ElevenLabsVoicesResponseError {
     }
 }
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``_catalog_provider_env_metadata._profile``: one provider sharing an env var with others. */
+@Serializable
+public data class EnvProviderProfile(
+    @SerialName("description")
+    public val description: String,
+    @SerialName("primary")
+    public val primary: Boolean,
+    @SerialName("provider")
+    public val provider: String,
+    @SerialName("provider_label")
+    public val providerLabel: String,
+    @SerialName("url")
+    public val url: String?,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = EnvVarDelete.Serializer::class)
 public data class EnvVarDelete(
@@ -327,7 +475,7 @@ public data class EnvVarDelete(
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``_get_env_vars_sync._row``: ``OPTIONAL_ENV_VARS`` prose layered over the provider catalog's card metadata. ``GET /api/env`` returns ``{VAR_NAME: EnvVarInfo}``. Custom ``.env`` keys (in no catalog) carry ``custom: true``, ``category: "custom"`` and ``is_password: true``. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``_get_env_vars_sync._row``: ``OPTIONAL_ENV_VARS`` prose layered over the provider catalog's card metadata. ``GET /api/env`` returns ``{VAR_NAME: EnvVarInfo}``. */
 @Serializable
 public data class EnvVarInfo(
     @SerialName("advanced")
@@ -348,6 +496,11 @@ public data class EnvVarInfo(
     public val provider: String,
     @SerialName("provider_label")
     public val providerLabel: String,
+    @SerialName("provider_primary")
+    public val providerPrimary: Boolean,
+    /** Every built-in provider this credential serves; [] when only one does. */
+    @SerialName("provider_profiles")
+    public val providerProfiles: List<EnvProviderProfile>,
     @SerialName("redacted_value")
     public val redactedValue: String?,
     @SerialName("tools")
@@ -443,6 +596,7 @@ public data class EnvVarUpdate(
     public val apiKey: String? = null,
     public val key: String,
     public val profile: Patch<String> = Patch.Absent,
+    public val providerSetup: Boolean? = null,
     public val value: String,
 )
 {
@@ -456,13 +610,14 @@ public data class EnvVarUpdate(
             val input = jsonDecoder.decodeJsonElement() as? JsonObject
                 ?: throw SerializationException("EnvVarUpdate requires an object")
             if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("api_key", "key", "profile", "value")
+                val known = setOf<String>("api_key", "key", "profile", "provider_setup", "value")
                 input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
             }
             return EnvVarUpdate(
                 apiKey = input["api_key"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 key = json.decodeFromJsonElement<String>((input["key"] ?: throw SerializationException("Missing key"))),
                 profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                providerSetup = input["provider_setup"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 value = json.decodeFromJsonElement<String>((input["value"] ?: throw SerializationException("Missing value"))),
             )
         }
@@ -479,6 +634,7 @@ public data class EnvVarUpdate(
                 Patch.Null -> output["profile"] = JsonNull
                 is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
             }
+            value.providerSetup?.let { output["provider_setup"] = json.encodeToJsonElement(it) }
             output["value"] = json.encodeToJsonElement(value.value)
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
@@ -560,117 +716,3 @@ public data class FsDefaultCwdResponse(
     @SerialName("cwd")
     public val cwd: String,
 )
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_git_root``: the nearest ancestor holding ``.git``, else null. */
-@Serializable
-public data class FsGitRootResponse(
-    @SerialName("root")
-    public val root: String?,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class FsListEntry(
-    @SerialName("isDirectory")
-    public val isDirectory: Boolean,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("path")
-    public val path: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_list``. A read failure is a 200 with ``entries: []`` and ``error`` (an errno name such as ``ENOENT``, else the OS ``strerror`` or ``"read-error"``). */
-@Serializable
-public data class FsListResponse(
-    @SerialName("entries")
-    public val entries: List<FsListEntry>,
-    @SerialName("error")
-    public val error: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_read_text``: a UTF-8 (``replace``) preview capped at 512 KiB. */
-@Serializable
-public data class FsReadTextResponse(
-    @SerialName("binary")
-    public val binary: Boolean,
-    @SerialName("byteSize")
-    public val byteSize: Long,
-    @SerialName("language")
-    public val language: String,
-    @SerialName("mimeType")
-    public val mimeType: String,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("text")
-    public val text: String,
-    @SerialName("truncated")
-    public val truncated: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable
-public data class FsWriteText(
-    @SerialName("content")
-    public val content: String,
-    @SerialName("path")
-    public val path: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``fs_write_text``. */
-@Serializable
-public data class FsWriteTextResponse(
-    @SerialName("byteSize")
-    public val byteSize: Long,
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("path")
-    public val path: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``post_gateway_drain``: ``action`` defaults to ``drain``; ``suppress_notification`` only applies to a drain. */
-@Serializable
-public data class GatewayDrainRequest(
-    @SerialName("action")
-    public val action: GatewayDrainRequestAction? = null,
-    @SerialName("suppress_notification")
-    public val suppressNotification: Boolean? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = GatewayDrainRequestAction.Serializer::class)
-public sealed interface GatewayDrainRequestAction {
-    public data object Drain : GatewayDrainRequestAction
-    public data object Cancel : GatewayDrainRequestAction
-    public data class Unknown(public val raw: kotlin.String) : GatewayDrainRequestAction
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Drain -> "drain"
-            Cancel -> "cancel"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): GatewayDrainRequestAction = when (raw) {
-            "drain" -> Drain
-            "cancel" -> Cancel
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<GatewayDrainRequestAction> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("GatewayDrainRequestAction", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): GatewayDrainRequestAction = when (val raw = decoder.decodeString()) {
-            "drain" -> Drain
-            "cancel" -> Cancel
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected GatewayDrainRequestAction value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: GatewayDrainRequestAction) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}

@@ -42,6 +42,23 @@ on every use). The same object authorizes `HermesGateway` connections, so one cr
 surfaces. The native sign-in itself is generated: `web.authNativeAuthorize`, `web.authPasswordLogin`
 (password providers) and `web.authNativeToken`.
 
+## Session mutations
+
+From v0.22.1 every change to a stored session is fenced. `sessions.patch` (`PATCH
+/api/sessions/{session_id}`, in its `SessionRename` body), `sessions.delete` (query) and the session
+import (`POST /api/sessions/import`) carry a `request_id` the caller chooses and the `expected_revision` it last read
+(`sessions.mutationSnapshot(sessionId:)`, or the `revision` of the previous receipt); a delete also carries
+`expected_generation` (the snapshot's `runtime_generation`). Without them Hermes answers 409
+`mutation_identity_required`; a stale revision is a 409 too. Sending the same `request_id` again
+repeats the stored receipt, so a retry after a lost answer is safe, but a different mutation under a
+used id is refused. Each answers a receipt (`operation`, `revision`, `execution_generation`). A deleted id
+is retired and cannot be imported again, and importing a session that exists skips it.
+
+A standalone dashboard applies these offline and refuses them (409, exclusive maintenance) while a
+gateway runtime owns the profile; the same goes for `POST /api/sessions/bulk-delete`, `DELETE
+/api/sessions/empty`, `POST /api/sessions/owner-backfill` and `POST /api/sessions/prune`. The gateway's
+own session methods (`canonical.session.mutate`) are the path that works while it runs.
+
 ## Timeouts, retries and cancellation
 
 Each attempt has a deadline (`timeout`, 60 s by default) from sending the request to the last byte of

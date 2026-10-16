@@ -28,7 +28,8 @@ internal object RESTScenario {
                     observations: LiveObservations) {
         val plain = HermesREST(HermesRESTConfiguration(HermesDashboardAddress(baseURI), auth, transport = transport))
         var native: HermesREST? = null
-        val captured = mutableMapOf<String, JsonElement>()
+        // Names the scenario creates carry a per-run value, as in the gateway scenario.
+        val captured = mutableMapOf<String, JsonElement>("@unique" to JsonPrimitive("kotlin${System.currentTimeMillis() / 1000}"))
         for ((index, element) in calls.withIndex()) {
             val call = element.jsonObject
             val operation = call.getValue("operation").jsonPrimitive.content

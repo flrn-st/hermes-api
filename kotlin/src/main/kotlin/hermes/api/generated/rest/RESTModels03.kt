@@ -9,6 +9,113 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = CronJobScheduleKind.Serializer::class)
+public sealed interface CronJobScheduleKind {
+    public data object Once : CronJobScheduleKind
+    public data object Interval : CronJobScheduleKind
+    public data object Cron : CronJobScheduleKind
+    public data class Unknown(public val raw: kotlin.String) : CronJobScheduleKind
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Once -> "once"
+            Interval -> "interval"
+            Cron -> "cron"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): CronJobScheduleKind = when (raw) {
+            "once" -> Once
+            "interval" -> Interval
+            "cron" -> Cron
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<CronJobScheduleKind> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("CronJobScheduleKind", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): CronJobScheduleKind = when (val raw = decoder.decodeString()) {
+            "once" -> Once
+            "interval" -> Interval
+            "cron" -> Cron
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected CronJobScheduleKind value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: CronJobScheduleKind) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class CronJobUpdate(
+    @SerialName("updates")
+    public val updates: Map<String, JsonElement>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class CuratorPause(
+    @SerialName("paused")
+    public val paused: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``set_curator_paused``. */
+@Serializable
+public data class CuratorPausedResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("paused")
+    public val paused: Boolean,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``get_curator_status``; a getter that raised reads as ``null``. */
+@Serializable
+public data class CuratorStatusResponse(
+    @SerialName("archive_after_days")
+    public val archiveAfterDays: Long?,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("interval_hours")
+    public val intervalHours: Long?,
+    @SerialName("last_run_at")
+    public val lastRunAt: String?,
+    @SerialName("min_idle_hours")
+    public val minIdleHours: Double?,
+    @SerialName("paused")
+    public val paused: Boolean,
+    @SerialName("stale_after_days")
+    public val staleAfterDays: Long?,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``activate_custom_endpoint``. */
+@Serializable
+public data class CustomEndpointActivateResponse(
+    @SerialName("model")
+    public val model: String,
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("provider")
+    public val provider: String,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class CustomEndpointCurrentModel(
+    @SerialName("base_url")
+    public val baseUrl: String,
+    @SerialName("model")
+    public val model: String,
+    @SerialName("provider")
+    public val provider: String,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_custom_endpoint`` — the refreshed list. */
 @Serializable
 public data class CustomEndpointDeleteResponse(
@@ -411,7 +518,7 @@ public sealed interface DashboardAuthBearerTokenResponseTokenType {
     }
 }
 
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``api_auth_me``: the verified ``request.state.session`` minus its tokens. */
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``api_auth_me``: the verified ``request.state.session`` minus its tokens. With the auth gate off it reports the loopback identity instead (``user_id: "local"``, ``provider: "loopback"``, ``expires_at: 0``). */
 @Serializable
 public data class DashboardAuthMeResponse(
     @SerialName("display_name")
@@ -829,136 +936,3 @@ public sealed interface DashboardPluginManifestVersion {
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``_dashboard_plugin_entry`` tab info; ``override`` only when it is an absolute route, ``hidden`` only when true. */
-@Serializable
-public data class DashboardPluginTab(
-    @SerialName("hidden")
-    public val hidden: Boolean? = null,
-    @SerialName("override")
-    public val override: String? = null,
-    @SerialName("path")
-    public val path: String,
-    @SerialName("position")
-    public val position: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``rescan_dashboard_plugins``. */
-@Serializable
-public data class DashboardPluginsRescanResponse(
-    @SerialName("count")
-    public val count: Long,
-    @SerialName("ok")
-    public val ok: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. Only non-empty named slots are sent; ``custom`` keys are CSS identifiers. */
-@Serializable
-public data class DashboardThemeAssets(
-    @SerialName("bg")
-    public val bg: String? = null,
-    @SerialName("crest")
-    public val crest: String? = null,
-    @SerialName("custom")
-    public val custom: Map<String, String>? = null,
-    @SerialName("header")
-    public val header: String? = null,
-    @SerialName("hero")
-    public val hero: String? = null,
-    @SerialName("logo")
-    public val logo: String? = null,
-    @SerialName("sidebar")
-    public val sidebar: String? = null,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_normalise_theme_definition`` — the wire format ``ThemeProvider`` consumes. ``label`` falls back to ``name``; ``description`` is the raw YAML value (``null`` when the key is present but empty). */
-@Serializable
-public data class DashboardThemeDefinition(
-    @SerialName("assets")
-    public val assets: DashboardThemeAssets? = null,
-    @SerialName("colorOverrides")
-    public val colorOverrides: Map<String, String>? = null,
-    @SerialName("componentStyles")
-    public val componentStyles: Map<String, Map<String, String>>? = null,
-    @SerialName("customCSS")
-    public val customCSS: String? = null,
-    @SerialName("description")
-    public val description: String?,
-    @SerialName("label")
-    public val label: String,
-    @SerialName("layout")
-    public val layout: DashboardThemeLayout,
-    @SerialName("layoutVariant")
-    public val layoutVariant: DashboardThemeDefinitionLayoutVariant,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("palette")
-    public val palette: DashboardThemePalette,
-    @SerialName("typography")
-    public val typography: DashboardThemeTypography,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = DashboardThemeDefinitionLayoutVariant.Serializer::class)
-public sealed interface DashboardThemeDefinitionLayoutVariant {
-    public data object Standard : DashboardThemeDefinitionLayoutVariant
-    public data object Cockpit : DashboardThemeDefinitionLayoutVariant
-    public data object Tiled : DashboardThemeDefinitionLayoutVariant
-    public data class Unknown(public val raw: kotlin.String) : DashboardThemeDefinitionLayoutVariant
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Standard -> "standard"
-            Cockpit -> "cockpit"
-            Tiled -> "tiled"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): DashboardThemeDefinitionLayoutVariant = when (raw) {
-            "standard" -> Standard
-            "cockpit" -> Cockpit
-            "tiled" -> Tiled
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<DashboardThemeDefinitionLayoutVariant> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DashboardThemeDefinitionLayoutVariant", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): DashboardThemeDefinitionLayoutVariant = when (val raw = decoder.decodeString()) {
-            "standard" -> Standard
-            "cockpit" -> Cockpit
-            "tiled" -> Tiled
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected DashboardThemeDefinitionLayoutVariant value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: DashboardThemeDefinitionLayoutVariant) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. A built-in (``_BUILTIN_DASHBOARD_THEMES``: no ``definition``, the frontend owns it) or a user theme from ``dashboard-themes/&#42;.yaml`` (with its normalised ``definition``). */
-@Serializable
-public data class DashboardThemeEntry(
-    @SerialName("definition")
-    public val definition: DashboardThemeDefinition? = null,
-    @SerialName("description")
-    public val description: String?,
-    @SerialName("label")
-    public val label: String,
-    @SerialName("name")
-    public val name: String,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``hermes_cli/web_server_dashboard.py::_parse_theme_layer`` — alpha clamped to 0..1. */
-@Serializable
-public data class DashboardThemeLayer(
-    @SerialName("alpha")
-    public val alpha: Double,
-    @SerialName("hex")
-    public val hex: String,
-)

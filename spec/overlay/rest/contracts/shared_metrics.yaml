@@ -1,0 +1,57 @@
+# Drafted by tools/import_contracts.py from the response contracts named in x-contract;
+# re-run the importer rather than editing, and review changes like any overlay.
+components:
+  SharedMetricsConsentResponse:
+    additionalProperties: false
+    description: '``shared_metrics._read_consent`` (GET, and PUT after saving): ``shared_metrics_consent.consent_state``
+
+      of the profile''s raw config plus ``managed``. ``send`` is never true without ``enabled``; ``reask`` is
+
+      an "off" answer from before the current offer version, which reads as undecided.'
+    properties:
+      decided:
+        type: boolean
+      enabled:
+        type: boolean
+      managed:
+        type: boolean
+      reask:
+        type: boolean
+      send:
+        type: boolean
+    required:
+    - enabled
+    - send
+    - decided
+    - reask
+    - managed
+    type: object
+operations:
+- method: GET
+  path: /api/shared-metrics/consent
+  x-source: hermes_cli/web_routers/shared_metrics.py:34
+  x-handler-hash: e0fccabb623d9aa4546a094343206e1694388d65c2a3c621931fd25a55c0fff1
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SharedMetricsConsentResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SharedMetricsConsentResponse'
+      description: Successful Response
+- method: PUT
+  path: /api/shared-metrics/consent
+  x-source: hermes_cli/web_routers/shared_metrics.py:39
+  x-handler-hash: efc0a56004a5c5e97ed157168efe54db82816c7ce9c886aaa8ceb765eed34a31
+  x-contract:
+    commit: 000b6ee1ccf7cb698844da0b8c8fd82168d48ce7
+    model: SharedMetricsConsentResponse
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SharedMetricsConsentResponse'
+      description: Successful Response

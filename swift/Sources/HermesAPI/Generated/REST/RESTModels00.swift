@@ -1212,6 +1212,8 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
     public var activation: AgentPluginActivation?
     public var enabled: Bool
     public var gatewayReloaded: Bool
+    /// The catalog entry's known issues; empty for a non-catalog install.
+    public var knownIssues: [String]
     public var missingEnv: [String]
     public var ok: Bool
     public var pluginName: String
@@ -1219,10 +1221,11 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
     public var restartRequired: Bool
     public var warnings: [String]
 
-    public init(activation: AgentPluginActivation?, enabled: Bool, gatewayReloaded: Bool, missingEnv: [String], ok: Bool, pluginName: String, pythonDependencies: [String], restartRequired: Bool, warnings: [String]) {
+    public init(activation: AgentPluginActivation?, enabled: Bool, gatewayReloaded: Bool, knownIssues: [String], missingEnv: [String], ok: Bool, pluginName: String, pythonDependencies: [String], restartRequired: Bool, warnings: [String]) {
         self.activation = activation
         self.enabled = enabled
         self.gatewayReloaded = gatewayReloaded
+        self.knownIssues = knownIssues
         self.missingEnv = missingEnv
         self.ok = ok
         self.pluginName = pluginName
@@ -1235,6 +1238,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
         case activation = "activation"
         case enabled = "enabled"
         case gatewayReloaded = "gateway_reloaded"
+        case knownIssues = "known_issues"
         case missingEnv = "missing_env"
         case ok = "ok"
         case pluginName = "plugin_name"
@@ -1246,7 +1250,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["activation", "enabled", "gateway_reloaded", "missing_env", "ok", "plugin_name", "python_dependencies", "restart_required", "warnings"]
+            let known: Set<String> = ["activation", "enabled", "gateway_reloaded", "known_issues", "missing_env", "ok", "plugin_name", "python_dependencies", "restart_required", "warnings"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
@@ -1255,6 +1259,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
         activation = try container.decode(Optional<AgentPluginActivation>.self, forKey: .activation)
         enabled = try container.decode(Bool.self, forKey: .enabled)
         gatewayReloaded = try container.decode(Bool.self, forKey: .gatewayReloaded)
+        knownIssues = try container.decode([String].self, forKey: .knownIssues)
         missingEnv = try container.decode([String].self, forKey: .missingEnv)
         ok = try container.decode(Bool.self, forKey: .ok)
         pluginName = try container.decode(String.self, forKey: .pluginName)
@@ -1268,6 +1273,7 @@ public struct AgentPluginInstallResponse: Codable, Sendable, Hashable {
         try container.encode(activation, forKey: .activation)
         try container.encode(enabled, forKey: .enabled)
         try container.encode(gatewayReloaded, forKey: .gatewayReloaded)
+        try container.encode(knownIssues, forKey: .knownIssues)
         try container.encode(missingEnv, forKey: .missingEnv)
         try container.encode(ok, forKey: .ok)
         try container.encode(pluginName, forKey: .pluginName)

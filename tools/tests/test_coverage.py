@@ -15,6 +15,7 @@ def test_coverage_accounts_for_every_tagged_operation() -> None:
     openapi = json.loads((ROOT / f"spec/out/{CURRENT}/openapi.json").read_text())
     expected = {
         "gateway_method": len(contract["methods"]),
+        "canonical_method": len(contract.get("x-canonical-methods", [])),
         "server_request": len(contract["x-server-requests"]),
         "event": len(contract["x-notifications"]),
         "rest": sum(len(operations) for operations in openapi["paths"].values()),

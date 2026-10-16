@@ -49,11 +49,14 @@ def _gateway_entries(contract: dict, symbols: dict) -> list[dict]:
     result: list[dict] = []
     for section, symbol_key, kind in (
         ("methods", "methods", "gateway_method"),
+        # The unified runtime's strict methods (v0.22.1 on) share wire names with legacy methods but
+        # not their schemas, so they are a surface of their own.
+        ("x-canonical-methods", "canonical_methods", "canonical_method"),
         ("x-server-requests", "server_requests", "server_request"),
         ("x-notifications", "events", "event"),
     ):
-        generated = {item["wire"] for item in symbols[symbol_key]}
-        for item in contract[section]:
+        generated = {item["wire"] for item in symbols.get(symbol_key, [])}
+        for item in contract.get(section, []):
             # Tagged methods may deliberately accept free-form JSON input (for
             # example prompt.submit.text). Strict typed credit requires a
             # closed result, while generation still covers every param type.
@@ -106,8 +109,8 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
     if evidence["fixture_sha256"] != hashlib.sha256(fixture.read_bytes()).hexdigest():
         raise ValueError("Coverage fixture changed after evidence was recorded")
     recorded = {json.loads(line)["name"] for line in fixture.read_text(encoding="utf-8").splitlines()}
-    declared = (set(evidence["methods"]) | set(evidence["server_requests"]) |
-                set(evidence["events"]) | set(evidence["rest"]))
+    declared = (set(evidence["methods"]) | set(evidence.get("canonical_methods", [])) |
+                set(evidence["server_requests"]) | set(evidence["events"]) | set(evidence["rest"]))
     if recorded != declared:
         raise ValueError("Coverage evidence does not match recorded frame names")
     for platform in ("swift", "kotlin"):
@@ -119,20 +122,21 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
         if unknown:
             raise ValueError(f"{platform} live evidence names errors the catalog lacks: {sorted(unknown)}")
     # Gateway live credit is what each client's scenarios exercised, measured on the wire.
-    report_key = {"gateway_method": "methods", "event": "events", "server_request": "server_requests"}
+    report_key = {"gateway_method": "methods", "canonical_method": "canonical_methods", "event": "events",
+                  "server_request": "server_requests"}
     known = {(entry["kind"], entry["name"]) for entry in entries}
     live_gateway = evidence["live_gateway"]
     for platform in ("swift", "kotlin"):
         for kind, key in report_key.items():
-            unknown = {name for name in live_gateway[platform][key] if (kind, name) not in known}
+            unknown = {name for name in live_gateway[platform].get(key, []) if (kind, name) not in known}
             if unknown:
                 raise ValueError(f"{platform} live evidence names unknown {kind} items: {sorted(unknown)}")
     for entry in entries:
         if entry["kind"] in report_key:
             key = report_key[entry["kind"]]
-            entry["fixture"] = entry["name"] in evidence[key]
-            entry["live_swift"] = entry["name"] in live_gateway["swift"][key]
-            entry["live_kotlin"] = entry["name"] in live_gateway["kotlin"][key]
+            entry["fixture"] = entry["name"] in evidence.get(key, [])
+            entry["live_swift"] = entry["name"] in live_gateway["swift"].get(key, [])
+            entry["live_kotlin"] = entry["name"] in live_gateway["kotlin"].get(key, [])
         else:
             entry["fixture"] = entry["name"] in evidence["rest"]
             entry["live_swift"] = entry["name"] in evidence["live_rest"]["swift"]
@@ -141,7 +145,7 @@ def _apply_evidence(entries: list[dict], ref: str, root: Path, commit: str) -> N
 
 
 CHECKS = ("typed", "generated", "fixture", "decode", "live_swift", "live_kotlin")
-KINDS = ("gateway_method", "server_request", "event", "rest")
+KINDS = ("gateway_method", "canonical_method", "server_request", "event", "rest")
 
 
 def _load(root: Path, relative: str) -> dict:

@@ -372,7 +372,16 @@ internal class SessionAuthority(
                 throw unsupportedOnAuthority("prompt.submit", "this message is not saved yet; wait for it to settle, then edit it again")
             }
         }
-        val submit = JsonObject(params.filterKeys { it in SUBMIT_PARAMETERS })
+        // The authority knows two surfaces and reads a voice context only for a live-voice turn; anything else
+        // is refused, so it is left out as a legacy gateway ignored it.
+        val surface = params.string("surface")
+        val submit = JsonObject(params.filterKeys { key ->
+            key in SUBMIT_PARAMETERS && when (key) {
+                "surface" -> surface in SUBMIT_SURFACES
+                "voice_context" -> surface == "voice-live"
+                else -> true
+            }
+        })
         ensureState(sessionId, profile, wire, subscription = true)
         retireMutations(owner(sessionId, profile ?: routes[sessionId]), null)
         val submissionId = submit.string("submission_id") ?: submit.string("input_id") ?: intent
@@ -683,6 +692,8 @@ internal class SessionAuthority(
         val SUBMIT_PARAMETERS = setOf("session_id", "profile", "text", "submission_id", "input_id", "queued", "attachments",
             "finite", "unattended", "surface", "voice_context", "interrupted", "voice_turn", "display_kind", "title_preview",
             "turn_author", "api_text", "model_override", "clarify_batch")
+        /** `gateway/session_surface.py` `SURFACES`. */
+        val SUBMIT_SURFACES = setOf("hud", "voice-live")
         val TRUNCATE_TARGETS = listOf("truncate_before_row_id", "truncate_before_message_id", "truncate_before_user_ordinal")
         val VALUE_OPERATIONS = setOf("rename", "archive", "model", "reasoning", "workspace")
 

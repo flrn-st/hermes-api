@@ -335,6 +335,29 @@ private let iosCreate = SessionCreateParams(
     await gateway.disconnect()
 }
 
+@Test func aSubmitKeepsTheHUDAndLiveVoiceSurfaces() async throws {
+    let (gateway, socket, initial) = try await authorityWithSession()
+    var sent = initial
+    let admitted = #"{"admission_id":"ad1","ref":{"profile_id":"/home/h","session_id":"local-a"},"sequence":1,"status":"started","outcome":null,"authority_epoch":1,"execution_generation":8}"#
+    let hud = Task {
+        try await gateway.methods.prompt.submit(.init(sessionId: "local-a", text: .string("a"), surface: .value("hud"), voiceContext: .value("ctx")))
+    }
+    let hudSubmit = try await sent.next("prompt.submit")
+    #expect(hudSubmit.params["surface"] == "hud")
+    #expect(hudSubmit.params["voice_context"] == nil)
+    await socket.inject(GatewayFrames.result(hudSubmit.id, admitted))
+    _ = try await hud.value
+    let voice = Task {
+        try await gateway.methods.prompt.submit(.init(sessionId: "local-a", text: .string("b"), surface: .value("voice-live"), voiceContext: .value("ctx")))
+    }
+    let voiceSubmit = try await sent.next("prompt.submit")
+    #expect(voiceSubmit.params["surface"] == "voice-live")
+    #expect(voiceSubmit.params["voice_context"] == "ctx")
+    await socket.inject(GatewayFrames.result(voiceSubmit.id, admitted))
+    _ = try await voice.value
+    await gateway.disconnect()
+}
+
 @Test func anEditRewindsThenSubmits() async throws {
     let (gateway, socket, initial) = try await authorityWithSession()
     var sent = initial

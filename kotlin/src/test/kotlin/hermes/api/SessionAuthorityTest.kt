@@ -451,6 +451,26 @@ class SessionAuthorityTest {
     }
 
     @Test
+    fun submitKeepsOnlyTheSurfacesTheAuthorityKnows() = runTest {
+        val wire = ScriptedWire()
+        val authority = authority()
+        wire.on("session.resume", GatewayFrames.authoritySnapshot("s"))
+        wire.on("prompt.submit") { params ->
+            obj("""{"admission_id":"a1","ref":{"profile_id":"/h","session_id":"${params.text("session_id")}"},"sequence":1,
+                "status":"started","outcome":null,"authority_epoch":1,"execution_generation":3}""")
+        }
+        val voice = """{"mode":"live"}"""
+        authority.call("prompt.submit", obj("""{"session_id":"s","text":"a","surface":"cadu-android","voice_context":$voice}"""), wire, "i1")
+        assertEquals(setOf("session_id", "text", "submission_id"), wire.last("prompt.submit").keys)
+        authority.call("prompt.submit", obj("""{"session_id":"s","text":"b","surface":"hud","voice_context":$voice}"""), wire, "i2")
+        assertEquals("hud", wire.last("prompt.submit").text("surface"))
+        assertNull(wire.last("prompt.submit")["voice_context"])
+        authority.call("prompt.submit", obj("""{"session_id":"s","text":"c","surface":"voice-live","voice_context":$voice}"""), wire, "i3")
+        assertEquals("voice-live", wire.last("prompt.submit").text("surface"))
+        assertEquals(obj(voice), wire.last("prompt.submit")["voice_context"])
+    }
+
+    @Test
     fun anEditIsARewindThenASubmitAndRetriesWithoutCuttingTwice() = runTest {
         val wire = ScriptedWire()
         val authority = authority()

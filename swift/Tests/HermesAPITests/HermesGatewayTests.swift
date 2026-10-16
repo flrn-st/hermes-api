@@ -619,6 +619,64 @@ private actor RenewingAuth: HermesAuth {
     await gateway.disconnect()
 }
 
+private actor DeliveryCount {
+    private(set) var value = 0
+    func increment() { value += 1 }
+}
+
+@Test func anAnsweredRequestASnapshotStillListsIsNotHandledAgain() async throws {
+    let first = ScriptedGatewaySocket()
+    let second = ScriptedGatewaySocket()
+    let gateway = client(ScriptedGatewayTransport([first, second]))
+    let deliveries = DeliveryCount()
+    await gateway.setServerRequestHandler { request in
+        guard case .clarify(let params) = request else { throw HermesGatewayError.decoding("Unexpected request") }
+        await deliveries.increment()
+        return .clarify(ClarifyResult(answers: [params.questions[0].qid: "Stable"]))
+    }
+    try await gateway.connect()
+    var events = gateway.events().makeAsyncIterator()
+    await first.inject(event("message.start", session: "s", seq: 1))
+    #expect(await events.next()?.seq == 1)
+    var sent = second.sent.makeAsyncIterator()
+    await first.sever()
+    let open = #"[{"id":"srq-1","method":"clarify","params":{"session_id":"s","questions":[{"qid":"q0","question":"Which?","choices":["Stable","Beta"],"multi_select":false}]}}]"#
+    // The rebind carries the open question: it reaches the handler, which answers it.
+    let (activate, activateID) = try sentCall(try #require(await sent.next()))
+    #expect(activate == "session.activate")
+    await second.inject(result(activateID, #"{"session_id":"s","open_requests":\#(open)}"#))
+    var answer: [String: Any] = [:]
+    var replayID: Int?
+    while answer.isEmpty || replayID == nil {
+        let frame = try #require(await sent.next())
+        let object = try #require(JSONSerialization.jsonObject(with: frame) as? [String: Any])
+        if object["method"] as? String == "session.events.since" {
+            replayID = object["id"] as? Int
+        } else {
+            answer = object
+        }
+    }
+    #expect(answer["id"] as? String == "srq-1")
+    let answers = (answer["result"] as? [String: Any])?["answers"] as? [String: Any]
+    #expect(answers?["q0"] as? String == "Stable")
+    // The replay's snapshot was taken before the answer landed and still lists the question.
+    await second.inject(result(try #require(replayID), #"{"events":[],"latest_seq":1,"truncated":false,"count":0,"epoch":"same","open_requests":\#(open)}"#))
+    try await state(of: gateway) { $0 == .connected }
+    let ping = Task { try await gateway.call("ping", params: PingParams(), as: PingResult.self) }
+    let (method, pingID) = try sentCall(try #require(await sent.next()))
+    #expect(method == "ping")
+    await second.inject(result(pingID, #"{"pong":true}"#))
+    #expect(try await ping.value.pong)
+    #expect(await deliveries.value == 1)
+    // A live frame with the id is a new delivery.
+    await second.inject(#"{"jsonrpc":"2.0","id":"srq-1","method":"clarify","params":{"session_id":"s","questions":[{"qid":"q0","question":"Which?","choices":["Stable","Beta"],"multi_select":false}]}}"#)
+    let againFrame = try #require(await sent.next())
+    let again = try JSONSerialization.jsonObject(with: againFrame) as? [String: Any]
+    #expect(again?["id"] as? String == "srq-1")
+    #expect(await deliveries.value == 2)
+    await gateway.disconnect()
+}
+
 // MARK: - Reconnect and session recovery
 
 @Test func reconnectReplaysGapBeforeLiveEvents() async throws {

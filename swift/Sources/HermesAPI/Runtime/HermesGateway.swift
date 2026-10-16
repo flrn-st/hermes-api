@@ -80,6 +80,10 @@ public actor HermesGateway: HermesGatewayClient {
 
     private var pending: [Int: AsyncThrowingStream<JSONValue, Error>.Continuation] = [:]
     var serverTasks: [String: Task<Void, Never>] = [:]
+    /// Server requests this connection answered or Hermes withdrew. A snapshot (`open_requests`) taken before
+    /// the answer landed still lists the request; it must not reach the handler again. A live frame with the
+    /// id is a new delivery and clears it. Lives as long as the connection.
+    private var settledSnapshotRequests: Set<String> = []
     var serverRequestHandler: (@Sendable (ServerRequest) async throws -> ServerRequestResult)?
     private var nextID = 1
 
@@ -408,6 +412,7 @@ public actor HermesGateway: HermesGatewayClient {
         heartbeatTask = nil
         for task in serverTasks.values { task.cancel() }
         serverTasks.removeAll()
+        settledSnapshotRequests.removeAll()
         for continuation in pending.values { continuation.finish(throwing: error) }
         pending.removeAll()
         replayHold.removeAll()
@@ -788,6 +793,7 @@ public actor HermesGateway: HermesGatewayClient {
             // Older backends answer gateway.ping with an error, which still proves the socket alive.
             heartbeatMethod = ready.heartbeat == true ? "gateway.ping" : "ping"
         case .requestCancel(let cancel):
+            settledSnapshotRequests.insert(cancel.id)
             serverTasks.removeValue(forKey: cancel.id)?.cancel()
         case .messageStart:
             if let sessionID { setTurn(sessionID, active: true) }
@@ -823,8 +829,10 @@ public actor HermesGateway: HermesGatewayClient {
 
     private func handleServerRequest(
         id: String, method: String, params: JSONValue,
-        socket: any GatewayConnection, generation current: Int
+        socket: any GatewayConnection, generation current: Int, snapshot: Bool = false
     ) async {
+        if snapshot, settledSnapshotRequests.contains(id) { return }
+        if !snapshot { settledSnapshotRequests.remove(id) }
         // A reconnect can deliver one request both live and through open_requests.
         guard serverTasks[id] == nil else { return }
         let request: ServerRequest
@@ -866,11 +874,19 @@ public actor HermesGateway: HermesGatewayClient {
                                                socket: socket, generation: current)
                 }
             }
-            self.finishServerRequest(id)
+            // A cancelled delivery was already removed by whoever cancelled it (request.cancel or a lost
+            // connection), and the id may belong to a newer delivery by now.
+            if !Task.isCancelled { self.settleServerRequest(id) }
         }
     }
 
     func finishServerRequest(_ id: String) { serverTasks[id] = nil }
+
+    /// The handler answered: a later snapshot that still lists the request does not put it to the handler again.
+    private func settleServerRequest(_ id: String) {
+        serverTasks[id] = nil
+        settledSnapshotRequests.insert(id)
+    }
 
     private func answerWithError(
         id: String, code: Int, message: String, socket: any GatewayConnection, generation current: Int
@@ -944,7 +960,7 @@ public actor HermesGateway: HermesGatewayClient {
         for case .object(let entry) in entries {
             guard let id = entry["id"]?.stringValue, let method = entry["method"]?.stringValue else { continue }
             await handleServerRequest(id: id, method: method, params: entry["params"] ?? .object([:]),
-                                      socket: socket, generation: current)
+                                      socket: socket, generation: current, snapshot: true)
         }
     }
 
@@ -1138,7 +1154,7 @@ public actor HermesGateway: HermesGatewayClient {
         for request in result.openRequests {
             await handleServerRequest(
                 id: request.id, method: request.method, params: .object(request.params),
-                socket: socket, generation: current
+                socket: socket, generation: current, snapshot: true
             )
         }
     }

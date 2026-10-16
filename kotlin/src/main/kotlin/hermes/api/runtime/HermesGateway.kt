@@ -1119,7 +1119,7 @@ public class HermesGateway(
                     // Hermes dropped the session, but its turn may still be writing the reply to the replay
                     // buffer under this id: deliver what is there before moving to a new runtime id.
                     if (sessionId in activeTurns) replay(sessionId, connection, current)
-                    resume(sessionId, session, outcome.reason)
+                    resume(sessionId, session, outcome.reason, connection, current)
                 }
                 Rebind.Settling -> Unit
             }
@@ -1205,7 +1205,8 @@ public class HermesGateway(
 
     /** Hermes reclaims a session 20 s after its socket closes (and every session on restart), but keeps it
      *  in storage. Resuming by the stored id rebuilds it under a new runtime id. */
-    private suspend fun resume(sessionId: String, session: TrackedSession, reason: String) {
+    private suspend fun resume(sessionId: String, session: TrackedSession, reason: String,
+                               connection: GatewayConnection, current: Int) {
         val storedId = session.storedId
         if (!configuration.resumesReclaimedSessions || storedId == null) {
             retire(sessionId)
@@ -1220,6 +1221,13 @@ public class HermesGateway(
                     omitMessages = true),
                 SessionResumeParams.serializer(), SessionResumeResult.serializer(),
                 configuration.requestTimeoutMillis, waitsForConnection = false)
+            // Cadu same-runtime resume: a runtime Hermes still runs comes back under its own id, bound to this
+            // socket again. It stays tracked, so the next reconnect rebinds it too; what it sent is replayed.
+            if (result.sessionId == sessionId) {
+                logger.log(GatewayLogLevel.INFO, "Resumed a session Hermes still runs under its own runtime id")
+                replay(sessionId, connection, current)
+                return
+            }
             retire(sessionId)
             logger.log(GatewayLogLevel.INFO, "Resumed a reclaimed session under a new runtime id")
             recoveryBroadcast.emit(GatewaySessionRecovery.Resumed(sessionId, result.sessionId, result.storedSessionId ?: result.sessionKey ?: storedId, result))

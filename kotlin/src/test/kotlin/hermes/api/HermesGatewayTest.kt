@@ -800,6 +800,33 @@ class HermesGatewayTest {
         gateway.disconnect()
     }
 
+    @Test
+    fun resumeThatFindsTheRuntimeStillRunningKeepsItTracked() = runTest {
+        val first = ScriptedGatewaySocket()
+        val second = ScriptedGatewaySocket()
+        val third = ScriptedGatewaySocket()
+        val gateway = client(sockets(first, second, third))
+        gateway.connect()
+        createSession(gateway, first, "runtime-1", "stored-1")
+        first.sever()
+        // The activate is refused, but Hermes still runs the runtime: the resume binds the same id again.
+        second.inject(error(second.next(), 4001, "session not found"))
+        val resume = second.next()
+        assertEquals("session.resume", resume.method())
+        second.inject(result(resume, """{"session_id":"runtime-1","session_key":"stored-1","message_count":3,"messages":[],"info":{}}"""))
+        val replay = second.next()
+        assertEquals("session.events.since", replay.method())
+        assertEquals("runtime-1", replay.fields["session_id"]?.jsonPrimitive?.content)
+        second.inject(result(replay, """{"events":[],"latest_seq":0,"truncated":false,"count":0,"epoch":"same","open_requests":[]}"""))
+        gateway.awaitState { it == GatewayConnectionState.Connected }
+        // Still tracked: the next reconnect rebinds it.
+        second.sever()
+        val rebind = third.next()
+        assertEquals("session.activate", rebind.method())
+        assertEquals("runtime-1", rebind.fields["session_id"]?.jsonPrimitive?.content)
+        gateway.disconnect()
+    }
+
     private fun GatewaySessionRecovery.withoutSnapshot(): GatewaySessionRecovery =
         if (this is GatewaySessionRecovery.Resumed) copy(snapshot = null) else this
 

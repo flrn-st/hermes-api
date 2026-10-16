@@ -49,6 +49,7 @@ import hermes.api.runtime.HermesAuth
 import hermes.api.runtime.HermesDashboardAddress
 import hermes.api.runtime.HermesGateway
 import hermes.api.runtime.HermesGatewayConfiguration
+import hermes.api.runtime.HermesGatewayException
 import hermes.api.runtime.Patch
 
 /**
@@ -182,9 +183,15 @@ private suspend fun run(gateway: HermesGateway, created: MutableList<String>) {
         "If it is denied, reply with the word denied.")
     report(if (asked.any { it is ServerRequest.Approval }) "approval prompt answered through approval.respond"
         else "the model ran no guarded command; approval path not exercised")
-    val history = gateway.methods.session.history(SessionHistoryParams(id))
-    report("session.history -> ${history.count} messages")
-    check(history.count >= 6) { "History too short" }
+    // Like Hermes Desktop, the client sends session.history unchanged and the authority does not serve it; the
+    // transcript is a snapshot's.
+    val refused = try { gateway.methods.session.history(SessionHistoryParams(id)); null }
+        catch (error: HermesGatewayException.RPC) { error }
+    report("session.history -> ${refused?.let { "${it.code} ${it.message}" } ?: "answered"}")
+    check(refused?.code == -32601) { "session.history was not refused as an unknown method" }
+    val history = gateway.methods.session.resume(SessionResumeParams(id)).messageCount
+    report("session.resume -> $history messages")
+    check(history >= 6) { "History too short" }
 
     val fork = gateway.methods.session.create(SessionCreateParams(source = Patch.Value("cadu"), parentSessionId = Patch.Value(id),
         messages = Patch.Value(listOf(SeedMessage("user", content = Patch.Value("Reply with exactly the word pong and nothing else.")),
@@ -195,8 +202,8 @@ private suspend fun run(gateway: HermesGateway, created: MutableList<String>) {
 
     val undone = gateway.methods.session.undo(SessionUndoParams(id))
     report("session.undo -> removed ${undone.removed}")
-    val after = gateway.methods.session.history(SessionHistoryParams(id))
-    check(after.count == history.count - undone.removed) { "Undo removed ${undone.removed} but history went ${history.count} -> ${after.count}" }
+    val after = gateway.methods.session.resume(SessionResumeParams(id)).messageCount
+    check(after == history - undone.removed) { "Undo removed ${undone.removed} but history went $history -> $after" }
 
     val interrupted = gateway.methods.session.interrupt(SessionInterruptParams(id))
     report("session.interrupt -> ${interrupted.status.rawValue}")

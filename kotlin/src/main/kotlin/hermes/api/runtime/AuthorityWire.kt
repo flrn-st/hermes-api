@@ -106,8 +106,6 @@ internal data class AuthorityPrompt(
         }
     }
 
-    fun openRequest(): JsonObject = jsonObject("id" to JsonPrimitive(promptId), "method" to JsonPrimitive(kind), "params" to legacyParams())
-
     companion object {
         fun parse(payload: JsonObject, sessionId: String, profile: String, kind: String? = null, generation: Long? = null): AuthorityPrompt? {
             val id = payload.string("prompt_id") ?: return null
@@ -149,7 +147,9 @@ internal data class AuthoritySnapshot(
 /** Projections of canonical results onto the legacy shapes the generated types decode. */
 internal object LegacyShapes {
     /** A snapshot as `SessionResumeResult` / `SessionActivateResult` / `SessionCreateResult`: the stored identity
-     *  under its legacy names, the turn state inside `info`, and open prompts as `open_requests`. */
+     *  under its legacy names, the turn state inside `info`, and the open approval as `pending_approval`. Open
+     *  prompts are not `open_requests` (Hermes Desktop has none): the gateway puts them to the server request
+     *  handler itself. */
     fun snapshot(snapshot: AuthoritySnapshot, prompts: List<AuthorityPrompt>): JsonObject {
         val raw = snapshot.raw
         val stored = snapshot.storedSessionId ?: snapshot.sessionId
@@ -168,7 +168,6 @@ internal object LegacyShapes {
             "messages" to (raw["messages"] ?: JsonArray(emptyList())),
             "message_count" to (raw["message_count"] ?: JsonPrimitive(snapshot.messages.size)),
             "messages_omitted" to JsonPrimitive(false),
-            "open_requests" to JsonArray(prompts.map { it.openRequest() }),
             "pending_approval" to approval,
         )
     }

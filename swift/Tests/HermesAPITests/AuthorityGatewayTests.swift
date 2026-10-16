@@ -622,3 +622,17 @@ private let iosCreate = SessionCreateParams(
     #expect(pdf?.known == .unknownMethod)
     await gateway.disconnect()
 }
+
+@Test func aHistoryReadGoesToTheAuthorityUnchanged() async throws {
+    // Hermes Desktop does not translate session.history either; the authority answers -32601 (read the
+    // snapshot's messages or REST instead).
+    let (gateway, socket, initial) = try await authorityWithSession()
+    var sent = initial
+    let history = Task { try await gateway.methods.session.history(.init(sessionId: "local-a")) }
+    let call = try await sent.next("session.history")
+    #expect(call.params == ["session_id": "local-a"])
+    await socket.inject(GatewayFrames.error(call.id, code: -32601, "unknown method: session.history"))
+    let error = await #expect(throws: HermesGatewayError.self) { try await history.value }
+    #expect(error?.known == .unknownMethod)
+    await gateway.disconnect()
+}

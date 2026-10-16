@@ -24,7 +24,6 @@ import hermes.api.generated.gateway.SessionCompressResult
 import hermes.api.generated.gateway.SessionCreateResult
 import hermes.api.generated.gateway.SessionCwdSetResult
 import hermes.api.generated.gateway.SessionEventsSinceResult
-import hermes.api.generated.gateway.SessionHistoryResult
 import hermes.api.generated.gateway.SessionInterruptResult
 import hermes.api.generated.gateway.SessionResumeResult
 import hermes.api.generated.gateway.SessionTitleResult
@@ -159,9 +158,9 @@ class SessionAuthorityTest {
         assertEquals("s", resumed.sessionKey)
         assertEquals(true, resumed.running)
         assertEquals(true, resumed.info.running)
-        val open = resumed.openRequests.orEmpty().single()
-        assertEquals("p1", open.id)
-        assertEquals("approval", open.method)
+        // Hermes Desktop keeps no open_requests: the gateway delivers the snapshot's prompts itself.
+        assertNull(resumed.openRequests)
+        assertEquals("p1", authority.prompt("p1")?.promptId)
         assertEquals("p1", resumed.pendingApproval?.requestId)
         assertEquals(true, resumed.pendingApproval?.allowSession)
         assertEquals(false, resumed.pendingApproval?.allowPermanent)
@@ -196,13 +195,17 @@ class SessionAuthorityTest {
     }
 
     @Test
-    fun historyReadsTheSnapshotTranscript() = runTest {
+    fun historyGoesToTheAuthorityUnchanged() = runTest {
+        // Hermes Desktop does not translate session.history either; the authority answers -32601.
         val wire = ScriptedWire()
         val authority = authority()
-        wire.on("session.resume", GatewayFrames.authoritySnapshot("s", messages = """[{"role":"user","content":"hi","row_id":1}]"""))
-        val history = decode(SessionHistoryResult.serializer(), authority.call("session.history", obj("""{"session_id":"s"}"""), wire, "i"))
-        assertEquals(1, history.count)
-        assertEquals("false", wire.last("session.resume").text("omit_messages"))
+        wire.fail("session.history", HermesGatewayException.RPC(-32601, "unknown method: session.history", null))
+        val error = assertFailsWith<HermesGatewayException.RPC> {
+            authority.call("session.history", obj("""{"session_id":"s","profile":"work"}"""), wire, "i")
+        }
+        assertEquals(-32601, error.code)
+        assertEquals(listOf("session.history"), wire.methods())
+        assertEquals(obj("""{"session_id":"s","profile":"work"}"""), wire.last("session.history"))
     }
 
     // Mutations
@@ -299,6 +302,28 @@ class SessionAuthorityTest {
         authority.call("session.title", obj("""{"session_id":"s","title":"B"}"""), wire, "6")
         assertEquals(listOf("session.resume", "session.mutate"), wire.methods().takeLast(2))
         assertEquals(9, wire.last("session.mutate")["expected_revision"]?.jsonPrimitive?.long)
+    }
+
+    @Test
+    fun aStaleGenerationKeepsTheRefusedRequest() = runTest {
+        val wire = ScriptedWire()
+        val authority = authority()
+        authority.attached(wire)
+        wire.fail("session.mutate", refusal("stale_generation"))
+        assertFailsWith<HermesGatewayException.RPC> { authority.call("session.cwd.set", obj("""{"session_id":"s","cwd":"/x"}"""), wire, "1") }
+        val refused = wire.last("session.mutate")
+        assertEquals(2, refused["expected_generation"]?.jsonPrimitive?.long)
+        // As in Hermes Desktop, the same edit is retried as the same request; the generation is re-read first.
+        wire.on("session.resume", GatewayFrames.authoritySnapshot("s", revision = 3, generation = 5))
+        assertFailsWith<HermesGatewayException.RPC> { authority.call("session.cwd.set", obj("""{"session_id":"s","cwd":"/x"}"""), wire, "2") }
+        assertEquals(listOf("session.resume", "session.mutate"), wire.methods().takeLast(2))
+        assertEquals(refused, wire.last("session.mutate"))
+        // Another edit retires it and presents the current generation.
+        wire.on("session.mutate", """{"session_id":"s","operation":"workspace","revision":4,"cwd":"/y"}""")
+        authority.call("session.cwd.set", obj("""{"session_id":"s","cwd":"/y"}"""), wire, "3")
+        val next = wire.last("session.mutate")
+        assertTrue(next.text("request_id") != refused.text("request_id"))
+        assertEquals(5, next["expected_generation"]?.jsonPrimitive?.long)
     }
 
     @Test

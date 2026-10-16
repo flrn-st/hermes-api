@@ -97,8 +97,8 @@ let address = HermesDashboardAddress { previousFailure in
 | App goes to the background | `enterBackground()` lets a streaming turn finish (up to 25 s; on iOS inside `performExpiringActivity`), then closes the socket. No heartbeat or retry runs in the background. Hermes keeps running turns alive. |
 | App returns | `enterForeground()` reconnects and replays what was missed. |
 | Hermes reclaimed a session (it does so 20 s after its socket closes, and on restart) | Resumes it from storage with `session.resume`. The session continues under a new runtime id, reported as `.resumed(previousSessionID:sessionID:storedSessionID:)`. A turn that was still streaming keeps writing to Hermes' replay buffer under the previous id, so the client keeps delivering its events (under the previous id) until the turn completes: a reply that finished during a long outage still arrives. |
-| The app resumes or activates a session with questions still open (after a relaunch, say) | `session.resume` and `session.activate` return them as `open_requests`; the gateway puts each to the server request handler like a live one. Hermes settles an answer by its request id on any socket, so the app needs no `request.answer` path. |
-| Replay window exceeded (512 events or 4 MiB per session) | Reports `.replayTruncated`; reload the transcript with `session.history`. |
+| The app resumes or activates a session with questions still open (after a relaunch, say) | `session.resume` and `session.activate` return them as `open_requests` (a session authority lists them as the snapshot's `prompts` instead); the gateway puts each to the server request handler like a live one. Hermes settles an answer by its request id on any socket, so the app needs no `request.answer` path. |
+| Replay window exceeded (512 events or 4 MiB per session) | Reports `.replayTruncated`; reload the transcript with `session.history` (on a session authority, which does not serve it, with `session.resume`). |
 | Credential rejected (HTTP 401/403 from the ticket request or the upgrade) | Asks the credential to renew once (`HermesAuth.renew`, for example signing in again) and retries at once with the new one. When it cannot renew, stops retrying and reports `.failed(error)`; call `connect()` again once fixed. `NativeSessionAuth` renews by refreshing its tokens, `PasswordSessionAuth` by signing in again. |
 | Incompatible server | Stops retrying and reports `.failed(error)`; see [Backend versions](#backend-versions). |
 | Hermes is retiring the backend (`GatewayKnownError.backendRetiring`) | Reconnects. Other failures that reuse code 5035 do not. |
@@ -257,17 +257,19 @@ does not know yet) resumes the session first.
 Mutations follow Desktop's retry rules: one `request_id` per intent, kept with its `expected_revision` and
 `expected_generation` while its outcome is unknown, so a retry after a lost reply is an exact retry; another
 edit of the same session retires the retained ones; an acknowledged revision retires older
-value-setting edits (`rename`, `archive`, `model`, `reasoning`, `workspace`); `revision_conflict` and
-`stale_generation` (and `session_busy` on `rewind` / `workspace`) retire the refused one, and the runtime
-re-reads the stale value (by resuming the session) before the next edit. Retiring on `stale_generation` goes
-beyond Desktop, which would retry the refused request forever; a typed refusal wrote nothing, so it is safe. `prompt.submit` retires every retained mutation of its
+value-setting edits (`rename`, `archive`, `model`, `reasoning`, `workspace`); `revision_conflict` (and
+`session_busy` on `rewind` / `workspace`) retires the refused one. A `stale_generation` refusal keeps it, as
+Desktop's `failure` does: the same edit is retried as the same request until another edit of the session or
+`prompt.submit` retires it. After `revision_conflict` or `stale_generation` the runtime re-reads the stale
+value (by resuming the session) before a new edit. `prompt.submit` retires every retained mutation of its
 session.
 
 Results are given back in the legacy shapes the generated types decode: a `CanonicalSnapshot` becomes a
 create / resume / activate result (`session_id`, `stored_session_id`, `messages`, `message_count`,
 `running`, `info` with `running` and `stored_session_id`, `pending_approval` from the open approval). A
 legacy field the authority has no equivalent for (`resumed`, `session_key`, `open_requests`, `todo_state`,
-`user_row_id`, `survivor_*`, cost lines, `desktop_contract`) stays absent.
+`user_row_id`, `survivor_*`, cost lines, `desktop_contract`) stays absent. Like Desktop, neither runtime
+answers open prompts as `open_requests`: they reach the server request handler (below).
 
 ### Prompts and events
 
@@ -311,8 +313,8 @@ an authority session), a fork whose seed does not match the parent's stored rows
 
 ### Not translated
 
-`process.stop` needs a `session_id` the legacy call may lack; `session.history` is gone (use the
-snapshot's `messages` or REST); `clarify.lock` / `request.answer` for a prompt this socket never saw go to
+`process.stop` needs a `session_id` the legacy call may lack; `session.history` goes out unchanged, as
+Desktop sends it, and the authority answers `-32601` (use the snapshot's `messages` or REST); `clarify.lock` / `request.answer` for a prompt this socket never saw go to
 the legacy sidecar unchanged; `session.list` lists only live (or `scope: stored` gui/cli/tui) sessions;
 legacy `ios` / `cadu` rows answer `not_found` on resume and are readable over REST only. REST session
 mutations (`PATCH` / `DELETE /api/sessions/{id}`) are not covered here.
@@ -324,11 +326,10 @@ The Kotlin runtime (`kotlin/src/main/kotlin/hermes/api/runtime/SessionAuthority.
 
 - `HermesGatewayClient.runtime` is a `GatewayRuntime` with what `runtime.describe` answered (instance,
   profile home, capabilities, create sources and parameters); `sessionAuthority` reads it.
-- A snapshot keeps its open prompts as `open_requests` (legacy shape: `id` = `prompt_id`, `method`
-  `approval` / `clarify`), because apps that set `automaticallyRestoreServerRequests = false` present them
-  through `restoreServerRequests`; an answer to one is sent as `approval.respond` / `clarify.respond`.
-  `resumed` and `session_key` stay absent.
-- `session.history` is translated: the transcript of a `session.resume` snapshot, as `{count, messages}`.
+- A snapshot's `resumed` and `session_key` carry its stored id.
+- The open prompts of a `session.create` / `session.resume` / `session.activate` snapshot reach the handler
+  even when `automaticallyRestoreServerRequests` is `false`: there are no `open_requests` to restore, and a
+  session keeps its id on the authority, so the app can register it before the call.
 - `session.list` without `title` or `scope` asks for `scope: "stored"`, the stored history the legacy list
   returned (the authority's default lists only live sessions).
 - `command.dispatch` (`name` + `arg`) takes the same `/model`, `/branch` and `/compress` mutations as
@@ -339,8 +340,6 @@ The Kotlin runtime (`kotlin/src/main/kotlin/hermes/api/runtime/SessionAuthority.
   settled while its handler still runs is followed by a legacy `request.cancel`.
 - `request.answer` for a server request still open on the socket (`sudo`, `secret`) is sent as its
   JSON-RPC response.
-- A `stale_generation` refusal does not retire the refused mutation yet (Swift retires it, see above);
-  only `revision_conflict` and `session_busy` on `rewind` / `workspace` do.
 - `kind` reads the generated `GatewayRefusalReason` classification first (for example `profile_mismatch`
   is `forbidden` there).
 - Calls the authority deduplicates (retained request ids, submission ids, prompt answers, reads) are resent
@@ -380,7 +379,8 @@ that report is the coverage evidence (`coverage/evidence/`).
 Kotlin apps that register conversation ownership before presenting prompts must set
 `HermesGatewayConfiguration.automaticallyRestoreServerRequests = false`. They then
 call `restoreServerRequests` after registering the returned runtime owner. The
-default remains automatic delivery for clients that do not need this ordering.
+default remains automatic delivery for clients that do not need this ordering. On a session authority the
+setting does not apply (see [Kotlin specifics](#kotlin-specifics)).
 Both paths deduplicate settled or withdrawn snapshot requests.
 
 Kotlin `Resumed.snapshot` carries the typed `SessionResumeResult`, including effective model/settings, running state, and pending server requests. Register the replacement runtime owner before presenting requests from that snapshot through `restoreServerRequests`. Apps can compare the recovered settings with a saved conversation choice instead of blindly switching an already matching runtime.

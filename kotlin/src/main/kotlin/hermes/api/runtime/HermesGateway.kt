@@ -547,7 +547,12 @@ public class HermesGateway(
             }
             withContext(confined) {
                 trackSession(method, encodedParams, result)
-                if (configuration.automaticallyRestoreServerRequests && (method == "session.resume" || method == "session.activate")) deliverOpenRequests(result, connection, current)
+                if (onAuthority) {
+                    // Hermes Desktop's adoptAttachedSnapshot: a snapshot's open prompts reach the handler at once.
+                    if (method == "session.create" || method == "session.resume" || method == "session.activate") deliverSnapshotPrompts(result)
+                } else if (configuration.automaticallyRestoreServerRequests && (method == "session.resume" || method == "session.activate")) {
+                    deliverOpenRequests(result, connection, current)
+                }
             }
             return decoded
         } catch (error: HermesGatewayException.RPC) {
@@ -1026,6 +1031,17 @@ public class HermesGateway(
         }
     }
 
+    /** On the session authority a snapshot lists its open prompts as `prompts`, not `open_requests`; each is put to
+     *  the handler like a live one (one already delivered or answered is skipped). A session keeps its id there,
+     *  so an app can register it before resuming, whatever [HermesGatewayConfiguration.automaticallyRestoreServerRequests]. */
+    private fun deliverSnapshotPrompts(result: JsonElement) {
+        val listed = (result as? JsonObject)?.get("prompts") as? JsonArray ?: return
+        for (entry in listed) {
+            val id = ((entry as? JsonObject)?.get("prompt_id") as? JsonPrimitive)?.takeIf { it.isString }?.content ?: continue
+            authority.prompt(id)?.let { deliverPrompt(it, snapshot = true) }
+        }
+    }
+
     private fun trackSession(method: String, params: JsonElement, result: JsonElement) {
         val arguments = params as? JsonObject ?: JsonObject(emptyMap())
         fun JsonObject.string(name: String) = (this[name] as? JsonPrimitive)?.takeIf { it.isString }?.content
@@ -1333,7 +1349,7 @@ public class HermesGateway(
         /** Translated calls the authority recognises when repeated (a retained request id, a submission id, a
          *  prompt answered once, or a plain read), so a reply lost with the connection is safe to resend. */
         val AUTHORITY_IDEMPOTENT_METHODS = setOf("session.create", "session.resume", "session.activate", "session.close",
-            "session.history", "session.title", "session.cwd.set", "session.workspace.move", "session.compress",
+            "session.title", "session.cwd.set", "session.workspace.move", "session.compress",
             "session.branch", "session.usage", "session.events.since", "session.interrupt", "session.list",
             "prompt.submit", "approval.respond", "clarify.respond", "clarify.lock", "commands.catalog")
     }

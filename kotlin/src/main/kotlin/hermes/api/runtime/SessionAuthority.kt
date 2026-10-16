@@ -163,10 +163,6 @@ internal class SessionAuthority(
             "session.activate" -> resume(params.only(setOf("session_id", "profile", "cols", "omit_messages"))
                 .let { if (it.containsKey("profile") || routes[it.string("session_id")] == null) it else it.with("profile" to json(routes[it.string("session_id")])) }, wire)
             "session.close" -> close(params, wire)
-            "session.history" -> {
-                val snapshot = snapshot(required(params, "session_id"), profile, wire, messages = true)
-                jsonObject("count" to JsonPrimitive(snapshot.messages.size), "messages" to JsonArray(snapshot.messages))
-            }
             "session.title" -> {
                 val sessionId = required(params, "session_id")
                 val title = params["title"] ?: JsonPrimitive("")
@@ -642,21 +638,20 @@ internal class SessionAuthority(
         }
     }
 
-    /** A typed refusal wrote nothing. A transport failure keeps the request, so its retry cannot overwrite an
-     *  edit made meanwhile. Unlike Hermes Desktop, a stale generation also retires the request and every
-     *  conflict forgets the cached fence values, so the next attempt re-reads them instead of failing again. */
+    /** A typed refusal wrote nothing. As in Hermes Desktop's `failure`, only `revision_conflict` (and `session_busy`
+     *  on a rewind or a move) retires the request; a `stale_generation` refusal keeps it, so the same edit is
+     *  retried as the same request until another control of the session retires it. A transport failure keeps the
+     *  request, so its retry cannot overwrite an edit made meanwhile. A refusal that proves the presented revision
+     *  or generation stale forgets that value, so a new edit re-reads it. */
     private fun failure(owner: Owner, request: JsonObject, error: HermesGatewayException.RPC) {
         val reason = error.refusal?.reason ?: return
         settleConfirmation(owner, request)
         val operation = request.string("operation")
-        if (reason == "revision_conflict" || reason == "stale_generation") {
-            states[owner]?.let { state ->
-                state.revision = null
-                if (reason == "stale_generation") state.generation = null
-            }
+        when (reason) {
+            "revision_conflict" -> states[owner]?.revision = null
+            "stale_generation" -> states[owner]?.generation = null
         }
-        if (reason == "revision_conflict" || reason == "stale_generation" ||
-            (reason == "session_busy" && operation in setOf("rewind", "workspace"))) {
+        if (reason == "revision_conflict" || (reason == "session_busy" && operation in setOf("rewind", "workspace"))) {
             forgetRequest(request)
         }
     }

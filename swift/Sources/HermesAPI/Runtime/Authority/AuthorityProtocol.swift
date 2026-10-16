@@ -347,9 +347,11 @@ struct AuthorityProtocol: Sendable {
         }
     }
 
-    /// The authority refused `mutation` (`reason`), or its answer was lost (`nil`). A typed refusal wrote
-    /// nothing; a refusal that proves the presented revision or generation stale retires the request, and the
-    /// runtime re-reads the value before the next edit. A lost answer keeps the request for an exact retry.
+    /// The authority refused `mutation` (`reason`), or its answer was lost (`nil`). As in Hermes Desktop's
+    /// `failure`, only `revision_conflict` (and `session_busy` on a rewind or a move) retires the request; a
+    /// `stale_generation` refusal keeps it, so the same edit is retried as the same request until another
+    /// control of the session retires it. A refusal that proves the presented revision or generation stale
+    /// makes the runtime re-read that value before a new edit. A lost answer keeps the request for an exact retry.
     mutating func mutationRefused(_ mutation: RetainedMutation, reason: String?) {
         guard let reason else { return }
         settleModelConfirmation(mutation)
@@ -358,7 +360,6 @@ struct AuthorityProtocol: Sendable {
             removeMutation(requestID: mutation.requestID)
             forgetRevision(of: mutation.owner)
         case "stale_generation":
-            removeMutation(requestID: mutation.requestID)
             forgetGeneration(of: mutation.owner)
         case "session_busy" where mutation.operation == "rewind" || mutation.operation == "workspace":
             removeMutation(requestID: mutation.requestID)

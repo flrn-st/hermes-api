@@ -112,14 +112,18 @@ private let owner = AuthorityOwner(sessionID: "local-a", profile: nil)
     #expect(try state.mutation(owner, operation: "compress", payload: [:], fenced: true) == compress)
 }
 
-@Test func aStaleGenerationRetiresTheEditAndForgetsTheGeneration() throws {
+@Test func aStaleGenerationKeepsTheEditAndForgetsTheGeneration() throws {
     var state = attached(owner)
     let move = try state.mutation(owner, operation: "workspace", payload: ["cwd": "/w"], fenced: true)
     #expect(move.expectedGeneration == 7)
     state.mutationRefused(move, reason: "stale_generation")
+    // Hermes Desktop retires a refused edit only on revision_conflict (and session_busy for rewind / workspace).
+    #expect(try state.mutation(owner, operation: "workspace", payload: ["cwd": "/w"], fenced: true) == move)
+    // A different edit retires it and needs the generation re-read first.
     #expect(throws: AuthorityPrerequisite.generation) {
-        try state.mutation(owner, operation: "workspace", payload: ["cwd": "/w"], fenced: true)
+        try state.mutation(owner, operation: "workspace", payload: ["cwd": "/x"], fenced: true)
     }
+    #expect(state.mutations.isEmpty)
 }
 
 @Test func aMutationNeedsAKnownRevision() {

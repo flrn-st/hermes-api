@@ -300,10 +300,16 @@ class SessionAuthorityGatewayTest {
     }
 
     @Test
-    fun restoredSnapshotPromptsAreAnsweredByRPC() = runTest {
+    fun snapshotPromptsReachTheHandlerAndAreAnsweredByRPC() = runTest {
         val socket = authoritySocket()
+        // Hermes Desktop has no open_requests: the snapshot's prompts reach the handler at once, as live ones do,
+        // also for an app that restores legacy requests itself (the session keeps its id on the authority).
         val gateway = client(ScriptedGatewayTransport(socket), restoresRequests = false)
-        gateway.setServerRequestHandler { ServerRequestResult.Approval(ApprovalResult(ApprovalChoice.Deny)) }
+        val asked = CompletableDeferred<ServerRequest>()
+        gateway.setServerRequestHandler {
+            asked.complete(it)
+            ServerRequestResult.Approval(ApprovalResult(ApprovalChoice.Deny))
+        }
         gateway.connect()
         val resumed = async { gateway.methods.session.resume(SessionResumeParams("local-1", lazy = true)) }
         val frame = socket.next()
@@ -311,10 +317,9 @@ class SessionAuthorityGatewayTest {
         socket.inject(GatewayFrames.result(frame.id, GatewayFrames.authoritySnapshot("local-1", generation = 3, prompts =
             """[{"kind":"approval","prompt_id":"p7","execution_generation":3,"choices":["once","deny"],"command":"ls"}]""")))
         val snapshot = resumed.await()
-        // Nothing is put to the handler until the app asks.
-        val open = snapshot.openRequests.orEmpty()
-        assertEquals(listOf("p7"), open.map { it.id })
-        gateway.restoreServerRequests(open)
+        assertNull(snapshot.openRequests)
+        assertEquals("p7", snapshot.pendingApproval?.requestId)
+        assertIs<ServerRequest.Approval>(withTimeout(3_000) { asked.await() })
         val answer = socket.next()
         assertEquals("approval.respond", answer.method)
         assertEquals("p7", answer.text("prompt_id"))

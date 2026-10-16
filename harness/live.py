@@ -113,6 +113,7 @@ class GatedServer:
         (self.home / "config.yaml").write_text(
             f"dashboard:\n  public_url: http://hermes-gated.localhost:{self.port}\n"
             f"  basic_auth:\n    secret: {secrets.token_hex(32)}\n", encoding="utf-8")
+        _initialize_session_store(self.repo, self.python, self.env)
         code = ("from hermes_cli.plugins import discover_plugins; discover_plugins(); "
                 "from hermes_cli.web_server import start_server; "
                 f"start_server(host='127.0.0.1', port={self.port}, open_browser=False, headless=True)")
@@ -157,6 +158,46 @@ def _simulator_destination(client: str, env: dict[str, str]) -> str:
             if device["name"].startswith(device_prefix):
                 return f"platform={family} Simulator,id={device['udid']}"
     raise RuntimeError(f"No available {device_prefix} simulator; set HERMES_{client.upper()}_DESTINATION")
+
+
+def _initialize_session_store(repo: Path, python: Path, env: dict[str, str]) -> None:
+    """Create an isolated home's session store before its server starts.
+
+    From v0.22.1 dashboard reads never initialize the store: they answer 503 until a gateway runtime
+    has created ``state.db``, which the gated server's home never gets, and the main home only once
+    its first ``/api/ws`` client has started one. Closing the only connection checkpoints, so the
+    file is never left empty."""
+    subprocess.run([str(python), "-c", "from hermes_state import SessionDB; SessionDB().close()"],
+                   cwd=repo, env=env, check=True, capture_output=True)
+
+
+def _stop_gateway_runtimes(*homes: Path) -> None:
+    """Stop the gateway runtime each home's ``gateway.lock`` names, so none outlives its temporary home.
+
+    From v0.22.1 the dashboard's ``/api/ws`` starts the profile's gateway runtime as a process of its
+    own (ending only after ten idle minutes), so stopping the dashboard leaves it running."""
+    import signal
+
+    for home in homes:
+        try:
+            pid = int(json.loads((home / "gateway.lock").read_text(encoding="utf-8"))["pid"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        for sig, wait in ((signal.SIGTERM, 30.0), (signal.SIGKILL, 5.0)):
+            try:
+                os.kill(pid, sig)
+            except ProcessLookupError:
+                break
+            deadline = time.monotonic() + wait
+            while time.monotonic() < deadline:
+                try:
+                    os.kill(pid, 0)
+                except ProcessLookupError:
+                    break
+                time.sleep(0.1)
+            else:
+                continue
+            break
 
 
 class HermesServer:
@@ -293,6 +334,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
         control: ControlServer | None = None
         tls: TLSFront | None = None
         try:
+            _initialize_session_store(repo, python, env)
             server.start()
             gated.start()
             proxy = FaultProxy(port)
@@ -312,9 +354,12 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
             env["HERMES_LIVE_URL"] = f"http://127.0.0.1:{proxy.port}"
             env["HERMES_LIVE_CONTROL"] = control.url
             if record:
+                liveness = Path(home) / "liveness-scenario.json"
+                liveness.write_text(json.dumps(yaml.safe_load(
+                    (ROOT / "scenarios/liveness.yaml").read_text(encoding="utf-8"))), encoding="utf-8")
                 subprocess.run(
                     [str(python), str(ROOT / "harness/record.py"),
-                     "--scenario", str(ROOT / "scenarios/liveness.yaml"),
+                     "--scenario", str(liveness),
                      "--rest-scenario", str(resolved_scenario), "--gated-url", gated.url,
                      "--gateway-scenario", str(resolved_gateway),
                      "--output", str(ROOT / "fixtures" / ref / "liveness.jsonl"),
@@ -323,6 +368,9 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                 )
             reports: dict[str, dict[str, list[str]]] = {}
             for client in clients:
+                # Each run starts with no gateway runtime owning the home, as the recorder did: one a
+                # previous run started (a cron trigger does) would refuse the offline session mutations.
+                _stop_gateway_runtimes(Path(home))
                 restarts, drops, blackholes = control.restarts, proxy.drops, proxy.blackholes
                 control.report = None
                 command, cwd, client_env = _client_command(client, env, proxy, control, gated)
@@ -390,6 +438,7 @@ def run(ref: str, source_repo: Path | None = None, *, record: bool = False,
                 proxy.close()
             server.stop()
             gated.stop()
+            _stop_gateway_runtimes(Path(home), Path(home) / "gated-home")
             stub.close()
 
 def main() -> None:

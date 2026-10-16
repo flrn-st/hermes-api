@@ -35,6 +35,11 @@ TODO_PROMPT = "Plan the HermesAPI fixture with a todo list."
 TODO_REPLY = "HermesAPI todo list written."
 DELEGATE_PROMPT = "Delegate the HermesAPI fixture check to a subagent."
 DELEGATE_REPLY = "HermesAPI subagent finished."
+# The subagent answers over a few seconds: the roster lists only running children, so a client lists and
+# tails it while it streams.
+SUBAGENT_GOAL = "Greet the HermesAPI fixture slowly."
+SUBAGENT_CHUNKS = [f"hello {index:02d} " for index in range(1, 51)]
+SUBAGENT_CHUNK_DELAY = 0.1
 REASONING_PROMPT = "Think about the HermesAPI fixture before answering."
 REASONING_CHUNKS = ["Considering ", "the HermesAPI ", "fixture."]
 REASONING_REPLY = "HermesAPI reasoning complete."
@@ -62,7 +67,7 @@ SCRIPTED_TOOLS = {
     SECRET_PROMPT: ("skill_view", {"name": SECRET_SKILL}, SECRET_REPLY),
     WITHDRAWN_PROMPT: ("clarify", {"questions": [{"question": "Which HermesAPI question will be withdrawn?",
                                                   "choices": ["First", "Second"]}]}, WITHDRAWN_REPLY),
-    DELEGATE_PROMPT: ("delegate_task", {"tasks": [{"goal": "Reply with a short greeting.",
+    DELEGATE_PROMPT: ("delegate_task", {"tasks": [{"goal": SUBAGENT_GOAL,
                                                    "context": "HermesAPI fixture subagent."}]},
                       DELEGATE_REPLY),
 }
@@ -188,6 +193,13 @@ class StubLLM:
                 if PACED_PROMPT in latest_user and request.get("stream"):
                     self._stream_slowly(model, usage, PACED_CHUNKS, PACED_CHUNK_DELAY)
                     return
+                # Only the subagent's own turn: anything quoting the parent's transcript names the delegation.
+                subagent = SUBAGENT_GOAL in latest_user and DELEGATE_PROMPT not in json.dumps(messages)
+                if subagent and request.get("stream"):
+                    self._stream_slowly(model, usage, SUBAGENT_CHUNKS, SUBAGENT_CHUNK_DELAY)
+                    return
+                if subagent:
+                    time.sleep(len(SUBAGENT_CHUNKS) * SUBAGENT_CHUNK_DELAY)
                 if REASONING_PROMPT in latest_user and request.get("stream"):
                     self._stream_reasoning(model, usage)
                     return

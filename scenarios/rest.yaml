@@ -2,8 +2,8 @@
 # Each call names an operation ("METHOD /path" as in the OpenAPI document) and its arguments:
 # `path`, `query`, `form` (multipart fields; a file is {filename, content_type, text}) and `body`.
 # `capture` remembers values from the JSON result by dotted path (`$` is the whole result);
-# `${name}` uses them later. `${@name}` is a harness value: `home` (the isolated HERMES_HOME) and
-# `repo` (a scratch git repository in it). `until: {path, equals, timeout}` repeats a call until
+# `${name}` uses them later. `${@name}` is a harness value: `home` (the isolated HERMES_HOME), `repo`
+# (a scratch git repository in it) and `unique` (a value each run fills in). `until: {path, equals, timeout}` repeats a call until
 # the result at `path` equals `equals`, for waiting on background actions.
 # The scenario runs several times against the same server (recorder, then each client), so every
 # call that creates something also removes it or uses a name unique to the run, and every call
@@ -65,6 +65,7 @@ calls:
 - {operation: GET /api/plugins/hermes-achievements/scan-status}
 - {operation: GET /api/plugins/kanban/assignees}
 - {operation: GET /api/plugins/kanban/board}
+- {operation: GET /api/plugins/kanban/workflow}
 - {operation: GET /api/plugins/kanban/boards}
 - {operation: GET /api/plugins/kanban/config}
 - {operation: GET /api/plugins/kanban/diagnostics}
@@ -88,6 +89,7 @@ calls:
   query: {profile: default}
 - {operation: GET /api/sessions/search}
 - {operation: GET /api/sessions/stats}
+- {operation: GET /api/shared-metrics/consent}
 - {operation: GET /api/skills}
 - {operation: GET /api/skills/hub/official}
 - {operation: GET /api/skills/hub/search}
@@ -197,12 +199,20 @@ calls:
   path: {session_id: '${session}'}
 - operation: GET /api/sessions/{session_id}/latest-descendant
   path: {session_id: '${session}'}
+# Session mutations are fenced from v0.22.1: each quotes the revision it read and a request id unique to
+# the run (a retry under the same id must repeat the same mutation).
+- operation: GET /api/sessions/{session_id}/mutation-snapshot
+  path: {session_id: '${session}'}
+  capture: {revision: runtime_revision}
 - operation: PATCH /api/sessions/{session_id}
   path: {session_id: '${session}'}
-  body: {title: 'HermesAPI scenario session ${head}', pinned: true, unread: false}
+  body: {request_id: 'scenario-${@unique}-pin', expected_revision: '${revision}',
+         title: 'HermesAPI scenario session ${head}', pinned: true, unread: false}
+  capture: {revision: revision}
 - operation: PATCH /api/sessions/{session_id}
   path: {session_id: '${session}'}
-  body: {pinned: false}
+  body: {request_id: 'scenario-${@unique}-unpin', expected_revision: '${revision}', pinned: false}
+  capture: {revision: revision}
 - operation: GET /api/plugins/hermes-achievements/sessions/{session_id}/badges
   path: {session_id: '${session}'}
 - operation: POST /api/profiles/sessions/pull-requests
@@ -211,11 +221,20 @@ calls:
 - operation: GET /api/sessions/{session_id}/export
   path: {session_id: '${session}'}
   capture: {exported: $}
-- operation: DELETE /api/sessions/{session_id}
-  path: {session_id: '${session}'}
+# Importing a session that exists skips it; a deleted id is retired and refused, so the import comes first.
 - operation: POST /api/sessions/import
   body:
+    request_id: 'scenario-${@unique}-import'
+    expected_revision: '${revision}'
     sessions: ['${exported}']
+# A delete affects turns, so it quotes the execution generation as well.
+- operation: GET /api/sessions/{session_id}/mutation-snapshot
+  path: {session_id: '${session}'}
+  capture: {revision: runtime_revision, generation: runtime_generation}
+- operation: DELETE /api/sessions/{session_id}
+  path: {session_id: '${session}'}
+  query: {request_id: 'scenario-${@unique}-delete', expected_revision: '${revision}',
+          expected_generation: '${generation}'}
 - operation: POST /api/sessions/bulk-delete
   body:
     ids: [hermes-api-scenario-missing]
@@ -318,6 +337,9 @@ calls:
   query: {id: '${learning_node}'}
 - operation: PUT /api/learning/node
   body: {id: '${learning_node}', content: 'HermesAPI scenario memory, edited'}
+# A node's id fingerprints its content, so the edit gives it a new one.
+- operation: GET /api/learning/graph
+  capture: {learning_node: nodes.0.id}
 - operation: DELETE /api/learning/node
   body: {id: '${learning_node}'}
 - operation: POST /api/skills/hub/uninstall
@@ -554,19 +576,17 @@ calls:
   query: {profile: default}
   body: {event: agent_loop_stopped, command: 'true'}
 - {operation: POST /api/pairing/clear-pending}
+# v0.22.1 bundles no memory provider that declares a config schema (holographic is gone), so there is
+# nothing PUT /api/memory/providers/{name}/config could write.
 - operation: GET /api/memory/providers/{name}/config
-  path: {name: holographic}
-- operation: PUT /api/memory/providers/{name}/config
-  path: {name: holographic}
-  body:
-    values: {}
+  path: {name: retaindb}
 - operation: PUT /api/memory/provider
   body: {provider: ''}
 - operation: POST /api/memory/reset
   query: {profile: default}
   body: {target: memory}
-- operation: GET /api/memory/providers/{provider}/oauth/status
-  path: {provider: honcho}
+# No memory provider v0.22.1 bundles has an OAuth flow (honcho left the bundle), so the
+# /api/memory/providers/{provider}/oauth/* routes answer 404 here.
 - operation: POST /api/audio/tts-lease
   body: {lease: hermes-api-scenario, active: true}
 - operation: POST /api/audio/tts-lease
@@ -600,9 +620,12 @@ calls:
   capture: {retirement: token}
 - operation: POST /api/health/retirement
   body: {action: cancel, token: '${retirement}'}
-- operation: DELETE /api/providers/oauth/{provider_id}
-  path: {provider_id: nous}
-  query: {profile: default}
+# DELETE /api/providers/oauth/{provider_id} answers 409 from v0.22.1 when no stored credential was
+# removed, and the isolated home holds none, so it is not called here.
+# Saving a platform writes a `platforms:` section; restore the configuration after, so the next run's
+# raw edit above does not repeat that key (v0.22.1 refuses duplicate keys).
+- operation: GET /api/config/raw
+  capture: {raw_platforms_config: yaml}
 - operation: PUT /api/messaging/platforms/{platform_id}
   path: {platform_id: telegram}
   body:
@@ -610,6 +633,8 @@ calls:
     env: {}
 - operation: POST /api/messaging/platforms/{platform_id}/test
   path: {platform_id: telegram}
+- operation: PUT /api/config/raw
+  body: {yaml_text: '${raw_platforms_config}'}
 - operation: POST /api/plugins/kanban/estimate
   body: {title: Write a haiku, body: About HermesAPI}
 - operation: POST /api/profiles/{name}/describe-auto

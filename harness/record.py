@@ -21,7 +21,6 @@ from urllib.request import (
     build_opener,
 )
 
-import yaml
 from tagside.openapi_check import Validator
 from tui_gateway.contracts import EVENTS, METHODS, SERVER_REQUESTS
 from websockets.asyncio.client import connect
@@ -160,7 +159,8 @@ def record_rest(calls: list[dict], document: dict, base: str, token: str | None,
     and ``auth: native`` signs a call with the Bearer access token captured as ``tokens``.
     """
     validator = Validator(document.get("components", {}).get("schemas", {}))
-    captured = {} if captured is None else captured
+    # Names the scenario creates carry a per-run value, as in the gateway scenario.
+    captured = {"@unique": f"record{int(time.time())}"} if captured is None else captured
     entries: list[dict] = []
     for index, call in enumerate(calls, 1):
         operation_name = call["operation"]
@@ -188,8 +188,14 @@ def record_rest(calls: list[dict], document: dict, base: str, token: str | None,
             headers["Content-Type"] = "application/json"
         until = call.get("until")
         deadline = time.monotonic() + (until or {}).get("timeout", 0)
+        retries = 0
         while True:
             status, response_headers, raw = _fetch_rest(Request(url, method=method, headers=headers, data=data), opener)
+            # Like the clients' RESTRetryPolicy: a read answered 502-504 is sent again, with backoff.
+            if method in {"GET", "HEAD"} and status in {502, 503, 504} and retries < 5:
+                time.sleep(0.25 * 2 ** retries)
+                retries += 1
+                continue
             if not until or not 200 <= status < 300:
                 break
             try:
@@ -237,7 +243,7 @@ def record_rest(calls: list[dict], document: dict, base: str, token: str | None,
 
 async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Path | None = None,
                  gated_url: str | None = None, gateway_scenario: Path | None = None) -> None:
-    definition = yaml.safe_load(scenario.read_text(encoding="utf-8"))
+    definition = json.loads(scenario.read_text(encoding="utf-8"))
     if not isinstance(definition, dict) or not isinstance(definition.get("calls"), list):
         raise TypeError("Invalid scenario")
     url = os.environ["HERMES_LIVE_URL"].replace("http://", "ws://").replace("https://", "wss://")
@@ -350,7 +356,11 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
                 raise ValueError(f"Gateway scenario call {number} {method} returned {frame['error']}")
             contract.result.model_validate(frame["result"])
             for name, pointer in call.get("capture", {}).items():
-                values[name] = _capture(frame["result"], pointer)
+                try:
+                    values[name] = _capture(frame["result"], pointer)
+                except KeyError as error:
+                    excerpt = json.dumps(frame["result"])[:600]
+                    raise KeyError(f"Gateway scenario call {number} {method} has no {pointer}: {excerpt}") from error
             redacted, redactions = _redact_host(frame)
             entries.append({"kind": "response", "name": method, "frame": redacted,
                             **({"redactions": redactions} if redactions else {})})
@@ -363,7 +373,7 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
                         raise TimeoutError(f"Gateway scenario call {number} {method} never saw {wait_for}")
                     await receive()
     document = json.loads(openapi.read_text(encoding="utf-8"))
-    rest = yaml.safe_load(rest_scenario.read_text(encoding="utf-8")) if rest_scenario else {}
+    rest = json.loads(rest_scenario.read_text(encoding="utf-8")) if rest_scenario else {}
     entries.extend(await asyncio.to_thread(
         record_rest, rest.get("calls", []), document, os.environ["HERMES_LIVE_URL"], token))
     if gated_url and rest.get("gated_calls"):
@@ -377,7 +387,9 @@ async def record(scenario: Path, output: Path, openapi: Path, rest_scenario: Pat
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scenario", type=Path, required=True)
+    # JSON throughout: this runs in the tagged checkout's venv, which need not have PyYAML (v0.22.x
+    # uses ruamel.yaml), so harness/live.py converts the YAML scenarios before handing them over.
+    parser.add_argument("--scenario", type=Path, required=True, help="scenarios/liveness.yaml as JSON")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--openapi", type=Path, required=True)
     parser.add_argument("--rest-scenario", type=Path)

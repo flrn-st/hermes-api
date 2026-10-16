@@ -22,12 +22,15 @@ calls:
 - {method: free_tier.status}
 - {method: groups.capabilities}
 - {method: groups.list}
+- {method: i18n.languages}
+- {method: i18n.catalog, params: {lang: en}}
 - {method: insights.get, params: {days: 7}}
 - {method: learning.frames}
 - {method: learning.detail}
 - {method: mcp.catalog}
 - {method: mcp.servers.list}
 - {method: mcp.servers.status}
+- {method: shared_metrics.status}
 - {method: model.options}
 - {method: pet.gallery, params: {localOnly: true}}
 - {method: pet.generate.status}
@@ -79,14 +82,12 @@ calls:
 - {method: spawn_tree.save, params: {subagents: [{id: probe, goal: Probe}]}, capture: {tree: path}}
 - {method: spawn_tree.load, params: {path: "${tree}"}}
 # Profiles and projects.
-- {method: onboarding.ensure_setup_profile}
-- {method: onboarding.reset_setup_profile}
+- {method: onboarding.state}
 - {method: profiles.create, params: {name: "probe-${@unique}", description: Scenario profile}}
 - {method: profiles.configure, params: {name: "probe-${@unique}", soul: You are a scenario profile.}}
 - {method: profiles.set_asset, params: {name: "probe-${@unique}", asset: avatar, data: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="}}
 - {method: profiles.get_asset, params: {name: "probe-${@unique}", asset: avatar}}
 - {method: profiles.set_asset, params: {name: "probe-${@unique}", asset: avatar, clear: true}}
-- {method: profiles.remember_onboarding, params: {answers: {name: Scenario}}}
 - {method: projects.create, params: {name: "Scenario ${@unique}", folders: ["${@repo}"]}, capture: {project: project.id}}
 - {method: projects.get, params: {id: "${project}"}}
 - {method: projects.update, params: {id: "${project}", name: "Scenario ${@unique} renamed"}}
@@ -120,9 +121,10 @@ calls:
 - {method: session.create, params: {title: "Scenario ${@unique}", cwd: "${@repo}", close_on_disconnect: false}, capture: {session: session_id, stored: stored_session_id}}
 - {method: prompt.submit, params: {session_id: "${session}", text: Reply with a short greeting.}, wait: message.complete}
 - {method: prompt.submit, params: {session_id: "${session}", text: Think about the HermesAPI fixture before answering.}, wait: message.complete}
-- {method: prompt.submit, params: {session_id: "${session}", text: Delegate the HermesAPI fixture check to a subagent.}, wait: message.complete}
+# The roster lists only running children; the stub's subagent answers over a few seconds.
+- {method: prompt.submit, params: {session_id: "${session}", text: Delegate the HermesAPI fixture check to a subagent.}, wait: subagent.start}
 - {method: subagent.list, params: {session_id: "${session}"}, capture: {child: subagents.0.subagent_id}}
-- {method: subagent.tail, params: {session_id: "${session}", subagent_id: "${child}"}}
+- {method: subagent.tail, params: {session_id: "${session}", subagent_id: "${child}"}, wait: message.complete}
 - {method: session.history, params: {session_id: "${session}"}}
 - {method: session.status, params: {session_id: "${session}"}}
 - {method: session.usage, params: {session_id: "${session}"}}

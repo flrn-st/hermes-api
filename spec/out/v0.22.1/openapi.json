@@ -17179,6 +17179,17 @@
           "name": {
             "type": "string"
           },
+          "plan_usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanUsage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "``_attach_nous_plan_usage``: ``PickerUsage.to_payload`` on the ``nous`` row of a usage-window plan; the same object as ``ModelOptionProvider.plan_usage``."
+          },
           "pricing": {
             "anyOf": [
               {
@@ -17247,6 +17258,20 @@
                 "type": "null"
               }
             ]
+          },
+          "usage_levels": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "``model_picker_usage.usage_levels`` on a usage-window plan's ``nous`` row: model id to its usage word (``free`` / ``low`` / ``medium`` / ``top_tier``). Such a row carries no ``pricing``."
           },
           "warning": {
             "anyOf": [
@@ -18192,6 +18217,125 @@
           "user_id"
         ],
         "title": "PairingRevoke",
+        "type": "object"
+      },
+      "PlanUsage": {
+        "additionalProperties": false,
+        "description": "``hermes_cli/model_picker_usage.py::PickerUsage.to_payload`` — usage-window plan chrome.",
+        "properties": {
+          "credits_pay": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Credits Pay"
+          },
+          "featured_model_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Featured Model Ids",
+            "type": "array"
+          },
+          "gauges": {
+            "items": {
+              "$ref": "#/components/schemas/PlanUsageGauge"
+            },
+            "title": "Gauges",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "paused_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Paused Reason"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Plan"
+          },
+          "top_tier_model_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Top Tier Model Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "PlanUsage",
+        "type": "object"
+      },
+      "PlanUsageGauge": {
+        "additionalProperties": false,
+        "description": "One server allowance on ``ModelOptionProvider.plan_usage``, in the server's order. ``label`` is the\nserver's id (``day`` / ``week`` / ``month`` / ``top_tier`` have client words; any other id shows\n``title``). ``scope``: which models a full one stops (``all`` / ``top_tier``).",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "left_fraction": {
+            "title": "Left Fraction",
+            "type": "number"
+          },
+          "resets_at_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Resets At Ms"
+          },
+          "scope": {
+            "default": "all",
+            "title": "Scope",
+            "type": "string"
+          },
+          "style": {
+            "title": "Style",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "left_fraction",
+          "style"
+        ],
+        "title": "PlanUsageGauge",
         "type": "object"
       },
       "PluginCatalogCapabilities": {

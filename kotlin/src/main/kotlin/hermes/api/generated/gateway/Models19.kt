@@ -9,6 +9,42 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class RoomTombstone(
+    @SerialName("room_id")
+    public val roomId: String,
+    @SerialName("disbanded_at")
+    public val disbandedAt: Double,
+    @SerialName("idempotent")
+    public val idempotent: Boolean,
+    @SerialName("history_expired")
+    public val historyExpired: Boolean? = null,
+    @SerialName("event")
+    public val event: RoomEvent? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public class RuntimeDescribeParams
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class RuntimeDescribeResult(
+    @SerialName("instance_id")
+    public val instanceId: String,
+    @SerialName("profile_id")
+    public val profileId: String,
+    @SerialName("authority_epoch")
+    public val authorityEpoch: Long,
+    @SerialName("capabilities")
+    public val capabilities: List<String>,
+    @SerialName("session_create")
+    public val sessionCreate: SessionCreateDescriptor,
+    @SerialName("skin")
+    public val skin: SkinPayload? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = SecretRequestParams.Serializer::class)
 public data class SecretRequestParams(
     public val sessionId: String,
@@ -1087,63 +1123,4 @@ public data class SessionControlSnapshot(
 public data class SessionControlUpdatePayload(
     @SerialName("control")
     public val control: SessionControlSnapshot,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = SessionCorrectionParams.Serializer::class)
-public data class SessionCorrectionParams(
-    public val sessionId: String,
-    public val profile: Patch<String> = Patch.Absent,
-    public val text: String,
-)
-{
-    public object Serializer : KSerializer<SessionCorrectionParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): SessionCorrectionParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("SessionCorrectionParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("SessionCorrectionParams requires an object")
-            return SessionCorrectionParams(
-                sessionId = json.decodeFromJsonElement<String>((input["session_id"] ?: throw SerializationException("Missing session_id"))),
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                text = json.decodeFromJsonElement<String>((input["text"] ?: throw SerializationException("Missing text"))),
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: SessionCorrectionParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("SessionCorrectionParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["session_id"] = json.encodeToJsonElement(value.sessionId)
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            output["text"] = json.encodeToJsonElement(value.text)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class SessionCorrectionResult(
-    @SerialName("status")
-    public val status: CorrectionStatus,
-    @SerialName("text")
-    public val text: String,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class SessionCreateDescriptor(
-    @SerialName("sources")
-    public val sources: List<String>,
-    @SerialName("parameters")
-    public val parameters: List<String>,
 )

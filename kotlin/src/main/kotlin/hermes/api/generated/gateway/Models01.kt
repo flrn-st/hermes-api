@@ -333,6 +333,44 @@ public sealed interface BillingChargeStatusResultRetryAfter {
 }
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = BillingKeepGoingOnCreditsParams.Serializer::class)
+public data class BillingKeepGoingOnCreditsParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val enabled: Boolean? = null,
+)
+{
+    public object Serializer : KSerializer<BillingKeepGoingOnCreditsParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): BillingKeepGoingOnCreditsParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("BillingKeepGoingOnCreditsParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("BillingKeepGoingOnCreditsParams requires an object")
+            return BillingKeepGoingOnCreditsParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                enabled = input["enabled"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: BillingKeepGoingOnCreditsParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("BillingKeepGoingOnCreditsParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            value.enabled?.let { output["enabled"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class BillingMonthlyCap(
     @SerialName("limit_usd")
@@ -537,12 +575,16 @@ public data class BillingStateResult(
     public val monthlyCap: BillingMonthlyCap? = null,
     @SerialName("auto_reload")
     public val autoReload: BillingAutoReload? = null,
+    @SerialName("keep_going_on_credits")
+    public val keepGoingOnCredits: Boolean? = null,
     @SerialName("portal_url")
     public val portalUrl: String? = null,
     @SerialName("error")
     public val error: String? = null,
     @SerialName("usage")
     public val usage: UsageModel? = null,
+    @SerialName("plan_usage")
+    public val planUsage: PlanUsage? = null,
 )
 
 /** Generated from the Hermes gateway contract. Do not edit. */
@@ -1024,58 +1066,3 @@ public data class BrowserControllerRegisterResult(
     @SerialName("scope")
     public val scope: ControllerScope,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = BrowserControllerResultParams.Serializer::class)
-public data class BrowserControllerResultParams(
-    public val sessionId: String,
-    public val commandId: String,
-    public val ok: Patch<JsonElement> = Patch.Absent,
-    public val result: Patch<JsonElement> = Patch.Absent,
-    public val error: Patch<JsonElement> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<BrowserControllerResultParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): BrowserControllerResultParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("BrowserControllerResultParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("BrowserControllerResultParams requires an object")
-            return BrowserControllerResultParams(
-                sessionId = json.decodeFromJsonElement<String>((input["session_id"] ?: throw SerializationException("Missing session_id"))),
-                commandId = json.decodeFromJsonElement<String>((input["command_id"] ?: throw SerializationException("Missing command_id"))),
-                ok = when (val raw = input["ok"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<JsonElement>(raw)) },
-                result = when (val raw = input["result"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<JsonElement>(raw)) },
-                error = when (val raw = input["error"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<JsonElement>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: BrowserControllerResultParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("BrowserControllerResultParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            output["session_id"] = json.encodeToJsonElement(value.sessionId)
-            output["command_id"] = json.encodeToJsonElement(value.commandId)
-            when (val patch = value.ok) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["ok"] = JsonNull
-                is Patch.Value -> output["ok"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.result) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["result"] = JsonNull
-                is Patch.Value -> output["result"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.error) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["error"] = JsonNull
-                is Patch.Value -> output["error"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}

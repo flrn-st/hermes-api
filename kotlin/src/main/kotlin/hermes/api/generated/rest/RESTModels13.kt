@@ -209,6 +209,8 @@ public data class ModelOptionProviderRow(
     public val limit: ModelOptionLimit? = null,
     public val models: List<String>? = null,
     public val name: String,
+    /** ``_attach_nous_plan_usage``: ``PickerUsage.to_payload`` on the ``nous`` row of a usage-window plan; the same object as ``ModelOptionProvider.plan_usage``. */
+    public val planUsage: RESTPlanUsage? = null,
     public val pricing: Map<String, ModelOptionPricing>? = null,
     public val pricingPending: Boolean? = null,
     public val slug: String,
@@ -216,6 +218,8 @@ public data class ModelOptionProviderRow(
     public val totalModels: Long? = null,
     public val unavailableModels: List<String>? = null,
     public val usage: ModelOptionUsage? = null,
+    /** ``model_picker_usage.usage_levels`` on a usage-window plan's ``nous`` row: model id to its usage word (``free`` / ``low`` / ``medium`` / ``top_tier``). Such a row carries no ``pricing``. */
+    public val usageLevels: Map<String, String>? = null,
     public val warning: String? = null,
     public val additionalProperties: Map<String, JsonElement> = emptyMap(),
 )
@@ -245,6 +249,7 @@ public data class ModelOptionProviderRow(
                 limit = input["limit"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<ModelOptionLimit>(it) },
                 models = input["models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                planUsage = input["plan_usage"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<RESTPlanUsage>(it) },
                 pricing = input["pricing"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, ModelOptionPricing>>(it) },
                 pricingPending = input["pricing_pending"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 slug = json.decodeFromJsonElement<String>((input["slug"] ?: throw SerializationException("Missing slug"))),
@@ -252,8 +257,9 @@ public data class ModelOptionProviderRow(
                 totalModels = input["total_models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 unavailableModels = input["unavailable_models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
                 usage = input["usage"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<ModelOptionUsage>(it) },
+                usageLevels = input["usage_levels"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, String>>(it) },
                 warning = input["warning"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "warning") },
+                additionalProperties = input.filterKeys { it !in setOf("aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "plan_usage", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "usage_levels", "warning") },
             )
         }
 
@@ -262,7 +268,7 @@ public data class ModelOptionProviderRow(
                 ?: throw SerializationException("ModelOptionProviderRow requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "warning")
+            val known = setOf("aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "plan_usage", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "usage_levels", "warning")
             if (value.additionalProperties.keys.any { it in known }) {
                 throw SerializationException("Additional property conflicts with a known field")
             }
@@ -282,6 +288,7 @@ public data class ModelOptionProviderRow(
             value.limit?.let { output["limit"] = json.encodeToJsonElement(it) }
             value.models?.let { output["models"] = json.encodeToJsonElement(it) }
             output["name"] = json.encodeToJsonElement(value.name)
+            value.planUsage?.let { output["plan_usage"] = json.encodeToJsonElement(it) }
             value.pricing?.let { output["pricing"] = json.encodeToJsonElement(it) }
             value.pricingPending?.let { output["pricing_pending"] = json.encodeToJsonElement(it) }
             output["slug"] = json.encodeToJsonElement(value.slug)
@@ -289,6 +296,7 @@ public data class ModelOptionProviderRow(
             value.totalModels?.let { output["total_models"] = json.encodeToJsonElement(it) }
             value.unavailableModels?.let { output["unavailable_models"] = json.encodeToJsonElement(it) }
             value.usage?.let { output["usage"] = json.encodeToJsonElement(it) }
+            value.usageLevels?.let { output["usage_levels"] = json.encodeToJsonElement(it) }
             value.warning?.let { output["warning"] = json.encodeToJsonElement(it) }
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }

@@ -157,6 +157,8 @@ backend reporting `minimumContract` or higher; the default is the contract of th
 `incompatibleServer`. An app that must keep working with older backends lowers `minimumContract` and reads
 `backendContract` (the last contract Hermes reported) to leave out what those backends lack.
 
+A few additions come from a Hermes development branch rather than the pinned release (`spec/overlay/development/`): `billing.keepGoingOnCredits` and the usage-window plan fields (`planUsage`, `usageLevels`, `keepGoingOnCredits`, `ErrorSurface.usageLimit`, `SessionUsageResult.creditsUsageWindow`). The released server answers the method with `unknown method` and never sends the fields, which are all optional.
+
 ## Errors Hermes answers with
 
 A refused call throws `HermesGatewayError.rpc(code:message:data:)` (Kotlin: `HermesGatewayException.RPC`).

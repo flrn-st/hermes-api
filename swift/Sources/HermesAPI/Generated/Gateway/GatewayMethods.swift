@@ -147,6 +147,10 @@ public struct BillingMethods: Sendable {
     public func chargeStatus(_ params: BillingChargeStatusParams) async throws -> BillingChargeStatusResult {
         try await caller.call("billing.charge_status", params: params, as: BillingChargeStatusResult.self)
     }
+    /// Window plans: turn 'Keep going on credits' on/off (billing:manage).
+    public func keepGoingOnCredits(_ params: BillingKeepGoingOnCreditsParams) async throws -> BillingMutationResult {
+        try await caller.call("billing.keep_going_on_credits", params: params, as: BillingMutationResult.self)
+    }
     /// Read-only billing view (no scope); the Nous free tier is answered locally without a portal call.
     public func state(_ params: ProfileParams) async throws -> BillingStateResult {
         try await caller.call("billing.state", params: params, as: BillingStateResult.self)

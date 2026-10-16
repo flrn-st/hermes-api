@@ -9,6 +9,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from tools.development_overlay import gateway_contract
 from tools.ref_policy import require_release
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -165,7 +166,7 @@ def main() -> None:
     args = parser.parse_args()
     ref = require_release(args.ref)
     path = ROOT / "spec" / "out" / ref
-    contract = json.loads((path / "openrpc.json").read_text(encoding="utf-8"))
+    contract = gateway_contract(ref)
     counts = audit_contract(contract)
     (path / "schema-audit.json").write_text(json.dumps(counts, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(counts, indent=2))

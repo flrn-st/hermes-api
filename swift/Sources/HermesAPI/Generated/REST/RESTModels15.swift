@@ -1681,415 +1681,62 @@ public struct QuickstartBody: Codable, Sendable, Hashable {
 }
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
-/// One ``SessionDB.list_sessions_rich`` row as the list endpoints stamp it (``is_active``, ``profile``, boolean ``archived`` / ``pinned``). The prompt-storage columns ride only with ``full=1``; the ``_lineage_*`` keys and ``continuation_kind`` only on a compression root projected onto its live tip. The sessions table's counters (``message_count``, ``tool_call_count``, the token counts, ``api_call_count`` and ``expiry_finalized``) are ``INTEGER DEFAULT 0`` without NOT NULL (``hermes_state_common.py``), so rows can hold null.
-public struct RESTSessionListRow: Codable, Sendable, Hashable {
-    /// Lifted from ``model_config`` when set: a /branch fork.
-    public var branchedFrom: String?
-    public var lineageIds: [String]?
-    public var lineageRootId: String?
-    /// Lifted from ``model_config`` when set: a /new sibling.
-    public var resetFrom: String?
-    public var actualCostUsd: Double?
-    public var apiCallCount: Int?
-    public var archived: Bool
-    /// SQLite 0/1: archived by the idle sweep, not by hand.
-    public var autoArchived: Int?
-    public var billingBaseUrl: String?
-    public var billingMode: String?
-    public var billingProvider: String?
-    public var cacheReadTokens: Int?
-    public var cacheWriteTokens: Int?
-    public var chatId: String?
-    public var chatType: String?
-    public var compressionFailureCooldownUntil: Double?
-    public var compressionFailureError: String?
-    public var compressionFallbackStreak: Int
-    public var compressionIneffectiveCount: Int
-    public var compressionRecoveryDeadline: Double?
-    /// Only on a compression root projected onto its live tip.
-    public var continuationKind: RESTSessionListRowContinuationKind?
-    public var costSource: String?
-    public var costStatus: String?
-    /// The source the row was created under; null on rows that predate it.
-    public var createdSource: String?
-    public var cwd: String?
-    public var displayName: String?
-    public var endReason: String?
-    public var endedAt: Double?
-    public var estimatedCostUsd: Double?
-    public var expiryFinalized: Int?
-    public var gitBranch: String?
-    public var gitMetadataGeneration: Int?
-    public var gitRepoRoot: String?
-    public var handoffError: String?
-    public var handoffPlatform: String?
-    public var handoffState: String?
-    public var hidden: Int
-    public var id: String
-    public var inputTokens: Int?
-    public var isActive: Bool
-    public var isDefaultProfile: Bool
-    public var lastActive: Double
-    public var lastActivityAt: Double?
-    public var lastActivityDescription: String?
-    public var lastActivityProvenance: String?
-    /// Read watermark; ``0`` = marked unread, null = never tracked.
-    public var lastReadAt: Double?
-    public var messageCount: Int?
-    public var model: String?
-    public var modelConfig: String?
-    public var originJson: String?
-    public var outputTokens: Int?
-    public var parentSessionId: String?
-    public var pinned: Bool
-    public var preview: String
-    public var pricingVersion: String?
-    public var profile: String
-    public var profileName: String?
-    public var reasoningTokens: Int?
-    public var rewindCount: Int
-    /// Execution generation a turn-affecting mutation must quote.
-    public var runtimeGeneration: Int?
-    /// Mutation fence: bumped by every committed session mutation.
-    public var runtimeRevision: Int?
-    public var sessionKey: String?
-    public var source: String
-    public var startedAt: Double
-    public var systemPrompt: String?
-    public var systemPromptHash: String?
-    public var threadId: String?
-    public var title: String?
-    public var titleSource: String?
-    public var toolCallCount: Int?
-    public var toolNames: String?
-    public var transportProfile: String?
-    public var unread: Bool
-    public var userId: String?
-    public var additionalProperties: [String: JSONValue]
+/// ``hermes_cli/model_picker_usage.py::PickerUsage.to_payload`` — usage-window plan chrome.
+public struct RESTPlanUsage: Codable, Sendable, Hashable {
+    public var creditsPay: Bool?
+    public var featuredModelIds: [String]?
+    public var gauges: [RESTPlanUsageGauge]?
+    public var kind: String
+    public var pausedReason: String?
+    public var plan: String?
+    public var topTierModelIds: [String]?
 
-    public init(branchedFrom: String? = nil, lineageIds: [String]? = nil, lineageRootId: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, autoArchived: Int? = nil, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, continuationKind: RESTSessionListRowContinuationKind? = nil, costSource: String?, costStatus: String?, createdSource: String? = nil, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int? = nil, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String? = nil, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Bool, preview: String, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int? = nil, runtimeRevision: Int? = nil, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String? = nil, systemPromptHash: String? = nil, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, unread: Bool, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
-        self.branchedFrom = branchedFrom
-        self.lineageIds = lineageIds
-        self.lineageRootId = lineageRootId
-        self.resetFrom = resetFrom
-        self.actualCostUsd = actualCostUsd
-        self.apiCallCount = apiCallCount
-        self.archived = archived
-        self.autoArchived = autoArchived
-        self.billingBaseUrl = billingBaseUrl
-        self.billingMode = billingMode
-        self.billingProvider = billingProvider
-        self.cacheReadTokens = cacheReadTokens
-        self.cacheWriteTokens = cacheWriteTokens
-        self.chatId = chatId
-        self.chatType = chatType
-        self.compressionFailureCooldownUntil = compressionFailureCooldownUntil
-        self.compressionFailureError = compressionFailureError
-        self.compressionFallbackStreak = compressionFallbackStreak
-        self.compressionIneffectiveCount = compressionIneffectiveCount
-        self.compressionRecoveryDeadline = compressionRecoveryDeadline
-        self.continuationKind = continuationKind
-        self.costSource = costSource
-        self.costStatus = costStatus
-        self.createdSource = createdSource
-        self.cwd = cwd
-        self.displayName = displayName
-        self.endReason = endReason
-        self.endedAt = endedAt
-        self.estimatedCostUsd = estimatedCostUsd
-        self.expiryFinalized = expiryFinalized
-        self.gitBranch = gitBranch
-        self.gitMetadataGeneration = gitMetadataGeneration
-        self.gitRepoRoot = gitRepoRoot
-        self.handoffError = handoffError
-        self.handoffPlatform = handoffPlatform
-        self.handoffState = handoffState
-        self.hidden = hidden
-        self.id = id
-        self.inputTokens = inputTokens
-        self.isActive = isActive
-        self.isDefaultProfile = isDefaultProfile
-        self.lastActive = lastActive
-        self.lastActivityAt = lastActivityAt
-        self.lastActivityDescription = lastActivityDescription
-        self.lastActivityProvenance = lastActivityProvenance
-        self.lastReadAt = lastReadAt
-        self.messageCount = messageCount
-        self.model = model
-        self.modelConfig = modelConfig
-        self.originJson = originJson
-        self.outputTokens = outputTokens
-        self.parentSessionId = parentSessionId
-        self.pinned = pinned
-        self.preview = preview
-        self.pricingVersion = pricingVersion
-        self.profile = profile
-        self.profileName = profileName
-        self.reasoningTokens = reasoningTokens
-        self.rewindCount = rewindCount
-        self.runtimeGeneration = runtimeGeneration
-        self.runtimeRevision = runtimeRevision
-        self.sessionKey = sessionKey
-        self.source = source
-        self.startedAt = startedAt
-        self.systemPrompt = systemPrompt
-        self.systemPromptHash = systemPromptHash
-        self.threadId = threadId
-        self.title = title
-        self.titleSource = titleSource
-        self.toolCallCount = toolCallCount
-        self.toolNames = toolNames
-        self.transportProfile = transportProfile
-        self.unread = unread
-        self.userId = userId
-        self.additionalProperties = additionalProperties
+    public init(creditsPay: Bool? = nil, featuredModelIds: [String]? = nil, gauges: [RESTPlanUsageGauge]? = nil, kind: String, pausedReason: String? = nil, plan: String? = nil, topTierModelIds: [String]? = nil) {
+        self.creditsPay = creditsPay
+        self.featuredModelIds = featuredModelIds
+        self.gauges = gauges
+        self.kind = kind
+        self.pausedReason = pausedReason
+        self.plan = plan
+        self.topTierModelIds = topTierModelIds
     }
 
     private enum CodingKeys: String, CodingKey {
-        case branchedFrom = "_branched_from"
-        case lineageIds = "_lineage_ids"
-        case lineageRootId = "_lineage_root_id"
-        case resetFrom = "_reset_from"
-        case actualCostUsd = "actual_cost_usd"
-        case apiCallCount = "api_call_count"
-        case archived = "archived"
-        case autoArchived = "auto_archived"
-        case billingBaseUrl = "billing_base_url"
-        case billingMode = "billing_mode"
-        case billingProvider = "billing_provider"
-        case cacheReadTokens = "cache_read_tokens"
-        case cacheWriteTokens = "cache_write_tokens"
-        case chatId = "chat_id"
-        case chatType = "chat_type"
-        case compressionFailureCooldownUntil = "compression_failure_cooldown_until"
-        case compressionFailureError = "compression_failure_error"
-        case compressionFallbackStreak = "compression_fallback_streak"
-        case compressionIneffectiveCount = "compression_ineffective_count"
-        case compressionRecoveryDeadline = "compression_recovery_deadline"
-        case continuationKind = "continuation_kind"
-        case costSource = "cost_source"
-        case costStatus = "cost_status"
-        case createdSource = "created_source"
-        case cwd = "cwd"
-        case displayName = "display_name"
-        case endReason = "end_reason"
-        case endedAt = "ended_at"
-        case estimatedCostUsd = "estimated_cost_usd"
-        case expiryFinalized = "expiry_finalized"
-        case gitBranch = "git_branch"
-        case gitMetadataGeneration = "git_metadata_generation"
-        case gitRepoRoot = "git_repo_root"
-        case handoffError = "handoff_error"
-        case handoffPlatform = "handoff_platform"
-        case handoffState = "handoff_state"
-        case hidden = "hidden"
-        case id = "id"
-        case inputTokens = "input_tokens"
-        case isActive = "is_active"
-        case isDefaultProfile = "is_default_profile"
-        case lastActive = "last_active"
-        case lastActivityAt = "last_activity_at"
-        case lastActivityDescription = "last_activity_description"
-        case lastActivityProvenance = "last_activity_provenance"
-        case lastReadAt = "last_read_at"
-        case messageCount = "message_count"
-        case model = "model"
-        case modelConfig = "model_config"
-        case originJson = "origin_json"
-        case outputTokens = "output_tokens"
-        case parentSessionId = "parent_session_id"
-        case pinned = "pinned"
-        case preview = "preview"
-        case pricingVersion = "pricing_version"
-        case profile = "profile"
-        case profileName = "profile_name"
-        case reasoningTokens = "reasoning_tokens"
-        case rewindCount = "rewind_count"
-        case runtimeGeneration = "runtime_generation"
-        case runtimeRevision = "runtime_revision"
-        case sessionKey = "session_key"
-        case source = "source"
-        case startedAt = "started_at"
-        case systemPrompt = "system_prompt"
-        case systemPromptHash = "system_prompt_hash"
-        case threadId = "thread_id"
-        case title = "title"
-        case titleSource = "title_source"
-        case toolCallCount = "tool_call_count"
-        case toolNames = "tool_names"
-        case transportProfile = "transport_profile"
-        case unread = "unread"
-        case userId = "user_id"
+        case creditsPay = "credits_pay"
+        case featuredModelIds = "featured_model_ids"
+        case gauges = "gauges"
+        case kind = "kind"
+        case pausedReason = "paused_reason"
+        case plan = "plan"
+        case topTierModelIds = "top_tier_model_ids"
     }
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        branchedFrom = try container.decodeIfPresent(String.self, forKey: .branchedFrom)
-        lineageIds = try container.decodeIfPresent([String].self, forKey: .lineageIds)
-        lineageRootId = try container.decodeIfPresent(String.self, forKey: .lineageRootId)
-        resetFrom = try container.decodeIfPresent(String.self, forKey: .resetFrom)
-        actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
-        apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
-        archived = try container.decode(Bool.self, forKey: .archived)
-        autoArchived = try container.decodeIfPresent(Int.self, forKey: .autoArchived)
-        billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
-        billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
-        billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
-        cacheReadTokens = try container.decode(Optional<Int>.self, forKey: .cacheReadTokens)
-        cacheWriteTokens = try container.decode(Optional<Int>.self, forKey: .cacheWriteTokens)
-        chatId = try container.decode(Optional<String>.self, forKey: .chatId)
-        chatType = try container.decode(Optional<String>.self, forKey: .chatType)
-        compressionFailureCooldownUntil = try container.decode(Optional<Double>.self, forKey: .compressionFailureCooldownUntil)
-        compressionFailureError = try container.decode(Optional<String>.self, forKey: .compressionFailureError)
-        compressionFallbackStreak = try container.decode(Int.self, forKey: .compressionFallbackStreak)
-        compressionIneffectiveCount = try container.decode(Int.self, forKey: .compressionIneffectiveCount)
-        compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
-        continuationKind = try container.decodeIfPresent(RESTSessionListRowContinuationKind.self, forKey: .continuationKind)
-        costSource = try container.decode(Optional<String>.self, forKey: .costSource)
-        costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
-        createdSource = try container.decodeIfPresent(String.self, forKey: .createdSource)
-        cwd = try container.decode(Optional<String>.self, forKey: .cwd)
-        displayName = try container.decode(Optional<String>.self, forKey: .displayName)
-        endReason = try container.decode(Optional<String>.self, forKey: .endReason)
-        endedAt = try container.decode(Optional<Double>.self, forKey: .endedAt)
-        estimatedCostUsd = try container.decode(Optional<Double>.self, forKey: .estimatedCostUsd)
-        expiryFinalized = try container.decode(Optional<Int>.self, forKey: .expiryFinalized)
-        gitBranch = try container.decode(Optional<String>.self, forKey: .gitBranch)
-        gitMetadataGeneration = try container.decodeIfPresent(Int.self, forKey: .gitMetadataGeneration)
-        gitRepoRoot = try container.decode(Optional<String>.self, forKey: .gitRepoRoot)
-        handoffError = try container.decode(Optional<String>.self, forKey: .handoffError)
-        handoffPlatform = try container.decode(Optional<String>.self, forKey: .handoffPlatform)
-        handoffState = try container.decode(Optional<String>.self, forKey: .handoffState)
-        hidden = try container.decode(Int.self, forKey: .hidden)
-        id = try container.decode(String.self, forKey: .id)
-        inputTokens = try container.decode(Optional<Int>.self, forKey: .inputTokens)
-        isActive = try container.decode(Bool.self, forKey: .isActive)
-        isDefaultProfile = try container.decode(Bool.self, forKey: .isDefaultProfile)
-        lastActive = try container.decode(Double.self, forKey: .lastActive)
-        lastActivityAt = try container.decode(Optional<Double>.self, forKey: .lastActivityAt)
-        lastActivityDescription = try container.decode(Optional<String>.self, forKey: .lastActivityDescription)
-        lastActivityProvenance = try container.decode(Optional<String>.self, forKey: .lastActivityProvenance)
-        lastReadAt = try container.decode(Optional<Double>.self, forKey: .lastReadAt)
-        messageCount = try container.decode(Optional<Int>.self, forKey: .messageCount)
-        model = try container.decode(Optional<String>.self, forKey: .model)
-        modelConfig = try container.decodeIfPresent(String.self, forKey: .modelConfig)
-        originJson = try container.decode(Optional<String>.self, forKey: .originJson)
-        outputTokens = try container.decode(Optional<Int>.self, forKey: .outputTokens)
-        parentSessionId = try container.decode(Optional<String>.self, forKey: .parentSessionId)
-        pinned = try container.decode(Bool.self, forKey: .pinned)
-        preview = try container.decode(String.self, forKey: .preview)
-        pricingVersion = try container.decode(Optional<String>.self, forKey: .pricingVersion)
-        profile = try container.decode(String.self, forKey: .profile)
-        profileName = try container.decode(Optional<String>.self, forKey: .profileName)
-        reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
-        rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        runtimeGeneration = try container.decodeIfPresent(Int.self, forKey: .runtimeGeneration)
-        runtimeRevision = try container.decodeIfPresent(Int.self, forKey: .runtimeRevision)
-        sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
-        source = try container.decode(String.self, forKey: .source)
-        startedAt = try container.decode(Double.self, forKey: .startedAt)
-        systemPrompt = try container.decodeIfPresent(String.self, forKey: .systemPrompt)
-        systemPromptHash = try container.decodeIfPresent(String.self, forKey: .systemPromptHash)
-        threadId = try container.decode(Optional<String>.self, forKey: .threadId)
-        title = try container.decode(Optional<String>.self, forKey: .title)
-        titleSource = try container.decode(Optional<String>.self, forKey: .titleSource)
-        toolCallCount = try container.decode(Optional<Int>.self, forKey: .toolCallCount)
-        toolNames = try container.decode(Optional<String>.self, forKey: .toolNames)
-        transportProfile = try container.decode(Optional<String>.self, forKey: .transportProfile)
-        unread = try container.decode(Bool.self, forKey: .unread)
-        userId = try container.decode(Optional<String>.self, forKey: .userId)
-        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_branched_from", "_lineage_ids", "_lineage_root_id", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "continuation_kind", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id"]
-        var extra: [String: JSONValue] = [:]
-        for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["credits_pay", "featured_model_ids", "gauges", "kind", "paused_reason", "plan", "top_tier_model_ids"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
         }
-        additionalProperties = extra
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        creditsPay = try container.decodeIfPresent(Bool.self, forKey: .creditsPay)
+        featuredModelIds = try container.decodeIfPresent([String].self, forKey: .featuredModelIds)
+        gauges = try container.decodeIfPresent([RESTPlanUsageGauge].self, forKey: .gauges)
+        kind = try container.decode(String.self, forKey: .kind)
+        pausedReason = try container.decodeIfPresent(String.self, forKey: .pausedReason)
+        plan = try container.decodeIfPresent(String.self, forKey: .plan)
+        topTierModelIds = try container.decodeIfPresent([String].self, forKey: .topTierModelIds)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(branchedFrom, forKey: .branchedFrom)
-        try container.encodeIfPresent(lineageIds, forKey: .lineageIds)
-        try container.encodeIfPresent(lineageRootId, forKey: .lineageRootId)
-        try container.encodeIfPresent(resetFrom, forKey: .resetFrom)
-        try container.encode(actualCostUsd, forKey: .actualCostUsd)
-        try container.encode(apiCallCount, forKey: .apiCallCount)
-        try container.encode(archived, forKey: .archived)
-        try container.encodeIfPresent(autoArchived, forKey: .autoArchived)
-        try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
-        try container.encode(billingMode, forKey: .billingMode)
-        try container.encode(billingProvider, forKey: .billingProvider)
-        try container.encode(cacheReadTokens, forKey: .cacheReadTokens)
-        try container.encode(cacheWriteTokens, forKey: .cacheWriteTokens)
-        try container.encode(chatId, forKey: .chatId)
-        try container.encode(chatType, forKey: .chatType)
-        try container.encode(compressionFailureCooldownUntil, forKey: .compressionFailureCooldownUntil)
-        try container.encode(compressionFailureError, forKey: .compressionFailureError)
-        try container.encode(compressionFallbackStreak, forKey: .compressionFallbackStreak)
-        try container.encode(compressionIneffectiveCount, forKey: .compressionIneffectiveCount)
-        try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
-        try container.encodeIfPresent(continuationKind, forKey: .continuationKind)
-        try container.encode(costSource, forKey: .costSource)
-        try container.encode(costStatus, forKey: .costStatus)
-        try container.encodeIfPresent(createdSource, forKey: .createdSource)
-        try container.encode(cwd, forKey: .cwd)
-        try container.encode(displayName, forKey: .displayName)
-        try container.encode(endReason, forKey: .endReason)
-        try container.encode(endedAt, forKey: .endedAt)
-        try container.encode(estimatedCostUsd, forKey: .estimatedCostUsd)
-        try container.encode(expiryFinalized, forKey: .expiryFinalized)
-        try container.encode(gitBranch, forKey: .gitBranch)
-        try container.encodeIfPresent(gitMetadataGeneration, forKey: .gitMetadataGeneration)
-        try container.encode(gitRepoRoot, forKey: .gitRepoRoot)
-        try container.encode(handoffError, forKey: .handoffError)
-        try container.encode(handoffPlatform, forKey: .handoffPlatform)
-        try container.encode(handoffState, forKey: .handoffState)
-        try container.encode(hidden, forKey: .hidden)
-        try container.encode(id, forKey: .id)
-        try container.encode(inputTokens, forKey: .inputTokens)
-        try container.encode(isActive, forKey: .isActive)
-        try container.encode(isDefaultProfile, forKey: .isDefaultProfile)
-        try container.encode(lastActive, forKey: .lastActive)
-        try container.encode(lastActivityAt, forKey: .lastActivityAt)
-        try container.encode(lastActivityDescription, forKey: .lastActivityDescription)
-        try container.encode(lastActivityProvenance, forKey: .lastActivityProvenance)
-        try container.encode(lastReadAt, forKey: .lastReadAt)
-        try container.encode(messageCount, forKey: .messageCount)
-        try container.encode(model, forKey: .model)
-        try container.encodeIfPresent(modelConfig, forKey: .modelConfig)
-        try container.encode(originJson, forKey: .originJson)
-        try container.encode(outputTokens, forKey: .outputTokens)
-        try container.encode(parentSessionId, forKey: .parentSessionId)
-        try container.encode(pinned, forKey: .pinned)
-        try container.encode(preview, forKey: .preview)
-        try container.encode(pricingVersion, forKey: .pricingVersion)
-        try container.encode(profile, forKey: .profile)
-        try container.encode(profileName, forKey: .profileName)
-        try container.encode(reasoningTokens, forKey: .reasoningTokens)
-        try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encodeIfPresent(runtimeGeneration, forKey: .runtimeGeneration)
-        try container.encodeIfPresent(runtimeRevision, forKey: .runtimeRevision)
-        try container.encode(sessionKey, forKey: .sessionKey)
-        try container.encode(source, forKey: .source)
-        try container.encode(startedAt, forKey: .startedAt)
-        try container.encodeIfPresent(systemPrompt, forKey: .systemPrompt)
-        try container.encodeIfPresent(systemPromptHash, forKey: .systemPromptHash)
-        try container.encode(threadId, forKey: .threadId)
-        try container.encode(title, forKey: .title)
-        try container.encode(titleSource, forKey: .titleSource)
-        try container.encode(toolCallCount, forKey: .toolCallCount)
-        try container.encode(toolNames, forKey: .toolNames)
-        try container.encode(transportProfile, forKey: .transportProfile)
-        try container.encode(unread, forKey: .unread)
-        try container.encode(userId, forKey: .userId)
-        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["_branched_from", "_lineage_ids", "_lineage_root_id", "_reset_from", "actual_cost_usd", "api_call_count", "archived", "auto_archived", "billing_base_url", "billing_mode", "billing_provider", "cache_read_tokens", "cache_write_tokens", "chat_id", "chat_type", "compression_failure_cooldown_until", "compression_failure_error", "compression_fallback_streak", "compression_ineffective_count", "compression_recovery_deadline", "continuation_kind", "cost_source", "cost_status", "created_source", "cwd", "display_name", "end_reason", "ended_at", "estimated_cost_usd", "expiry_finalized", "git_branch", "git_metadata_generation", "git_repo_root", "handoff_error", "handoff_platform", "handoff_state", "hidden", "id", "input_tokens", "is_active", "is_default_profile", "last_active", "last_activity_at", "last_activity_description", "last_activity_provenance", "last_read_at", "message_count", "model", "model_config", "origin_json", "output_tokens", "parent_session_id", "pinned", "preview", "pricing_version", "profile", "profile_name", "reasoning_tokens", "rewind_count", "runtime_generation", "runtime_revision", "session_key", "source", "started_at", "system_prompt", "system_prompt_hash", "thread_id", "title", "title_source", "tool_call_count", "tool_names", "transport_profile", "unread", "user_id"]
-        for (key, value) in additionalProperties {
-            guard !known.contains(key) else {
-                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
-            }
-            try dynamic.encode(value, forKey: DynamicCodingKey(key))
-        }
+        try container.encodeIfPresent(creditsPay, forKey: .creditsPay)
+        try container.encodeIfPresent(featuredModelIds, forKey: .featuredModelIds)
+        try container.encodeIfPresent(gauges, forKey: .gauges)
+        try container.encode(kind, forKey: .kind)
+        try container.encodeIfPresent(pausedReason, forKey: .pausedReason)
+        try container.encodeIfPresent(plan, forKey: .plan)
+        try container.encodeIfPresent(topTierModelIds, forKey: .topTierModelIds)
     }
 }

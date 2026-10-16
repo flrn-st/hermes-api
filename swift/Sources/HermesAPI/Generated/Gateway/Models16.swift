@@ -2,6 +2,263 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct ProfilesCreateParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var name: String
+    public var description: Patch<String>
+    public var cloneFrom: Patch<String>
+    public var cloneAll: Patch<ProfilesCreateParamsCloneAll>
+    public var cloneChannels: Patch<ProfilesCreateParamsCloneChannels>
+    public var noSkills: Patch<ProfilesCreateParamsNoSkills>
+    public var noAlias: Patch<ProfilesCreateParamsNoAlias>
+    public var soul: Patch<String>
+    public var model: Patch<String>
+    public var provider: Patch<String>
+    public var shareAuth: Patch<ProfilesCreateParamsShareAuth>
+    public var mirrorCredentials: Patch<ProfilesCreateParamsMirrorCredentials>
+
+    public init(profile: Patch<String> = .absent, name: String, description: Patch<String> = .absent, cloneFrom: Patch<String> = .absent, cloneAll: Patch<ProfilesCreateParamsCloneAll> = .absent, cloneChannels: Patch<ProfilesCreateParamsCloneChannels> = .absent, noSkills: Patch<ProfilesCreateParamsNoSkills> = .absent, noAlias: Patch<ProfilesCreateParamsNoAlias> = .absent, soul: Patch<String> = .absent, model: Patch<String> = .absent, provider: Patch<String> = .absent, shareAuth: Patch<ProfilesCreateParamsShareAuth> = .absent, mirrorCredentials: Patch<ProfilesCreateParamsMirrorCredentials> = .absent) {
+        self.profile = profile
+        self.name = name
+        self.description = description
+        self.cloneFrom = cloneFrom
+        self.cloneAll = cloneAll
+        self.cloneChannels = cloneChannels
+        self.noSkills = noSkills
+        self.noAlias = noAlias
+        self.soul = soul
+        self.model = model
+        self.provider = provider
+        self.shareAuth = shareAuth
+        self.mirrorCredentials = mirrorCredentials
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case name = "name"
+        case description = "description"
+        case cloneFrom = "clone_from"
+        case cloneAll = "clone_all"
+        case cloneChannels = "clone_channels"
+        case noSkills = "no_skills"
+        case noAlias = "no_alias"
+        case soul = "soul"
+        case model = "model"
+        case provider = "provider"
+        case shareAuth = "share_auth"
+        case mirrorCredentials = "mirror_credentials"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        name = try container.decode(String.self, forKey: .name)
+        if !container.contains(.description) {
+            description = .absent
+        } else if try container.decodeNil(forKey: .description) {
+            description = .null
+        } else {
+            description = .value(try container.decode(String.self, forKey: .description))
+        }
+        if !container.contains(.cloneFrom) {
+            cloneFrom = .absent
+        } else if try container.decodeNil(forKey: .cloneFrom) {
+            cloneFrom = .null
+        } else {
+            cloneFrom = .value(try container.decode(String.self, forKey: .cloneFrom))
+        }
+        if !container.contains(.cloneAll) {
+            cloneAll = .absent
+        } else if try container.decodeNil(forKey: .cloneAll) {
+            cloneAll = .null
+        } else {
+            cloneAll = .value(try container.decode(ProfilesCreateParamsCloneAll.self, forKey: .cloneAll))
+        }
+        if !container.contains(.cloneChannels) {
+            cloneChannels = .absent
+        } else if try container.decodeNil(forKey: .cloneChannels) {
+            cloneChannels = .null
+        } else {
+            cloneChannels = .value(try container.decode(ProfilesCreateParamsCloneChannels.self, forKey: .cloneChannels))
+        }
+        if !container.contains(.noSkills) {
+            noSkills = .absent
+        } else if try container.decodeNil(forKey: .noSkills) {
+            noSkills = .null
+        } else {
+            noSkills = .value(try container.decode(ProfilesCreateParamsNoSkills.self, forKey: .noSkills))
+        }
+        if !container.contains(.noAlias) {
+            noAlias = .absent
+        } else if try container.decodeNil(forKey: .noAlias) {
+            noAlias = .null
+        } else {
+            noAlias = .value(try container.decode(ProfilesCreateParamsNoAlias.self, forKey: .noAlias))
+        }
+        if !container.contains(.soul) {
+            soul = .absent
+        } else if try container.decodeNil(forKey: .soul) {
+            soul = .null
+        } else {
+            soul = .value(try container.decode(String.self, forKey: .soul))
+        }
+        if !container.contains(.model) {
+            model = .absent
+        } else if try container.decodeNil(forKey: .model) {
+            model = .null
+        } else {
+            model = .value(try container.decode(String.self, forKey: .model))
+        }
+        if !container.contains(.provider) {
+            provider = .absent
+        } else if try container.decodeNil(forKey: .provider) {
+            provider = .null
+        } else {
+            provider = .value(try container.decode(String.self, forKey: .provider))
+        }
+        if !container.contains(.shareAuth) {
+            shareAuth = .absent
+        } else if try container.decodeNil(forKey: .shareAuth) {
+            shareAuth = .null
+        } else {
+            shareAuth = .value(try container.decode(ProfilesCreateParamsShareAuth.self, forKey: .shareAuth))
+        }
+        if !container.contains(.mirrorCredentials) {
+            mirrorCredentials = .absent
+        } else if try container.decodeNil(forKey: .mirrorCredentials) {
+            mirrorCredentials = .null
+        } else {
+            mirrorCredentials = .value(try container.decode(ProfilesCreateParamsMirrorCredentials.self, forKey: .mirrorCredentials))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encode(name, forKey: .name)
+        switch description {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .description)
+        case .value(let value): try container.encode(value, forKey: .description)
+        }
+        switch cloneFrom {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .cloneFrom)
+        case .value(let value): try container.encode(value, forKey: .cloneFrom)
+        }
+        switch cloneAll {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .cloneAll)
+        case .value(let value): try container.encode(value, forKey: .cloneAll)
+        }
+        switch cloneChannels {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .cloneChannels)
+        case .value(let value): try container.encode(value, forKey: .cloneChannels)
+        }
+        switch noSkills {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .noSkills)
+        case .value(let value): try container.encode(value, forKey: .noSkills)
+        }
+        switch noAlias {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .noAlias)
+        case .value(let value): try container.encode(value, forKey: .noAlias)
+        }
+        switch soul {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .soul)
+        case .value(let value): try container.encode(value, forKey: .soul)
+        }
+        switch model {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .model)
+        case .value(let value): try container.encode(value, forKey: .model)
+        }
+        switch provider {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .provider)
+        case .value(let value): try container.encode(value, forKey: .provider)
+        }
+        switch shareAuth {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .shareAuth)
+        case .value(let value): try container.encode(value, forKey: .shareAuth)
+        }
+        switch mirrorCredentials {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .mirrorCredentials)
+        case .value(let value): try container.encode(value, forKey: .mirrorCredentials)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public enum ProfilesCreateParamsCloneAll: Codable, Sendable, Hashable {
+    case boolean(Bool)
+    case string(String)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(Bool.self) {
+            self = .boolean(value)
+            return
+        }
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .boolean(let value): try container.encode(value)
+        case .string(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public enum ProfilesCreateParamsCloneChannels: Codable, Sendable, Hashable {
+    case boolean(Bool)
+    case string(String)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(Bool.self) {
+            self = .boolean(value)
+            return
+        }
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .boolean(let value): try container.encode(value)
+        case .string(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public enum ProfilesCreateParamsMirrorCredentials: Codable, Sendable, Hashable {
     case boolean(Bool)
     case string(String)
@@ -1625,114 +1882,5 @@ public struct ProjectsDiscoverReposResult: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(repos, forKey: .repos)
         try container.encodeIfPresent(discoveryPolicy, forKey: .discoveryPolicy)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ProjectsForCwdParams: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var cwd: Patch<String>
-
-    public init(profile: Patch<String> = .absent, cwd: Patch<String> = .absent) {
-        self.profile = profile
-        self.cwd = cwd
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case cwd = "cwd"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        if !container.contains(.cwd) {
-            cwd = .absent
-        } else if try container.decodeNil(forKey: .cwd) {
-            cwd = .null
-        } else {
-            cwd = .value(try container.decode(String.self, forKey: .cwd))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-        switch cwd {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .cwd)
-        case .value(let value): try container.encode(value, forKey: .cwd)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ProjectsForCwdResult: Codable, Sendable, Hashable {
-    public var project: ProjectInfo?
-    public var cwd: String
-    public var branch: String?
-
-    public init(project: ProjectInfo? = nil, cwd: String, branch: String? = nil) {
-        self.project = project
-        self.cwd = cwd
-        self.branch = branch
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case project = "project"
-        case cwd = "cwd"
-        case branch = "branch"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        project = try container.decodeIfPresent(ProjectInfo.self, forKey: .project)
-        cwd = try container.decode(String.self, forKey: .cwd)
-        branch = try container.decodeIfPresent(String.self, forKey: .branch)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(project, forKey: .project)
-        try container.encode(cwd, forKey: .cwd)
-        try container.encodeIfPresent(branch, forKey: .branch)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ProjectsPayload: Codable, Sendable, Hashable {
-    public var projects: [ProjectInfo]
-    public var activeId: String?
-
-    public init(projects: [ProjectInfo], activeId: String? = nil) {
-        self.projects = projects
-        self.activeId = activeId
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case projects = "projects"
-        case activeId = "active_id"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        projects = try container.decode([ProjectInfo].self, forKey: .projects)
-        activeId = try container.decodeIfPresent(String.self, forKey: .activeId)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(projects, forKey: .projects)
-        try container.encodeIfPresent(activeId, forKey: .activeId)
     }
 }

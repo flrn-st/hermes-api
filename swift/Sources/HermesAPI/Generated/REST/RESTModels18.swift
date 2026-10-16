@@ -2,6 +2,113 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``list_skills_hub_sources``; ``installed`` is keyed by hub identifier.
+public struct SkillHubSourcesResponse: Codable, Sendable, Hashable {
+    public var featured: [SkillHubEntry]
+    public var indexAvailable: Bool
+    public var installed: [String: SkillHubInstalledRecord]
+    public var sources: [SkillHubSource]
+
+    public init(featured: [SkillHubEntry], indexAvailable: Bool, installed: [String: SkillHubInstalledRecord], sources: [SkillHubSource]) {
+        self.featured = featured
+        self.indexAvailable = indexAvailable
+        self.installed = installed
+        self.sources = sources
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case featured = "featured"
+        case indexAvailable = "index_available"
+        case installed = "installed"
+        case sources = "sources"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["featured", "index_available", "installed", "sources"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        featured = try container.decode([SkillHubEntry].self, forKey: .featured)
+        indexAvailable = try container.decode(Bool.self, forKey: .indexAvailable)
+        installed = try container.decode([String: SkillHubInstalledRecord].self, forKey: .installed)
+        sources = try container.decode([SkillHubSource].self, forKey: .sources)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(featured, forKey: .featured)
+        try container.encode(indexAvailable, forKey: .indexAvailable)
+        try container.encode(installed, forKey: .installed)
+        try container.encode(sources, forKey: .sources)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// ``tools/skillevaluator_scan.py::Tier1Finding``; ``secrets_class`` is ``is_secrets_class``.
+public struct SkillHubTier1Finding: Codable, Sendable, Hashable {
+    public var check: String
+    public var file: String
+    public var line: Int
+    public var message: String
+    public var secretsClass: Bool
+    public var severity: String
+    public var validator: String
+
+    public init(check: String, file: String, line: Int, message: String, secretsClass: Bool, severity: String, validator: String) {
+        self.check = check
+        self.file = file
+        self.line = line
+        self.message = message
+        self.secretsClass = secretsClass
+        self.severity = severity
+        self.validator = validator
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case check = "check"
+        case file = "file"
+        case line = "line"
+        case message = "message"
+        case secretsClass = "secrets_class"
+        case severity = "severity"
+        case validator = "validator"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["check", "file", "line", "message", "secrets_class", "severity", "validator"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        check = try container.decode(String.self, forKey: .check)
+        file = try container.decode(String.self, forKey: .file)
+        line = try container.decode(Int.self, forKey: .line)
+        message = try container.decode(String.self, forKey: .message)
+        secretsClass = try container.decode(Bool.self, forKey: .secretsClass)
+        severity = try container.decode(String.self, forKey: .severity)
+        validator = try container.decode(String.self, forKey: .validator)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(check, forKey: .check)
+        try container.encode(file, forKey: .file)
+        try container.encode(line, forKey: .line)
+        try container.encode(message, forKey: .message)
+        try container.encode(secretsClass, forKey: .secretsClass)
+        try container.encode(severity, forKey: .severity)
+        try container.encode(validator, forKey: .validator)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 /// Advisory SkillEvaluator Tier 1 result (``tools/skillevaluator_scan.py::Tier1Report``).
 public struct SkillHubTier1Report: Codable, Sendable, Hashable {
     public var findings: [SkillHubTier1Finding]
@@ -1722,96 +1829,6 @@ public enum StatusResponseGatewayMode: Codable, Sendable, Hashable, RawRepresent
         default:
             guard decoder.decodesTolerantly else {
                 throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected StatusResponseGatewayMode value: \(raw)")
-            }
-            self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusResponseNousSessionValid: Codable, Sendable, Hashable, RawRepresentable {
-    case valid
-    case terminal
-    case knownUnknown
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "valid": self = .valid
-        case "terminal": self = .terminal
-        case "unknown": self = .knownUnknown
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .valid: "valid"
-        case .terminal: "terminal"
-        case .knownUnknown: "unknown"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "valid": self = .valid
-        case "terminal": self = .terminal
-        case "unknown": self = .knownUnknown
-        default:
-            guard decoder.decodesTolerantly else {
-                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected StatusResponseNousSessionValid value: \(raw)")
-            }
-            self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the reviewed Hermes REST contract. Do not edit.
-public enum StatusResponseOverall: Codable, Sendable, Hashable, RawRepresentable {
-    case ok
-    case degraded
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "ok": self = .ok
-        case "degraded": self = .degraded
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .ok: "ok"
-        case .degraded: "degraded"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "ok": self = .ok
-        case "degraded": self = .degraded
-        default:
-            guard decoder.decodesTolerantly else {
-                throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected StatusResponseOverall value: \(raw)")
             }
             self = .unknown(raw)
         }

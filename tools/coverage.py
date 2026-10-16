@@ -9,6 +9,7 @@ from pathlib import Path
 
 import yaml
 
+from tools.development_overlay import gateway_contract
 from tools.fetch_spec import ROOT
 from tools.gateway_errors import load as load_errors
 from tools.ref_policy import require_release
@@ -221,7 +222,7 @@ def report(ref: str, root: Path = ROOT, *, assume_proposed: bool = False) -> dic
     signing them would change."""
     ref = require_release(ref)
     source = root / "spec/out" / ref
-    contract = json.loads((source / "openrpc.json").read_text())
+    contract = gateway_contract(ref, root)
     symbols = json.loads((source / "gateway-symbols.json").read_text())
     openapi_path = source / "openapi.json"
     document = json.loads((openapi_path if openapi_path.exists() else source / "openapi.raw.json").read_text())

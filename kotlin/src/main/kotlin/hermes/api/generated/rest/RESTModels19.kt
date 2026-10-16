@@ -9,6 +9,88 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusResponseNousSessionValid.Serializer::class)
+public sealed interface StatusResponseNousSessionValid {
+    public data object Valid : StatusResponseNousSessionValid
+    public data object Terminal : StatusResponseNousSessionValid
+    public data object KnownUnknown : StatusResponseNousSessionValid
+    public data class Unknown(public val raw: kotlin.String) : StatusResponseNousSessionValid
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Valid -> "valid"
+            Terminal -> "terminal"
+            KnownUnknown -> "unknown"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusResponseNousSessionValid = when (raw) {
+            "valid" -> Valid
+            "terminal" -> Terminal
+            "unknown" -> KnownUnknown
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusResponseNousSessionValid> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseNousSessionValid", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusResponseNousSessionValid = when (val raw = decoder.decodeString()) {
+            "valid" -> Valid
+            "terminal" -> Terminal
+            "unknown" -> KnownUnknown
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseNousSessionValid value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusResponseNousSessionValid) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable(with = StatusResponseOverall.Serializer::class)
+public sealed interface StatusResponseOverall {
+    public data object Ok : StatusResponseOverall
+    public data object Degraded : StatusResponseOverall
+    public data class Unknown(public val raw: kotlin.String) : StatusResponseOverall
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Ok -> "ok"
+            Degraded -> "degraded"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): StatusResponseOverall = when (raw) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<StatusResponseOverall> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseOverall", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): StatusResponseOverall = when (val raw = decoder.decodeString()) {
+            "ok" -> Ok
+            "degraded" -> Degraded
+            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseOverall value: $raw")
+        }
+
+        override fun serialize(encoder: Encoder, value: StatusResponseOverall) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``gateway/readiness.py::_probe_state_db`` reduced to its status enum. */
 @Serializable
 public data class StatusStorageComponent(
@@ -838,42 +920,3 @@ public data class ToolsetEnvUpdate(
         }
     }
 }
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One ``get_toolsets`` row per ``hermes_cli/tools_config.py::_get_effective_configurable_toolsets`` entry (built-ins, then plugin toolsets). ``available`` mirrors ``enabled``. */
-@Serializable
-public data class ToolsetListRow(
-    @SerialName("available")
-    public val available: Boolean,
-    @SerialName("configured")
-    public val configured: Boolean,
-    @SerialName("description")
-    public val description: String,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("label")
-    public val label: String,
-    @SerialName("name")
-    public val name: String,
-    /** Platform the toggle writes to (``cli`` unless platform-restricted). */
-    @SerialName("platform")
-    public val platform: String,
-    @SerialName("platform_label")
-    public val platformLabel: String,
-    @SerialName("tools")
-    public val tools: List<String>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. One catalog model (``display`` defaults to the id; the other labels to ``""``). */
-@Serializable
-public data class ToolsetModelOption(
-    @SerialName("display")
-    public val display: String,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("price")
-    public val price: String,
-    @SerialName("speed")
-    public val speed: String,
-    @SerialName("strengths")
-    public val strengths: String,
-)

@@ -9,6 +9,45 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = OnboardingFactsSource.Serializer::class)
+public sealed interface OnboardingFactsSource {
+    public data object Local : OnboardingFactsSource
+    public data object Remote : OnboardingFactsSource
+    public data class Unknown(public val raw: kotlin.String) : OnboardingFactsSource
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Local -> "local"
+            Remote -> "remote"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): OnboardingFactsSource = when (raw) {
+            "local" -> Local
+            "remote" -> Remote
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<OnboardingFactsSource> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OnboardingFactsSource", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): OnboardingFactsSource = when (val raw = decoder.decodeString()) {
+            "local" -> Local
+            "remote" -> Remote
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: OnboardingFactsSource) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = OnboardingOutcome.Serializer::class)
 public sealed interface OnboardingOutcome {
     public data object Done : OnboardingOutcome
@@ -929,53 +968,6 @@ public data class PetGenerateParams(
                 Patch.Null -> output["provider"] = JsonNull
                 is Patch.Value -> output["provider"] = json.encodeToJsonElement(patch.value)
             }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = PetGenerateProgressPayload.Serializer::class)
-public data class PetGenerateProgressPayload(
-    public val token: String,
-    public val count: Long,
-    public val index: Long? = null,
-    public val dataUri: String? = null,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<PetGenerateProgressPayload> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): PetGenerateProgressPayload {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("PetGenerateProgressPayload requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("PetGenerateProgressPayload requires an object")
-            return PetGenerateProgressPayload(
-                token = json.decodeFromJsonElement<String>((input["token"] ?: throw SerializationException("Missing token"))),
-                count = json.decodeFromJsonElement<Long>((input["count"] ?: throw SerializationException("Missing count"))),
-                index = input["index"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
-                dataUri = input["dataUri"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("token", "count", "index", "dataUri") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: PetGenerateProgressPayload) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("PetGenerateProgressPayload requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("token", "count", "index", "dataUri")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            output["token"] = json.encodeToJsonElement(value.token)
-            output["count"] = json.encodeToJsonElement(value.count)
-            value.index?.let { output["index"] = json.encodeToJsonElement(it) }
-            value.dataUri?.let { output["dataUri"] = json.encodeToJsonElement(it) }
             jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }

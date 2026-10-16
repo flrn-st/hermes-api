@@ -9,6 +9,106 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = SideAgentParams.Serializer::class)
+public data class SideAgentParams(
+    public val sessionId: String,
+    public val profile: Patch<String> = Patch.Absent,
+    public val text: String,
+)
+{
+    public object Serializer : KSerializer<SideAgentParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SideAgentParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SideAgentParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SideAgentParams requires an object")
+            return SideAgentParams(
+                sessionId = json.decodeFromJsonElement<String>((input["session_id"] ?: throw SerializationException("Missing session_id"))),
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                text = json.decodeFromJsonElement<String>((input["text"] ?: throw SerializationException("Missing text"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SideAgentParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SideAgentParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["session_id"] = json.encodeToJsonElement(value.sessionId)
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            output["text"] = json.encodeToJsonElement(value.text)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = SkillBrowseItem.Serializer::class)
+public data class SkillBrowseItem(
+    public val name: String? = null,
+    public val description: String? = null,
+    public val source: String? = null,
+    public val trust: String? = null,
+    public val identifier: String? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<SkillBrowseItem> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): SkillBrowseItem {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("SkillBrowseItem requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("SkillBrowseItem requires an object")
+            return SkillBrowseItem(
+                name = input["name"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                description = input["description"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                source = input["source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                trust = input["trust"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                identifier = input["identifier"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("name", "description", "source", "trust", "identifier") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: SkillBrowseItem) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("SkillBrowseItem requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("name", "description", "source", "trust", "identifier")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            value.name?.let { output["name"] = json.encodeToJsonElement(it) }
+            value.description?.let { output["description"] = json.encodeToJsonElement(it) }
+            value.source?.let { output["source"] = json.encodeToJsonElement(it) }
+            value.trust?.let { output["trust"] = json.encodeToJsonElement(it) }
+            value.identifier?.let { output["identifier"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class SkillCatalogEntry(
+    @SerialName("usage")
+    public val usage: Long? = null,
+    @SerialName("origin")
+    public val origin: String? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class SkillCommandRef(
     @SerialName("name")
@@ -1052,134 +1152,3 @@ public data class SubagentTailResult(
     @SerialName("truncated")
     public val truncated: Boolean? = null,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = SubscriptionChangeEffect.Serializer::class)
-public sealed interface SubscriptionChangeEffect {
-    public data object ChargeNow : SubscriptionChangeEffect
-    public data object Scheduled : SubscriptionChangeEffect
-    public data object NoOp : SubscriptionChangeEffect
-    public data object Blocked : SubscriptionChangeEffect
-    public data class Unknown(public val raw: kotlin.String) : SubscriptionChangeEffect
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            ChargeNow -> "charge_now"
-            Scheduled -> "scheduled"
-            NoOp -> "no_op"
-            Blocked -> "blocked"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): SubscriptionChangeEffect = when (raw) {
-            "charge_now" -> ChargeNow
-            "scheduled" -> Scheduled
-            "no_op" -> NoOp
-            "blocked" -> Blocked
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<SubscriptionChangeEffect> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SubscriptionChangeEffect", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): SubscriptionChangeEffect = when (val raw = decoder.decodeString()) {
-            "charge_now" -> ChargeNow
-            "scheduled" -> Scheduled
-            "no_op" -> NoOp
-            "blocked" -> Blocked
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: SubscriptionChangeEffect) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = SubscriptionChangeParams.Serializer::class)
-public data class SubscriptionChangeParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val subscriptionTypeId: Patch<String> = Patch.Absent,
-    public val cancel: Boolean? = null,
-)
-{
-    public object Serializer : KSerializer<SubscriptionChangeParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): SubscriptionChangeParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("SubscriptionChangeParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("SubscriptionChangeParams requires an object")
-            return SubscriptionChangeParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                subscriptionTypeId = when (val raw = input["subscription_type_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                cancel = input["cancel"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: SubscriptionChangeParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("SubscriptionChangeParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.subscriptionTypeId) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["subscription_type_id"] = JsonNull
-                is Patch.Value -> output["subscription_type_id"] = json.encodeToJsonElement(patch.value)
-            }
-            value.cancel?.let { output["cancel"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = SubscriptionContext.Serializer::class)
-public sealed interface SubscriptionContext {
-    public data object Personal : SubscriptionContext
-    public data object Team : SubscriptionContext
-    public data class Unknown(public val raw: kotlin.String) : SubscriptionContext
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Personal -> "personal"
-            Team -> "team"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): SubscriptionContext = when (raw) {
-            "personal" -> Personal
-            "team" -> Team
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<SubscriptionContext> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SubscriptionContext", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): SubscriptionContext = when (val raw = decoder.decodeString()) {
-            "personal" -> Personal
-            "team" -> Team
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: SubscriptionContext) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}

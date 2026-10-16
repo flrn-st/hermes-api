@@ -9,6 +9,44 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ConnectionOperationParamsOwner.Serializer::class)
+public sealed interface ConnectionOperationParamsOwner {
+    public data class SessionOwnerValue(public val value: SessionOwner) : ConnectionOperationParamsOwner
+    public data class AccountOwnerValue(public val value: AccountOwner) : ConnectionOperationParamsOwner
+
+    public object Serializer : KSerializer<ConnectionOperationParamsOwner> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ConnectionOperationParamsOwner {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ConnectionOperationParamsOwner requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            val objectValue = input as? JsonObject
+                ?: throw SerializationException("ConnectionOperationParamsOwner requires an object")
+            val tag = (objectValue["type"] as? JsonPrimitive)?.content
+                ?: throw SerializationException("Missing type discriminator")
+            return when (tag) {
+                "account" -> AccountOwnerValue(json.decodeFromJsonElement<AccountOwner>(input))
+                "session" -> SessionOwnerValue(json.decodeFromJsonElement<SessionOwner>(input))
+                else -> throw SerializationException("Unknown type discriminator: $tag")
+            }
+        }
+
+        override fun serialize(encoder: Encoder, value: ConnectionOperationParamsOwner) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ConnectionOperationParamsOwner requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is SessionOwnerValue -> json.encodeToJsonElement(value.value)
+                is AccountOwnerValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class ConnectionOperationStatus(
     @SerialName("op_id")
@@ -1142,30 +1180,5 @@ public sealed interface ConnectorPolicyDenyBodyMode {
         override fun serialize(encoder: Encoder, value: ConnectorPolicyDenyBodyMode) {
             encoder.encodeString(value.rawValue)
         }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ConnectorPolicyEffectiveAllow(
-    /** Always `1`; decoding any other value fails. */
-    @SerialName("version")
-    public val version: Long = 1,
-    @SerialName("revision")
-    public val revision: String,
-    @SerialName("issued_at_ms")
-    public val issuedAtMs: Long,
-    @SerialName("mode")
-    public val mode: ConnectorPolicyEffectiveAllowMode,
-    @SerialName("connectors")
-    public val connectors: List<String>,
-    @SerialName("tools")
-    public val tools: Map<String, List<String>>,
-    @SerialName("tags")
-    public val tags: ConnectorPolicyTags? = null,
-)
-{
-    init {
-        require(version == 1L) { "version must be 1" }
     }
 }

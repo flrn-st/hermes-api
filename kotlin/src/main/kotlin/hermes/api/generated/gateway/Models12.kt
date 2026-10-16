@@ -10,6 +10,17 @@ import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
+public data class McpServersAddResult(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("server")
+    public val server: McpServerSummary,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
 public data class McpServersListResult(
     @SerialName("servers")
     public val servers: List<McpServerSummary>,
@@ -486,6 +497,8 @@ public data class ModelOptionProvider(
     public val freeTierPending: Boolean? = null,
     public val freeTierRow: Boolean? = null,
     public val unavailableModels: List<String>? = null,
+    public val planUsage: PlanUsage? = null,
+    public val usageLevels: Map<String, String>? = null,
     public val limit: ProviderLimit? = null,
     public val usage: ProviderUsage? = null,
     public val additionalProperties: Map<String, JsonElement> = emptyMap(),
@@ -522,9 +535,11 @@ public data class ModelOptionProvider(
                 freeTierPending = input["free_tier_pending"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 freeTierRow = input["free_tier_row"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 unavailableModels = input["unavailable_models"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<List<String>>(it) },
+                planUsage = input["plan_usage"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<PlanUsage>(it) },
+                usageLevels = input["usage_levels"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, String>>(it) },
                 limit = input["limit"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<ProviderLimit>(it) },
                 usage = input["usage"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<ProviderUsage>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "limit", "usage") },
+                additionalProperties = input.filterKeys { it !in setOf("slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "plan_usage", "usage_levels", "limit", "usage") },
             )
         }
 
@@ -533,7 +548,7 @@ public data class ModelOptionProvider(
                 ?: throw SerializationException("ModelOptionProvider requires JSON")
             val json = jsonEncoder.json
             val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "limit", "usage")
+            val known = setOf("slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "plan_usage", "usage_levels", "limit", "usage")
             if (value.additionalProperties.keys.any { it in known }) {
                 throw SerializationException("Additional property conflicts with a known field")
             }
@@ -559,6 +574,8 @@ public data class ModelOptionProvider(
             value.freeTierPending?.let { output["free_tier_pending"] = json.encodeToJsonElement(it) }
             value.freeTierRow?.let { output["free_tier_row"] = json.encodeToJsonElement(it) }
             value.unavailableModels?.let { output["unavailable_models"] = json.encodeToJsonElement(it) }
+            value.planUsage?.let { output["plan_usage"] = json.encodeToJsonElement(it) }
+            value.usageLevels?.let { output["usage_levels"] = json.encodeToJsonElement(it) }
             value.limit?.let { output["limit"] = json.encodeToJsonElement(it) }
             value.usage?.let { output["usage"] = json.encodeToJsonElement(it) }
             jsonEncoder.encodeJsonElement(JsonObject(output))
@@ -762,42 +779,3 @@ public data class OnboardingEndedPayload(
     @SerialName("outcome")
     public val outcome: OnboardingOutcome,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = OnboardingFactsSource.Serializer::class)
-public sealed interface OnboardingFactsSource {
-    public data object Local : OnboardingFactsSource
-    public data object Remote : OnboardingFactsSource
-    public data class Unknown(public val raw: kotlin.String) : OnboardingFactsSource
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Local -> "local"
-            Remote -> "remote"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): OnboardingFactsSource = when (raw) {
-            "local" -> Local
-            "remote" -> Remote
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<OnboardingFactsSource> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("OnboardingFactsSource", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): OnboardingFactsSource = when (val raw = decoder.decodeString()) {
-            "local" -> Local
-            "remote" -> Remote
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: OnboardingFactsSource) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}

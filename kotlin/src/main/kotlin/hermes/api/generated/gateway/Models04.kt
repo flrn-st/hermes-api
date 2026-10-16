@@ -9,6 +9,49 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ClarifyResultOutcome.Serializer::class)
+public sealed interface ClarifyResultOutcome {
+    public data object Submitted : ClarifyResultOutcome
+    public data object TimedOut : ClarifyResultOutcome
+    public data object Cancelled : ClarifyResultOutcome
+    public data class Unknown(public val raw: kotlin.String) : ClarifyResultOutcome
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Submitted -> "submitted"
+            TimedOut -> "timed_out"
+            Cancelled -> "cancelled"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ClarifyResultOutcome = when (raw) {
+            "submitted" -> Submitted
+            "timed_out" -> TimedOut
+            "cancelled" -> Cancelled
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<ClarifyResultOutcome> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ClarifyResultOutcome", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): ClarifyResultOutcome = when (val raw = decoder.decodeString()) {
+            "submitted" -> Submitted
+            "timed_out" -> TimedOut
+            "cancelled" -> Cancelled
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: ClarifyResultOutcome) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = CliExecParams.Serializer::class)
 public data class CliExecParams(
     public val argv: List<String>,
@@ -1077,44 +1120,6 @@ public data class ConnectionOperationParams(
             output["owner"] = json.encodeToJsonElement(value.owner)
             output["op_id"] = json.encodeToJsonElement(value.opId)
             jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ConnectionOperationParamsOwner.Serializer::class)
-public sealed interface ConnectionOperationParamsOwner {
-    public data class SessionOwnerValue(public val value: SessionOwner) : ConnectionOperationParamsOwner
-    public data class AccountOwnerValue(public val value: AccountOwner) : ConnectionOperationParamsOwner
-
-    public object Serializer : KSerializer<ConnectionOperationParamsOwner> {
-        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ConnectionOperationParamsOwner {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ConnectionOperationParamsOwner requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement()
-            val objectValue = input as? JsonObject
-                ?: throw SerializationException("ConnectionOperationParamsOwner requires an object")
-            val tag = (objectValue["type"] as? JsonPrimitive)?.content
-                ?: throw SerializationException("Missing type discriminator")
-            return when (tag) {
-                "account" -> AccountOwnerValue(json.decodeFromJsonElement<AccountOwner>(input))
-                "session" -> SessionOwnerValue(json.decodeFromJsonElement<SessionOwner>(input))
-                else -> throw SerializationException("Unknown type discriminator: $tag")
-            }
-        }
-
-        override fun serialize(encoder: Encoder, value: ConnectionOperationParamsOwner) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ConnectionOperationParamsOwner requires JSON")
-            val json = jsonEncoder.json
-            val element = when (value) {
-                is SessionOwnerValue -> json.encodeToJsonElement(value.value)
-                is AccountOwnerValue -> json.encodeToJsonElement(value.value)
-            }
-            jsonEncoder.encodeJsonElement(element)
         }
     }
 }

@@ -9,6 +9,38 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_skills_hub_sources``; ``installed`` is keyed by hub identifier. */
+@Serializable
+public data class SkillHubSourcesResponse(
+    @SerialName("featured")
+    public val featured: List<SkillHubEntry>,
+    @SerialName("index_available")
+    public val indexAvailable: Boolean,
+    @SerialName("installed")
+    public val installed: Map<String, SkillHubInstalledRecord>,
+    @SerialName("sources")
+    public val sources: List<SkillHubSource>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``tools/skillevaluator_scan.py::Tier1Finding``; ``secrets_class`` is ``is_secrets_class``. */
+@Serializable
+public data class SkillHubTier1Finding(
+    @SerialName("check")
+    public val check: String,
+    @SerialName("file")
+    public val file: String,
+    @SerialName("line")
+    public val line: Long,
+    @SerialName("message")
+    public val message: String,
+    @SerialName("secrets_class")
+    public val secretsClass: Boolean,
+    @SerialName("severity")
+    public val severity: String,
+    @SerialName("validator")
+    public val validator: String,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. Advisory SkillEvaluator Tier 1 result (``tools/skillevaluator_scan.py::Tier1Report``). */
 @Serializable
 public data class SkillHubTier1Report(
@@ -971,88 +1003,6 @@ public sealed interface StatusResponseGatewayMode {
         }
 
         override fun serialize(encoder: Encoder, value: StatusResponseGatewayMode) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusResponseNousSessionValid.Serializer::class)
-public sealed interface StatusResponseNousSessionValid {
-    public data object Valid : StatusResponseNousSessionValid
-    public data object Terminal : StatusResponseNousSessionValid
-    public data object KnownUnknown : StatusResponseNousSessionValid
-    public data class Unknown(public val raw: kotlin.String) : StatusResponseNousSessionValid
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Valid -> "valid"
-            Terminal -> "terminal"
-            KnownUnknown -> "unknown"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusResponseNousSessionValid = when (raw) {
-            "valid" -> Valid
-            "terminal" -> Terminal
-            "unknown" -> KnownUnknown
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusResponseNousSessionValid> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseNousSessionValid", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusResponseNousSessionValid = when (val raw = decoder.decodeString()) {
-            "valid" -> Valid
-            "terminal" -> Terminal
-            "unknown" -> KnownUnknown
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseNousSessionValid value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusResponseNousSessionValid) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = StatusResponseOverall.Serializer::class)
-public sealed interface StatusResponseOverall {
-    public data object Ok : StatusResponseOverall
-    public data object Degraded : StatusResponseOverall
-    public data class Unknown(public val raw: kotlin.String) : StatusResponseOverall
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Ok -> "ok"
-            Degraded -> "degraded"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): StatusResponseOverall = when (raw) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<StatusResponseOverall> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StatusResponseOverall", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): StatusResponseOverall = when (val raw = decoder.decodeString()) {
-            "ok" -> Ok
-            "degraded" -> Degraded
-            else -> if (decoder.decodesTolerantly) Unknown(raw) else throw SerializationException("Unexpected StatusResponseOverall value: $raw")
-        }
-
-        override fun serialize(encoder: Encoder, value: StatusResponseOverall) {
             encoder.encodeString(value.rawValue)
         }
     }

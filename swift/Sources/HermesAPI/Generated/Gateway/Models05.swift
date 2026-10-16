@@ -2,6 +2,33 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public enum ConnectionOperationParamsOwner: Codable, Sendable, Hashable {
+    case sessionOwner(SessionOwner)
+    case accountOwner(AccountOwner)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let object = try container.decode([String: JSONValue].self)
+        guard case .string(let tag) = object["type"] else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Missing discriminator type")
+        }
+        switch tag {
+        case "account": self = .accountOwner(try container.decode(AccountOwner.self))
+        case "session": self = .sessionOwner(try container.decode(SessionOwner.self))
+        default: throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown discriminator: \(tag)")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .sessionOwner(let value): try container.encode(value)
+        case .accountOwner(let value): try container.encode(value)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct ConnectionOperationStatus: Codable, Sendable, Hashable {
     public var opId: String
     public var seq: Int
@@ -1613,63 +1640,5 @@ public enum ConnectorPolicyDenyBodyMode: Codable, Sendable, Hashable, RawReprese
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ConnectorPolicyEffectiveAllow: Codable, Sendable, Hashable {
-    /// Always `1`; decoding any other value fails.
-    public var version: Int
-    public var revision: String
-    public var issuedAtMs: Int
-    public var mode: ConnectorPolicyEffectiveAllowMode
-    public var connectors: [String]
-    public var tools: [String: [String]]
-    public var tags: ConnectorPolicyTags?
-
-    public init(version: Int = 1, revision: String, issuedAtMs: Int, mode: ConnectorPolicyEffectiveAllowMode, connectors: [String], tools: [String: [String]], tags: ConnectorPolicyTags? = nil) {
-        self.version = version
-        self.revision = revision
-        self.issuedAtMs = issuedAtMs
-        self.mode = mode
-        self.connectors = connectors
-        self.tools = tools
-        self.tags = tags
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case version = "version"
-        case revision = "revision"
-        case issuedAtMs = "issued_at_ms"
-        case mode = "mode"
-        case connectors = "connectors"
-        case tools = "tools"
-        case tags = "tags"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        version = try container.decode(Int.self, forKey: .version)
-        revision = try container.decode(String.self, forKey: .revision)
-        issuedAtMs = try container.decode(Int.self, forKey: .issuedAtMs)
-        mode = try container.decode(ConnectorPolicyEffectiveAllowMode.self, forKey: .mode)
-        connectors = try container.decode([String].self, forKey: .connectors)
-        tools = try container.decode([String: [String]].self, forKey: .tools)
-        tags = try container.decodeIfPresent(ConnectorPolicyTags.self, forKey: .tags)
-        guard version == 1 else {
-            throw DecodingError.dataCorruptedError(
-                forKey: .version, in: container, debugDescription: "version must be 1")
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(version, forKey: .version)
-        try container.encode(revision, forKey: .revision)
-        try container.encode(issuedAtMs, forKey: .issuedAtMs)
-        try container.encode(mode, forKey: .mode)
-        try container.encode(connectors, forKey: .connectors)
-        try container.encode(tools, forKey: .tools)
-        try container.encodeIfPresent(tags, forKey: .tags)
     }
 }

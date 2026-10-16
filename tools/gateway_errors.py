@@ -15,6 +15,7 @@ from pathlib import Path
 
 import yaml
 
+from tools.development_overlay import gateway_errors as development_errors
 from tools.ref_policy import ROOT, require_release
 
 REVIEW = ROOT / "spec" / "gateway-errors.yaml"
@@ -93,6 +94,11 @@ def load(ref: str, *, extracted_path: Path | None = None, review_path: Path = RE
     extracted = json.loads(path.read_text(encoding="utf-8"))
     if extracted.get("ref") != ref:
         raise ValueError(f"{path} was extracted from {extracted.get('ref')}, not {ref}")
+    # Methods a development overlay adds carry their errors with them (spec/overlay/development/).
+    for name, entries in development_errors(ref).items():
+        if name in extracted["methods"]:
+            raise ValueError(f"{path} already lists {name}, which a development overlay adds")
+        extracted["methods"][name] = entries
     review = yaml.safe_load(review_path.read_text(encoding="utf-8"))
 
     templates: dict[int, set[str]] = {}

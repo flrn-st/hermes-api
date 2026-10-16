@@ -2,6 +2,164 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct CanonicalResumeParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var sessionId: String?
+    public var title: Patch<String>
+    public var latest: Patch<CanonicalResumeParamsLatest>
+    public var workspace: Patch<String>
+    public var source: Patch<String>
+    public var editor: Patch<[String: JSONValue]>
+    public var apiKey: Patch<String>
+    public var deferHistory: Bool?
+    public var omitMessages: Bool?
+    public var cols: Patch<Int>
+    public var displayProjection: Bool?
+
+    public init(profile: Patch<String> = .absent, sessionId: String? = nil, title: Patch<String> = .absent, latest: Patch<CanonicalResumeParamsLatest> = .absent, workspace: Patch<String> = .absent, source: Patch<String> = .absent, editor: Patch<[String: JSONValue]> = .absent, apiKey: Patch<String> = .absent, deferHistory: Bool? = nil, omitMessages: Bool? = nil, cols: Patch<Int> = .absent, displayProjection: Bool? = nil) {
+        self.profile = profile
+        self.sessionId = sessionId
+        self.title = title
+        self.latest = latest
+        self.workspace = workspace
+        self.source = source
+        self.editor = editor
+        self.apiKey = apiKey
+        self.deferHistory = deferHistory
+        self.omitMessages = omitMessages
+        self.cols = cols
+        self.displayProjection = displayProjection
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case sessionId = "session_id"
+        case title = "title"
+        case latest = "latest"
+        case workspace = "workspace"
+        case source = "source"
+        case editor = "editor"
+        case apiKey = "api_key"
+        case deferHistory = "defer_history"
+        case omitMessages = "omit_messages"
+        case cols = "cols"
+        case displayProjection = "display_projection"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        sessionId = try container.decodeIfPresent(String.self, forKey: .sessionId)
+        if !container.contains(.title) {
+            title = .absent
+        } else if try container.decodeNil(forKey: .title) {
+            title = .null
+        } else {
+            title = .value(try container.decode(String.self, forKey: .title))
+        }
+        if !container.contains(.latest) {
+            latest = .absent
+        } else if try container.decodeNil(forKey: .latest) {
+            latest = .null
+        } else {
+            latest = .value(try container.decode(CanonicalResumeParamsLatest.self, forKey: .latest))
+        }
+        if !container.contains(.workspace) {
+            workspace = .absent
+        } else if try container.decodeNil(forKey: .workspace) {
+            workspace = .null
+        } else {
+            workspace = .value(try container.decode(String.self, forKey: .workspace))
+        }
+        if !container.contains(.source) {
+            source = .absent
+        } else if try container.decodeNil(forKey: .source) {
+            source = .null
+        } else {
+            source = .value(try container.decode(String.self, forKey: .source))
+        }
+        if !container.contains(.editor) {
+            editor = .absent
+        } else if try container.decodeNil(forKey: .editor) {
+            editor = .null
+        } else {
+            editor = .value(try container.decode([String: JSONValue].self, forKey: .editor))
+        }
+        if !container.contains(.apiKey) {
+            apiKey = .absent
+        } else if try container.decodeNil(forKey: .apiKey) {
+            apiKey = .null
+        } else {
+            apiKey = .value(try container.decode(String.self, forKey: .apiKey))
+        }
+        deferHistory = try container.decodeIfPresent(Bool.self, forKey: .deferHistory)
+        omitMessages = try container.decodeIfPresent(Bool.self, forKey: .omitMessages)
+        if !container.contains(.cols) {
+            cols = .absent
+        } else if try container.decodeNil(forKey: .cols) {
+            cols = .null
+        } else {
+            cols = .value(try container.decode(Int.self, forKey: .cols))
+        }
+        displayProjection = try container.decodeIfPresent(Bool.self, forKey: .displayProjection)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encodeIfPresent(sessionId, forKey: .sessionId)
+        switch title {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .title)
+        case .value(let value): try container.encode(value, forKey: .title)
+        }
+        switch latest {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .latest)
+        case .value(let value): try container.encode(value, forKey: .latest)
+        }
+        switch workspace {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .workspace)
+        case .value(let value): try container.encode(value, forKey: .workspace)
+        }
+        switch source {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .source)
+        case .value(let value): try container.encode(value, forKey: .source)
+        }
+        switch editor {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .editor)
+        case .value(let value): try container.encode(value, forKey: .editor)
+        }
+        switch apiKey {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .apiKey)
+        case .value(let value): try container.encode(value, forKey: .apiKey)
+        }
+        try container.encodeIfPresent(deferHistory, forKey: .deferHistory)
+        try container.encodeIfPresent(omitMessages, forKey: .omitMessages)
+        switch cols {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .cols)
+        case .value(let value): try container.encode(value, forKey: .cols)
+        }
+        try container.encodeIfPresent(displayProjection, forKey: .displayProjection)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public enum CanonicalResumeParamsLatest: Codable, Sendable, Hashable, RawRepresentable {
     case cli
     case tui
@@ -1944,48 +2102,5 @@ public struct ClarifyResult: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(answers, forKey: .answers)
         try container.encodeIfPresent(outcome, forKey: .outcome)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum ClarifyResultOutcome: Codable, Sendable, Hashable, RawRepresentable {
-    case submitted
-    case timedOut
-    case cancelled
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "submitted": self = .submitted
-        case "timed_out": self = .timedOut
-        case "cancelled": self = .cancelled
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .submitted: "submitted"
-        case .timedOut: "timed_out"
-        case .cancelled: "cancelled"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "submitted": self = .submitted
-        case "timed_out": self = .timedOut
-        case "cancelled": self = .cancelled
-        default: self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }

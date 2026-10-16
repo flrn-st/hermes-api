@@ -1,8 +1,7 @@
-import json
-from pathlib import Path
 
 import pytest
 
+from tools.development_overlay import gateway_contract
 from tools.naming import camel, checked_method_symbols, method_symbol, pascal
 from tools.ref_policy import current_release
 
@@ -26,6 +25,6 @@ def test_rejects_collisions_and_invalid_names() -> None:
 
 
 def test_target_contract_has_unique_method_names() -> None:
-    contract = json.loads(Path(f"spec/out/{CURRENT}/openrpc.json").read_text())
+    contract = gateway_contract(CURRENT)
     methods = checked_method_symbols(item["name"] for item in contract["methods"])
     assert len(methods) == len(contract["methods"])

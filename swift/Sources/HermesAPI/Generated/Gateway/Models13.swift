@@ -2,6 +2,45 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public enum OnboardingFactsSource: Codable, Sendable, Hashable, RawRepresentable {
+    case local
+    case remote
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "local": self = .local
+        case "remote": self = .remote
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .local: "local"
+        case .remote: "remote"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "local": self = .local
+        case "remote": self = .remote
+        default: self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public enum OnboardingOutcome: Codable, Sendable, Hashable, RawRepresentable {
     case done
     case skipped
@@ -1517,61 +1556,6 @@ public struct PetGenerateParams: Codable, Sendable, Hashable {
         case .absent: break
         case .null: try container.encodeNil(forKey: .provider)
         case .value(let value): try container.encode(value, forKey: .provider)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct PetGenerateProgressPayload: Codable, Sendable, Hashable {
-    public var token: String
-    public var count: Int
-    public var index: Int?
-    public var dataUri: String?
-    public var additionalProperties: [String: JSONValue]
-
-    public init(token: String, count: Int, index: Int? = nil, dataUri: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
-        self.token = token
-        self.count = count
-        self.index = index
-        self.dataUri = dataUri
-        self.additionalProperties = additionalProperties
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case token = "token"
-        case count = "count"
-        case index = "index"
-        case dataUri = "dataUri"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        token = try container.decode(String.self, forKey: .token)
-        count = try container.decode(Int.self, forKey: .count)
-        index = try container.decodeIfPresent(Int.self, forKey: .index)
-        dataUri = try container.decodeIfPresent(String.self, forKey: .dataUri)
-        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["token", "count", "index", "dataUri"]
-        var extra: [String: JSONValue] = [:]
-        for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
-        }
-        additionalProperties = extra
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(token, forKey: .token)
-        try container.encode(count, forKey: .count)
-        try container.encodeIfPresent(index, forKey: .index)
-        try container.encodeIfPresent(dataUri, forKey: .dataUri)
-        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["token", "count", "index", "dataUri"]
-        for (key, value) in additionalProperties {
-            guard !known.contains(key) else {
-                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
-            }
-            try dynamic.encode(value, forKey: DynamicCodingKey(key))
         }
     }
 }

@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from tools.development_overlay import gateway_contract
 from tools.gen_gateway_api import generate as generate_api
 from tools.gen_gateway_models import generate as generate_models
 from tools.ref_policy import current_release
@@ -16,7 +17,7 @@ def test_committed_generated_sources_match_pinned_contract() -> None:
 
 def test_public_symbol_manifest_covers_every_gateway_item() -> None:
     manifest = json.loads(Path(f"spec/out/{CURRENT}/gateway-symbols.json").read_text())
-    contract = json.loads(Path(f"spec/out/{CURRENT}/openrpc.json").read_text())
+    contract = gateway_contract(CURRENT)
     assert [item["wire"] for item in manifest["methods"]] == [item["name"] for item in contract["methods"]]
     assert [item["wire"] for item in manifest["events"]] == [item["name"] for item in contract["x-notifications"]]
     assert [item["wire"] for item in manifest["server_requests"]] == [

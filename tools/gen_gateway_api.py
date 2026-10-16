@@ -10,6 +10,7 @@ from collections import defaultdict
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
+from tools.development_overlay import gateway_contract
 from tools.gateway_errors import (
     KIND_SUMMARIES,
     KINDS,
@@ -250,7 +251,7 @@ def _error_views(catalog: Catalog, refusals: RefusalCatalog | None = None) -> di
 
 def generate(ref: str, *, check: bool = False) -> int:
     require_release(ref)
-    contract = json.loads((ROOT / "spec" / "out" / ref / "openrpc.json").read_text())
+    contract = gateway_contract(ref)
     meta = json.loads((ROOT / "spec" / "out" / ref / "meta.json").read_text())
     catalog = load_errors(ref)
     methods, events = _views(contract, catalog)

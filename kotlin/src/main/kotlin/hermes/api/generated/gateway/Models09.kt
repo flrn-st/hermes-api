@@ -9,6 +9,59 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = GroupsApproveParams.Serializer::class)
+public data class GroupsApproveParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val roomId: String,
+    public val memberId: String,
+    public val taskId: String,
+    public val executionGeneration: Long,
+    public val choice: ApprovalChoice,
+    public val requestId: String,
+)
+{
+    public object Serializer : KSerializer<GroupsApproveParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): GroupsApproveParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("GroupsApproveParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("GroupsApproveParams requires an object")
+            return GroupsApproveParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                roomId = json.decodeFromJsonElement<String>((input["room_id"] ?: throw SerializationException("Missing room_id"))),
+                memberId = json.decodeFromJsonElement<String>((input["member_id"] ?: throw SerializationException("Missing member_id"))),
+                taskId = json.decodeFromJsonElement<String>((input["task_id"] ?: throw SerializationException("Missing task_id"))),
+                executionGeneration = json.decodeFromJsonElement<Long>((input["execution_generation"] ?: throw SerializationException("Missing execution_generation"))),
+                choice = json.decodeFromJsonElement<ApprovalChoice>((input["choice"] ?: throw SerializationException("Missing choice"))),
+                requestId = json.decodeFromJsonElement<String>((input["request_id"] ?: throw SerializationException("Missing request_id"))),
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: GroupsApproveParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("GroupsApproveParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            output["room_id"] = json.encodeToJsonElement(value.roomId)
+            output["member_id"] = json.encodeToJsonElement(value.memberId)
+            output["task_id"] = json.encodeToJsonElement(value.taskId)
+            output["execution_generation"] = json.encodeToJsonElement(value.executionGeneration)
+            output["choice"] = json.encodeToJsonElement(value.choice)
+            output["request_id"] = json.encodeToJsonElement(value.requestId)
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class GroupsApproveResult(
     @SerialName("approved")
@@ -1098,16 +1151,3 @@ public data class GroupsSendParams(
         }
     }
 }
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class GroupsSendResult(
-    @SerialName("event")
-    public val event: RoomEvent,
-    @SerialName("client_event_id")
-    public val clientEventId: String? = null,
-    @SerialName("accepted")
-    public val accepted: Boolean? = null,
-    @SerialName("driver_started")
-    public val driverStarted: Boolean? = null,
-)

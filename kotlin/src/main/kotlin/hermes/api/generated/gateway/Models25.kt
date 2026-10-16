@@ -9,6 +9,76 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ToolStartPayload(
+    @SerialName("tool_id")
+    public val toolId: String,
+    @SerialName("name")
+    public val name: String,
+    @SerialName("context")
+    public val context: String? = null,
+    @SerialName("args")
+    public val args: Map<String, JsonElement>? = null,
+    @SerialName("args_text")
+    public val argsText: String? = null,
+    @SerialName("preview")
+    public val preview: String? = null,
+    @SerialName("labels")
+    public val labels: List<ToolLabel>? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ToolsAction.Serializer::class)
+public sealed interface ToolsAction {
+    public data object Enable : ToolsAction
+    public data object Disable : ToolsAction
+    public data class Unknown(public val raw: kotlin.String) : ToolsAction
+
+    /** The value on the wire. */
+    public val rawValue: kotlin.String
+        get() = when (this) {
+            Enable -> "enable"
+            Disable -> "disable"
+            is Unknown -> raw
+        }
+
+    public companion object {
+        /** The case for [raw]; values this release does not list become [Unknown]. */
+        public fun fromRawValue(raw: kotlin.String): ToolsAction = when (raw) {
+            "enable" -> Enable
+            "disable" -> Disable
+            else -> Unknown(raw)
+        }
+    }
+
+    public object Serializer : KSerializer<ToolsAction> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ToolsAction", PrimitiveKind.STRING)
+
+        override fun deserialize(decoder: Decoder): ToolsAction = when (val raw = decoder.decodeString()) {
+            "enable" -> Enable
+            "disable" -> Disable
+            else -> Unknown(raw)
+        }
+
+        override fun serialize(encoder: Encoder, value: ToolsAction) {
+            encoder.encodeString(value.rawValue)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ToolsChange(
+    @SerialName("type")
+    public val type: ToolsChangeType,
+    @SerialName("connector")
+    public val connector: String,
+    /** Must have at most 2000 items. */
+    @SerialName("disabled_tools")
+    public val disabledTools: List<String>,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = ToolsChangeType.Serializer::class)
 public sealed interface ToolsChangeType {
     public data object Tools : ToolsChangeType
@@ -671,6 +741,47 @@ public sealed interface UsageBarKind {
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
+public data class UsageLimit(
+    @SerialName("gauge_id")
+    public val gaugeId: String,
+    @SerialName("scope")
+    public val scope: String,
+    @SerialName("limit_name")
+    public val limitName: String,
+    @SerialName("resets_at_ms")
+    public val resetsAtMs: Long? = null,
+    @SerialName("message")
+    public val message: String,
+    @SerialName("suggestions")
+    public val suggestions: List<UsageLimitSuggestion>? = null,
+    @SerialName("credits")
+    public val credits: UsageLimitCredits? = null,
+    @SerialName("current_model")
+    public val currentModel: String? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class UsageLimitCredits(
+    @SerialName("action")
+    public val action: String,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class UsageLimitSuggestion(
+    @SerialName("model")
+    public val model: String,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("note")
+    public val note: String,
+    @SerialName("provider")
+    public val provider: String? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
 public data class UsageModel(
     @SerialName("ok")
     public val ok: Boolean? = null,
@@ -990,145 +1101,3 @@ public data class VaultRemoveResult(
     @SerialName("removed")
     public val removed: Boolean,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class VaultSaveLoginRequestParams(
-    @SerialName("session_id")
-    public val sessionId: String,
-    @SerialName("origin")
-    public val origin: String,
-    @SerialName("site")
-    public val site: String,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class VaultSource(
-    @SerialName("name")
-    public val name: String,
-    @SerialName("display_name")
-    public val displayName: String,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-    @SerialName("needs_unlock")
-    public val needsUnlock: Boolean,
-    @SerialName("unlocked")
-    public val unlocked: Boolean,
-    @SerialName("installed")
-    public val installed: Boolean,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = VaultSourceSetParams.Serializer::class)
-public data class VaultSourceSetParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val name: Patch<String> = Patch.Absent,
-    public val enabled: Patch<Boolean> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<VaultSourceSetParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): VaultSourceSetParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("VaultSourceSetParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("VaultSourceSetParams requires an object")
-            return VaultSourceSetParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                enabled = when (val raw = input["enabled"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: VaultSourceSetParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("VaultSourceSetParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.name) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["name"] = JsonNull
-                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.enabled) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["enabled"] = JsonNull
-                is Patch.Value -> output["enabled"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class VaultSourceSetResult(
-    @SerialName("name")
-    public val name: String,
-    @SerialName("enabled")
-    public val enabled: Boolean,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class VaultSourcesResult(
-    @SerialName("sources")
-    public val sources: List<VaultSource>? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = VaultUnlockParams.Serializer::class)
-public data class VaultUnlockParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val name: Patch<String> = Patch.Absent,
-    public val password: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<VaultUnlockParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): VaultUnlockParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("VaultUnlockParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("VaultUnlockParams requires an object")
-            return VaultUnlockParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                password = when (val raw = input["password"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: VaultUnlockParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("VaultUnlockParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.name) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["name"] = JsonNull
-                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.password) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["password"] = JsonNull
-                is Patch.Value -> output["password"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}

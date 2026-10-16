@@ -9,6 +9,45 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. One ``get_toolsets`` row per ``hermes_cli/tools_config.py::_get_effective_configurable_toolsets`` entry (built-ins, then plugin toolsets). ``available`` mirrors ``enabled``. */
+@Serializable
+public data class ToolsetListRow(
+    @SerialName("available")
+    public val available: Boolean,
+    @SerialName("configured")
+    public val configured: Boolean,
+    @SerialName("description")
+    public val description: String,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("name")
+    public val name: String,
+    /** Platform the toggle writes to (``cli`` unless platform-restricted). */
+    @SerialName("platform")
+    public val platform: String,
+    @SerialName("platform_label")
+    public val platformLabel: String,
+    @SerialName("tools")
+    public val tools: List<String>,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. One catalog model (``display`` defaults to the id; the other labels to ``""``). */
+@Serializable
+public data class ToolsetModelOption(
+    @SerialName("display")
+    public val display: String,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("price")
+    public val price: String,
+    @SerialName("speed")
+    public val speed: String,
+    @SerialName("strengths")
+    public val strengths: String,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = ToolsetModelSelect.Serializer::class)
 public data class ToolsetModelSelect(
@@ -1091,86 +1130,6 @@ public sealed interface VoiceClientTtsConfigWire {
 
         override fun serialize(encoder: Encoder, value: VoiceClientTtsConfigWire) {
             encoder.encodeString(value.rawValue)
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. */
-@Serializable(with = VoiceLiveSessionInfo.Serializer::class)
-public data class VoiceLiveSessionInfo(
-    public val id: String? = null,
-    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
-)
-{
-    public object Serializer : KSerializer<VoiceLiveSessionInfo> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): VoiceLiveSessionInfo {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("VoiceLiveSessionInfo requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("VoiceLiveSessionInfo requires an object")
-            return VoiceLiveSessionInfo(
-                id = input["id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                additionalProperties = input.filterKeys { it !in setOf("id") },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: VoiceLiveSessionInfo) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("VoiceLiveSessionInfo requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            val known = setOf("id")
-            if (value.additionalProperties.keys.any { it in known }) {
-                throw SerializationException("Additional property conflicts with a known field")
-            }
-            output.putAll(value.additionalProperties)
-            value.id?.let { output["id"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. POST /api/audio/voice-live/session: the renderer's WebRTC SDP offer plus optional prior text turns (``{"type":"message","role":..,"content":[..]}``) to seed the live voice model. */
-@Serializable(with = VoiceLiveSessionRequest.Serializer::class)
-public data class VoiceLiveSessionRequest(
-    public val history: Patch<List<Map<String, JsonElement>>> = Patch.Absent,
-    public val sdp: String,
-)
-{
-    public object Serializer : KSerializer<VoiceLiveSessionRequest> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): VoiceLiveSessionRequest {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("VoiceLiveSessionRequest requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("VoiceLiveSessionRequest requires an object")
-            if (!decoder.decodesTolerantly) {
-                val known = setOf<String>("history", "sdp")
-                input.keys.firstOrNull { it !in known }?.let { throw SerializationException("Unexpected field $it") }
-            }
-            return VoiceLiveSessionRequest(
-                history = when (val raw = input["history"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<List<Map<String, JsonElement>>>(raw)) },
-                sdp = json.decodeFromJsonElement<String>((input["sdp"] ?: throw SerializationException("Missing sdp"))),
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: VoiceLiveSessionRequest) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("VoiceLiveSessionRequest requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.history) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["history"] = JsonNull
-                is Patch.Value -> output["history"] = json.encodeToJsonElement(patch.value)
-            }
-            output["sdp"] = json.encodeToJsonElement(value.sdp)
-            jsonEncoder.encodeJsonElement(JsonObject(output))
         }
     }
 }

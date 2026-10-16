@@ -2,6 +2,105 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionCorrectionParams: Codable, Sendable, Hashable {
+    public var sessionId: String
+    public var profile: Patch<String>
+    public var text: String
+
+    public init(sessionId: String, profile: Patch<String> = .absent, text: String) {
+        self.sessionId = sessionId
+        self.profile = profile
+        self.text = text
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case profile = "profile"
+        case text = "text"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        text = try container.decode(String.self, forKey: .text)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sessionId, forKey: .sessionId)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encode(text, forKey: .text)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionCorrectionResult: Codable, Sendable, Hashable {
+    public var status: CorrectionStatus
+    public var text: String
+
+    public init(status: CorrectionStatus, text: String) {
+        self.status = status
+        self.text = text
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case status = "status"
+        case text = "text"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decode(CorrectionStatus.self, forKey: .status)
+        text = try container.decode(String.self, forKey: .text)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(status, forKey: .status)
+        try container.encode(text, forKey: .text)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SessionCreateDescriptor: Codable, Sendable, Hashable {
+    public var sources: [String]
+    public var parameters: [String]
+
+    public init(sources: [String], parameters: [String]) {
+        self.sources = sources
+        self.parameters = parameters
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sources = "sources"
+        case parameters = "parameters"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sources = try container.decode([String].self, forKey: .sources)
+        parameters = try container.decode([String].self, forKey: .parameters)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sources, forKey: .sources)
+        try container.encode(parameters, forKey: .parameters)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct SessionCreateParams: Codable, Sendable, Hashable {
     public var profile: Patch<String>
     public var cols: Patch<Int>
@@ -1824,123 +1923,5 @@ public struct SessionOwner: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
         try container.encode(sessionId, forKey: .sessionId)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum SessionOwnerType: Codable, Sendable, Hashable, RawRepresentable {
-    case session
-
-    public init?(rawValue: String) {
-        switch rawValue {
-        case "session": self = .session
-        default: return nil
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .session: "session"
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "session": self = .session
-        default: throw DecodingError.dataCorruptedError(in: try decoder.singleValueContainer(), debugDescription: "Unexpected const value: \(raw)")
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SessionParams: Codable, Sendable, Hashable {
-    public var sessionId: String
-    public var profile: Patch<String>
-
-    public init(sessionId: String, profile: Patch<String> = .absent) {
-        self.sessionId = sessionId
-        self.profile = profile
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case sessionId = "session_id"
-        case profile = "profile"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(sessionId, forKey: .sessionId)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SessionPruneParams: Codable, Sendable, Hashable {
-    public var filters: Patch<[String: JSONValue]>
-    public var neverActiveDays: Patch<Double>
-
-    public init(filters: Patch<[String: JSONValue]> = .absent, neverActiveDays: Patch<Double> = .absent) {
-        self.filters = filters
-        self.neverActiveDays = neverActiveDays
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case filters = "filters"
-        case neverActiveDays = "never_active_days"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.filters) {
-            filters = .absent
-        } else if try container.decodeNil(forKey: .filters) {
-            filters = .null
-        } else {
-            filters = .value(try container.decode([String: JSONValue].self, forKey: .filters))
-        }
-        if !container.contains(.neverActiveDays) {
-            neverActiveDays = .absent
-        } else if try container.decodeNil(forKey: .neverActiveDays) {
-            neverActiveDays = .null
-        } else {
-            neverActiveDays = .value(try container.decode(Double.self, forKey: .neverActiveDays))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch filters {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .filters)
-        case .value(let value): try container.encode(value, forKey: .filters)
-        }
-        switch neverActiveDays {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .neverActiveDays)
-        case .value(let value): try container.encode(value, forKey: .neverActiveDays)
-        }
     }
 }

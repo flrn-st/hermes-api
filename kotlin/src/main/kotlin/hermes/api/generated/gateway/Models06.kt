@@ -9,6 +9,31 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class ConnectorPolicyEffectiveAllow(
+    /** Always `1`; decoding any other value fails. */
+    @SerialName("version")
+    public val version: Long = 1,
+    @SerialName("revision")
+    public val revision: String,
+    @SerialName("issued_at_ms")
+    public val issuedAtMs: Long,
+    @SerialName("mode")
+    public val mode: ConnectorPolicyEffectiveAllowMode,
+    @SerialName("connectors")
+    public val connectors: List<String>,
+    @SerialName("tools")
+    public val tools: Map<String, List<String>>,
+    @SerialName("tags")
+    public val tags: ConnectorPolicyTags? = null,
+)
+{
+    init {
+        require(version == 1L) { "version must be 1" }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = ConnectorPolicyEffectiveAllowMode.Serializer::class)
 public sealed interface ConnectorPolicyEffectiveAllowMode {
     public data object Allow : ConnectorPolicyEffectiveAllowMode
@@ -1030,17 +1055,4 @@ public data class ConnectorsListResult(
     public val available: Boolean,
     @SerialName("connectors")
     public val connectors: List<ConnectorRow>,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ContextCategory(
-    @SerialName("color")
-    public val color: String,
-    @SerialName("id")
-    public val id: String,
-    @SerialName("label")
-    public val label: String,
-    @SerialName("tokens")
-    public val tokens: Long,
 )

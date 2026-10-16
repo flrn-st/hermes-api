@@ -456,6 +456,8 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
     public var limit: ModelOptionLimit?
     public var models: [String]?
     public var name: String
+    /// ``_attach_nous_plan_usage``: ``PickerUsage.to_payload`` on the ``nous`` row of a usage-window plan; the same object as ``ModelOptionProvider.plan_usage``.
+    public var planUsage: RESTPlanUsage?
     public var pricing: [String: ModelOptionPricing]?
     public var pricingPending: Bool?
     public var slug: String
@@ -463,10 +465,12 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
     public var totalModels: Int?
     public var unavailableModels: [String]?
     public var usage: ModelOptionUsage?
+    /// ``model_picker_usage.usage_levels`` on a usage-window plan's ``nous`` row: model id to its usage word (``free`` / ``low`` / ``medium`` / ``top_tier``). Such a row carries no ``pricing``.
+    public var usageLevels: [String: String]?
     public var warning: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(aliases: [String]? = nil, apiUrl: String? = nil, authType: String? = nil, authenticated: Bool? = nil, capabilities: [String: ModelOptionCapabilities]? = nil, featuredModels: [String]? = nil, freeTier: Bool? = nil, freeTierPending: Bool? = nil, freeTierRow: Bool? = nil, isCurrent: Bool? = nil, isUserDefined: Bool? = nil, keyEnv: String? = nil, limit: ModelOptionLimit? = nil, models: [String]? = nil, name: String, pricing: [String: ModelOptionPricing]? = nil, pricingPending: Bool? = nil, slug: String, source: String? = nil, totalModels: Int? = nil, unavailableModels: [String]? = nil, usage: ModelOptionUsage? = nil, warning: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
+    public init(aliases: [String]? = nil, apiUrl: String? = nil, authType: String? = nil, authenticated: Bool? = nil, capabilities: [String: ModelOptionCapabilities]? = nil, featuredModels: [String]? = nil, freeTier: Bool? = nil, freeTierPending: Bool? = nil, freeTierRow: Bool? = nil, isCurrent: Bool? = nil, isUserDefined: Bool? = nil, keyEnv: String? = nil, limit: ModelOptionLimit? = nil, models: [String]? = nil, name: String, planUsage: RESTPlanUsage? = nil, pricing: [String: ModelOptionPricing]? = nil, pricingPending: Bool? = nil, slug: String, source: String? = nil, totalModels: Int? = nil, unavailableModels: [String]? = nil, usage: ModelOptionUsage? = nil, usageLevels: [String: String]? = nil, warning: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
         self.aliases = aliases
         self.apiUrl = apiUrl
         self.authType = authType
@@ -482,6 +486,7 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         self.limit = limit
         self.models = models
         self.name = name
+        self.planUsage = planUsage
         self.pricing = pricing
         self.pricingPending = pricingPending
         self.slug = slug
@@ -489,6 +494,7 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         self.totalModels = totalModels
         self.unavailableModels = unavailableModels
         self.usage = usage
+        self.usageLevels = usageLevels
         self.warning = warning
         self.additionalProperties = additionalProperties
     }
@@ -509,6 +515,7 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         case limit = "limit"
         case models = "models"
         case name = "name"
+        case planUsage = "plan_usage"
         case pricing = "pricing"
         case pricingPending = "pricing_pending"
         case slug = "slug"
@@ -516,6 +523,7 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         case totalModels = "total_models"
         case unavailableModels = "unavailable_models"
         case usage = "usage"
+        case usageLevels = "usage_levels"
         case warning = "warning"
     }
 
@@ -536,6 +544,7 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         limit = try container.decodeIfPresent(ModelOptionLimit.self, forKey: .limit)
         models = try container.decodeIfPresent([String].self, forKey: .models)
         name = try container.decode(String.self, forKey: .name)
+        planUsage = try container.decodeIfPresent(RESTPlanUsage.self, forKey: .planUsage)
         pricing = try container.decodeIfPresent([String: ModelOptionPricing].self, forKey: .pricing)
         pricingPending = try container.decodeIfPresent(Bool.self, forKey: .pricingPending)
         slug = try container.decode(String.self, forKey: .slug)
@@ -543,9 +552,10 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         totalModels = try container.decodeIfPresent(Int.self, forKey: .totalModels)
         unavailableModels = try container.decodeIfPresent([String].self, forKey: .unavailableModels)
         usage = try container.decodeIfPresent(ModelOptionUsage.self, forKey: .usage)
+        usageLevels = try container.decodeIfPresent([String: String].self, forKey: .usageLevels)
         warning = try container.decodeIfPresent(String.self, forKey: .warning)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "warning"]
+        let known: Set<String> = ["aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "plan_usage", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "usage_levels", "warning"]
         var extra: [String: JSONValue] = [:]
         for key in dynamic.allKeys where !known.contains(key.stringValue) {
             extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
@@ -570,6 +580,7 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         try container.encodeIfPresent(limit, forKey: .limit)
         try container.encodeIfPresent(models, forKey: .models)
         try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(planUsage, forKey: .planUsage)
         try container.encodeIfPresent(pricing, forKey: .pricing)
         try container.encodeIfPresent(pricingPending, forKey: .pricingPending)
         try container.encode(slug, forKey: .slug)
@@ -577,9 +588,10 @@ public struct ModelOptionProviderRow: Codable, Sendable, Hashable {
         try container.encodeIfPresent(totalModels, forKey: .totalModels)
         try container.encodeIfPresent(unavailableModels, forKey: .unavailableModels)
         try container.encodeIfPresent(usage, forKey: .usage)
+        try container.encodeIfPresent(usageLevels, forKey: .usageLevels)
         try container.encodeIfPresent(warning, forKey: .warning)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "warning"]
+        let known: Set<String> = ["aliases", "api_url", "auth_type", "authenticated", "capabilities", "featured_models", "free_tier", "free_tier_pending", "free_tier_row", "is_current", "is_user_defined", "key_env", "limit", "models", "name", "plan_usage", "pricing", "pricing_pending", "slug", "source", "total_models", "unavailable_models", "usage", "usage_levels", "warning"]
         for (key, value) in additionalProperties {
             guard !known.contains(key) else {
                 throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))

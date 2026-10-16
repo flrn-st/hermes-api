@@ -9,6 +9,55 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = LearningFramesParams.Serializer::class)
+public data class LearningFramesParams(
+    public val cols: Patch<Long> = Patch.Absent,
+    public val rows: Patch<Long> = Patch.Absent,
+    public val frames: Patch<Long> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<LearningFramesParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): LearningFramesParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("LearningFramesParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("LearningFramesParams requires an object")
+            return LearningFramesParams(
+                cols = when (val raw = input["cols"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Long>(raw)) },
+                rows = when (val raw = input["rows"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Long>(raw)) },
+                frames = when (val raw = input["frames"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Long>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: LearningFramesParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("LearningFramesParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.cols) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["cols"] = JsonNull
+                is Patch.Value -> output["cols"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.rows) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["rows"] = JsonNull
+                is Patch.Value -> output["rows"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.frames) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["frames"] = JsonNull
+                is Patch.Value -> output["frames"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class LearningFramesResult(
     @SerialName("frames")
@@ -1054,14 +1103,3 @@ public data class McpServersAddParams(
         }
     }
 }
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class McpServersAddResult(
-    @SerialName("ok")
-    public val ok: Boolean,
-    @SerialName("name")
-    public val name: String,
-    @SerialName("server")
-    public val server: McpServerSummary,
-)

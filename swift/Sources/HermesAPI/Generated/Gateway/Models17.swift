@@ -2,6 +2,115 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct ProjectsForCwdParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var cwd: Patch<String>
+
+    public init(profile: Patch<String> = .absent, cwd: Patch<String> = .absent) {
+        self.profile = profile
+        self.cwd = cwd
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case cwd = "cwd"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        if !container.contains(.cwd) {
+            cwd = .absent
+        } else if try container.decodeNil(forKey: .cwd) {
+            cwd = .null
+        } else {
+            cwd = .value(try container.decode(String.self, forKey: .cwd))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        switch cwd {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .cwd)
+        case .value(let value): try container.encode(value, forKey: .cwd)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct ProjectsForCwdResult: Codable, Sendable, Hashable {
+    public var project: ProjectInfo?
+    public var cwd: String
+    public var branch: String?
+
+    public init(project: ProjectInfo? = nil, cwd: String, branch: String? = nil) {
+        self.project = project
+        self.cwd = cwd
+        self.branch = branch
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case project = "project"
+        case cwd = "cwd"
+        case branch = "branch"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        project = try container.decodeIfPresent(ProjectInfo.self, forKey: .project)
+        cwd = try container.decode(String.self, forKey: .cwd)
+        branch = try container.decodeIfPresent(String.self, forKey: .branch)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(project, forKey: .project)
+        try container.encode(cwd, forKey: .cwd)
+        try container.encodeIfPresent(branch, forKey: .branch)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct ProjectsPayload: Codable, Sendable, Hashable {
+    public var projects: [ProjectInfo]
+    public var activeId: String?
+
+    public init(projects: [ProjectInfo], activeId: String? = nil) {
+        self.projects = projects
+        self.activeId = activeId
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case projects = "projects"
+        case activeId = "active_id"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        projects = try container.decode([ProjectInfo].self, forKey: .projects)
+        activeId = try container.decodeIfPresent(String.self, forKey: .activeId)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(projects, forKey: .projects)
+        try container.encodeIfPresent(activeId, forKey: .activeId)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct ProjectsProjectSessionsParams: Codable, Sendable, Hashable {
     public var profile: Patch<String>
     public var projectId: String
@@ -1665,156 +1774,6 @@ public struct RelayAgentRow: Codable, Sendable, Hashable {
                 throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
             }
             try dynamic.encode(value, forKey: DynamicCodingKey(key))
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct RelayEnvelope: Codable, Sendable, Hashable {
-    public var id: String
-    public var createdAt: RelayEnvelopeCreatedAt
-    public var fromProfile: String
-    public var fromHandle: String
-    public var targetConnection: String
-    public var targetProfile: String
-    public var targetHandle: String
-    public var message: String
-    public var additionalProperties: [String: JSONValue]
-
-    public init(id: String, createdAt: RelayEnvelopeCreatedAt, fromProfile: String, fromHandle: String, targetConnection: String, targetProfile: String, targetHandle: String, message: String, additionalProperties: [String: JSONValue] = [:]) {
-        self.id = id
-        self.createdAt = createdAt
-        self.fromProfile = fromProfile
-        self.fromHandle = fromHandle
-        self.targetConnection = targetConnection
-        self.targetProfile = targetProfile
-        self.targetHandle = targetHandle
-        self.message = message
-        self.additionalProperties = additionalProperties
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case id = "id"
-        case createdAt = "created_at"
-        case fromProfile = "from_profile"
-        case fromHandle = "from_handle"
-        case targetConnection = "target_connection"
-        case targetProfile = "target_profile"
-        case targetHandle = "target_handle"
-        case message = "message"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(String.self, forKey: .id)
-        createdAt = try container.decode(RelayEnvelopeCreatedAt.self, forKey: .createdAt)
-        fromProfile = try container.decode(String.self, forKey: .fromProfile)
-        fromHandle = try container.decode(String.self, forKey: .fromHandle)
-        targetConnection = try container.decode(String.self, forKey: .targetConnection)
-        targetProfile = try container.decode(String.self, forKey: .targetProfile)
-        targetHandle = try container.decode(String.self, forKey: .targetHandle)
-        message = try container.decode(String.self, forKey: .message)
-        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["id", "created_at", "from_profile", "from_handle", "target_connection", "target_profile", "target_handle", "message"]
-        var extra: [String: JSONValue] = [:]
-        for key in dynamic.allKeys where !known.contains(key.stringValue) {
-            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
-        }
-        additionalProperties = extra
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(createdAt, forKey: .createdAt)
-        try container.encode(fromProfile, forKey: .fromProfile)
-        try container.encode(fromHandle, forKey: .fromHandle)
-        try container.encode(targetConnection, forKey: .targetConnection)
-        try container.encode(targetProfile, forKey: .targetProfile)
-        try container.encode(targetHandle, forKey: .targetHandle)
-        try container.encode(message, forKey: .message)
-        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["id", "created_at", "from_profile", "from_handle", "target_connection", "target_profile", "target_handle", "message"]
-        for (key, value) in additionalProperties {
-            guard !known.contains(key) else {
-                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
-            }
-            try dynamic.encode(value, forKey: DynamicCodingKey(key))
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum RelayEnvelopeCreatedAt: Codable, Sendable, Hashable {
-    case long(Int)
-    case double(Double)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(Int.self) {
-            self = .long(value)
-            return
-        }
-        if let value = try? container.decode(Double.self) {
-            self = .double(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .long(let value): try container.encode(value)
-        case .double(let value): try container.encode(value)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ReloadEnvParams: Codable, Sendable, Hashable {
-    public var sessionId: Patch<String>
-    public var profile: Patch<String>
-
-    public init(sessionId: Patch<String> = .absent, profile: Patch<String> = .absent) {
-        self.sessionId = sessionId
-        self.profile = profile
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case sessionId = "session_id"
-        case profile = "profile"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.sessionId) {
-            sessionId = .absent
-        } else if try container.decodeNil(forKey: .sessionId) {
-            sessionId = .null
-        } else {
-            sessionId = .value(try container.decode(String.self, forKey: .sessionId))
-        }
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch sessionId {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .sessionId)
-        case .value(let value): try container.encode(value, forKey: .sessionId)
-        }
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
         }
     }
 }

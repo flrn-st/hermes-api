@@ -9,6 +9,61 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = BrowserControllerResultParams.Serializer::class)
+public data class BrowserControllerResultParams(
+    public val sessionId: String,
+    public val commandId: String,
+    public val ok: Patch<JsonElement> = Patch.Absent,
+    public val result: Patch<JsonElement> = Patch.Absent,
+    public val error: Patch<JsonElement> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<BrowserControllerResultParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): BrowserControllerResultParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("BrowserControllerResultParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("BrowserControllerResultParams requires an object")
+            return BrowserControllerResultParams(
+                sessionId = json.decodeFromJsonElement<String>((input["session_id"] ?: throw SerializationException("Missing session_id"))),
+                commandId = json.decodeFromJsonElement<String>((input["command_id"] ?: throw SerializationException("Missing command_id"))),
+                ok = when (val raw = input["ok"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<JsonElement>(raw)) },
+                result = when (val raw = input["result"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<JsonElement>(raw)) },
+                error = when (val raw = input["error"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<JsonElement>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: BrowserControllerResultParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("BrowserControllerResultParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            output["session_id"] = json.encodeToJsonElement(value.sessionId)
+            output["command_id"] = json.encodeToJsonElement(value.commandId)
+            when (val patch = value.ok) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["ok"] = JsonNull
+                is Patch.Value -> output["ok"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.result) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["result"] = JsonNull
+                is Patch.Value -> output["result"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.error) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["error"] = JsonNull
+                is Patch.Value -> output["error"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class BrowserControllerResultResult(
     @SerialName("accepted")
@@ -1310,99 +1365,3 @@ public data class CanonicalReplayEvent(
     @SerialName("admission_id")
     public val admissionId: String? = null,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = CanonicalResumeParams.Serializer::class)
-public data class CanonicalResumeParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val sessionId: String? = null,
-    public val title: Patch<String> = Patch.Absent,
-    public val latest: Patch<CanonicalResumeParamsLatest> = Patch.Absent,
-    public val workspace: Patch<String> = Patch.Absent,
-    public val source: Patch<String> = Patch.Absent,
-    public val editor: Patch<Map<String, JsonElement>> = Patch.Absent,
-    public val apiKey: Patch<String> = Patch.Absent,
-    public val deferHistory: Boolean? = null,
-    public val omitMessages: Boolean? = null,
-    public val cols: Patch<Long> = Patch.Absent,
-    public val displayProjection: Boolean? = null,
-)
-{
-    public object Serializer : KSerializer<CanonicalResumeParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): CanonicalResumeParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("CanonicalResumeParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("CanonicalResumeParams requires an object")
-            return CanonicalResumeParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                sessionId = input["session_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
-                title = when (val raw = input["title"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                latest = when (val raw = input["latest"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<CanonicalResumeParamsLatest>(raw)) },
-                workspace = when (val raw = input["workspace"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                source = when (val raw = input["source"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                editor = when (val raw = input["editor"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Map<String, JsonElement>>(raw)) },
-                apiKey = when (val raw = input["api_key"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                deferHistory = input["defer_history"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                omitMessages = input["omit_messages"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                cols = when (val raw = input["cols"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Long>(raw)) },
-                displayProjection = input["display_projection"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: CanonicalResumeParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("CanonicalResumeParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            value.sessionId?.let { output["session_id"] = json.encodeToJsonElement(it) }
-            when (val patch = value.title) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["title"] = JsonNull
-                is Patch.Value -> output["title"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.latest) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["latest"] = JsonNull
-                is Patch.Value -> output["latest"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.workspace) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["workspace"] = JsonNull
-                is Patch.Value -> output["workspace"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.source) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["source"] = JsonNull
-                is Patch.Value -> output["source"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.editor) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["editor"] = JsonNull
-                is Patch.Value -> output["editor"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.apiKey) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["api_key"] = JsonNull
-                is Patch.Value -> output["api_key"] = json.encodeToJsonElement(patch.value)
-            }
-            value.deferHistory?.let { output["defer_history"] = json.encodeToJsonElement(it) }
-            value.omitMessages?.let { output["omit_messages"] = json.encodeToJsonElement(it) }
-            when (val patch = value.cols) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["cols"] = JsonNull
-                is Patch.Value -> output["cols"] = json.encodeToJsonElement(patch.value)
-            }
-            value.displayProjection?.let { output["display_projection"] = json.encodeToJsonElement(it) }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}

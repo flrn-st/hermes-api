@@ -7,7 +7,9 @@ its success responses, either as ``response`` (the 200 ``application/json`` sche
 ``x-contract`` optionally traces the schema to the response contract it was drafted from, and
 ``request`` documents a JSON body the handler reads without declaring it (``await request.json()``).
 The documented responses replace the operation's success responses, which must all be untyped
-(FastAPI's default); nothing may replace a schema upstream already documents.
+(FastAPI's default); nothing may replace a schema upstream already documents. Last, the ``rest``
+sections of ``spec/overlay/development/`` add a development branch's optional fields to the reviewed
+components (``tools/development_overlay.py``).
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ from pathlib import Path
 
 import yaml
 
+from tools.development_overlay import apply_rest_overlays
 from tools.fetch_spec import ROOT
 from tools.ref_policy import require_release
 
@@ -139,6 +142,8 @@ def apply(ref: str, *, check: bool = False, root: Path = ROOT) -> dict[str, int]
                 operation["x-contract"] = copy.deepcopy(contract)
             operation["x-source"] = entry["x-source"]
             operation["x-handler-hash"] = entry["x-handler-hash"]
+    # A development branch's additions to the reviewed rows (spec/overlay/development/).
+    apply_rest_overlays(document, ref, root)
     _check_refs(document)
     rendered = json.dumps(document, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
     target = output / "openapi.json"

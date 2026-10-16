@@ -2,6 +2,64 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct ConnectorPolicyEffectiveAllow: Codable, Sendable, Hashable {
+    /// Always `1`; decoding any other value fails.
+    public var version: Int
+    public var revision: String
+    public var issuedAtMs: Int
+    public var mode: ConnectorPolicyEffectiveAllowMode
+    public var connectors: [String]
+    public var tools: [String: [String]]
+    public var tags: ConnectorPolicyTags?
+
+    public init(version: Int = 1, revision: String, issuedAtMs: Int, mode: ConnectorPolicyEffectiveAllowMode, connectors: [String], tools: [String: [String]], tags: ConnectorPolicyTags? = nil) {
+        self.version = version
+        self.revision = revision
+        self.issuedAtMs = issuedAtMs
+        self.mode = mode
+        self.connectors = connectors
+        self.tools = tools
+        self.tags = tags
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case version = "version"
+        case revision = "revision"
+        case issuedAtMs = "issued_at_ms"
+        case mode = "mode"
+        case connectors = "connectors"
+        case tools = "tools"
+        case tags = "tags"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decode(Int.self, forKey: .version)
+        revision = try container.decode(String.self, forKey: .revision)
+        issuedAtMs = try container.decode(Int.self, forKey: .issuedAtMs)
+        mode = try container.decode(ConnectorPolicyEffectiveAllowMode.self, forKey: .mode)
+        connectors = try container.decode([String].self, forKey: .connectors)
+        tools = try container.decode([String: [String]].self, forKey: .tools)
+        tags = try container.decodeIfPresent(ConnectorPolicyTags.self, forKey: .tags)
+        guard version == 1 else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .version, in: container, debugDescription: "version must be 1")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(version, forKey: .version)
+        try container.encode(revision, forKey: .revision)
+        try container.encode(issuedAtMs, forKey: .issuedAtMs)
+        try container.encode(mode, forKey: .mode)
+        try container.encode(connectors, forKey: .connectors)
+        try container.encode(tools, forKey: .tools)
+        try container.encodeIfPresent(tags, forKey: .tags)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public enum ConnectorPolicyEffectiveAllowMode: Codable, Sendable, Hashable, RawRepresentable {
     case allow
 
@@ -1328,43 +1386,5 @@ public struct ConnectorsListResult: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(available, forKey: .available)
         try container.encode(connectors, forKey: .connectors)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ContextCategory: Codable, Sendable, Hashable {
-    public var color: String
-    public var id: String
-    public var label: String
-    public var tokens: Int
-
-    public init(color: String, id: String, label: String, tokens: Int) {
-        self.color = color
-        self.id = id
-        self.label = label
-        self.tokens = tokens
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case color = "color"
-        case id = "id"
-        case label = "label"
-        case tokens = "tokens"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        color = try container.decode(String.self, forKey: .color)
-        id = try container.decode(String.self, forKey: .id)
-        label = try container.decode(String.self, forKey: .label)
-        tokens = try container.decode(Int.self, forKey: .tokens)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(color, forKey: .color)
-        try container.encode(id, forKey: .id)
-        try container.encode(label, forKey: .label)
-        try container.encode(tokens, forKey: .tokens)
     }
 }

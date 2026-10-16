@@ -2,6 +2,379 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct WakePauseResult: Codable, Sendable, Hashable {
+    public var reason: String?
+    public var paused: Bool
+
+    public init(reason: String? = nil, paused: Bool) {
+        self.reason = reason
+        self.paused = paused
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case reason = "reason"
+        case paused = "paused"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        reason = try container.decodeIfPresent(String.self, forKey: .reason)
+        paused = try container.decode(Bool.self, forKey: .paused)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(reason, forKey: .reason)
+        try container.encode(paused, forKey: .paused)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct WakeResumeResult: Codable, Sendable, Hashable {
+    public var reason: String?
+    public var resumed: Bool
+
+    public init(reason: String? = nil, resumed: Bool) {
+        self.reason = reason
+        self.resumed = resumed
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case reason = "reason"
+        case resumed = "resumed"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        reason = try container.decodeIfPresent(String.self, forKey: .reason)
+        resumed = try container.decode(Bool.self, forKey: .resumed)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(reason, forKey: .reason)
+        try container.encode(resumed, forKey: .resumed)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct WakeStartParams: Codable, Sendable, Hashable {
+    public var surface: Patch<String>
+    public var persist: Patch<Bool>
+    public var clientCapture: Patch<Bool>
+    public var sessionId: Patch<String>
+    public var profile: Patch<String>
+
+    public init(surface: Patch<String> = .absent, persist: Patch<Bool> = .absent, clientCapture: Patch<Bool> = .absent, sessionId: Patch<String> = .absent, profile: Patch<String> = .absent) {
+        self.surface = surface
+        self.persist = persist
+        self.clientCapture = clientCapture
+        self.sessionId = sessionId
+        self.profile = profile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case surface = "surface"
+        case persist = "persist"
+        case clientCapture = "client_capture"
+        case sessionId = "session_id"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.surface) {
+            surface = .absent
+        } else if try container.decodeNil(forKey: .surface) {
+            surface = .null
+        } else {
+            surface = .value(try container.decode(String.self, forKey: .surface))
+        }
+        if !container.contains(.persist) {
+            persist = .absent
+        } else if try container.decodeNil(forKey: .persist) {
+            persist = .null
+        } else {
+            persist = .value(try container.decode(Bool.self, forKey: .persist))
+        }
+        if !container.contains(.clientCapture) {
+            clientCapture = .absent
+        } else if try container.decodeNil(forKey: .clientCapture) {
+            clientCapture = .null
+        } else {
+            clientCapture = .value(try container.decode(Bool.self, forKey: .clientCapture))
+        }
+        if !container.contains(.sessionId) {
+            sessionId = .absent
+        } else if try container.decodeNil(forKey: .sessionId) {
+            sessionId = .null
+        } else {
+            sessionId = .value(try container.decode(String.self, forKey: .sessionId))
+        }
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch surface {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .surface)
+        case .value(let value): try container.encode(value, forKey: .surface)
+        }
+        switch persist {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .persist)
+        case .value(let value): try container.encode(value, forKey: .persist)
+        }
+        switch clientCapture {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .clientCapture)
+        case .value(let value): try container.encode(value, forKey: .clientCapture)
+        }
+        switch sessionId {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .sessionId)
+        case .value(let value): try container.encode(value, forKey: .sessionId)
+        }
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct WakeStartResult: Codable, Sendable, Hashable {
+    public var started: Bool
+    public var reason: String?
+    public var hint: String?
+    public var phrase: String?
+    public var provider: String?
+    public var ownerSurface: String?
+    public var enabledPersisted: Bool?
+    public var capture: String?
+    public var sampleRate: Int?
+    public var frameLength: Int?
+
+    public init(started: Bool, reason: String? = nil, hint: String? = nil, phrase: String? = nil, provider: String? = nil, ownerSurface: String? = nil, enabledPersisted: Bool? = nil, capture: String? = nil, sampleRate: Int? = nil, frameLength: Int? = nil) {
+        self.started = started
+        self.reason = reason
+        self.hint = hint
+        self.phrase = phrase
+        self.provider = provider
+        self.ownerSurface = ownerSurface
+        self.enabledPersisted = enabledPersisted
+        self.capture = capture
+        self.sampleRate = sampleRate
+        self.frameLength = frameLength
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case started = "started"
+        case reason = "reason"
+        case hint = "hint"
+        case phrase = "phrase"
+        case provider = "provider"
+        case ownerSurface = "owner_surface"
+        case enabledPersisted = "enabled_persisted"
+        case capture = "capture"
+        case sampleRate = "sample_rate"
+        case frameLength = "frame_length"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        started = try container.decode(Bool.self, forKey: .started)
+        reason = try container.decodeIfPresent(String.self, forKey: .reason)
+        hint = try container.decodeIfPresent(String.self, forKey: .hint)
+        phrase = try container.decodeIfPresent(String.self, forKey: .phrase)
+        provider = try container.decodeIfPresent(String.self, forKey: .provider)
+        ownerSurface = try container.decodeIfPresent(String.self, forKey: .ownerSurface)
+        enabledPersisted = try container.decodeIfPresent(Bool.self, forKey: .enabledPersisted)
+        capture = try container.decodeIfPresent(String.self, forKey: .capture)
+        sampleRate = try container.decodeIfPresent(Int.self, forKey: .sampleRate)
+        frameLength = try container.decodeIfPresent(Int.self, forKey: .frameLength)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(started, forKey: .started)
+        try container.encodeIfPresent(reason, forKey: .reason)
+        try container.encodeIfPresent(hint, forKey: .hint)
+        try container.encodeIfPresent(phrase, forKey: .phrase)
+        try container.encodeIfPresent(provider, forKey: .provider)
+        try container.encodeIfPresent(ownerSurface, forKey: .ownerSurface)
+        try container.encodeIfPresent(enabledPersisted, forKey: .enabledPersisted)
+        try container.encodeIfPresent(capture, forKey: .capture)
+        try container.encodeIfPresent(sampleRate, forKey: .sampleRate)
+        try container.encodeIfPresent(frameLength, forKey: .frameLength)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct WakeStatusParams: Codable, Sendable, Hashable {
+    public var surface: Patch<String>
+    public var clientCapture: Patch<Bool>
+    public var profile: Patch<String>
+
+    public init(surface: Patch<String> = .absent, clientCapture: Patch<Bool> = .absent, profile: Patch<String> = .absent) {
+        self.surface = surface
+        self.clientCapture = clientCapture
+        self.profile = profile
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case surface = "surface"
+        case clientCapture = "client_capture"
+        case profile = "profile"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.surface) {
+            surface = .absent
+        } else if try container.decodeNil(forKey: .surface) {
+            surface = .null
+        } else {
+            surface = .value(try container.decode(String.self, forKey: .surface))
+        }
+        if !container.contains(.clientCapture) {
+            clientCapture = .absent
+        } else if try container.decodeNil(forKey: .clientCapture) {
+            clientCapture = .null
+        } else {
+            clientCapture = .value(try container.decode(Bool.self, forKey: .clientCapture))
+        }
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch surface {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .surface)
+        case .value(let value): try container.encode(value, forKey: .surface)
+        }
+        switch clientCapture {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .clientCapture)
+        case .value(let value): try container.encode(value, forKey: .clientCapture)
+        }
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct WakeStatusResult: Codable, Sendable, Hashable {
+    public var listening: Bool
+    public var ownedByCaller: Bool
+    public var ownerSurface: String?
+    public var phrase: String
+    public var provider: String
+    public var configuredSurface: String
+    public var inputDevice: WakeInputDevice
+    public var available: Bool
+    public var hint: String
+    public var enabled: Bool
+    public var audioSilent: Bool
+    public var capture: String
+    public var localInputAvailable: Bool
+    public var sampleRate: Int
+    public var frameLength: Int
+
+    public init(listening: Bool, ownedByCaller: Bool, ownerSurface: String? = nil, phrase: String, provider: String, configuredSurface: String, inputDevice: WakeInputDevice, available: Bool, hint: String, enabled: Bool, audioSilent: Bool, capture: String, localInputAvailable: Bool, sampleRate: Int, frameLength: Int) {
+        self.listening = listening
+        self.ownedByCaller = ownedByCaller
+        self.ownerSurface = ownerSurface
+        self.phrase = phrase
+        self.provider = provider
+        self.configuredSurface = configuredSurface
+        self.inputDevice = inputDevice
+        self.available = available
+        self.hint = hint
+        self.enabled = enabled
+        self.audioSilent = audioSilent
+        self.capture = capture
+        self.localInputAvailable = localInputAvailable
+        self.sampleRate = sampleRate
+        self.frameLength = frameLength
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case listening = "listening"
+        case ownedByCaller = "owned_by_caller"
+        case ownerSurface = "owner_surface"
+        case phrase = "phrase"
+        case provider = "provider"
+        case configuredSurface = "configured_surface"
+        case inputDevice = "input_device"
+        case available = "available"
+        case hint = "hint"
+        case enabled = "enabled"
+        case audioSilent = "audio_silent"
+        case capture = "capture"
+        case localInputAvailable = "local_input_available"
+        case sampleRate = "sample_rate"
+        case frameLength = "frame_length"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        listening = try container.decode(Bool.self, forKey: .listening)
+        ownedByCaller = try container.decode(Bool.self, forKey: .ownedByCaller)
+        ownerSurface = try container.decodeIfPresent(String.self, forKey: .ownerSurface)
+        phrase = try container.decode(String.self, forKey: .phrase)
+        provider = try container.decode(String.self, forKey: .provider)
+        configuredSurface = try container.decode(String.self, forKey: .configuredSurface)
+        inputDevice = try container.decode(WakeInputDevice.self, forKey: .inputDevice)
+        available = try container.decode(Bool.self, forKey: .available)
+        hint = try container.decode(String.self, forKey: .hint)
+        enabled = try container.decode(Bool.self, forKey: .enabled)
+        audioSilent = try container.decode(Bool.self, forKey: .audioSilent)
+        capture = try container.decode(String.self, forKey: .capture)
+        localInputAvailable = try container.decode(Bool.self, forKey: .localInputAvailable)
+        sampleRate = try container.decode(Int.self, forKey: .sampleRate)
+        frameLength = try container.decode(Int.self, forKey: .frameLength)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(listening, forKey: .listening)
+        try container.encode(ownedByCaller, forKey: .ownedByCaller)
+        try container.encodeIfPresent(ownerSurface, forKey: .ownerSurface)
+        try container.encode(phrase, forKey: .phrase)
+        try container.encode(provider, forKey: .provider)
+        try container.encode(configuredSurface, forKey: .configuredSurface)
+        try container.encode(inputDevice, forKey: .inputDevice)
+        try container.encode(available, forKey: .available)
+        try container.encode(hint, forKey: .hint)
+        try container.encode(enabled, forKey: .enabled)
+        try container.encode(audioSilent, forKey: .audioSilent)
+        try container.encode(capture, forKey: .capture)
+        try container.encode(localInputAvailable, forKey: .localInputAvailable)
+        try container.encode(sampleRate, forKey: .sampleRate)
+        try container.encode(frameLength, forKey: .frameLength)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct WakeStopParams: Codable, Sendable, Hashable {
     public var persist: Patch<Bool>
     public var profile: Patch<String>

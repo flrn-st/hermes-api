@@ -9,6 +9,102 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = CanonicalResumeParams.Serializer::class)
+public data class CanonicalResumeParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val sessionId: String? = null,
+    public val title: Patch<String> = Patch.Absent,
+    public val latest: Patch<CanonicalResumeParamsLatest> = Patch.Absent,
+    public val workspace: Patch<String> = Patch.Absent,
+    public val source: Patch<String> = Patch.Absent,
+    public val editor: Patch<Map<String, JsonElement>> = Patch.Absent,
+    public val apiKey: Patch<String> = Patch.Absent,
+    public val deferHistory: Boolean? = null,
+    public val omitMessages: Boolean? = null,
+    public val cols: Patch<Long> = Patch.Absent,
+    public val displayProjection: Boolean? = null,
+)
+{
+    public object Serializer : KSerializer<CanonicalResumeParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): CanonicalResumeParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("CanonicalResumeParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("CanonicalResumeParams requires an object")
+            return CanonicalResumeParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                sessionId = input["session_id"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                title = when (val raw = input["title"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                latest = when (val raw = input["latest"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<CanonicalResumeParamsLatest>(raw)) },
+                workspace = when (val raw = input["workspace"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                source = when (val raw = input["source"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                editor = when (val raw = input["editor"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Map<String, JsonElement>>(raw)) },
+                apiKey = when (val raw = input["api_key"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                deferHistory = input["defer_history"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                omitMessages = input["omit_messages"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+                cols = when (val raw = input["cols"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Long>(raw)) },
+                displayProjection = input["display_projection"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: CanonicalResumeParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("CanonicalResumeParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            value.sessionId?.let { output["session_id"] = json.encodeToJsonElement(it) }
+            when (val patch = value.title) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["title"] = JsonNull
+                is Patch.Value -> output["title"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.latest) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["latest"] = JsonNull
+                is Patch.Value -> output["latest"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.workspace) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["workspace"] = JsonNull
+                is Patch.Value -> output["workspace"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.source) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["source"] = JsonNull
+                is Patch.Value -> output["source"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.editor) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["editor"] = JsonNull
+                is Patch.Value -> output["editor"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.apiKey) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["api_key"] = JsonNull
+                is Patch.Value -> output["api_key"] = json.encodeToJsonElement(patch.value)
+            }
+            value.deferHistory?.let { output["defer_history"] = json.encodeToJsonElement(it) }
+            value.omitMessages?.let { output["omit_messages"] = json.encodeToJsonElement(it) }
+            when (val patch = value.cols) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["cols"] = JsonNull
+                is Patch.Value -> output["cols"] = json.encodeToJsonElement(patch.value)
+            }
+            value.displayProjection?.let { output["display_projection"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = CanonicalResumeParamsLatest.Serializer::class)
 public sealed interface CanonicalResumeParamsLatest {
     public data object Cli : CanonicalResumeParamsLatest
@@ -1286,46 +1382,3 @@ public data class ClarifyResult(
     @SerialName("outcome")
     public val outcome: ClarifyResultOutcome? = null,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ClarifyResultOutcome.Serializer::class)
-public sealed interface ClarifyResultOutcome {
-    public data object Submitted : ClarifyResultOutcome
-    public data object TimedOut : ClarifyResultOutcome
-    public data object Cancelled : ClarifyResultOutcome
-    public data class Unknown(public val raw: kotlin.String) : ClarifyResultOutcome
-
-    /** The value on the wire. */
-    public val rawValue: kotlin.String
-        get() = when (this) {
-            Submitted -> "submitted"
-            TimedOut -> "timed_out"
-            Cancelled -> "cancelled"
-            is Unknown -> raw
-        }
-
-    public companion object {
-        /** The case for [raw]; values this release does not list become [Unknown]. */
-        public fun fromRawValue(raw: kotlin.String): ClarifyResultOutcome = when (raw) {
-            "submitted" -> Submitted
-            "timed_out" -> TimedOut
-            "cancelled" -> Cancelled
-            else -> Unknown(raw)
-        }
-    }
-
-    public object Serializer : KSerializer<ClarifyResultOutcome> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ClarifyResultOutcome", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): ClarifyResultOutcome = when (val raw = decoder.decodeString()) {
-            "submitted" -> Submitted
-            "timed_out" -> TimedOut
-            "cancelled" -> Cancelled
-            else -> Unknown(raw)
-        }
-
-        override fun serialize(encoder: Encoder, value: ClarifyResultOutcome) {
-            encoder.encodeString(value.rawValue)
-        }
-    }
-}

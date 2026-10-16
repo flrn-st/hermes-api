@@ -9,6 +9,196 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class WakePauseResult(
+    @SerialName("reason")
+    public val reason: String? = null,
+    @SerialName("paused")
+    public val paused: Boolean,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class WakeResumeResult(
+    @SerialName("reason")
+    public val reason: String? = null,
+    @SerialName("resumed")
+    public val resumed: Boolean,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = WakeStartParams.Serializer::class)
+public data class WakeStartParams(
+    public val surface: Patch<String> = Patch.Absent,
+    public val persist: Patch<Boolean> = Patch.Absent,
+    public val clientCapture: Patch<Boolean> = Patch.Absent,
+    public val sessionId: Patch<String> = Patch.Absent,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<WakeStartParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): WakeStartParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("WakeStartParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("WakeStartParams requires an object")
+            return WakeStartParams(
+                surface = when (val raw = input["surface"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                persist = when (val raw = input["persist"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
+                clientCapture = when (val raw = input["client_capture"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
+                sessionId = when (val raw = input["session_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: WakeStartParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("WakeStartParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.surface) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["surface"] = JsonNull
+                is Patch.Value -> output["surface"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.persist) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["persist"] = JsonNull
+                is Patch.Value -> output["persist"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.clientCapture) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["client_capture"] = JsonNull
+                is Patch.Value -> output["client_capture"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.sessionId) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["session_id"] = JsonNull
+                is Patch.Value -> output["session_id"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class WakeStartResult(
+    @SerialName("started")
+    public val started: Boolean,
+    @SerialName("reason")
+    public val reason: String? = null,
+    @SerialName("hint")
+    public val hint: String? = null,
+    @SerialName("phrase")
+    public val phrase: String? = null,
+    @SerialName("provider")
+    public val provider: String? = null,
+    @SerialName("owner_surface")
+    public val ownerSurface: String? = null,
+    @SerialName("enabled_persisted")
+    public val enabledPersisted: Boolean? = null,
+    @SerialName("capture")
+    public val capture: String? = null,
+    @SerialName("sample_rate")
+    public val sampleRate: Long? = null,
+    @SerialName("frame_length")
+    public val frameLength: Long? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = WakeStatusParams.Serializer::class)
+public data class WakeStatusParams(
+    public val surface: Patch<String> = Patch.Absent,
+    public val clientCapture: Patch<Boolean> = Patch.Absent,
+    public val profile: Patch<String> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<WakeStatusParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): WakeStatusParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("WakeStatusParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("WakeStatusParams requires an object")
+            return WakeStatusParams(
+                surface = when (val raw = input["surface"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                clientCapture = when (val raw = input["client_capture"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: WakeStatusParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("WakeStatusParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.surface) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["surface"] = JsonNull
+                is Patch.Value -> output["surface"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.clientCapture) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["client_capture"] = JsonNull
+                is Patch.Value -> output["client_capture"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class WakeStatusResult(
+    @SerialName("listening")
+    public val listening: Boolean,
+    @SerialName("owned_by_caller")
+    public val ownedByCaller: Boolean,
+    @SerialName("owner_surface")
+    public val ownerSurface: String? = null,
+    @SerialName("phrase")
+    public val phrase: String,
+    @SerialName("provider")
+    public val provider: String,
+    @SerialName("configured_surface")
+    public val configuredSurface: String,
+    @SerialName("input_device")
+    public val inputDevice: WakeInputDevice,
+    @SerialName("available")
+    public val available: Boolean,
+    @SerialName("hint")
+    public val hint: String,
+    @SerialName("enabled")
+    public val enabled: Boolean,
+    @SerialName("audio_silent")
+    public val audioSilent: Boolean,
+    @SerialName("capture")
+    public val capture: String,
+    @SerialName("local_input_available")
+    public val localInputAvailable: Boolean,
+    @SerialName("sample_rate")
+    public val sampleRate: Long,
+    @SerialName("frame_length")
+    public val frameLength: Long,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = WakeStopParams.Serializer::class)
 public data class WakeStopParams(
     public val persist: Patch<Boolean> = Patch.Absent,

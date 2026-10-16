@@ -10,6 +10,19 @@ import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
+public data class ContextCategory(
+    @SerialName("color")
+    public val color: String,
+    @SerialName("id")
+    public val id: String,
+    @SerialName("label")
+    public val label: String,
+    @SerialName("tokens")
+    public val tokens: Long,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
 public data class ContextFileSource(
     @SerialName("label")
     public val label: String,
@@ -1081,52 +1094,3 @@ public data class DisplayLeasePayload(
     @SerialName("lease")
     public val lease: DisplayLease,
 )
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = DisplayLeaseReleaseParams.Serializer::class)
-public data class DisplayLeaseReleaseParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val viewerId: Patch<String> = Patch.Absent,
-    public val force: Patch<Boolean> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<DisplayLeaseReleaseParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): DisplayLeaseReleaseParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("DisplayLeaseReleaseParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("DisplayLeaseReleaseParams requires an object")
-            return DisplayLeaseReleaseParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                viewerId = when (val raw = input["viewer_id"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                force = when (val raw = input["force"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: DisplayLeaseReleaseParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("DisplayLeaseReleaseParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.viewerId) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["viewer_id"] = JsonNull
-                is Patch.Value -> output["viewer_id"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.force) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["force"] = JsonNull
-                is Patch.Value -> output["force"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}

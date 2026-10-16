@@ -14,6 +14,7 @@ public enum GatewayOperations {
         "billing.auto_reload",
         "billing.charge",
         "billing.charge_status",
+        "billing.keep_going_on_credits",
         "billing.state",
         "billing.step_up",
         "bot_relay.deliver",
@@ -282,6 +283,8 @@ public enum GatewayOperations {
             return try encode(try await gateway.billing.charge(try decode(BillingChargeParams.self, params)))
         case "billing.charge_status":
             return try encode(try await gateway.billing.chargeStatus(try decode(BillingChargeStatusParams.self, params)))
+        case "billing.keep_going_on_credits":
+            return try encode(try await gateway.billing.keepGoingOnCredits(try decode(BillingKeepGoingOnCreditsParams.self, params)))
         case "billing.state":
             return try encode(try await gateway.billing.state(try decode(ProfileParams.self, params)))
         case "billing.step_up":
@@ -797,6 +800,7 @@ public enum GatewayOperations {
         case "billing.auto_reload": return try encode(try decode(BillingMutationResult.self, result))
         case "billing.charge": return try encode(try decode(BillingChargeResult.self, result))
         case "billing.charge_status": return try encode(try decode(BillingChargeStatusResult.self, result))
+        case "billing.keep_going_on_credits": return try encode(try decode(BillingMutationResult.self, result))
         case "billing.state": return try encode(try decode(BillingStateResult.self, result))
         case "billing.step_up": return try encode(try decode(BillingStepUpResult.self, result))
         case "bot_relay.deliver": return try encode(try decode(BotRelayDeliverResult.self, result))

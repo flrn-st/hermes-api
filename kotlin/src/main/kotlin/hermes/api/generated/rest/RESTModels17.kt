@@ -9,6 +9,24 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 import hermes.api.runtime.decodesTolerantly
 
+/** Generated from the reviewed Hermes REST contract. Do not edit. ``backfill_session_owner_profiles``. */
+@Serializable
+public data class SessionOwnerBackfillResponse(
+    @SerialName("ok")
+    public val ok: Boolean,
+    @SerialName("profile")
+    public val profile: String,
+    @SerialName("stamped")
+    public val stamped: Long,
+)
+
+/** Generated from the reviewed Hermes REST contract. Do not edit. */
+@Serializable
+public data class SessionPrScanBody(
+    @SerialName("ids")
+    public val ids: List<String>? = null,
+)
+
 /** Generated from the reviewed Hermes REST contract. Do not edit. */
 @Serializable(with = SessionPrune.Serializer::class)
 public data class SessionPrune(
@@ -990,36 +1008,4 @@ public data class SkillHubSource(
     public val rateLimited: Boolean? = null,
     @SerialName("searchable")
     public val searchable: Boolean,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``list_skills_hub_sources``; ``installed`` is keyed by hub identifier. */
-@Serializable
-public data class SkillHubSourcesResponse(
-    @SerialName("featured")
-    public val featured: List<SkillHubEntry>,
-    @SerialName("index_available")
-    public val indexAvailable: Boolean,
-    @SerialName("installed")
-    public val installed: Map<String, SkillHubInstalledRecord>,
-    @SerialName("sources")
-    public val sources: List<SkillHubSource>,
-)
-
-/** Generated from the reviewed Hermes REST contract. Do not edit. ``tools/skillevaluator_scan.py::Tier1Finding``; ``secrets_class`` is ``is_secrets_class``. */
-@Serializable
-public data class SkillHubTier1Finding(
-    @SerialName("check")
-    public val check: String,
-    @SerialName("file")
-    public val file: String,
-    @SerialName("line")
-    public val line: Long,
-    @SerialName("message")
-    public val message: String,
-    @SerialName("secrets_class")
-    public val secretsClass: Boolean,
-    @SerialName("severity")
-    public val severity: String,
-    @SerialName("validator")
-    public val validator: String,
 )

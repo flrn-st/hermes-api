@@ -9,6 +9,53 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = PetGenerateProgressPayload.Serializer::class)
+public data class PetGenerateProgressPayload(
+    public val token: String,
+    public val count: Long,
+    public val index: Long? = null,
+    public val dataUri: String? = null,
+    public val additionalProperties: Map<String, JsonElement> = emptyMap(),
+)
+{
+    public object Serializer : KSerializer<PetGenerateProgressPayload> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): PetGenerateProgressPayload {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("PetGenerateProgressPayload requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("PetGenerateProgressPayload requires an object")
+            return PetGenerateProgressPayload(
+                token = json.decodeFromJsonElement<String>((input["token"] ?: throw SerializationException("Missing token"))),
+                count = json.decodeFromJsonElement<Long>((input["count"] ?: throw SerializationException("Missing count"))),
+                index = input["index"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                dataUri = input["dataUri"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                additionalProperties = input.filterKeys { it !in setOf("token", "count", "index", "dataUri") },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: PetGenerateProgressPayload) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("PetGenerateProgressPayload requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            val known = setOf("token", "count", "index", "dataUri")
+            if (value.additionalProperties.keys.any { it in known }) {
+                throw SerializationException("Additional property conflicts with a known field")
+            }
+            output.putAll(value.additionalProperties)
+            output["token"] = json.encodeToJsonElement(value.token)
+            output["count"] = json.encodeToJsonElement(value.count)
+            value.index?.let { output["index"] = json.encodeToJsonElement(it) }
+            value.dataUri?.let { output["dataUri"] = json.encodeToJsonElement(it) }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public data class PetGenerateResult(
     @SerialName("ok")
@@ -550,6 +597,42 @@ public data class PingResult(
 
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
+public data class PlanUsage(
+    @SerialName("kind")
+    public val kind: String,
+    @SerialName("plan")
+    public val plan: String? = null,
+    @SerialName("gauges")
+    public val gauges: List<PlanUsageGauge>? = null,
+    @SerialName("top_tier_model_ids")
+    public val topTierModelIds: List<String>? = null,
+    @SerialName("featured_model_ids")
+    public val featuredModelIds: List<String>? = null,
+    @SerialName("paused_reason")
+    public val pausedReason: String? = null,
+    @SerialName("credits_pay")
+    public val creditsPay: Boolean? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
+public data class PlanUsageGauge(
+    @SerialName("label")
+    public val label: String,
+    @SerialName("left_fraction")
+    public val leftFraction: Double,
+    @SerialName("style")
+    public val style: String,
+    @SerialName("resets_at_ms")
+    public val resetsAtMs: Long? = null,
+    @SerialName("scope")
+    public val scope: String? = null,
+    @SerialName("title")
+    public val title: String? = null,
+)
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable
 public data class PluginActivation(
     @SerialName("name")
     public val name: String,
@@ -925,182 +1008,3 @@ public sealed interface PluginsAction {
 /** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable
 public class PluginsListParams
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class PluginsListResult(
-    @SerialName("plugins")
-    public val plugins: List<LegacyPluginRow>,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = PluginsManageParams.Serializer::class)
-public data class PluginsManageParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val action: PluginsAction? = null,
-    public val key: Patch<String> = Patch.Absent,
-    public val name: Patch<String> = Patch.Absent,
-    public val enable: Patch<Boolean> = Patch.Absent,
-    public val identifier: Patch<String> = Patch.Absent,
-    public val repo: Patch<String> = Patch.Absent,
-    public val catalogName: Patch<String> = Patch.Absent,
-    public val force: Patch<Boolean> = Patch.Absent,
-    public val ref: Patch<String> = Patch.Absent,
-    public val acceptCapabilities: Patch<Boolean> = Patch.Absent,
-    public val values: Patch<Map<String, JsonElement>> = Patch.Absent,
-    public val names: Patch<List<String>> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<PluginsManageParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): PluginsManageParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("PluginsManageParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("PluginsManageParams requires an object")
-            return PluginsManageParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                action = input["action"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<PluginsAction>(it) },
-                key = when (val raw = input["key"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                name = when (val raw = input["name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                enable = when (val raw = input["enable"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-                identifier = when (val raw = input["identifier"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                repo = when (val raw = input["repo"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                catalogName = when (val raw = input["catalog_name"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                force = when (val raw = input["force"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-                ref = when (val raw = input["ref"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                acceptCapabilities = when (val raw = input["accept_capabilities"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-                values = when (val raw = input["values"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Map<String, JsonElement>>(raw)) },
-                names = when (val raw = input["names"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<List<String>>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: PluginsManageParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("PluginsManageParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            value.action?.let { output["action"] = json.encodeToJsonElement(it) }
-            when (val patch = value.key) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["key"] = JsonNull
-                is Patch.Value -> output["key"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.name) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["name"] = JsonNull
-                is Patch.Value -> output["name"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.enable) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["enable"] = JsonNull
-                is Patch.Value -> output["enable"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.identifier) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["identifier"] = JsonNull
-                is Patch.Value -> output["identifier"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.repo) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["repo"] = JsonNull
-                is Patch.Value -> output["repo"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.catalogName) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["catalog_name"] = JsonNull
-                is Patch.Value -> output["catalog_name"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.force) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["force"] = JsonNull
-                is Patch.Value -> output["force"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.ref) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["ref"] = JsonNull
-                is Patch.Value -> output["ref"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.acceptCapabilities) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["accept_capabilities"] = JsonNull
-                is Patch.Value -> output["accept_capabilities"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.values) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["values"] = JsonNull
-                is Patch.Value -> output["values"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.names) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["names"] = JsonNull
-                is Patch.Value -> output["names"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class PluginsManageResult(
-    @SerialName("plugins")
-    public val plugins: List<AgentPluginRow>? = null,
-    @SerialName("user_count")
-    public val userCount: Long? = null,
-    @SerialName("bundled_count")
-    public val bundledCount: Long? = null,
-    @SerialName("ok")
-    public val ok: Boolean? = null,
-    @SerialName("unchanged")
-    public val unchanged: Boolean? = null,
-    @SerialName("restart_required")
-    public val restartRequired: Boolean? = null,
-    @SerialName("gateway_reloaded")
-    public val gatewayReloaded: Boolean? = null,
-    @SerialName("activation")
-    public val activation: PluginActivation? = null,
-    @SerialName("cleared_memory_provider")
-    public val clearedMemoryProvider: Boolean? = null,
-    @SerialName("name")
-    public val name: String? = null,
-    @SerialName("plugin")
-    public val plugin: AgentPluginRow? = null,
-    @SerialName("plugin_name")
-    public val pluginName: String? = null,
-    @SerialName("warnings")
-    public val warnings: List<String>? = null,
-    @SerialName("missing_env")
-    public val missingEnv: List<String>? = null,
-    @SerialName("python_dependencies")
-    public val pythonDependencies: List<String>? = null,
-    @SerialName("known_issues")
-    public val knownIssues: List<String>? = null,
-    @SerialName("after_install_path")
-    public val afterInstallPath: String? = null,
-    @SerialName("enabled")
-    public val enabled: Boolean? = null,
-    @SerialName("sha")
-    public val sha: String? = null,
-    @SerialName("consent_required")
-    public val consentRequired: Boolean? = null,
-    @SerialName("delta")
-    public val delta: Map<String, List<String>>? = null,
-    @SerialName("delta_lines")
-    public val deltaLines: List<String>? = null,
-    @SerialName("error")
-    public val error: String? = null,
-    @SerialName("written")
-    public val written: List<String>? = null,
-    @SerialName("onboarding")
-    public val onboarding: List<OnboardingCatalogPlugin>? = null,
-    @SerialName("presence")
-    public val presence: List<CatalogPluginPresence>? = null,
-)

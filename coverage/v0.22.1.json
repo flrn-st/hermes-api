@@ -116,6 +116,22 @@
       "kind": "gateway_method",
       "live_kotlin": false,
       "live_swift": false,
+      "name": "billing.keep_going_on_credits",
+      "open": [
+        "gateway:BillingMutationResult.payload"
+      ],
+      "proposed": null,
+      "typed": false
+    },
+    {
+      "complete": false,
+      "decode": false,
+      "exempt": null,
+      "fixture": false,
+      "generated": true,
+      "kind": "gateway_method",
+      "live_kotlin": false,
+      "live_swift": false,
       "name": "billing.state",
       "open": [],
       "proposed": "Needs a Nous billing account and the billing portal.",
@@ -11176,9 +11192,9 @@
       "decode": 138,
       "exempt": 0,
       "fixture": 138,
-      "generated": 257,
+      "generated": 258,
       "live_both": 138,
-      "total": 257,
+      "total": 258,
       "typed": 195
     },
     "rest": {
@@ -11202,5 +11218,5 @@
       "typed": 16
     }
   },
-  "total": 736
+  "total": 737
 }

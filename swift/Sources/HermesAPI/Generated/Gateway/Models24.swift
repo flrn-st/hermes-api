@@ -2,6 +2,145 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public enum SubscriptionChangeEffect: Codable, Sendable, Hashable, RawRepresentable {
+    case chargeNow
+    case scheduled
+    case noOp
+    case blocked
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "charge_now": self = .chargeNow
+        case "scheduled": self = .scheduled
+        case "no_op": self = .noOp
+        case "blocked": self = .blocked
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .chargeNow: "charge_now"
+        case .scheduled: "scheduled"
+        case .noOp: "no_op"
+        case .blocked: "blocked"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "charge_now": self = .chargeNow
+        case "scheduled": self = .scheduled
+        case "no_op": self = .noOp
+        case "blocked": self = .blocked
+        default: self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct SubscriptionChangeParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var subscriptionTypeId: Patch<String>
+    public var cancel: Bool?
+
+    public init(profile: Patch<String> = .absent, subscriptionTypeId: Patch<String> = .absent, cancel: Bool? = nil) {
+        self.profile = profile
+        self.subscriptionTypeId = subscriptionTypeId
+        self.cancel = cancel
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case subscriptionTypeId = "subscription_type_id"
+        case cancel = "cancel"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        if !container.contains(.subscriptionTypeId) {
+            subscriptionTypeId = .absent
+        } else if try container.decodeNil(forKey: .subscriptionTypeId) {
+            subscriptionTypeId = .null
+        } else {
+            subscriptionTypeId = .value(try container.decode(String.self, forKey: .subscriptionTypeId))
+        }
+        cancel = try container.decodeIfPresent(Bool.self, forKey: .cancel)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        switch subscriptionTypeId {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .subscriptionTypeId)
+        case .value(let value): try container.encode(value, forKey: .subscriptionTypeId)
+        }
+        try container.encodeIfPresent(cancel, forKey: .cancel)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public enum SubscriptionContext: Codable, Sendable, Hashable, RawRepresentable {
+    case personal
+    case team
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "personal": self = .personal
+        case "team": self = .team
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .personal: "personal"
+        case .team: "team"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "personal": self = .personal
+        case "team": self = .team
+        default: self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct SubscriptionPreviewParams: Codable, Sendable, Hashable {
     public var profile: Patch<String>
     public var subscriptionTypeId: Patch<String>
@@ -199,8 +338,9 @@ public struct SubscriptionStateResult: Codable, Sendable, Hashable {
     public var portalUrl: String?
     public var error: String?
     public var usage: UsageModel?
+    public var planUsage: PlanUsage?
 
-    public init(ok: Bool, loggedIn: Bool, isAdmin: Bool? = nil, canChangePlan: Bool? = nil, orgName: String? = nil, orgId: String? = nil, role: String? = nil, context: SubscriptionContext? = nil, current: CurrentSubscription? = nil, tiers: [SubscriptionTierOption]? = nil, portalUrl: String? = nil, error: String? = nil, usage: UsageModel? = nil) {
+    public init(ok: Bool, loggedIn: Bool, isAdmin: Bool? = nil, canChangePlan: Bool? = nil, orgName: String? = nil, orgId: String? = nil, role: String? = nil, context: SubscriptionContext? = nil, current: CurrentSubscription? = nil, tiers: [SubscriptionTierOption]? = nil, portalUrl: String? = nil, error: String? = nil, usage: UsageModel? = nil, planUsage: PlanUsage? = nil) {
         self.ok = ok
         self.loggedIn = loggedIn
         self.isAdmin = isAdmin
@@ -214,6 +354,7 @@ public struct SubscriptionStateResult: Codable, Sendable, Hashable {
         self.portalUrl = portalUrl
         self.error = error
         self.usage = usage
+        self.planUsage = planUsage
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -230,6 +371,7 @@ public struct SubscriptionStateResult: Codable, Sendable, Hashable {
         case portalUrl = "portal_url"
         case error = "error"
         case usage = "usage"
+        case planUsage = "plan_usage"
     }
 
     public init(from decoder: Decoder) throws {
@@ -247,6 +389,7 @@ public struct SubscriptionStateResult: Codable, Sendable, Hashable {
         portalUrl = try container.decodeIfPresent(String.self, forKey: .portalUrl)
         error = try container.decodeIfPresent(String.self, forKey: .error)
         usage = try container.decodeIfPresent(UsageModel.self, forKey: .usage)
+        planUsage = try container.decodeIfPresent(PlanUsage.self, forKey: .planUsage)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -264,6 +407,7 @@ public struct SubscriptionStateResult: Codable, Sendable, Hashable {
         try container.encodeIfPresent(portalUrl, forKey: .portalUrl)
         try container.encodeIfPresent(error, forKey: .error)
         try container.encodeIfPresent(usage, forKey: .usage)
+        try container.encodeIfPresent(planUsage, forKey: .planUsage)
     }
 }
 
@@ -1373,131 +1517,5 @@ public struct ToolShowSection: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(name, forKey: .name)
         try container.encode(tools, forKey: .tools)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ToolStartPayload: Codable, Sendable, Hashable {
-    public var toolId: String
-    public var name: String
-    public var context: String?
-    public var args: [String: JSONValue]?
-    public var argsText: String?
-    public var preview: String?
-    public var labels: [ToolLabel]?
-
-    public init(toolId: String, name: String, context: String? = nil, args: [String: JSONValue]? = nil, argsText: String? = nil, preview: String? = nil, labels: [ToolLabel]? = nil) {
-        self.toolId = toolId
-        self.name = name
-        self.context = context
-        self.args = args
-        self.argsText = argsText
-        self.preview = preview
-        self.labels = labels
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case toolId = "tool_id"
-        case name = "name"
-        case context = "context"
-        case args = "args"
-        case argsText = "args_text"
-        case preview = "preview"
-        case labels = "labels"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        toolId = try container.decode(String.self, forKey: .toolId)
-        name = try container.decode(String.self, forKey: .name)
-        context = try container.decodeIfPresent(String.self, forKey: .context)
-        args = try container.decodeIfPresent([String: JSONValue].self, forKey: .args)
-        argsText = try container.decodeIfPresent(String.self, forKey: .argsText)
-        preview = try container.decodeIfPresent(String.self, forKey: .preview)
-        labels = try container.decodeIfPresent([ToolLabel].self, forKey: .labels)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(toolId, forKey: .toolId)
-        try container.encode(name, forKey: .name)
-        try container.encodeIfPresent(context, forKey: .context)
-        try container.encodeIfPresent(args, forKey: .args)
-        try container.encodeIfPresent(argsText, forKey: .argsText)
-        try container.encodeIfPresent(preview, forKey: .preview)
-        try container.encodeIfPresent(labels, forKey: .labels)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum ToolsAction: Codable, Sendable, Hashable, RawRepresentable {
-    case enable
-    case disable
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "enable": self = .enable
-        case "disable": self = .disable
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .enable: "enable"
-        case .disable: "disable"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "enable": self = .enable
-        case "disable": self = .disable
-        default: self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ToolsChange: Codable, Sendable, Hashable {
-    public var type: ToolsChangeType
-    public var connector: String
-    /// Must have at most 2000 items.
-    public var disabledTools: [String]
-
-    public init(type: ToolsChangeType, connector: String, disabledTools: [String]) {
-        self.type = type
-        self.connector = connector
-        self.disabledTools = disabledTools
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case type = "type"
-        case connector = "connector"
-        case disabledTools = "disabled_tools"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        type = try container.decode(ToolsChangeType.self, forKey: .type)
-        connector = try container.decode(String.self, forKey: .connector)
-        disabledTools = try container.decode([String].self, forKey: .disabledTools)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(connector, forKey: .connector)
-        try container.encode(disabledTools, forKey: .disabledTools)
     }
 }

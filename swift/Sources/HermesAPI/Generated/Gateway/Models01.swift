@@ -420,6 +420,44 @@ public enum BillingChargeStatusResultRetryAfter: Codable, Sendable, Hashable {
 }
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct BillingKeepGoingOnCreditsParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var enabled: Bool?
+
+    public init(profile: Patch<String> = .absent, enabled: Bool? = nil) {
+        self.profile = profile
+        self.enabled = enabled
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case enabled = "enabled"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encodeIfPresent(enabled, forKey: .enabled)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct BillingMonthlyCap: Codable, Sendable, Hashable {
     public var limitUsd: String?
     public var limitDisplay: String
@@ -718,11 +756,13 @@ public struct BillingStateResult: Codable, Sendable, Hashable {
     public var paymentMethod: BillingPaymentMethod?
     public var monthlyCap: BillingMonthlyCap?
     public var autoReload: BillingAutoReload?
+    public var keepGoingOnCredits: Bool?
     public var portalUrl: String?
     public var error: String?
     public var usage: UsageModel?
+    public var planUsage: PlanUsage?
 
-    public init(ok: Bool, loggedIn: Bool, freeTierAccount: Bool? = nil, freeTierModel: String? = nil, orgName: String? = nil, orgSlug: String? = nil, role: String? = nil, isAdmin: Bool? = nil, canChangePlan: Bool? = nil, canCharge: Bool? = nil, balanceUsd: String? = nil, balanceDisplay: String? = nil, cliBillingEnabled: Bool? = nil, chargePresets: [String]? = nil, chargePresetsDisplay: [String]? = nil, minUsd: String? = nil, maxUsd: String? = nil, card: BillingCardInfo? = nil, paymentMethod: BillingPaymentMethod? = nil, monthlyCap: BillingMonthlyCap? = nil, autoReload: BillingAutoReload? = nil, portalUrl: String? = nil, error: String? = nil, usage: UsageModel? = nil) {
+    public init(ok: Bool, loggedIn: Bool, freeTierAccount: Bool? = nil, freeTierModel: String? = nil, orgName: String? = nil, orgSlug: String? = nil, role: String? = nil, isAdmin: Bool? = nil, canChangePlan: Bool? = nil, canCharge: Bool? = nil, balanceUsd: String? = nil, balanceDisplay: String? = nil, cliBillingEnabled: Bool? = nil, chargePresets: [String]? = nil, chargePresetsDisplay: [String]? = nil, minUsd: String? = nil, maxUsd: String? = nil, card: BillingCardInfo? = nil, paymentMethod: BillingPaymentMethod? = nil, monthlyCap: BillingMonthlyCap? = nil, autoReload: BillingAutoReload? = nil, keepGoingOnCredits: Bool? = nil, portalUrl: String? = nil, error: String? = nil, usage: UsageModel? = nil, planUsage: PlanUsage? = nil) {
         self.ok = ok
         self.loggedIn = loggedIn
         self.freeTierAccount = freeTierAccount
@@ -744,9 +784,11 @@ public struct BillingStateResult: Codable, Sendable, Hashable {
         self.paymentMethod = paymentMethod
         self.monthlyCap = monthlyCap
         self.autoReload = autoReload
+        self.keepGoingOnCredits = keepGoingOnCredits
         self.portalUrl = portalUrl
         self.error = error
         self.usage = usage
+        self.planUsage = planUsage
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -771,9 +813,11 @@ public struct BillingStateResult: Codable, Sendable, Hashable {
         case paymentMethod = "payment_method"
         case monthlyCap = "monthly_cap"
         case autoReload = "auto_reload"
+        case keepGoingOnCredits = "keep_going_on_credits"
         case portalUrl = "portal_url"
         case error = "error"
         case usage = "usage"
+        case planUsage = "plan_usage"
     }
 
     public init(from decoder: Decoder) throws {
@@ -799,9 +843,11 @@ public struct BillingStateResult: Codable, Sendable, Hashable {
         paymentMethod = try container.decodeIfPresent(BillingPaymentMethod.self, forKey: .paymentMethod)
         monthlyCap = try container.decodeIfPresent(BillingMonthlyCap.self, forKey: .monthlyCap)
         autoReload = try container.decodeIfPresent(BillingAutoReload.self, forKey: .autoReload)
+        keepGoingOnCredits = try container.decodeIfPresent(Bool.self, forKey: .keepGoingOnCredits)
         portalUrl = try container.decodeIfPresent(String.self, forKey: .portalUrl)
         error = try container.decodeIfPresent(String.self, forKey: .error)
         usage = try container.decodeIfPresent(UsageModel.self, forKey: .usage)
+        planUsage = try container.decodeIfPresent(PlanUsage.self, forKey: .planUsage)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -827,9 +873,11 @@ public struct BillingStateResult: Codable, Sendable, Hashable {
         try container.encodeIfPresent(paymentMethod, forKey: .paymentMethod)
         try container.encodeIfPresent(monthlyCap, forKey: .monthlyCap)
         try container.encodeIfPresent(autoReload, forKey: .autoReload)
+        try container.encodeIfPresent(keepGoingOnCredits, forKey: .keepGoingOnCredits)
         try container.encodeIfPresent(portalUrl, forKey: .portalUrl)
         try container.encodeIfPresent(error, forKey: .error)
         try container.encodeIfPresent(usage, forKey: .usage)
+        try container.encodeIfPresent(planUsage, forKey: .planUsage)
     }
 }
 
@@ -1577,78 +1625,5 @@ public struct BrowserControllerRegisterResult: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(scope, forKey: .scope)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct BrowserControllerResultParams: Codable, Sendable, Hashable {
-    public var sessionId: String
-    public var commandId: String
-    public var ok: Patch<JSONValue>
-    public var result: Patch<JSONValue>
-    public var error: Patch<JSONValue>
-
-    public init(sessionId: String, commandId: String, ok: Patch<JSONValue> = .absent, result: Patch<JSONValue> = .absent, error: Patch<JSONValue> = .absent) {
-        self.sessionId = sessionId
-        self.commandId = commandId
-        self.ok = ok
-        self.result = result
-        self.error = error
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case sessionId = "session_id"
-        case commandId = "command_id"
-        case ok = "ok"
-        case result = "result"
-        case error = "error"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-        commandId = try container.decode(String.self, forKey: .commandId)
-        if !container.contains(.ok) {
-            ok = .absent
-        } else if try container.decodeNil(forKey: .ok) {
-            ok = .null
-        } else {
-            ok = .value(try container.decode(JSONValue.self, forKey: .ok))
-        }
-        if !container.contains(.result) {
-            result = .absent
-        } else if try container.decodeNil(forKey: .result) {
-            result = .null
-        } else {
-            result = .value(try container.decode(JSONValue.self, forKey: .result))
-        }
-        if !container.contains(.error) {
-            error = .absent
-        } else if try container.decodeNil(forKey: .error) {
-            error = .null
-        } else {
-            error = .value(try container.decode(JSONValue.self, forKey: .error))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(sessionId, forKey: .sessionId)
-        try container.encode(commandId, forKey: .commandId)
-        switch ok {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .ok)
-        case .value(let value): try container.encode(value, forKey: .ok)
-        }
-        switch result {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .result)
-        case .value(let value): try container.encode(value, forKey: .result)
-        }
-        switch error {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .error)
-        case .value(let value): try container.encode(value, forKey: .error)
-        }
     }
 }

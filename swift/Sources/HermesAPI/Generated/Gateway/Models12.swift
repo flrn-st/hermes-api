@@ -2,6 +2,39 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct McpServersAddResult: Codable, Sendable, Hashable {
+    public var ok: Bool
+    public var name: String
+    public var server: McpServerSummary
+
+    public init(ok: Bool, name: String, server: McpServerSummary) {
+        self.ok = ok
+        self.name = name
+        self.server = server
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case ok = "ok"
+        case name = "name"
+        case server = "server"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        ok = try container.decode(Bool.self, forKey: .ok)
+        name = try container.decode(String.self, forKey: .name)
+        server = try container.decode(McpServerSummary.self, forKey: .server)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(ok, forKey: .ok)
+        try container.encode(name, forKey: .name)
+        try container.encode(server, forKey: .server)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct McpServersListResult: Codable, Sendable, Hashable {
     public var servers: [McpServerSummary]
 
@@ -931,11 +964,13 @@ public struct ModelOptionProvider: Codable, Sendable, Hashable {
     public var freeTierPending: Bool?
     public var freeTierRow: Bool?
     public var unavailableModels: [String]?
+    public var planUsage: PlanUsage?
+    public var usageLevels: [String: String]?
     public var limit: ProviderLimit?
     public var usage: ProviderUsage?
     public var additionalProperties: [String: JSONValue]
 
-    public init(slug: String, name: String, models: [String]? = nil, totalModels: Int? = nil, isCurrent: Bool? = nil, isUserDefined: Bool? = nil, source: String? = nil, aliases: [String]? = nil, apiUrl: String? = nil, authType: String? = nil, authenticated: Bool? = nil, keyEnv: String? = nil, warning: String? = nil, featuredModels: [String]? = nil, capabilities: [String: ModelCapabilities]? = nil, pricing: [String: ModelPricing]? = nil, pricingPending: Bool? = nil, freeTier: Bool? = nil, freeTierPending: Bool? = nil, freeTierRow: Bool? = nil, unavailableModels: [String]? = nil, limit: ProviderLimit? = nil, usage: ProviderUsage? = nil, additionalProperties: [String: JSONValue] = [:]) {
+    public init(slug: String, name: String, models: [String]? = nil, totalModels: Int? = nil, isCurrent: Bool? = nil, isUserDefined: Bool? = nil, source: String? = nil, aliases: [String]? = nil, apiUrl: String? = nil, authType: String? = nil, authenticated: Bool? = nil, keyEnv: String? = nil, warning: String? = nil, featuredModels: [String]? = nil, capabilities: [String: ModelCapabilities]? = nil, pricing: [String: ModelPricing]? = nil, pricingPending: Bool? = nil, freeTier: Bool? = nil, freeTierPending: Bool? = nil, freeTierRow: Bool? = nil, unavailableModels: [String]? = nil, planUsage: PlanUsage? = nil, usageLevels: [String: String]? = nil, limit: ProviderLimit? = nil, usage: ProviderUsage? = nil, additionalProperties: [String: JSONValue] = [:]) {
         self.slug = slug
         self.name = name
         self.models = models
@@ -957,6 +992,8 @@ public struct ModelOptionProvider: Codable, Sendable, Hashable {
         self.freeTierPending = freeTierPending
         self.freeTierRow = freeTierRow
         self.unavailableModels = unavailableModels
+        self.planUsage = planUsage
+        self.usageLevels = usageLevels
         self.limit = limit
         self.usage = usage
         self.additionalProperties = additionalProperties
@@ -984,6 +1021,8 @@ public struct ModelOptionProvider: Codable, Sendable, Hashable {
         case freeTierPending = "free_tier_pending"
         case freeTierRow = "free_tier_row"
         case unavailableModels = "unavailable_models"
+        case planUsage = "plan_usage"
+        case usageLevels = "usage_levels"
         case limit = "limit"
         case usage = "usage"
     }
@@ -1011,10 +1050,12 @@ public struct ModelOptionProvider: Codable, Sendable, Hashable {
         freeTierPending = try container.decodeIfPresent(Bool.self, forKey: .freeTierPending)
         freeTierRow = try container.decodeIfPresent(Bool.self, forKey: .freeTierRow)
         unavailableModels = try container.decodeIfPresent([String].self, forKey: .unavailableModels)
+        planUsage = try container.decodeIfPresent(PlanUsage.self, forKey: .planUsage)
+        usageLevels = try container.decodeIfPresent([String: String].self, forKey: .usageLevels)
         limit = try container.decodeIfPresent(ProviderLimit.self, forKey: .limit)
         usage = try container.decodeIfPresent(ProviderUsage.self, forKey: .usage)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "limit", "usage"]
+        let known: Set<String> = ["slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "plan_usage", "usage_levels", "limit", "usage"]
         var extra: [String: JSONValue] = [:]
         for key in dynamic.allKeys where !known.contains(key.stringValue) {
             extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
@@ -1045,10 +1086,12 @@ public struct ModelOptionProvider: Codable, Sendable, Hashable {
         try container.encodeIfPresent(freeTierPending, forKey: .freeTierPending)
         try container.encodeIfPresent(freeTierRow, forKey: .freeTierRow)
         try container.encodeIfPresent(unavailableModels, forKey: .unavailableModels)
+        try container.encodeIfPresent(planUsage, forKey: .planUsage)
+        try container.encodeIfPresent(usageLevels, forKey: .usageLevels)
         try container.encodeIfPresent(limit, forKey: .limit)
         try container.encodeIfPresent(usage, forKey: .usage)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
-        let known: Set<String> = ["slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "limit", "usage"]
+        let known: Set<String> = ["slug", "name", "models", "total_models", "is_current", "is_user_defined", "source", "aliases", "api_url", "auth_type", "authenticated", "key_env", "warning", "featured_models", "capabilities", "pricing", "pricing_pending", "free_tier", "free_tier_pending", "free_tier_row", "unavailable_models", "plan_usage", "usage_levels", "limit", "usage"]
         for (key, value) in additionalProperties {
             guard !known.contains(key) else {
                 throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
@@ -1473,44 +1516,5 @@ public struct OnboardingEndedPayload: Codable, Sendable, Hashable {
         try container.encode(runId, forKey: .runId)
         try container.encode(storedSessionId, forKey: .storedSessionId)
         try container.encode(outcome, forKey: .outcome)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum OnboardingFactsSource: Codable, Sendable, Hashable, RawRepresentable {
-    case local
-    case remote
-    case unknown(String)
-
-    /// Values this release does not list become `.unknown`.
-    public init(rawValue: String) {
-        switch rawValue {
-        case "local": self = .local
-        case "remote": self = .remote
-        default: self = .unknown(rawValue)
-        }
-    }
-
-    /// The value on the wire.
-    public var rawValue: String {
-        switch self {
-        case .local: "local"
-        case .remote: "remote"
-        case .unknown(let raw): raw
-        }
-    }
-
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "local": self = .local
-        case "remote": self = .remote
-        default: self = .unknown(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }

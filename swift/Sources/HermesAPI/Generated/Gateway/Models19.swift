@@ -2,6 +2,104 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct RoomTombstone: Codable, Sendable, Hashable {
+    public var roomId: String
+    public var disbandedAt: Double
+    public var idempotent: Bool
+    public var historyExpired: Bool?
+    public var event: RoomEvent?
+
+    public init(roomId: String, disbandedAt: Double, idempotent: Bool, historyExpired: Bool? = nil, event: RoomEvent? = nil) {
+        self.roomId = roomId
+        self.disbandedAt = disbandedAt
+        self.idempotent = idempotent
+        self.historyExpired = historyExpired
+        self.event = event
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case roomId = "room_id"
+        case disbandedAt = "disbanded_at"
+        case idempotent = "idempotent"
+        case historyExpired = "history_expired"
+        case event = "event"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        roomId = try container.decode(String.self, forKey: .roomId)
+        disbandedAt = try container.decode(Double.self, forKey: .disbandedAt)
+        idempotent = try container.decode(Bool.self, forKey: .idempotent)
+        historyExpired = try container.decodeIfPresent(Bool.self, forKey: .historyExpired)
+        event = try container.decodeIfPresent(RoomEvent.self, forKey: .event)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(roomId, forKey: .roomId)
+        try container.encode(disbandedAt, forKey: .disbandedAt)
+        try container.encode(idempotent, forKey: .idempotent)
+        try container.encodeIfPresent(historyExpired, forKey: .historyExpired)
+        try container.encodeIfPresent(event, forKey: .event)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct RuntimeDescribeParams: Codable, Sendable, Hashable {
+
+    public init() {
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct RuntimeDescribeResult: Codable, Sendable, Hashable {
+    public var instanceId: String
+    public var profileId: String
+    public var authorityEpoch: Int
+    public var capabilities: [String]
+    public var sessionCreate: SessionCreateDescriptor
+    public var skin: SkinPayload?
+
+    public init(instanceId: String, profileId: String, authorityEpoch: Int, capabilities: [String], sessionCreate: SessionCreateDescriptor, skin: SkinPayload? = nil) {
+        self.instanceId = instanceId
+        self.profileId = profileId
+        self.authorityEpoch = authorityEpoch
+        self.capabilities = capabilities
+        self.sessionCreate = sessionCreate
+        self.skin = skin
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case instanceId = "instance_id"
+        case profileId = "profile_id"
+        case authorityEpoch = "authority_epoch"
+        case capabilities = "capabilities"
+        case sessionCreate = "session_create"
+        case skin = "skin"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        instanceId = try container.decode(String.self, forKey: .instanceId)
+        profileId = try container.decode(String.self, forKey: .profileId)
+        authorityEpoch = try container.decode(Int.self, forKey: .authorityEpoch)
+        capabilities = try container.decode([String].self, forKey: .capabilities)
+        sessionCreate = try container.decode(SessionCreateDescriptor.self, forKey: .sessionCreate)
+        skin = try container.decodeIfPresent(SkinPayload.self, forKey: .skin)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(instanceId, forKey: .instanceId)
+        try container.encode(profileId, forKey: .profileId)
+        try container.encode(authorityEpoch, forKey: .authorityEpoch)
+        try container.encode(capabilities, forKey: .capabilities)
+        try container.encode(sessionCreate, forKey: .sessionCreate)
+        try container.encodeIfPresent(skin, forKey: .skin)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct SecretRequestParams: Codable, Sendable, Hashable {
     public var sessionId: String
     public var envVar: String
@@ -1714,104 +1812,5 @@ public struct SessionControlUpdatePayload: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(control, forKey: .control)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SessionCorrectionParams: Codable, Sendable, Hashable {
-    public var sessionId: String
-    public var profile: Patch<String>
-    public var text: String
-
-    public init(sessionId: String, profile: Patch<String> = .absent, text: String) {
-        self.sessionId = sessionId
-        self.profile = profile
-        self.text = text
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case sessionId = "session_id"
-        case profile = "profile"
-        case text = "text"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        text = try container.decode(String.self, forKey: .text)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(sessionId, forKey: .sessionId)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-        try container.encode(text, forKey: .text)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SessionCorrectionResult: Codable, Sendable, Hashable {
-    public var status: CorrectionStatus
-    public var text: String
-
-    public init(status: CorrectionStatus, text: String) {
-        self.status = status
-        self.text = text
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case status = "status"
-        case text = "text"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        status = try container.decode(CorrectionStatus.self, forKey: .status)
-        text = try container.decode(String.self, forKey: .text)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(status, forKey: .status)
-        try container.encode(text, forKey: .text)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct SessionCreateDescriptor: Codable, Sendable, Hashable {
-    public var sources: [String]
-    public var parameters: [String]
-
-    public init(sources: [String], parameters: [String]) {
-        self.sources = sources
-        self.parameters = parameters
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case sources = "sources"
-        case parameters = "parameters"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        sources = try container.decode([String].self, forKey: .sources)
-        parameters = try container.decode([String].self, forKey: .parameters)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(sources, forKey: .sources)
-        try container.encode(parameters, forKey: .parameters)
     }
 }

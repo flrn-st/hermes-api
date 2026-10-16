@@ -9,6 +9,201 @@ import hermes.api.runtime.EmptyObject
 import hermes.api.runtime.Patch
 
 /** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ProfilesCreateParams.Serializer::class)
+public data class ProfilesCreateParams(
+    public val profile: Patch<String> = Patch.Absent,
+    public val name: String,
+    public val description: Patch<String> = Patch.Absent,
+    public val cloneFrom: Patch<String> = Patch.Absent,
+    public val cloneAll: Patch<ProfilesCreateParamsCloneAll> = Patch.Absent,
+    public val cloneChannels: Patch<ProfilesCreateParamsCloneChannels> = Patch.Absent,
+    public val noSkills: Patch<ProfilesCreateParamsNoSkills> = Patch.Absent,
+    public val noAlias: Patch<ProfilesCreateParamsNoAlias> = Patch.Absent,
+    public val soul: Patch<String> = Patch.Absent,
+    public val model: Patch<String> = Patch.Absent,
+    public val provider: Patch<String> = Patch.Absent,
+    public val shareAuth: Patch<ProfilesCreateParamsShareAuth> = Patch.Absent,
+    public val mirrorCredentials: Patch<ProfilesCreateParamsMirrorCredentials> = Patch.Absent,
+)
+{
+    public object Serializer : KSerializer<ProfilesCreateParams> {
+        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ProfilesCreateParams {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ProfilesCreateParams requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement() as? JsonObject
+                ?: throw SerializationException("ProfilesCreateParams requires an object")
+            return ProfilesCreateParams(
+                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                name = json.decodeFromJsonElement<String>((input["name"] ?: throw SerializationException("Missing name"))),
+                description = when (val raw = input["description"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                cloneFrom = when (val raw = input["clone_from"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                cloneAll = when (val raw = input["clone_all"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ProfilesCreateParamsCloneAll>(raw)) },
+                cloneChannels = when (val raw = input["clone_channels"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ProfilesCreateParamsCloneChannels>(raw)) },
+                noSkills = when (val raw = input["no_skills"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ProfilesCreateParamsNoSkills>(raw)) },
+                noAlias = when (val raw = input["no_alias"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ProfilesCreateParamsNoAlias>(raw)) },
+                soul = when (val raw = input["soul"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                model = when (val raw = input["model"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                provider = when (val raw = input["provider"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                shareAuth = when (val raw = input["share_auth"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ProfilesCreateParamsShareAuth>(raw)) },
+                mirrorCredentials = when (val raw = input["mirror_credentials"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<ProfilesCreateParamsMirrorCredentials>(raw)) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: ProfilesCreateParams) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ProfilesCreateParams requires JSON")
+            val json = jsonEncoder.json
+            val output = mutableMapOf<String, JsonElement>()
+            when (val patch = value.profile) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["profile"] = JsonNull
+                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
+            }
+            output["name"] = json.encodeToJsonElement(value.name)
+            when (val patch = value.description) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["description"] = JsonNull
+                is Patch.Value -> output["description"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.cloneFrom) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["clone_from"] = JsonNull
+                is Patch.Value -> output["clone_from"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.cloneAll) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["clone_all"] = JsonNull
+                is Patch.Value -> output["clone_all"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.cloneChannels) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["clone_channels"] = JsonNull
+                is Patch.Value -> output["clone_channels"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.noSkills) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["no_skills"] = JsonNull
+                is Patch.Value -> output["no_skills"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.noAlias) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["no_alias"] = JsonNull
+                is Patch.Value -> output["no_alias"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.soul) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["soul"] = JsonNull
+                is Patch.Value -> output["soul"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.model) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["model"] = JsonNull
+                is Patch.Value -> output["model"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.provider) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["provider"] = JsonNull
+                is Patch.Value -> output["provider"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.shareAuth) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["share_auth"] = JsonNull
+                is Patch.Value -> output["share_auth"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.mirrorCredentials) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["mirror_credentials"] = JsonNull
+                is Patch.Value -> output["mirror_credentials"] = json.encodeToJsonElement(patch.value)
+            }
+            jsonEncoder.encodeJsonElement(JsonObject(output))
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ProfilesCreateParamsCloneAll.Serializer::class)
+public sealed interface ProfilesCreateParamsCloneAll {
+    public data class BooleanValue(public val value: Boolean) : ProfilesCreateParamsCloneAll
+    public data class StringValue(public val value: String) : ProfilesCreateParamsCloneAll
+
+    public object Serializer : KSerializer<ProfilesCreateParamsCloneAll> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ProfilesCreateParamsCloneAll {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ProfilesCreateParamsCloneAll requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return BooleanValue(json.decodeFromJsonElement<Boolean>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No ProfilesCreateParamsCloneAll variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: ProfilesCreateParamsCloneAll) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ProfilesCreateParamsCloneAll requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is BooleanValue -> json.encodeToJsonElement(value.value)
+                is StringValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
+@Serializable(with = ProfilesCreateParamsCloneChannels.Serializer::class)
+public sealed interface ProfilesCreateParamsCloneChannels {
+    public data class BooleanValue(public val value: Boolean) : ProfilesCreateParamsCloneChannels
+    public data class StringValue(public val value: String) : ProfilesCreateParamsCloneChannels
+
+    public object Serializer : KSerializer<ProfilesCreateParamsCloneChannels> {
+        override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): ProfilesCreateParamsCloneChannels {
+            val jsonDecoder = decoder as? JsonDecoder
+                ?: throw SerializationException("ProfilesCreateParamsCloneChannels requires JSON")
+            val json = jsonDecoder.json
+            val input = jsonDecoder.decodeJsonElement()
+            try {
+                return BooleanValue(json.decodeFromJsonElement<Boolean>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            try {
+                return StringValue(json.decodeFromJsonElement<String>(input))
+            } catch (_: SerializationException) {
+                // Try the next contract variant.
+            }
+            throw SerializationException("No ProfilesCreateParamsCloneChannels variant matched")
+        }
+
+        override fun serialize(encoder: Encoder, value: ProfilesCreateParamsCloneChannels) {
+            val jsonEncoder = encoder as? JsonEncoder
+                ?: throw SerializationException("ProfilesCreateParamsCloneChannels requires JSON")
+            val json = jsonEncoder.json
+            val element = when (value) {
+                is BooleanValue -> json.encodeToJsonElement(value.value)
+                is StringValue -> json.encodeToJsonElement(value.value)
+            }
+            jsonEncoder.encodeJsonElement(element)
+        }
+    }
+}
+
+/** Generated from the Hermes gateway contract. Do not edit. */
 @Serializable(with = ProfilesCreateParamsMirrorCredentials.Serializer::class)
 public sealed interface ProfilesCreateParamsMirrorCredentials {
     public data class BooleanValue(public val value: Boolean) : ProfilesCreateParamsMirrorCredentials
@@ -1093,66 +1288,4 @@ public data class ProjectsDiscoverReposResult(
     public val repos: List<DiscoveredRepo>,
     @SerialName("discovery_policy")
     public val discoveryPolicy: RepoDiscoveryPolicy? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable(with = ProjectsForCwdParams.Serializer::class)
-public data class ProjectsForCwdParams(
-    public val profile: Patch<String> = Patch.Absent,
-    public val cwd: Patch<String> = Patch.Absent,
-)
-{
-    public object Serializer : KSerializer<ProjectsForCwdParams> {
-        override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
-
-        override fun deserialize(decoder: Decoder): ProjectsForCwdParams {
-            val jsonDecoder = decoder as? JsonDecoder
-                ?: throw SerializationException("ProjectsForCwdParams requires JSON")
-            val json = jsonDecoder.json
-            val input = jsonDecoder.decodeJsonElement() as? JsonObject
-                ?: throw SerializationException("ProjectsForCwdParams requires an object")
-            return ProjectsForCwdParams(
-                profile = when (val raw = input["profile"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-                cwd = when (val raw = input["cwd"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
-            )
-        }
-
-        override fun serialize(encoder: Encoder, value: ProjectsForCwdParams) {
-            val jsonEncoder = encoder as? JsonEncoder
-                ?: throw SerializationException("ProjectsForCwdParams requires JSON")
-            val json = jsonEncoder.json
-            val output = mutableMapOf<String, JsonElement>()
-            when (val patch = value.profile) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["profile"] = JsonNull
-                is Patch.Value -> output["profile"] = json.encodeToJsonElement(patch.value)
-            }
-            when (val patch = value.cwd) {
-                Patch.Absent -> Unit
-                Patch.Null -> output["cwd"] = JsonNull
-                is Patch.Value -> output["cwd"] = json.encodeToJsonElement(patch.value)
-            }
-            jsonEncoder.encodeJsonElement(JsonObject(output))
-        }
-    }
-}
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ProjectsForCwdResult(
-    @SerialName("project")
-    public val project: ProjectInfo? = null,
-    @SerialName("cwd")
-    public val cwd: String,
-    @SerialName("branch")
-    public val branch: String? = null,
-)
-
-/** Generated from the Hermes gateway contract. Do not edit. */
-@Serializable
-public data class ProjectsPayload(
-    @SerialName("projects")
-    public val projects: List<ProjectInfo>,
-    @SerialName("active_id")
-    public val activeId: String? = null,
 )

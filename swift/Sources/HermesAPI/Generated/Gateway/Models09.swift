@@ -2,6 +2,69 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct GroupsApproveParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var roomId: String
+    public var memberId: String
+    public var taskId: String
+    public var executionGeneration: Int
+    public var choice: ApprovalChoice
+    public var requestId: String
+
+    public init(profile: Patch<String> = .absent, roomId: String, memberId: String, taskId: String, executionGeneration: Int, choice: ApprovalChoice, requestId: String) {
+        self.profile = profile
+        self.roomId = roomId
+        self.memberId = memberId
+        self.taskId = taskId
+        self.executionGeneration = executionGeneration
+        self.choice = choice
+        self.requestId = requestId
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case roomId = "room_id"
+        case memberId = "member_id"
+        case taskId = "task_id"
+        case executionGeneration = "execution_generation"
+        case choice = "choice"
+        case requestId = "request_id"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        roomId = try container.decode(String.self, forKey: .roomId)
+        memberId = try container.decode(String.self, forKey: .memberId)
+        taskId = try container.decode(String.self, forKey: .taskId)
+        executionGeneration = try container.decode(Int.self, forKey: .executionGeneration)
+        choice = try container.decode(ApprovalChoice.self, forKey: .choice)
+        requestId = try container.decode(String.self, forKey: .requestId)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encode(roomId, forKey: .roomId)
+        try container.encode(memberId, forKey: .memberId)
+        try container.encode(taskId, forKey: .taskId)
+        try container.encode(executionGeneration, forKey: .executionGeneration)
+        try container.encode(choice, forKey: .choice)
+        try container.encode(requestId, forKey: .requestId)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct GroupsApproveResult: Codable, Sendable, Hashable {
     public var approved: Bool?
     public var result: [String: JSONValue]
@@ -1680,43 +1743,5 @@ public struct GroupsSendParams: Codable, Sendable, Hashable {
         case .value(let value): try container.encode(value, forKey: .eventId)
         }
         try container.encode(payload, forKey: .payload)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct GroupsSendResult: Codable, Sendable, Hashable {
-    public var event: RoomEvent
-    public var clientEventId: String?
-    public var accepted: Bool?
-    public var driverStarted: Bool?
-
-    public init(event: RoomEvent, clientEventId: String? = nil, accepted: Bool? = nil, driverStarted: Bool? = nil) {
-        self.event = event
-        self.clientEventId = clientEventId
-        self.accepted = accepted
-        self.driverStarted = driverStarted
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case event = "event"
-        case clientEventId = "client_event_id"
-        case accepted = "accepted"
-        case driverStarted = "driver_started"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        event = try container.decode(RoomEvent.self, forKey: .event)
-        clientEventId = try container.decodeIfPresent(String.self, forKey: .clientEventId)
-        accepted = try container.decodeIfPresent(Bool.self, forKey: .accepted)
-        driverStarted = try container.decodeIfPresent(Bool.self, forKey: .driverStarted)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(event, forKey: .event)
-        try container.encodeIfPresent(clientEventId, forKey: .clientEventId)
-        try container.encodeIfPresent(accepted, forKey: .accepted)
-        try container.encodeIfPresent(driverStarted, forKey: .driverStarted)
     }
 }

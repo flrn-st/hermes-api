@@ -9,6 +9,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
+from tools.development_overlay import gateway_contract
 from tools.gen.schema_ir import (
     EnumDecl,
     Field,
@@ -264,7 +265,7 @@ def _render(graph: SchemaGraph) -> tuple[dict[Path, str], list[str]]:
 
 def generate(ref: str, *, check: bool = False) -> int:
     require_release(ref)
-    contract = json.loads((ROOT / "spec" / "out" / ref / "openrpc.json").read_text())
+    contract = gateway_contract(ref)
     graph = SchemaGraph(contract)
     outputs, symbols = _render(graph)
     manifest = ROOT / "spec" / "out" / ref / "generated-model-symbols.json"

@@ -2,6 +2,49 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public enum ClarifyResultOutcome: Codable, Sendable, Hashable, RawRepresentable {
+    case submitted
+    case timedOut
+    case cancelled
+    case unknown(String)
+
+    /// Values this release does not list become `.unknown`.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "submitted": self = .submitted
+        case "timed_out": self = .timedOut
+        case "cancelled": self = .cancelled
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    /// The value on the wire.
+    public var rawValue: String {
+        switch self {
+        case .submitted: "submitted"
+        case .timedOut: "timed_out"
+        case .cancelled: "cancelled"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "submitted": self = .submitted
+        case "timed_out": self = .timedOut
+        case "cancelled": self = .cancelled
+        default: self = .unknown(raw)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct CliExecParams: Codable, Sendable, Hashable {
     public var argv: [String]
     public var timeout: Patch<Int>
@@ -1601,32 +1644,5 @@ public struct ConnectionOperationParams: Codable, Sendable, Hashable {
         }
         try container.encode(owner, forKey: .owner)
         try container.encode(opId, forKey: .opId)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum ConnectionOperationParamsOwner: Codable, Sendable, Hashable {
-    case sessionOwner(SessionOwner)
-    case accountOwner(AccountOwner)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let object = try container.decode([String: JSONValue].self)
-        guard case .string(let tag) = object["type"] else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Missing discriminator type")
-        }
-        switch tag {
-        case "account": self = .accountOwner(try container.decode(AccountOwner.self))
-        case "session": self = .sessionOwner(try container.decode(SessionOwner.self))
-        default: throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown discriminator: \(tag)")
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .sessionOwner(let value): try container.encode(value)
-        case .accountOwner(let value): try container.encode(value)
-        }
     }
 }

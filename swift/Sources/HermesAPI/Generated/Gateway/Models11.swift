@@ -2,6 +2,69 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct LearningFramesParams: Codable, Sendable, Hashable {
+    public var cols: Patch<Int>
+    public var rows: Patch<Int>
+    public var frames: Patch<Int>
+
+    public init(cols: Patch<Int> = .absent, rows: Patch<Int> = .absent, frames: Patch<Int> = .absent) {
+        self.cols = cols
+        self.rows = rows
+        self.frames = frames
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case cols = "cols"
+        case rows = "rows"
+        case frames = "frames"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.cols) {
+            cols = .absent
+        } else if try container.decodeNil(forKey: .cols) {
+            cols = .null
+        } else {
+            cols = .value(try container.decode(Int.self, forKey: .cols))
+        }
+        if !container.contains(.rows) {
+            rows = .absent
+        } else if try container.decodeNil(forKey: .rows) {
+            rows = .null
+        } else {
+            rows = .value(try container.decode(Int.self, forKey: .rows))
+        }
+        if !container.contains(.frames) {
+            frames = .absent
+        } else if try container.decodeNil(forKey: .frames) {
+            frames = .null
+        } else {
+            frames = .value(try container.decode(Int.self, forKey: .frames))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch cols {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .cols)
+        case .value(let value): try container.encode(value, forKey: .cols)
+        }
+        switch rows {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .rows)
+        case .value(let value): try container.encode(value, forKey: .rows)
+        }
+        switch frames {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .frames)
+        case .value(let value): try container.encode(value, forKey: .frames)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct LearningFramesResult: Codable, Sendable, Hashable {
     public var frames: [LearningFrame]
     public var legend: [LearningLegendItem]
@@ -1743,38 +1806,5 @@ public struct McpServersAddParams: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .bearerToken)
         case .value(let value): try container.encode(value, forKey: .bearerToken)
         }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct McpServersAddResult: Codable, Sendable, Hashable {
-    public var ok: Bool
-    public var name: String
-    public var server: McpServerSummary
-
-    public init(ok: Bool, name: String, server: McpServerSummary) {
-        self.ok = ok
-        self.name = name
-        self.server = server
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case ok = "ok"
-        case name = "name"
-        case server = "server"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        ok = try container.decode(Bool.self, forKey: .ok)
-        name = try container.decode(String.self, forKey: .name)
-        server = try container.decode(McpServerSummary.self, forKey: .server)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(ok, forKey: .ok)
-        try container.encode(name, forKey: .name)
-        try container.encode(server, forKey: .server)
     }
 }

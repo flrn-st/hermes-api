@@ -2,6 +2,44 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct GroupsSendResult: Codable, Sendable, Hashable {
+    public var event: RoomEvent
+    public var clientEventId: String?
+    public var accepted: Bool?
+    public var driverStarted: Bool?
+
+    public init(event: RoomEvent, clientEventId: String? = nil, accepted: Bool? = nil, driverStarted: Bool? = nil) {
+        self.event = event
+        self.clientEventId = clientEventId
+        self.accepted = accepted
+        self.driverStarted = driverStarted
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case event = "event"
+        case clientEventId = "client_event_id"
+        case accepted = "accepted"
+        case driverStarted = "driver_started"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        event = try container.decode(RoomEvent.self, forKey: .event)
+        clientEventId = try container.decodeIfPresent(String.self, forKey: .clientEventId)
+        accepted = try container.decodeIfPresent(Bool.self, forKey: .accepted)
+        driverStarted = try container.decodeIfPresent(Bool.self, forKey: .driverStarted)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(event, forKey: .event)
+        try container.encodeIfPresent(clientEventId, forKey: .clientEventId)
+        try container.encodeIfPresent(accepted, forKey: .accepted)
+        try container.encodeIfPresent(driverStarted, forKey: .driverStarted)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct GroupsStateParams: Codable, Sendable, Hashable {
     public var profile: Patch<String>
     public var roomId: String
@@ -1531,68 +1569,5 @@ public struct LearningFrame: Codable, Sendable, Hashable {
         try container.encode(visible, forKey: .visible)
         try container.encode(grid, forKey: .grid)
         try container.encodeIfPresent(labels, forKey: .labels)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct LearningFramesParams: Codable, Sendable, Hashable {
-    public var cols: Patch<Int>
-    public var rows: Patch<Int>
-    public var frames: Patch<Int>
-
-    public init(cols: Patch<Int> = .absent, rows: Patch<Int> = .absent, frames: Patch<Int> = .absent) {
-        self.cols = cols
-        self.rows = rows
-        self.frames = frames
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case cols = "cols"
-        case rows = "rows"
-        case frames = "frames"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.cols) {
-            cols = .absent
-        } else if try container.decodeNil(forKey: .cols) {
-            cols = .null
-        } else {
-            cols = .value(try container.decode(Int.self, forKey: .cols))
-        }
-        if !container.contains(.rows) {
-            rows = .absent
-        } else if try container.decodeNil(forKey: .rows) {
-            rows = .null
-        } else {
-            rows = .value(try container.decode(Int.self, forKey: .rows))
-        }
-        if !container.contains(.frames) {
-            frames = .absent
-        } else if try container.decodeNil(forKey: .frames) {
-            frames = .null
-        } else {
-            frames = .value(try container.decode(Int.self, forKey: .frames))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch cols {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .cols)
-        case .value(let value): try container.encode(value, forKey: .cols)
-        }
-        switch rows {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .rows)
-        case .value(let value): try container.encode(value, forKey: .rows)
-        }
-        switch frames {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .frames)
-        case .value(let value): try container.encode(value, forKey: .frames)
-        }
     }
 }

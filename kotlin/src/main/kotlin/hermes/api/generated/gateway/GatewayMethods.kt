@@ -147,6 +147,11 @@ public class BillingMethods(private val caller: GatewayCaller) {
     public suspend fun chargeStatus(params: BillingChargeStatusParams): BillingChargeStatusResult =
         caller.call("billing.charge_status", params, serializer<BillingChargeStatusParams>(), serializer<BillingChargeStatusResult>())
     /**
+     * Window plans: turn 'Keep going on credits' on/off (billing:manage).
+     */
+    public suspend fun keepGoingOnCredits(params: BillingKeepGoingOnCreditsParams): BillingMutationResult =
+        caller.call("billing.keep_going_on_credits", params, serializer<BillingKeepGoingOnCreditsParams>(), serializer<BillingMutationResult>())
+    /**
      * Read-only billing view (no scope); the Nous free tier is answered locally without a portal call.
      */
     public suspend fun state(params: ProfileParams): BillingStateResult =

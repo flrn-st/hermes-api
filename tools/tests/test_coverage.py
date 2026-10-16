@@ -3,6 +3,7 @@ import json
 import pytest
 
 from tools.coverage import report
+from tools.development_overlay import gateway_contract
 from tools.fetch_spec import ROOT
 from tools.ref_policy import current_release
 
@@ -11,7 +12,7 @@ CURRENT = current_release()
 
 def test_coverage_accounts_for_every_tagged_operation() -> None:
     data = report(CURRENT)
-    contract = json.loads((ROOT / f"spec/out/{CURRENT}/openrpc.json").read_text())
+    contract = gateway_contract(CURRENT)
     openapi = json.loads((ROOT / f"spec/out/{CURRENT}/openapi.json").read_text())
     expected = {
         "gateway_method": len(contract["methods"]),

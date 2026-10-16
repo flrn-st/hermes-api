@@ -2,6 +2,44 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct ContextCategory: Codable, Sendable, Hashable {
+    public var color: String
+    public var id: String
+    public var label: String
+    public var tokens: Int
+
+    public init(color: String, id: String, label: String, tokens: Int) {
+        self.color = color
+        self.id = id
+        self.label = label
+        self.tokens = tokens
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case color = "color"
+        case id = "id"
+        case label = "label"
+        case tokens = "tokens"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        color = try container.decode(String.self, forKey: .color)
+        id = try container.decode(String.self, forKey: .id)
+        label = try container.decode(String.self, forKey: .label)
+        tokens = try container.decode(Int.self, forKey: .tokens)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(color, forKey: .color)
+        try container.encode(id, forKey: .id)
+        try container.encode(label, forKey: .label)
+        try container.encode(tokens, forKey: .tokens)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct ContextFileSource: Codable, Sendable, Hashable {
     public var label: String
     public var path: String
@@ -1652,68 +1690,5 @@ public struct DisplayLeasePayload: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(profileKey, forKey: .profileKey)
         try container.encode(lease, forKey: .lease)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct DisplayLeaseReleaseParams: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var viewerId: Patch<String>
-    public var force: Patch<Bool>
-
-    public init(profile: Patch<String> = .absent, viewerId: Patch<String> = .absent, force: Patch<Bool> = .absent) {
-        self.profile = profile
-        self.viewerId = viewerId
-        self.force = force
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case viewerId = "viewer_id"
-        case force = "force"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        if !container.contains(.viewerId) {
-            viewerId = .absent
-        } else if try container.decodeNil(forKey: .viewerId) {
-            viewerId = .null
-        } else {
-            viewerId = .value(try container.decode(String.self, forKey: .viewerId))
-        }
-        if !container.contains(.force) {
-            force = .absent
-        } else if try container.decodeNil(forKey: .force) {
-            force = .null
-        } else {
-            force = .value(try container.decode(Bool.self, forKey: .force))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-        switch viewerId {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .viewerId)
-        case .value(let value): try container.encode(value, forKey: .viewerId)
-        }
-        switch force {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .force)
-        case .value(let value): try container.encode(value, forKey: .force)
-        }
     }
 }

@@ -1,6 +1,5 @@
-import json
-from pathlib import Path
 
+from tools.development_overlay import gateway_contract
 from tools.gen.schema_ir import SchemaGraph
 from tools.ref_policy import current_release
 
@@ -8,7 +7,7 @@ CURRENT = current_release()
 
 
 def test_full_release_resolves_to_named_models() -> None:
-    contract = json.loads(Path(f"spec/out/{CURRENT}/openrpc.json").read_text())
+    contract = gateway_contract(CURRENT)
     graph = SchemaGraph(contract)
     named = [name for name, schema in contract["components"]["schemas"].items()
              if schema.get("type") == "object" or (schema.get("type") == "string" and "enum" in schema)]

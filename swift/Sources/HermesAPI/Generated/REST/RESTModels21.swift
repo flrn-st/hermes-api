@@ -2,6 +2,92 @@
 import Foundation
 
 /// Generated from the reviewed Hermes REST contract. Do not edit.
+public struct VoiceLiveSessionInfo: Codable, Sendable, Hashable {
+    public var id: String?
+    public var additionalProperties: [String: JSONValue]
+
+    public init(id: String? = nil, additionalProperties: [String: JSONValue] = [:]) {
+        self.id = id
+        self.additionalProperties = additionalProperties
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+        let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = ["id"]
+        var extra: [String: JSONValue] = [:]
+        for key in dynamic.allKeys where !known.contains(key.stringValue) {
+            extra[key.stringValue] = try dynamic.decode(JSONValue.self, forKey: key)
+        }
+        additionalProperties = extra
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(id, forKey: .id)
+        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
+        let known: Set<String> = ["id"]
+        for (key, value) in additionalProperties {
+            guard !known.contains(key) else {
+                throw EncodingError.invalidValue(value, .init(codingPath: encoder.codingPath, debugDescription: "Additional property conflicts with a known field: \(key)"))
+            }
+            try dynamic.encode(value, forKey: DynamicCodingKey(key))
+        }
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
+/// POST /api/audio/voice-live/session: the renderer's WebRTC SDP offer plus optional prior text turns (``{"type":"message","role":..,"content":[..]}``) to seed the live voice model.
+public struct VoiceLiveSessionRequest: Codable, Sendable, Hashable {
+    public var history: Patch<[[String: JSONValue]]>
+    public var sdp: String
+
+    public init(history: Patch<[[String: JSONValue]]> = .absent, sdp: String) {
+        self.history = history
+        self.sdp = sdp
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case history = "history"
+        case sdp = "sdp"
+    }
+
+    public init(from decoder: Decoder) throws {
+        if !decoder.decodesTolerantly {
+            let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
+            let known: Set<String> = ["history", "sdp"]
+            if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
+            }
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.history) {
+            history = .absent
+        } else if try container.decodeNil(forKey: .history) {
+            history = .null
+        } else {
+            history = .value(try container.decode([[String: JSONValue]].self, forKey: .history))
+        }
+        sdp = try container.decode(String.self, forKey: .sdp)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch history {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .history)
+        case .value(let value): try container.encode(value, forKey: .history)
+        }
+        try container.encode(sdp, forKey: .sdp)
+    }
+}
+
+/// Generated from the reviewed Hermes REST contract. Do not edit.
 /// ``create_voice_live_session`` — ``{"ok": true}`` merged over the vendor's ``POST /v1/live/sessions`` response (``tools/voice_live.py::create_webrtc_session``), which the vendor owns; the session id and SDP answer are the fields the renderer reads.
 public struct VoiceLiveSessionResponse: Codable, Sendable, Hashable {
     public var ok: Bool

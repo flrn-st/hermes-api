@@ -2,6 +2,380 @@
 import Foundation
 
 /// Generated from the Hermes gateway contract. Do not edit.
+public struct PluginsListResult: Codable, Sendable, Hashable {
+    public var plugins: [LegacyPluginRow]
+
+    public init(plugins: [LegacyPluginRow]) {
+        self.plugins = plugins
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case plugins = "plugins"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        plugins = try container.decode([LegacyPluginRow].self, forKey: .plugins)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(plugins, forKey: .plugins)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct PluginsManageParams: Codable, Sendable, Hashable {
+    public var profile: Patch<String>
+    public var action: PluginsAction?
+    public var key: Patch<String>
+    public var name: Patch<String>
+    public var enable: Patch<Bool>
+    public var identifier: Patch<String>
+    public var repo: Patch<String>
+    public var catalogName: Patch<String>
+    public var force: Patch<Bool>
+    public var ref: Patch<String>
+    public var acceptCapabilities: Patch<Bool>
+    public var values: Patch<[String: JSONValue]>
+    public var names: Patch<[String]>
+
+    public init(profile: Patch<String> = .absent, action: PluginsAction? = nil, key: Patch<String> = .absent, name: Patch<String> = .absent, enable: Patch<Bool> = .absent, identifier: Patch<String> = .absent, repo: Patch<String> = .absent, catalogName: Patch<String> = .absent, force: Patch<Bool> = .absent, ref: Patch<String> = .absent, acceptCapabilities: Patch<Bool> = .absent, values: Patch<[String: JSONValue]> = .absent, names: Patch<[String]> = .absent) {
+        self.profile = profile
+        self.action = action
+        self.key = key
+        self.name = name
+        self.enable = enable
+        self.identifier = identifier
+        self.repo = repo
+        self.catalogName = catalogName
+        self.force = force
+        self.ref = ref
+        self.acceptCapabilities = acceptCapabilities
+        self.values = values
+        self.names = names
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case profile = "profile"
+        case action = "action"
+        case key = "key"
+        case name = "name"
+        case enable = "enable"
+        case identifier = "identifier"
+        case repo = "repo"
+        case catalogName = "catalog_name"
+        case force = "force"
+        case ref = "ref"
+        case acceptCapabilities = "accept_capabilities"
+        case values = "values"
+        case names = "names"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if !container.contains(.profile) {
+            profile = .absent
+        } else if try container.decodeNil(forKey: .profile) {
+            profile = .null
+        } else {
+            profile = .value(try container.decode(String.self, forKey: .profile))
+        }
+        action = try container.decodeIfPresent(PluginsAction.self, forKey: .action)
+        if !container.contains(.key) {
+            key = .absent
+        } else if try container.decodeNil(forKey: .key) {
+            key = .null
+        } else {
+            key = .value(try container.decode(String.self, forKey: .key))
+        }
+        if !container.contains(.name) {
+            name = .absent
+        } else if try container.decodeNil(forKey: .name) {
+            name = .null
+        } else {
+            name = .value(try container.decode(String.self, forKey: .name))
+        }
+        if !container.contains(.enable) {
+            enable = .absent
+        } else if try container.decodeNil(forKey: .enable) {
+            enable = .null
+        } else {
+            enable = .value(try container.decode(Bool.self, forKey: .enable))
+        }
+        if !container.contains(.identifier) {
+            identifier = .absent
+        } else if try container.decodeNil(forKey: .identifier) {
+            identifier = .null
+        } else {
+            identifier = .value(try container.decode(String.self, forKey: .identifier))
+        }
+        if !container.contains(.repo) {
+            repo = .absent
+        } else if try container.decodeNil(forKey: .repo) {
+            repo = .null
+        } else {
+            repo = .value(try container.decode(String.self, forKey: .repo))
+        }
+        if !container.contains(.catalogName) {
+            catalogName = .absent
+        } else if try container.decodeNil(forKey: .catalogName) {
+            catalogName = .null
+        } else {
+            catalogName = .value(try container.decode(String.self, forKey: .catalogName))
+        }
+        if !container.contains(.force) {
+            force = .absent
+        } else if try container.decodeNil(forKey: .force) {
+            force = .null
+        } else {
+            force = .value(try container.decode(Bool.self, forKey: .force))
+        }
+        if !container.contains(.ref) {
+            ref = .absent
+        } else if try container.decodeNil(forKey: .ref) {
+            ref = .null
+        } else {
+            ref = .value(try container.decode(String.self, forKey: .ref))
+        }
+        if !container.contains(.acceptCapabilities) {
+            acceptCapabilities = .absent
+        } else if try container.decodeNil(forKey: .acceptCapabilities) {
+            acceptCapabilities = .null
+        } else {
+            acceptCapabilities = .value(try container.decode(Bool.self, forKey: .acceptCapabilities))
+        }
+        if !container.contains(.values) {
+            values = .absent
+        } else if try container.decodeNil(forKey: .values) {
+            values = .null
+        } else {
+            values = .value(try container.decode([String: JSONValue].self, forKey: .values))
+        }
+        if !container.contains(.names) {
+            names = .absent
+        } else if try container.decodeNil(forKey: .names) {
+            names = .null
+        } else {
+            names = .value(try container.decode([String].self, forKey: .names))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch profile {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .profile)
+        case .value(let value): try container.encode(value, forKey: .profile)
+        }
+        try container.encodeIfPresent(action, forKey: .action)
+        switch key {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .key)
+        case .value(let value): try container.encode(value, forKey: .key)
+        }
+        switch name {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .name)
+        case .value(let value): try container.encode(value, forKey: .name)
+        }
+        switch enable {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .enable)
+        case .value(let value): try container.encode(value, forKey: .enable)
+        }
+        switch identifier {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .identifier)
+        case .value(let value): try container.encode(value, forKey: .identifier)
+        }
+        switch repo {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .repo)
+        case .value(let value): try container.encode(value, forKey: .repo)
+        }
+        switch catalogName {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .catalogName)
+        case .value(let value): try container.encode(value, forKey: .catalogName)
+        }
+        switch force {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .force)
+        case .value(let value): try container.encode(value, forKey: .force)
+        }
+        switch ref {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .ref)
+        case .value(let value): try container.encode(value, forKey: .ref)
+        }
+        switch acceptCapabilities {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .acceptCapabilities)
+        case .value(let value): try container.encode(value, forKey: .acceptCapabilities)
+        }
+        switch values {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .values)
+        case .value(let value): try container.encode(value, forKey: .values)
+        }
+        switch names {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .names)
+        case .value(let value): try container.encode(value, forKey: .names)
+        }
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
+public struct PluginsManageResult: Codable, Sendable, Hashable {
+    public var plugins: [AgentPluginRow]?
+    public var userCount: Int?
+    public var bundledCount: Int?
+    public var ok: Bool?
+    public var unchanged: Bool?
+    public var restartRequired: Bool?
+    public var gatewayReloaded: Bool?
+    public var activation: PluginActivation?
+    public var clearedMemoryProvider: Bool?
+    public var name: String?
+    public var plugin: AgentPluginRow?
+    public var pluginName: String?
+    public var warnings: [String]?
+    public var missingEnv: [String]?
+    public var pythonDependencies: [String]?
+    public var knownIssues: [String]?
+    public var afterInstallPath: String?
+    public var enabled: Bool?
+    public var sha: String?
+    public var consentRequired: Bool?
+    public var delta: [String: [String]]?
+    public var deltaLines: [String]?
+    public var error: String?
+    public var written: [String]?
+    public var onboarding: [OnboardingCatalogPlugin]?
+    public var presence: [CatalogPluginPresence]?
+
+    public init(plugins: [AgentPluginRow]? = nil, userCount: Int? = nil, bundledCount: Int? = nil, ok: Bool? = nil, unchanged: Bool? = nil, restartRequired: Bool? = nil, gatewayReloaded: Bool? = nil, activation: PluginActivation? = nil, clearedMemoryProvider: Bool? = nil, name: String? = nil, plugin: AgentPluginRow? = nil, pluginName: String? = nil, warnings: [String]? = nil, missingEnv: [String]? = nil, pythonDependencies: [String]? = nil, knownIssues: [String]? = nil, afterInstallPath: String? = nil, enabled: Bool? = nil, sha: String? = nil, consentRequired: Bool? = nil, delta: [String: [String]]? = nil, deltaLines: [String]? = nil, error: String? = nil, written: [String]? = nil, onboarding: [OnboardingCatalogPlugin]? = nil, presence: [CatalogPluginPresence]? = nil) {
+        self.plugins = plugins
+        self.userCount = userCount
+        self.bundledCount = bundledCount
+        self.ok = ok
+        self.unchanged = unchanged
+        self.restartRequired = restartRequired
+        self.gatewayReloaded = gatewayReloaded
+        self.activation = activation
+        self.clearedMemoryProvider = clearedMemoryProvider
+        self.name = name
+        self.plugin = plugin
+        self.pluginName = pluginName
+        self.warnings = warnings
+        self.missingEnv = missingEnv
+        self.pythonDependencies = pythonDependencies
+        self.knownIssues = knownIssues
+        self.afterInstallPath = afterInstallPath
+        self.enabled = enabled
+        self.sha = sha
+        self.consentRequired = consentRequired
+        self.delta = delta
+        self.deltaLines = deltaLines
+        self.error = error
+        self.written = written
+        self.onboarding = onboarding
+        self.presence = presence
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case plugins = "plugins"
+        case userCount = "user_count"
+        case bundledCount = "bundled_count"
+        case ok = "ok"
+        case unchanged = "unchanged"
+        case restartRequired = "restart_required"
+        case gatewayReloaded = "gateway_reloaded"
+        case activation = "activation"
+        case clearedMemoryProvider = "cleared_memory_provider"
+        case name = "name"
+        case plugin = "plugin"
+        case pluginName = "plugin_name"
+        case warnings = "warnings"
+        case missingEnv = "missing_env"
+        case pythonDependencies = "python_dependencies"
+        case knownIssues = "known_issues"
+        case afterInstallPath = "after_install_path"
+        case enabled = "enabled"
+        case sha = "sha"
+        case consentRequired = "consent_required"
+        case delta = "delta"
+        case deltaLines = "delta_lines"
+        case error = "error"
+        case written = "written"
+        case onboarding = "onboarding"
+        case presence = "presence"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        plugins = try container.decodeIfPresent([AgentPluginRow].self, forKey: .plugins)
+        userCount = try container.decodeIfPresent(Int.self, forKey: .userCount)
+        bundledCount = try container.decodeIfPresent(Int.self, forKey: .bundledCount)
+        ok = try container.decodeIfPresent(Bool.self, forKey: .ok)
+        unchanged = try container.decodeIfPresent(Bool.self, forKey: .unchanged)
+        restartRequired = try container.decodeIfPresent(Bool.self, forKey: .restartRequired)
+        gatewayReloaded = try container.decodeIfPresent(Bool.self, forKey: .gatewayReloaded)
+        activation = try container.decodeIfPresent(PluginActivation.self, forKey: .activation)
+        clearedMemoryProvider = try container.decodeIfPresent(Bool.self, forKey: .clearedMemoryProvider)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        plugin = try container.decodeIfPresent(AgentPluginRow.self, forKey: .plugin)
+        pluginName = try container.decodeIfPresent(String.self, forKey: .pluginName)
+        warnings = try container.decodeIfPresent([String].self, forKey: .warnings)
+        missingEnv = try container.decodeIfPresent([String].self, forKey: .missingEnv)
+        pythonDependencies = try container.decodeIfPresent([String].self, forKey: .pythonDependencies)
+        knownIssues = try container.decodeIfPresent([String].self, forKey: .knownIssues)
+        afterInstallPath = try container.decodeIfPresent(String.self, forKey: .afterInstallPath)
+        enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled)
+        sha = try container.decodeIfPresent(String.self, forKey: .sha)
+        consentRequired = try container.decodeIfPresent(Bool.self, forKey: .consentRequired)
+        delta = try container.decodeIfPresent([String: [String]].self, forKey: .delta)
+        deltaLines = try container.decodeIfPresent([String].self, forKey: .deltaLines)
+        error = try container.decodeIfPresent(String.self, forKey: .error)
+        written = try container.decodeIfPresent([String].self, forKey: .written)
+        onboarding = try container.decodeIfPresent([OnboardingCatalogPlugin].self, forKey: .onboarding)
+        presence = try container.decodeIfPresent([CatalogPluginPresence].self, forKey: .presence)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(plugins, forKey: .plugins)
+        try container.encodeIfPresent(userCount, forKey: .userCount)
+        try container.encodeIfPresent(bundledCount, forKey: .bundledCount)
+        try container.encodeIfPresent(ok, forKey: .ok)
+        try container.encodeIfPresent(unchanged, forKey: .unchanged)
+        try container.encodeIfPresent(restartRequired, forKey: .restartRequired)
+        try container.encodeIfPresent(gatewayReloaded, forKey: .gatewayReloaded)
+        try container.encodeIfPresent(activation, forKey: .activation)
+        try container.encodeIfPresent(clearedMemoryProvider, forKey: .clearedMemoryProvider)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encodeIfPresent(plugin, forKey: .plugin)
+        try container.encodeIfPresent(pluginName, forKey: .pluginName)
+        try container.encodeIfPresent(warnings, forKey: .warnings)
+        try container.encodeIfPresent(missingEnv, forKey: .missingEnv)
+        try container.encodeIfPresent(pythonDependencies, forKey: .pythonDependencies)
+        try container.encodeIfPresent(knownIssues, forKey: .knownIssues)
+        try container.encodeIfPresent(afterInstallPath, forKey: .afterInstallPath)
+        try container.encodeIfPresent(enabled, forKey: .enabled)
+        try container.encodeIfPresent(sha, forKey: .sha)
+        try container.encodeIfPresent(consentRequired, forKey: .consentRequired)
+        try container.encodeIfPresent(delta, forKey: .delta)
+        try container.encodeIfPresent(deltaLines, forKey: .deltaLines)
+        try container.encodeIfPresent(error, forKey: .error)
+        try container.encodeIfPresent(written, forKey: .written)
+        try container.encodeIfPresent(onboarding, forKey: .onboarding)
+        try container.encodeIfPresent(presence, forKey: .presence)
+    }
+}
+
+/// Generated from the Hermes gateway contract. Do not edit.
 public struct PreviewActRequestParams: Codable, Sendable, Hashable {
     public var sessionId: String
     public var action: String
@@ -1679,262 +2053,5 @@ public struct ProfilesConfigureResult: Codable, Sendable, Hashable {
         try container.encode(applied, forKey: .applied)
         try container.encodeIfPresent(confirmRequired, forKey: .confirmRequired)
         try container.encodeIfPresent(confirmMessage, forKey: .confirmMessage)
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public struct ProfilesCreateParams: Codable, Sendable, Hashable {
-    public var profile: Patch<String>
-    public var name: String
-    public var description: Patch<String>
-    public var cloneFrom: Patch<String>
-    public var cloneAll: Patch<ProfilesCreateParamsCloneAll>
-    public var cloneChannels: Patch<ProfilesCreateParamsCloneChannels>
-    public var noSkills: Patch<ProfilesCreateParamsNoSkills>
-    public var noAlias: Patch<ProfilesCreateParamsNoAlias>
-    public var soul: Patch<String>
-    public var model: Patch<String>
-    public var provider: Patch<String>
-    public var shareAuth: Patch<ProfilesCreateParamsShareAuth>
-    public var mirrorCredentials: Patch<ProfilesCreateParamsMirrorCredentials>
-
-    public init(profile: Patch<String> = .absent, name: String, description: Patch<String> = .absent, cloneFrom: Patch<String> = .absent, cloneAll: Patch<ProfilesCreateParamsCloneAll> = .absent, cloneChannels: Patch<ProfilesCreateParamsCloneChannels> = .absent, noSkills: Patch<ProfilesCreateParamsNoSkills> = .absent, noAlias: Patch<ProfilesCreateParamsNoAlias> = .absent, soul: Patch<String> = .absent, model: Patch<String> = .absent, provider: Patch<String> = .absent, shareAuth: Patch<ProfilesCreateParamsShareAuth> = .absent, mirrorCredentials: Patch<ProfilesCreateParamsMirrorCredentials> = .absent) {
-        self.profile = profile
-        self.name = name
-        self.description = description
-        self.cloneFrom = cloneFrom
-        self.cloneAll = cloneAll
-        self.cloneChannels = cloneChannels
-        self.noSkills = noSkills
-        self.noAlias = noAlias
-        self.soul = soul
-        self.model = model
-        self.provider = provider
-        self.shareAuth = shareAuth
-        self.mirrorCredentials = mirrorCredentials
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case profile = "profile"
-        case name = "name"
-        case description = "description"
-        case cloneFrom = "clone_from"
-        case cloneAll = "clone_all"
-        case cloneChannels = "clone_channels"
-        case noSkills = "no_skills"
-        case noAlias = "no_alias"
-        case soul = "soul"
-        case model = "model"
-        case provider = "provider"
-        case shareAuth = "share_auth"
-        case mirrorCredentials = "mirror_credentials"
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        if !container.contains(.profile) {
-            profile = .absent
-        } else if try container.decodeNil(forKey: .profile) {
-            profile = .null
-        } else {
-            profile = .value(try container.decode(String.self, forKey: .profile))
-        }
-        name = try container.decode(String.self, forKey: .name)
-        if !container.contains(.description) {
-            description = .absent
-        } else if try container.decodeNil(forKey: .description) {
-            description = .null
-        } else {
-            description = .value(try container.decode(String.self, forKey: .description))
-        }
-        if !container.contains(.cloneFrom) {
-            cloneFrom = .absent
-        } else if try container.decodeNil(forKey: .cloneFrom) {
-            cloneFrom = .null
-        } else {
-            cloneFrom = .value(try container.decode(String.self, forKey: .cloneFrom))
-        }
-        if !container.contains(.cloneAll) {
-            cloneAll = .absent
-        } else if try container.decodeNil(forKey: .cloneAll) {
-            cloneAll = .null
-        } else {
-            cloneAll = .value(try container.decode(ProfilesCreateParamsCloneAll.self, forKey: .cloneAll))
-        }
-        if !container.contains(.cloneChannels) {
-            cloneChannels = .absent
-        } else if try container.decodeNil(forKey: .cloneChannels) {
-            cloneChannels = .null
-        } else {
-            cloneChannels = .value(try container.decode(ProfilesCreateParamsCloneChannels.self, forKey: .cloneChannels))
-        }
-        if !container.contains(.noSkills) {
-            noSkills = .absent
-        } else if try container.decodeNil(forKey: .noSkills) {
-            noSkills = .null
-        } else {
-            noSkills = .value(try container.decode(ProfilesCreateParamsNoSkills.self, forKey: .noSkills))
-        }
-        if !container.contains(.noAlias) {
-            noAlias = .absent
-        } else if try container.decodeNil(forKey: .noAlias) {
-            noAlias = .null
-        } else {
-            noAlias = .value(try container.decode(ProfilesCreateParamsNoAlias.self, forKey: .noAlias))
-        }
-        if !container.contains(.soul) {
-            soul = .absent
-        } else if try container.decodeNil(forKey: .soul) {
-            soul = .null
-        } else {
-            soul = .value(try container.decode(String.self, forKey: .soul))
-        }
-        if !container.contains(.model) {
-            model = .absent
-        } else if try container.decodeNil(forKey: .model) {
-            model = .null
-        } else {
-            model = .value(try container.decode(String.self, forKey: .model))
-        }
-        if !container.contains(.provider) {
-            provider = .absent
-        } else if try container.decodeNil(forKey: .provider) {
-            provider = .null
-        } else {
-            provider = .value(try container.decode(String.self, forKey: .provider))
-        }
-        if !container.contains(.shareAuth) {
-            shareAuth = .absent
-        } else if try container.decodeNil(forKey: .shareAuth) {
-            shareAuth = .null
-        } else {
-            shareAuth = .value(try container.decode(ProfilesCreateParamsShareAuth.self, forKey: .shareAuth))
-        }
-        if !container.contains(.mirrorCredentials) {
-            mirrorCredentials = .absent
-        } else if try container.decodeNil(forKey: .mirrorCredentials) {
-            mirrorCredentials = .null
-        } else {
-            mirrorCredentials = .value(try container.decode(ProfilesCreateParamsMirrorCredentials.self, forKey: .mirrorCredentials))
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch profile {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .profile)
-        case .value(let value): try container.encode(value, forKey: .profile)
-        }
-        try container.encode(name, forKey: .name)
-        switch description {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .description)
-        case .value(let value): try container.encode(value, forKey: .description)
-        }
-        switch cloneFrom {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .cloneFrom)
-        case .value(let value): try container.encode(value, forKey: .cloneFrom)
-        }
-        switch cloneAll {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .cloneAll)
-        case .value(let value): try container.encode(value, forKey: .cloneAll)
-        }
-        switch cloneChannels {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .cloneChannels)
-        case .value(let value): try container.encode(value, forKey: .cloneChannels)
-        }
-        switch noSkills {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .noSkills)
-        case .value(let value): try container.encode(value, forKey: .noSkills)
-        }
-        switch noAlias {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .noAlias)
-        case .value(let value): try container.encode(value, forKey: .noAlias)
-        }
-        switch soul {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .soul)
-        case .value(let value): try container.encode(value, forKey: .soul)
-        }
-        switch model {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .model)
-        case .value(let value): try container.encode(value, forKey: .model)
-        }
-        switch provider {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .provider)
-        case .value(let value): try container.encode(value, forKey: .provider)
-        }
-        switch shareAuth {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .shareAuth)
-        case .value(let value): try container.encode(value, forKey: .shareAuth)
-        }
-        switch mirrorCredentials {
-        case .absent: break
-        case .null: try container.encodeNil(forKey: .mirrorCredentials)
-        case .value(let value): try container.encode(value, forKey: .mirrorCredentials)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum ProfilesCreateParamsCloneAll: Codable, Sendable, Hashable {
-    case boolean(Bool)
-    case string(String)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(Bool.self) {
-            self = .boolean(value)
-            return
-        }
-        if let value = try? container.decode(String.self) {
-            self = .string(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .boolean(let value): try container.encode(value)
-        case .string(let value): try container.encode(value)
-        }
-    }
-}
-
-/// Generated from the Hermes gateway contract. Do not edit.
-public enum ProfilesCreateParamsCloneChannels: Codable, Sendable, Hashable {
-    case boolean(Bool)
-    case string(String)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(Bool.self) {
-            self = .boolean(value)
-            return
-        }
-        if let value = try? container.decode(String.self) {
-            self = .string(value)
-            return
-        }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No union variant matched")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .boolean(let value): try container.encode(value)
-        case .string(let value): try container.encode(value)
-        }
     }
 }

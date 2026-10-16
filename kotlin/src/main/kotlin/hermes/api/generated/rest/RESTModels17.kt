@@ -344,19 +344,19 @@ public data class SessionRenameResponse(
     @SerialName("archived")
     public val archived: Boolean? = null,
     @SerialName("execution_generation")
-    public val executionGeneration: Long?,
+    public val executionGeneration: Long? = null,
     @SerialName("hidden")
     public val hidden: Boolean? = null,
     @SerialName("ok")
     public val ok: Boolean,
     @SerialName("operation")
-    public val operation: SessionRenameResponseOperation,
+    public val operation: SessionRenameResponseOperation? = null,
     @SerialName("pinned")
     public val pinned: Boolean? = null,
     @SerialName("revision")
-    public val revision: Long,
+    public val revision: Long? = null,
     @SerialName("session_id")
-    public val sessionId: String,
+    public val sessionId: String? = null,
     @SerialName("title")
     public val title: String? = null,
     @SerialName("unread")

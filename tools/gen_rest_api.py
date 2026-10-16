@@ -9,9 +9,12 @@ client configured for tolerant decoding skips unknown keys and keeps unknown enu
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
+
+import yaml
 
 from tools.fetch_spec import ROOT
 from tools.gen.schema_ir import SchemaGraph, TypeRef
@@ -25,6 +28,8 @@ KOTLIN_OUT = ROOT / "kotlin/src/main/kotlin/hermes/api/generated/rest"
 # The operation table the live scenarios and fixture decode tests drive every operation through.
 SWIFT_LIVE_OUT = ROOT / "swift/Sources/HermesAPILiveScenarios/Generated/RESTOperations.swift"
 KOTLIN_LIVE_OUT = ROOT / "kotlin/src/live/kotlin/hermes/api/live/generated/RESTOperations.kt"
+# Fields older Hermes releases leave out or still send; the generated models decode them as optional.
+COMPAT = ROOT / "spec/rest-compat.yaml"
 REF = "#/components/schemas/"
 METHODS = ("get", "head", "post", "put", "patch", "delete")
 # Name prefix for a non-GET operation whose name another operation of the namespace already has.
@@ -816,8 +821,33 @@ def _symbols(ops: list[Operation]) -> list[dict]:
             for op in ops]
 
 
+def with_older_releases(document: dict, compat: dict) -> dict:
+    """``document`` with the fields ``compat`` lists relaxed for older releases (spec/rest-compat.yaml)."""
+    document = copy.deepcopy(document)
+    schemas = document.get("components", {}).get("schemas", {})
+    for name, fields in (compat.get("optional") or {}).items():
+        schema = schemas.get(name)
+        if schema is None:
+            raise ValueError(f"rest-compat: unknown schema {name}")
+        required = schema.get("required", [])
+        for field in fields:
+            if field not in required:
+                raise ValueError(f"rest-compat: {name}.{field} is not required in the contract")
+        schema["required"] = [field for field in required if field not in fields]
+    for name, fields in (compat.get("retired") or {}).items():
+        schema = schemas.get(name)
+        if schema is None:
+            raise ValueError(f"rest-compat: unknown schema {name}")
+        for field, field_schema in fields.items():
+            if field in schema.get("properties", {}):
+                raise ValueError(f"rest-compat: {name}.{field} is declared by the contract")
+            schema.setdefault("properties", {})[field] = field_schema
+    return document
+
+
 def outputs(ref: str) -> tuple[dict, list[Operation]]:
     document = json.loads((ROOT / "spec/out" / ref / "openapi.json").read_text(encoding="utf-8"))
+    document = with_older_releases(document, yaml.safe_load(COMPAT.read_text(encoding="utf-8")) or {})
     gateway = set(json.loads((ROOT / "spec/out" / ref / "generated-model-symbols.json").read_text()))
     graph, ops = build(document, gateway)
     models = declarations(graph, ORIGIN)

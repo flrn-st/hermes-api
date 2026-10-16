@@ -481,9 +481,9 @@ public struct ServerActionBody: Codable, Sendable, Hashable {
 public struct SessionBulkDeleteResponse: Codable, Sendable, Hashable {
     public var deleted: Int
     public var ok: Bool
-    public var skippedActive: [String]
+    public var skippedActive: [String]?
 
-    public init(deleted: Int, ok: Bool, skippedActive: [String]) {
+    public init(deleted: Int, ok: Bool, skippedActive: [String]? = nil) {
         self.deleted = deleted
         self.ok = ok
         self.skippedActive = skippedActive
@@ -506,14 +506,14 @@ public struct SessionBulkDeleteResponse: Codable, Sendable, Hashable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         deleted = try container.decode(Int.self, forKey: .deleted)
         ok = try container.decode(Bool.self, forKey: .ok)
-        skippedActive = try container.decode([String].self, forKey: .skippedActive)
+        skippedActive = try container.decodeIfPresent([String].self, forKey: .skippedActive)
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(deleted, forKey: .deleted)
         try container.encode(ok, forKey: .ok)
-        try container.encode(skippedActive, forKey: .skippedActive)
+        try container.encodeIfPresent(skippedActive, forKey: .skippedActive)
     }
 }
 
@@ -657,7 +657,7 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
     public var apiCallCount: Int?
     public var archived: Int
     /// SQLite 0/1: archived by the idle sweep, not by hand.
-    public var autoArchived: Int
+    public var autoArchived: Int?
     public var billingBaseUrl: String?
     public var billingMode: String?
     public var billingProvider: String?
@@ -708,9 +708,9 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
     public var reasoningTokens: Int?
     public var rewindCount: Int
     /// Execution generation a turn-affecting mutation must quote.
-    public var runtimeGeneration: Int
+    public var runtimeGeneration: Int?
     /// Mutation fence: bumped by every committed session mutation.
-    public var runtimeRevision: Int
+    public var runtimeRevision: Int?
     public var schedulerOwned: Bool?
     public var sessionKey: String?
     public var source: String
@@ -726,7 +726,7 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(branchedFrom: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Int, autoArchived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, createdSource: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isDefaultProfile: Bool, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int, runtimeRevision: Int, schedulerOwned: Bool? = nil, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(branchedFrom: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Int, autoArchived: Int? = nil, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, createdSource: String? = nil, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isDefaultProfile: Bool, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int? = nil, runtimeRevision: Int? = nil, schedulerOwned: Bool? = nil, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
         self.branchedFrom = branchedFrom
         self.resetFrom = resetFrom
         self.actualCostUsd = actualCostUsd
@@ -876,7 +876,7 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
         actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
         apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
         archived = try container.decode(Int.self, forKey: .archived)
-        autoArchived = try container.decode(Int.self, forKey: .autoArchived)
+        autoArchived = try container.decodeIfPresent(Int.self, forKey: .autoArchived)
         billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
         billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
         billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
@@ -891,7 +891,7 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
         compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
         costSource = try container.decode(Optional<String>.self, forKey: .costSource)
         costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
-        createdSource = try container.decode(Optional<String>.self, forKey: .createdSource)
+        createdSource = try container.decodeIfPresent(String.self, forKey: .createdSource)
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
         displayName = try container.decode(Optional<String>.self, forKey: .displayName)
         endReason = try container.decode(Optional<String>.self, forKey: .endReason)
@@ -924,8 +924,8 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
         profileName = try container.decode(Optional<String>.self, forKey: .profileName)
         reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
         rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        runtimeGeneration = try container.decode(Int.self, forKey: .runtimeGeneration)
-        runtimeRevision = try container.decode(Int.self, forKey: .runtimeRevision)
+        runtimeGeneration = try container.decodeIfPresent(Int.self, forKey: .runtimeGeneration)
+        runtimeRevision = try container.decodeIfPresent(Int.self, forKey: .runtimeRevision)
         schedulerOwned = try container.decodeIfPresent(Bool.self, forKey: .schedulerOwned)
         sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
@@ -955,7 +955,7 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
         try container.encode(actualCostUsd, forKey: .actualCostUsd)
         try container.encode(apiCallCount, forKey: .apiCallCount)
         try container.encode(archived, forKey: .archived)
-        try container.encode(autoArchived, forKey: .autoArchived)
+        try container.encodeIfPresent(autoArchived, forKey: .autoArchived)
         try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
         try container.encode(billingMode, forKey: .billingMode)
         try container.encode(billingProvider, forKey: .billingProvider)
@@ -970,7 +970,7 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
         try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
         try container.encode(costSource, forKey: .costSource)
         try container.encode(costStatus, forKey: .costStatus)
-        try container.encode(createdSource, forKey: .createdSource)
+        try container.encodeIfPresent(createdSource, forKey: .createdSource)
         try container.encode(cwd, forKey: .cwd)
         try container.encode(displayName, forKey: .displayName)
         try container.encode(endReason, forKey: .endReason)
@@ -1003,8 +1003,8 @@ public struct SessionDetailResponse: Codable, Sendable, Hashable {
         try container.encode(profileName, forKey: .profileName)
         try container.encode(reasoningTokens, forKey: .reasoningTokens)
         try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encode(runtimeGeneration, forKey: .runtimeGeneration)
-        try container.encode(runtimeRevision, forKey: .runtimeRevision)
+        try container.encodeIfPresent(runtimeGeneration, forKey: .runtimeGeneration)
+        try container.encodeIfPresent(runtimeRevision, forKey: .runtimeRevision)
         try container.encodeIfPresent(schedulerOwned, forKey: .schedulerOwned)
         try container.encode(sessionKey, forKey: .sessionKey)
         try container.encode(source, forKey: .source)
@@ -1068,7 +1068,7 @@ public struct SessionDisplayMessage: Codable, Sendable, Hashable {
     public var toolName: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(compressedSummary: Bool? = nil, absorbedMessageUids: String?, active: Int, apiContent: String?, codexMessageItems: String?, codexReasoningItems: String?, compacted: Int, content: JSONValue, displayCommentary: [String]? = nil, displayContent: JSONValue? = nil, displayKind: String? = nil, displayMetadata: [String: JSONValue]?, displayReasoning: String? = nil, effectDisposition: String?, finishReason: String?, id: Int, messageUid: String?, observed: Int, platformMessageId: String?, reasoning: String?, reasoningContent: String?, reasoningDetails: String?, role: String, sessionId: String, timestamp: Double, tokenCount: Int?, toolCallId: String?, toolCallLabels: [String: [SessionToolCallLabel]]? = nil, toolCallUid: String?, toolCallUids: String?, toolCalls: JSONValue, toolName: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(compressedSummary: Bool? = nil, absorbedMessageUids: String? = nil, active: Int, apiContent: String?, codexMessageItems: String?, codexReasoningItems: String?, compacted: Int, content: JSONValue, displayCommentary: [String]? = nil, displayContent: JSONValue? = nil, displayKind: String? = nil, displayMetadata: [String: JSONValue]?, displayReasoning: String? = nil, effectDisposition: String?, finishReason: String?, id: Int, messageUid: String? = nil, observed: Int, platformMessageId: String?, reasoning: String?, reasoningContent: String?, reasoningDetails: String?, role: String, sessionId: String, timestamp: Double, tokenCount: Int?, toolCallId: String?, toolCallLabels: [String: [SessionToolCallLabel]]? = nil, toolCallUid: String? = nil, toolCallUids: String? = nil, toolCalls: JSONValue, toolName: String?, additionalProperties: [String: JSONValue] = [:]) {
         self.compressedSummary = compressedSummary
         self.absorbedMessageUids = absorbedMessageUids
         self.active = active
@@ -1142,7 +1142,7 @@ public struct SessionDisplayMessage: Codable, Sendable, Hashable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         compressedSummary = try container.decodeIfPresent(Bool.self, forKey: .compressedSummary)
-        absorbedMessageUids = try container.decode(Optional<String>.self, forKey: .absorbedMessageUids)
+        absorbedMessageUids = try container.decodeIfPresent(String.self, forKey: .absorbedMessageUids)
         active = try container.decode(Int.self, forKey: .active)
         apiContent = try container.decode(Optional<String>.self, forKey: .apiContent)
         codexMessageItems = try container.decode(Optional<String>.self, forKey: .codexMessageItems)
@@ -1157,7 +1157,7 @@ public struct SessionDisplayMessage: Codable, Sendable, Hashable {
         effectDisposition = try container.decode(Optional<String>.self, forKey: .effectDisposition)
         finishReason = try container.decode(Optional<String>.self, forKey: .finishReason)
         id = try container.decode(Int.self, forKey: .id)
-        messageUid = try container.decode(Optional<String>.self, forKey: .messageUid)
+        messageUid = try container.decodeIfPresent(String.self, forKey: .messageUid)
         observed = try container.decode(Int.self, forKey: .observed)
         platformMessageId = try container.decode(Optional<String>.self, forKey: .platformMessageId)
         reasoning = try container.decode(Optional<String>.self, forKey: .reasoning)
@@ -1169,8 +1169,8 @@ public struct SessionDisplayMessage: Codable, Sendable, Hashable {
         tokenCount = try container.decode(Optional<Int>.self, forKey: .tokenCount)
         toolCallId = try container.decode(Optional<String>.self, forKey: .toolCallId)
         toolCallLabels = try container.decodeIfPresent([String: [SessionToolCallLabel]].self, forKey: .toolCallLabels)
-        toolCallUid = try container.decode(Optional<String>.self, forKey: .toolCallUid)
-        toolCallUids = try container.decode(Optional<String>.self, forKey: .toolCallUids)
+        toolCallUid = try container.decodeIfPresent(String.self, forKey: .toolCallUid)
+        toolCallUids = try container.decodeIfPresent(String.self, forKey: .toolCallUids)
         toolCalls = try container.decode(JSONValue.self, forKey: .toolCalls)
         toolName = try container.decode(Optional<String>.self, forKey: .toolName)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
@@ -1185,7 +1185,7 @@ public struct SessionDisplayMessage: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(compressedSummary, forKey: .compressedSummary)
-        try container.encode(absorbedMessageUids, forKey: .absorbedMessageUids)
+        try container.encodeIfPresent(absorbedMessageUids, forKey: .absorbedMessageUids)
         try container.encode(active, forKey: .active)
         try container.encode(apiContent, forKey: .apiContent)
         try container.encode(codexMessageItems, forKey: .codexMessageItems)
@@ -1200,7 +1200,7 @@ public struct SessionDisplayMessage: Codable, Sendable, Hashable {
         try container.encode(effectDisposition, forKey: .effectDisposition)
         try container.encode(finishReason, forKey: .finishReason)
         try container.encode(id, forKey: .id)
-        try container.encode(messageUid, forKey: .messageUid)
+        try container.encodeIfPresent(messageUid, forKey: .messageUid)
         try container.encode(observed, forKey: .observed)
         try container.encode(platformMessageId, forKey: .platformMessageId)
         try container.encode(reasoning, forKey: .reasoning)
@@ -1212,8 +1212,8 @@ public struct SessionDisplayMessage: Codable, Sendable, Hashable {
         try container.encode(tokenCount, forKey: .tokenCount)
         try container.encode(toolCallId, forKey: .toolCallId)
         try container.encodeIfPresent(toolCallLabels, forKey: .toolCallLabels)
-        try container.encode(toolCallUid, forKey: .toolCallUid)
-        try container.encode(toolCallUids, forKey: .toolCallUids)
+        try container.encodeIfPresent(toolCallUid, forKey: .toolCallUid)
+        try container.encodeIfPresent(toolCallUids, forKey: .toolCallUids)
         try container.encode(toolCalls, forKey: .toolCalls)
         try container.encode(toolName, forKey: .toolName)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
@@ -1269,7 +1269,7 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
     public var apiCallCount: Int?
     public var archived: Int
     /// SQLite 0/1: archived by the idle sweep, not by hand.
-    public var autoArchived: Int
+    public var autoArchived: Int?
     public var billingBaseUrl: String?
     public var billingMode: String?
     public var billingProvider: String?
@@ -1285,7 +1285,7 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
     public var costSource: String?
     public var costStatus: String?
     /// The source the row was created under; null on rows that predate it.
-    public var createdSource: String?
+    public var createdSource: Patch<String>
     public var cwd: String?
     public var displayName: String?
     public var endReason: String?
@@ -1319,9 +1319,9 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
     public var reasoningTokens: Int?
     public var rewindCount: Int
     /// Execution generation a turn-affecting mutation must quote.
-    public var runtimeGeneration: Int
+    public var runtimeGeneration: Int?
     /// Mutation fence: bumped by every committed session mutation.
-    public var runtimeRevision: Int
+    public var runtimeRevision: Int?
     public var sessionKey: String?
     public var source: String
     public var startedAt: Double
@@ -1336,7 +1336,7 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(branchedFrom: Patch<String> = .absent, resetFrom: Patch<String> = .absent, actualCostUsd: Double?, apiCallCount: Int?, archived: Int, autoArchived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, createdSource: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, messages: [SessionMessage], model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, pricingVersion: String?, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int, runtimeRevision: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(branchedFrom: Patch<String> = .absent, resetFrom: Patch<String> = .absent, actualCostUsd: Double?, apiCallCount: Int?, archived: Int, autoArchived: Int? = nil, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, createdSource: Patch<String> = .absent, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, messages: [SessionMessage], model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, pricingVersion: String?, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int? = nil, runtimeRevision: Int? = nil, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
         self.branchedFrom = branchedFrom
         self.resetFrom = resetFrom
         self.actualCostUsd = actualCostUsd
@@ -1494,7 +1494,7 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
         actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
         apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
         archived = try container.decode(Int.self, forKey: .archived)
-        autoArchived = try container.decode(Int.self, forKey: .autoArchived)
+        autoArchived = try container.decodeIfPresent(Int.self, forKey: .autoArchived)
         billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
         billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
         billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
@@ -1509,7 +1509,13 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
         compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
         costSource = try container.decode(Optional<String>.self, forKey: .costSource)
         costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
-        createdSource = try container.decode(Optional<String>.self, forKey: .createdSource)
+        if !container.contains(.createdSource) {
+            createdSource = .absent
+        } else if try container.decodeNil(forKey: .createdSource) {
+            createdSource = .null
+        } else {
+            createdSource = .value(try container.decode(String.self, forKey: .createdSource))
+        }
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
         displayName = try container.decode(Optional<String>.self, forKey: .displayName)
         endReason = try container.decode(Optional<String>.self, forKey: .endReason)
@@ -1541,8 +1547,8 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
         profileName = try container.decode(Optional<String>.self, forKey: .profileName)
         reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
         rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        runtimeGeneration = try container.decode(Int.self, forKey: .runtimeGeneration)
-        runtimeRevision = try container.decode(Int.self, forKey: .runtimeRevision)
+        runtimeGeneration = try container.decodeIfPresent(Int.self, forKey: .runtimeGeneration)
+        runtimeRevision = try container.decodeIfPresent(Int.self, forKey: .runtimeRevision)
         sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Double.self, forKey: .startedAt)
@@ -1579,7 +1585,7 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
         try container.encode(actualCostUsd, forKey: .actualCostUsd)
         try container.encode(apiCallCount, forKey: .apiCallCount)
         try container.encode(archived, forKey: .archived)
-        try container.encode(autoArchived, forKey: .autoArchived)
+        try container.encodeIfPresent(autoArchived, forKey: .autoArchived)
         try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
         try container.encode(billingMode, forKey: .billingMode)
         try container.encode(billingProvider, forKey: .billingProvider)
@@ -1594,7 +1600,11 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
         try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
         try container.encode(costSource, forKey: .costSource)
         try container.encode(costStatus, forKey: .costStatus)
-        try container.encode(createdSource, forKey: .createdSource)
+        switch createdSource {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .createdSource)
+        case .value(let value): try container.encode(value, forKey: .createdSource)
+        }
         try container.encode(cwd, forKey: .cwd)
         try container.encode(displayName, forKey: .displayName)
         try container.encode(endReason, forKey: .endReason)
@@ -1626,8 +1636,8 @@ public struct SessionExportResponse: Codable, Sendable, Hashable {
         try container.encode(profileName, forKey: .profileName)
         try container.encode(reasoningTokens, forKey: .reasoningTokens)
         try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encode(runtimeGeneration, forKey: .runtimeGeneration)
-        try container.encode(runtimeRevision, forKey: .runtimeRevision)
+        try container.encodeIfPresent(runtimeGeneration, forKey: .runtimeGeneration)
+        try container.encodeIfPresent(runtimeRevision, forKey: .runtimeRevision)
         try container.encode(sessionKey, forKey: .sessionKey)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)
@@ -1736,13 +1746,13 @@ public struct SessionImportResponse: Codable, Sendable, Hashable {
     public var imported: Int
     public var importedIds: [String]
     public var ok: Bool
-    public var operation: SessionImportResponseOperation
-    public var revision: Int
-    public var sessionId: String
+    public var operation: SessionImportResponseOperation?
+    public var revision: Int?
+    public var sessionId: String?
     public var skipped: Int
     public var skippedIds: [String]
 
-    public init(detached: Int, errors: [[String: JSONValue]], executionGeneration: Int?, imported: Int, importedIds: [String], ok: Bool, operation: SessionImportResponseOperation, revision: Int, sessionId: String, skipped: Int, skippedIds: [String]) {
+    public init(detached: Int, errors: [[String: JSONValue]], executionGeneration: Int? = nil, imported: Int, importedIds: [String], ok: Bool, operation: SessionImportResponseOperation? = nil, revision: Int? = nil, sessionId: String? = nil, skipped: Int, skippedIds: [String]) {
         self.detached = detached
         self.errors = errors
         self.executionGeneration = executionGeneration
@@ -1781,13 +1791,13 @@ public struct SessionImportResponse: Codable, Sendable, Hashable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         detached = try container.decode(Int.self, forKey: .detached)
         errors = try container.decode([[String: JSONValue]].self, forKey: .errors)
-        executionGeneration = try container.decode(Optional<Int>.self, forKey: .executionGeneration)
+        executionGeneration = try container.decodeIfPresent(Int.self, forKey: .executionGeneration)
         imported = try container.decode(Int.self, forKey: .imported)
         importedIds = try container.decode([String].self, forKey: .importedIds)
         ok = try container.decode(Bool.self, forKey: .ok)
-        operation = try container.decode(SessionImportResponseOperation.self, forKey: .operation)
-        revision = try container.decode(Int.self, forKey: .revision)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
+        operation = try container.decodeIfPresent(SessionImportResponseOperation.self, forKey: .operation)
+        revision = try container.decodeIfPresent(Int.self, forKey: .revision)
+        sessionId = try container.decodeIfPresent(String.self, forKey: .sessionId)
         skipped = try container.decode(Int.self, forKey: .skipped)
         skippedIds = try container.decode([String].self, forKey: .skippedIds)
     }
@@ -1796,13 +1806,13 @@ public struct SessionImportResponse: Codable, Sendable, Hashable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(detached, forKey: .detached)
         try container.encode(errors, forKey: .errors)
-        try container.encode(executionGeneration, forKey: .executionGeneration)
+        try container.encodeIfPresent(executionGeneration, forKey: .executionGeneration)
         try container.encode(imported, forKey: .imported)
         try container.encode(importedIds, forKey: .importedIds)
         try container.encode(ok, forKey: .ok)
-        try container.encode(operation, forKey: .operation)
-        try container.encode(revision, forKey: .revision)
-        try container.encode(sessionId, forKey: .sessionId)
+        try container.encodeIfPresent(operation, forKey: .operation)
+        try container.encodeIfPresent(revision, forKey: .revision)
+        try container.encodeIfPresent(sessionId, forKey: .sessionId)
         try container.encode(skipped, forKey: .skipped)
         try container.encode(skippedIds, forKey: .skippedIds)
     }
@@ -1973,7 +1983,7 @@ public enum SessionListResponseStorageValue: Codable, Sendable, Hashable, RawRep
 /// ``SessionDB._row_to_message_dict``: a ``messages`` row with ``content`` / ``tool_calls`` / ``display_metadata`` decoded and the display-index columns dropped. ``content`` is text or the decoded multimodal parts; the reasoning sidecars stay JSON text.
 public struct SessionMessage: Codable, Sendable, Hashable {
     public var compressedSummary: Patch<Bool>
-    public var absorbedMessageUids: String?
+    public var absorbedMessageUids: Patch<String>
     public var active: Int
     public var apiContent: String?
     public var codexMessageItems: String?
@@ -1986,7 +1996,7 @@ public struct SessionMessage: Codable, Sendable, Hashable {
     public var finishReason: String?
     public var id: Int
     /// Stable message identity; null on legacy rows until backfilled.
-    public var messageUid: String?
+    public var messageUid: Patch<String>
     public var observed: Int
     public var platformMessageId: String?
     public var reasoning: String?
@@ -1997,14 +2007,14 @@ public struct SessionMessage: Codable, Sendable, Hashable {
     public var timestamp: Double
     public var tokenCount: Int?
     public var toolCallId: String?
-    public var toolCallUid: String?
-    public var toolCallUids: String?
+    public var toolCallUid: Patch<String>
+    public var toolCallUids: Patch<String>
     /// Decoded tool-call list (``[]`` when undecodable), or null.
     public var toolCalls: JSONValue
     public var toolName: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(compressedSummary: Patch<Bool> = .absent, absorbedMessageUids: String?, active: Int, apiContent: String?, codexMessageItems: String?, codexReasoningItems: String?, compacted: Int, content: JSONValue, displayKind: String?, displayMetadata: [String: JSONValue]?, effectDisposition: String?, finishReason: String?, id: Int, messageUid: String?, observed: Int, platformMessageId: String?, reasoning: String?, reasoningContent: String?, reasoningDetails: String?, role: String, sessionId: String, timestamp: Double, tokenCount: Int?, toolCallId: String?, toolCallUid: String?, toolCallUids: String?, toolCalls: JSONValue, toolName: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(compressedSummary: Patch<Bool> = .absent, absorbedMessageUids: Patch<String> = .absent, active: Int, apiContent: String?, codexMessageItems: String?, codexReasoningItems: String?, compacted: Int, content: JSONValue, displayKind: String?, displayMetadata: [String: JSONValue]?, effectDisposition: String?, finishReason: String?, id: Int, messageUid: Patch<String> = .absent, observed: Int, platformMessageId: String?, reasoning: String?, reasoningContent: String?, reasoningDetails: String?, role: String, sessionId: String, timestamp: Double, tokenCount: Int?, toolCallId: String?, toolCallUid: Patch<String> = .absent, toolCallUids: Patch<String> = .absent, toolCalls: JSONValue, toolName: String?, additionalProperties: [String: JSONValue] = [:]) {
         self.compressedSummary = compressedSummary
         self.absorbedMessageUids = absorbedMessageUids
         self.active = active
@@ -2076,7 +2086,13 @@ public struct SessionMessage: Codable, Sendable, Hashable {
         } else {
             compressedSummary = .value(try container.decode(Bool.self, forKey: .compressedSummary))
         }
-        absorbedMessageUids = try container.decode(Optional<String>.self, forKey: .absorbedMessageUids)
+        if !container.contains(.absorbedMessageUids) {
+            absorbedMessageUids = .absent
+        } else if try container.decodeNil(forKey: .absorbedMessageUids) {
+            absorbedMessageUids = .null
+        } else {
+            absorbedMessageUids = .value(try container.decode(String.self, forKey: .absorbedMessageUids))
+        }
         active = try container.decode(Int.self, forKey: .active)
         apiContent = try container.decode(Optional<String>.self, forKey: .apiContent)
         codexMessageItems = try container.decode(Optional<String>.self, forKey: .codexMessageItems)
@@ -2088,7 +2104,13 @@ public struct SessionMessage: Codable, Sendable, Hashable {
         effectDisposition = try container.decode(Optional<String>.self, forKey: .effectDisposition)
         finishReason = try container.decode(Optional<String>.self, forKey: .finishReason)
         id = try container.decode(Int.self, forKey: .id)
-        messageUid = try container.decode(Optional<String>.self, forKey: .messageUid)
+        if !container.contains(.messageUid) {
+            messageUid = .absent
+        } else if try container.decodeNil(forKey: .messageUid) {
+            messageUid = .null
+        } else {
+            messageUid = .value(try container.decode(String.self, forKey: .messageUid))
+        }
         observed = try container.decode(Int.self, forKey: .observed)
         platformMessageId = try container.decode(Optional<String>.self, forKey: .platformMessageId)
         reasoning = try container.decode(Optional<String>.self, forKey: .reasoning)
@@ -2099,8 +2121,20 @@ public struct SessionMessage: Codable, Sendable, Hashable {
         timestamp = try container.decode(Double.self, forKey: .timestamp)
         tokenCount = try container.decode(Optional<Int>.self, forKey: .tokenCount)
         toolCallId = try container.decode(Optional<String>.self, forKey: .toolCallId)
-        toolCallUid = try container.decode(Optional<String>.self, forKey: .toolCallUid)
-        toolCallUids = try container.decode(Optional<String>.self, forKey: .toolCallUids)
+        if !container.contains(.toolCallUid) {
+            toolCallUid = .absent
+        } else if try container.decodeNil(forKey: .toolCallUid) {
+            toolCallUid = .null
+        } else {
+            toolCallUid = .value(try container.decode(String.self, forKey: .toolCallUid))
+        }
+        if !container.contains(.toolCallUids) {
+            toolCallUids = .absent
+        } else if try container.decodeNil(forKey: .toolCallUids) {
+            toolCallUids = .null
+        } else {
+            toolCallUids = .value(try container.decode(String.self, forKey: .toolCallUids))
+        }
         toolCalls = try container.decode(JSONValue.self, forKey: .toolCalls)
         toolName = try container.decode(Optional<String>.self, forKey: .toolName)
         let dynamic = try decoder.container(keyedBy: DynamicCodingKey.self)
@@ -2119,7 +2153,11 @@ public struct SessionMessage: Codable, Sendable, Hashable {
         case .null: try container.encodeNil(forKey: .compressedSummary)
         case .value(let value): try container.encode(value, forKey: .compressedSummary)
         }
-        try container.encode(absorbedMessageUids, forKey: .absorbedMessageUids)
+        switch absorbedMessageUids {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .absorbedMessageUids)
+        case .value(let value): try container.encode(value, forKey: .absorbedMessageUids)
+        }
         try container.encode(active, forKey: .active)
         try container.encode(apiContent, forKey: .apiContent)
         try container.encode(codexMessageItems, forKey: .codexMessageItems)
@@ -2131,7 +2169,11 @@ public struct SessionMessage: Codable, Sendable, Hashable {
         try container.encode(effectDisposition, forKey: .effectDisposition)
         try container.encode(finishReason, forKey: .finishReason)
         try container.encode(id, forKey: .id)
-        try container.encode(messageUid, forKey: .messageUid)
+        switch messageUid {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .messageUid)
+        case .value(let value): try container.encode(value, forKey: .messageUid)
+        }
         try container.encode(observed, forKey: .observed)
         try container.encode(platformMessageId, forKey: .platformMessageId)
         try container.encode(reasoning, forKey: .reasoning)
@@ -2142,8 +2184,16 @@ public struct SessionMessage: Codable, Sendable, Hashable {
         try container.encode(timestamp, forKey: .timestamp)
         try container.encode(tokenCount, forKey: .tokenCount)
         try container.encode(toolCallId, forKey: .toolCallId)
-        try container.encode(toolCallUid, forKey: .toolCallUid)
-        try container.encode(toolCallUids, forKey: .toolCallUids)
+        switch toolCallUid {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .toolCallUid)
+        case .value(let value): try container.encode(value, forKey: .toolCallUid)
+        }
+        switch toolCallUids {
+        case .absent: break
+        case .null: try container.encodeNil(forKey: .toolCallUids)
+        case .value(let value): try container.encode(value, forKey: .toolCallUids)
+        }
         try container.encode(toolCalls, forKey: .toolCalls)
         try container.encode(toolName, forKey: .toolName)
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)

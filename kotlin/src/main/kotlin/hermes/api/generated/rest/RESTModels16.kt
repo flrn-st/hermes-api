@@ -329,7 +329,7 @@ public data class SessionBulkDeleteResponse(
     @SerialName("ok")
     public val ok: Boolean,
     @SerialName("skipped_active")
-    public val skippedActive: List<String>,
+    public val skippedActive: List<String>? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_session_endpoint``: the ``delete`` mutation receipt (``deleted_ids``: every retired row of the compression chain), or ``{ok, already_absent: true}`` when the id is already gone. */
@@ -404,7 +404,7 @@ public data class SessionDetailResponse(
     public val apiCallCount: Long?,
     public val archived: Long,
     /** SQLite 0/1: archived by the idle sweep, not by hand. */
-    public val autoArchived: Long,
+    public val autoArchived: Long? = null,
     public val billingBaseUrl: String?,
     public val billingMode: String?,
     public val billingProvider: String?,
@@ -420,7 +420,7 @@ public data class SessionDetailResponse(
     public val costSource: String?,
     public val costStatus: String?,
     /** The source the row was created under; null on rows that predate it. */
-    public val createdSource: String?,
+    public val createdSource: String? = null,
     public val cwd: String?,
     public val displayName: String?,
     public val endReason: String?,
@@ -455,9 +455,9 @@ public data class SessionDetailResponse(
     public val reasoningTokens: Long?,
     public val rewindCount: Long,
     /** Execution generation a turn-affecting mutation must quote. */
-    public val runtimeGeneration: Long,
+    public val runtimeGeneration: Long? = null,
     /** Mutation fence: bumped by every committed session mutation. */
-    public val runtimeRevision: Long,
+    public val runtimeRevision: Long? = null,
     public val schedulerOwned: Boolean? = null,
     public val sessionKey: String?,
     public val source: String,
@@ -489,7 +489,7 @@ public data class SessionDetailResponse(
                 actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
                 apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
                 archived = json.decodeFromJsonElement<Long>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                autoArchived = json.decodeFromJsonElement<Long>((input["auto_archived"] ?: throw SerializationException("Missing auto_archived"))),
+                autoArchived = input["auto_archived"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
                 billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
                 billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
@@ -504,7 +504,7 @@ public data class SessionDetailResponse(
                 compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
                 costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
                 costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
-                createdSource = if ((input["created_source"] ?: throw SerializationException("Missing created_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["created_source"] ?: throw SerializationException("Missing created_source"))),
+                createdSource = input["created_source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
                 displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
                 endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
@@ -537,8 +537,8 @@ public data class SessionDetailResponse(
                 profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
                 reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
                 rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
-                runtimeGeneration = json.decodeFromJsonElement<Long>((input["runtime_generation"] ?: throw SerializationException("Missing runtime_generation"))),
-                runtimeRevision = json.decodeFromJsonElement<Long>((input["runtime_revision"] ?: throw SerializationException("Missing runtime_revision"))),
+                runtimeGeneration = input["runtime_generation"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                runtimeRevision = input["runtime_revision"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 schedulerOwned = input["scheduler_owned"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
                 source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
@@ -571,7 +571,7 @@ public data class SessionDetailResponse(
             output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
             output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
             output["archived"] = json.encodeToJsonElement(value.archived)
-            output["auto_archived"] = json.encodeToJsonElement(value.autoArchived)
+            value.autoArchived?.let { output["auto_archived"] = json.encodeToJsonElement(it) }
             output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
             output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
             output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
@@ -586,7 +586,7 @@ public data class SessionDetailResponse(
             output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
             output["cost_source"] = json.encodeToJsonElement(value.costSource)
             output["cost_status"] = json.encodeToJsonElement(value.costStatus)
-            output["created_source"] = json.encodeToJsonElement(value.createdSource)
+            value.createdSource?.let { output["created_source"] = json.encodeToJsonElement(it) }
             output["cwd"] = json.encodeToJsonElement(value.cwd)
             output["display_name"] = json.encodeToJsonElement(value.displayName)
             output["end_reason"] = json.encodeToJsonElement(value.endReason)
@@ -619,8 +619,8 @@ public data class SessionDetailResponse(
             output["profile_name"] = json.encodeToJsonElement(value.profileName)
             output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
             output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
-            output["runtime_generation"] = json.encodeToJsonElement(value.runtimeGeneration)
-            output["runtime_revision"] = json.encodeToJsonElement(value.runtimeRevision)
+            value.runtimeGeneration?.let { output["runtime_generation"] = json.encodeToJsonElement(it) }
+            value.runtimeRevision?.let { output["runtime_revision"] = json.encodeToJsonElement(it) }
             value.schedulerOwned?.let { output["scheduler_owned"] = json.encodeToJsonElement(it) }
             output["session_key"] = json.encodeToJsonElement(value.sessionKey)
             output["source"] = json.encodeToJsonElement(value.source)
@@ -643,7 +643,7 @@ public data class SessionDetailResponse(
 @Serializable(with = SessionDisplayMessage.Serializer::class)
 public data class SessionDisplayMessage(
     public val compressedSummary: Boolean? = null,
-    public val absorbedMessageUids: String?,
+    public val absorbedMessageUids: String? = null,
     public val active: Long,
     public val apiContent: String?,
     public val codexMessageItems: String?,
@@ -659,7 +659,7 @@ public data class SessionDisplayMessage(
     public val finishReason: String?,
     public val id: Long,
     /** Stable message identity; null on legacy rows until backfilled. */
-    public val messageUid: String?,
+    public val messageUid: String? = null,
     public val observed: Long,
     public val platformMessageId: String?,
     public val reasoning: String?,
@@ -671,8 +671,8 @@ public data class SessionDisplayMessage(
     public val tokenCount: Long?,
     public val toolCallId: String?,
     public val toolCallLabels: Map<String, List<SessionToolCallLabel>>? = null,
-    public val toolCallUid: String?,
-    public val toolCallUids: String?,
+    public val toolCallUid: String? = null,
+    public val toolCallUids: String? = null,
     /** Decoded tool-call list (``[]`` when undecodable), or null. */
     public val toolCalls: JsonElement,
     public val toolName: String?,
@@ -690,7 +690,7 @@ public data class SessionDisplayMessage(
                 ?: throw SerializationException("SessionDisplayMessage requires an object")
             return SessionDisplayMessage(
                 compressedSummary = input["_compressed_summary"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
-                absorbedMessageUids = if ((input["absorbed_message_uids"] ?: throw SerializationException("Missing absorbed_message_uids")) is JsonNull) null else json.decodeFromJsonElement<String>((input["absorbed_message_uids"] ?: throw SerializationException("Missing absorbed_message_uids"))),
+                absorbedMessageUids = input["absorbed_message_uids"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 active = json.decodeFromJsonElement<Long>((input["active"] ?: throw SerializationException("Missing active"))),
                 apiContent = if ((input["api_content"] ?: throw SerializationException("Missing api_content")) is JsonNull) null else json.decodeFromJsonElement<String>((input["api_content"] ?: throw SerializationException("Missing api_content"))),
                 codexMessageItems = if ((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items")) is JsonNull) null else json.decodeFromJsonElement<String>((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items"))),
@@ -705,7 +705,7 @@ public data class SessionDisplayMessage(
                 effectDisposition = if ((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition")) is JsonNull) null else json.decodeFromJsonElement<String>((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition"))),
                 finishReason = if ((input["finish_reason"] ?: throw SerializationException("Missing finish_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["finish_reason"] ?: throw SerializationException("Missing finish_reason"))),
                 id = json.decodeFromJsonElement<Long>((input["id"] ?: throw SerializationException("Missing id"))),
-                messageUid = if ((input["message_uid"] ?: throw SerializationException("Missing message_uid")) is JsonNull) null else json.decodeFromJsonElement<String>((input["message_uid"] ?: throw SerializationException("Missing message_uid"))),
+                messageUid = input["message_uid"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 observed = json.decodeFromJsonElement<Long>((input["observed"] ?: throw SerializationException("Missing observed"))),
                 platformMessageId = if ((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id"))),
                 reasoning = if ((input["reasoning"] ?: throw SerializationException("Missing reasoning")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning"] ?: throw SerializationException("Missing reasoning"))),
@@ -717,8 +717,8 @@ public data class SessionDisplayMessage(
                 tokenCount = if ((input["token_count"] ?: throw SerializationException("Missing token_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["token_count"] ?: throw SerializationException("Missing token_count"))),
                 toolCallId = if ((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id"))),
                 toolCallLabels = input["tool_call_labels"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Map<String, List<SessionToolCallLabel>>>(it) },
-                toolCallUid = if ((input["tool_call_uid"] ?: throw SerializationException("Missing tool_call_uid")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_uid"] ?: throw SerializationException("Missing tool_call_uid"))),
-                toolCallUids = if ((input["tool_call_uids"] ?: throw SerializationException("Missing tool_call_uids")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_uids"] ?: throw SerializationException("Missing tool_call_uids"))),
+                toolCallUid = input["tool_call_uid"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
+                toolCallUids = input["tool_call_uids"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 toolCalls = json.decodeFromJsonElement<JsonElement>((input["tool_calls"] ?: throw SerializationException("Missing tool_calls"))),
                 toolName = if ((input["tool_name"] ?: throw SerializationException("Missing tool_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_name"] ?: throw SerializationException("Missing tool_name"))),
                 additionalProperties = input.filterKeys { it !in setOf("_compressed_summary", "absorbed_message_uids", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_commentary", "display_content", "display_kind", "display_metadata", "display_reasoning", "effect_disposition", "finish_reason", "id", "message_uid", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_call_labels", "tool_call_uid", "tool_call_uids", "tool_calls", "tool_name") },
@@ -736,7 +736,7 @@ public data class SessionDisplayMessage(
             }
             output.putAll(value.additionalProperties)
             value.compressedSummary?.let { output["_compressed_summary"] = json.encodeToJsonElement(it) }
-            output["absorbed_message_uids"] = json.encodeToJsonElement(value.absorbedMessageUids)
+            value.absorbedMessageUids?.let { output["absorbed_message_uids"] = json.encodeToJsonElement(it) }
             output["active"] = json.encodeToJsonElement(value.active)
             output["api_content"] = json.encodeToJsonElement(value.apiContent)
             output["codex_message_items"] = json.encodeToJsonElement(value.codexMessageItems)
@@ -751,7 +751,7 @@ public data class SessionDisplayMessage(
             output["effect_disposition"] = json.encodeToJsonElement(value.effectDisposition)
             output["finish_reason"] = json.encodeToJsonElement(value.finishReason)
             output["id"] = json.encodeToJsonElement(value.id)
-            output["message_uid"] = json.encodeToJsonElement(value.messageUid)
+            value.messageUid?.let { output["message_uid"] = json.encodeToJsonElement(it) }
             output["observed"] = json.encodeToJsonElement(value.observed)
             output["platform_message_id"] = json.encodeToJsonElement(value.platformMessageId)
             output["reasoning"] = json.encodeToJsonElement(value.reasoning)
@@ -763,8 +763,8 @@ public data class SessionDisplayMessage(
             output["token_count"] = json.encodeToJsonElement(value.tokenCount)
             output["tool_call_id"] = json.encodeToJsonElement(value.toolCallId)
             value.toolCallLabels?.let { output["tool_call_labels"] = json.encodeToJsonElement(it) }
-            output["tool_call_uid"] = json.encodeToJsonElement(value.toolCallUid)
-            output["tool_call_uids"] = json.encodeToJsonElement(value.toolCallUids)
+            value.toolCallUid?.let { output["tool_call_uid"] = json.encodeToJsonElement(it) }
+            value.toolCallUids?.let { output["tool_call_uids"] = json.encodeToJsonElement(it) }
             output["tool_calls"] = json.encodeToJsonElement(value.toolCalls)
             output["tool_name"] = json.encodeToJsonElement(value.toolName)
             jsonEncoder.encodeJsonElement(JsonObject(output))
@@ -790,7 +790,7 @@ public data class SessionExportResponse(
     public val apiCallCount: Long?,
     public val archived: Long,
     /** SQLite 0/1: archived by the idle sweep, not by hand. */
-    public val autoArchived: Long,
+    public val autoArchived: Long? = null,
     public val billingBaseUrl: String?,
     public val billingMode: String?,
     public val billingProvider: String?,
@@ -806,7 +806,7 @@ public data class SessionExportResponse(
     public val costSource: String?,
     public val costStatus: String?,
     /** The source the row was created under; null on rows that predate it. */
-    public val createdSource: String?,
+    public val createdSource: Patch<String> = Patch.Absent,
     public val cwd: String?,
     public val displayName: String?,
     public val endReason: String?,
@@ -840,9 +840,9 @@ public data class SessionExportResponse(
     public val reasoningTokens: Long?,
     public val rewindCount: Long,
     /** Execution generation a turn-affecting mutation must quote. */
-    public val runtimeGeneration: Long,
+    public val runtimeGeneration: Long? = null,
     /** Mutation fence: bumped by every committed session mutation. */
-    public val runtimeRevision: Long,
+    public val runtimeRevision: Long? = null,
     public val sessionKey: String?,
     public val source: String,
     public val startedAt: Double,
@@ -873,7 +873,7 @@ public data class SessionExportResponse(
                 actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
                 apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
                 archived = json.decodeFromJsonElement<Long>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                autoArchived = json.decodeFromJsonElement<Long>((input["auto_archived"] ?: throw SerializationException("Missing auto_archived"))),
+                autoArchived = input["auto_archived"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
                 billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
                 billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
@@ -888,7 +888,7 @@ public data class SessionExportResponse(
                 compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
                 costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
                 costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
-                createdSource = if ((input["created_source"] ?: throw SerializationException("Missing created_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["created_source"] ?: throw SerializationException("Missing created_source"))),
+                createdSource = when (val raw = input["created_source"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
                 displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
                 endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
@@ -920,8 +920,8 @@ public data class SessionExportResponse(
                 profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
                 reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
                 rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
-                runtimeGeneration = json.decodeFromJsonElement<Long>((input["runtime_generation"] ?: throw SerializationException("Missing runtime_generation"))),
-                runtimeRevision = json.decodeFromJsonElement<Long>((input["runtime_revision"] ?: throw SerializationException("Missing runtime_revision"))),
+                runtimeGeneration = input["runtime_generation"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                runtimeRevision = input["runtime_revision"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
                 source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
                 startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
@@ -961,7 +961,7 @@ public data class SessionExportResponse(
             output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
             output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
             output["archived"] = json.encodeToJsonElement(value.archived)
-            output["auto_archived"] = json.encodeToJsonElement(value.autoArchived)
+            value.autoArchived?.let { output["auto_archived"] = json.encodeToJsonElement(it) }
             output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
             output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
             output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
@@ -976,7 +976,11 @@ public data class SessionExportResponse(
             output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
             output["cost_source"] = json.encodeToJsonElement(value.costSource)
             output["cost_status"] = json.encodeToJsonElement(value.costStatus)
-            output["created_source"] = json.encodeToJsonElement(value.createdSource)
+            when (val patch = value.createdSource) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["created_source"] = JsonNull
+                is Patch.Value -> output["created_source"] = json.encodeToJsonElement(patch.value)
+            }
             output["cwd"] = json.encodeToJsonElement(value.cwd)
             output["display_name"] = json.encodeToJsonElement(value.displayName)
             output["end_reason"] = json.encodeToJsonElement(value.endReason)
@@ -1008,8 +1012,8 @@ public data class SessionExportResponse(
             output["profile_name"] = json.encodeToJsonElement(value.profileName)
             output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
             output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
-            output["runtime_generation"] = json.encodeToJsonElement(value.runtimeGeneration)
-            output["runtime_revision"] = json.encodeToJsonElement(value.runtimeRevision)
+            value.runtimeGeneration?.let { output["runtime_generation"] = json.encodeToJsonElement(it) }
+            value.runtimeRevision?.let { output["runtime_revision"] = json.encodeToJsonElement(it) }
             output["session_key"] = json.encodeToJsonElement(value.sessionKey)
             output["source"] = json.encodeToJsonElement(value.source)
             output["started_at"] = json.encodeToJsonElement(value.startedAt)
@@ -1091,7 +1095,7 @@ public data class SessionImportResponse(
     @SerialName("errors")
     public val errors: List<Map<String, JsonElement>>,
     @SerialName("execution_generation")
-    public val executionGeneration: Long?,
+    public val executionGeneration: Long? = null,
     @SerialName("imported")
     public val imported: Long,
     @SerialName("imported_ids")
@@ -1099,11 +1103,11 @@ public data class SessionImportResponse(
     @SerialName("ok")
     public val ok: Boolean,
     @SerialName("operation")
-    public val operation: SessionImportResponseOperation,
+    public val operation: SessionImportResponseOperation? = null,
     @SerialName("revision")
-    public val revision: Long,
+    public val revision: Long? = null,
     @SerialName("session_id")
-    public val sessionId: String,
+    public val sessionId: String? = null,
     @SerialName("skipped")
     public val skipped: Long,
     @SerialName("skipped_ids")
@@ -1208,7 +1212,7 @@ public sealed interface SessionListResponseStorageValue {
 @Serializable(with = SessionMessage.Serializer::class)
 public data class SessionMessage(
     public val compressedSummary: Patch<Boolean> = Patch.Absent,
-    public val absorbedMessageUids: String?,
+    public val absorbedMessageUids: Patch<String> = Patch.Absent,
     public val active: Long,
     public val apiContent: String?,
     public val codexMessageItems: String?,
@@ -1221,7 +1225,7 @@ public data class SessionMessage(
     public val finishReason: String?,
     public val id: Long,
     /** Stable message identity; null on legacy rows until backfilled. */
-    public val messageUid: String?,
+    public val messageUid: Patch<String> = Patch.Absent,
     public val observed: Long,
     public val platformMessageId: String?,
     public val reasoning: String?,
@@ -1232,8 +1236,8 @@ public data class SessionMessage(
     public val timestamp: Double,
     public val tokenCount: Long?,
     public val toolCallId: String?,
-    public val toolCallUid: String?,
-    public val toolCallUids: String?,
+    public val toolCallUid: Patch<String> = Patch.Absent,
+    public val toolCallUids: Patch<String> = Patch.Absent,
     /** Decoded tool-call list (``[]`` when undecodable), or null. */
     public val toolCalls: JsonElement,
     public val toolName: String?,
@@ -1251,7 +1255,7 @@ public data class SessionMessage(
                 ?: throw SerializationException("SessionMessage requires an object")
             return SessionMessage(
                 compressedSummary = when (val raw = input["_compressed_summary"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<Boolean>(raw)) },
-                absorbedMessageUids = if ((input["absorbed_message_uids"] ?: throw SerializationException("Missing absorbed_message_uids")) is JsonNull) null else json.decodeFromJsonElement<String>((input["absorbed_message_uids"] ?: throw SerializationException("Missing absorbed_message_uids"))),
+                absorbedMessageUids = when (val raw = input["absorbed_message_uids"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 active = json.decodeFromJsonElement<Long>((input["active"] ?: throw SerializationException("Missing active"))),
                 apiContent = if ((input["api_content"] ?: throw SerializationException("Missing api_content")) is JsonNull) null else json.decodeFromJsonElement<String>((input["api_content"] ?: throw SerializationException("Missing api_content"))),
                 codexMessageItems = if ((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items")) is JsonNull) null else json.decodeFromJsonElement<String>((input["codex_message_items"] ?: throw SerializationException("Missing codex_message_items"))),
@@ -1263,7 +1267,7 @@ public data class SessionMessage(
                 effectDisposition = if ((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition")) is JsonNull) null else json.decodeFromJsonElement<String>((input["effect_disposition"] ?: throw SerializationException("Missing effect_disposition"))),
                 finishReason = if ((input["finish_reason"] ?: throw SerializationException("Missing finish_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["finish_reason"] ?: throw SerializationException("Missing finish_reason"))),
                 id = json.decodeFromJsonElement<Long>((input["id"] ?: throw SerializationException("Missing id"))),
-                messageUid = if ((input["message_uid"] ?: throw SerializationException("Missing message_uid")) is JsonNull) null else json.decodeFromJsonElement<String>((input["message_uid"] ?: throw SerializationException("Missing message_uid"))),
+                messageUid = when (val raw = input["message_uid"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 observed = json.decodeFromJsonElement<Long>((input["observed"] ?: throw SerializationException("Missing observed"))),
                 platformMessageId = if ((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["platform_message_id"] ?: throw SerializationException("Missing platform_message_id"))),
                 reasoning = if ((input["reasoning"] ?: throw SerializationException("Missing reasoning")) is JsonNull) null else json.decodeFromJsonElement<String>((input["reasoning"] ?: throw SerializationException("Missing reasoning"))),
@@ -1274,8 +1278,8 @@ public data class SessionMessage(
                 timestamp = json.decodeFromJsonElement<Double>((input["timestamp"] ?: throw SerializationException("Missing timestamp"))),
                 tokenCount = if ((input["token_count"] ?: throw SerializationException("Missing token_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["token_count"] ?: throw SerializationException("Missing token_count"))),
                 toolCallId = if ((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_id"] ?: throw SerializationException("Missing tool_call_id"))),
-                toolCallUid = if ((input["tool_call_uid"] ?: throw SerializationException("Missing tool_call_uid")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_uid"] ?: throw SerializationException("Missing tool_call_uid"))),
-                toolCallUids = if ((input["tool_call_uids"] ?: throw SerializationException("Missing tool_call_uids")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_call_uids"] ?: throw SerializationException("Missing tool_call_uids"))),
+                toolCallUid = when (val raw = input["tool_call_uid"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
+                toolCallUids = when (val raw = input["tool_call_uids"]) { null -> Patch.Absent; JsonNull -> Patch.Null; else -> Patch.Value(json.decodeFromJsonElement<String>(raw)) },
                 toolCalls = json.decodeFromJsonElement<JsonElement>((input["tool_calls"] ?: throw SerializationException("Missing tool_calls"))),
                 toolName = if ((input["tool_name"] ?: throw SerializationException("Missing tool_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["tool_name"] ?: throw SerializationException("Missing tool_name"))),
                 additionalProperties = input.filterKeys { it !in setOf("_compressed_summary", "absorbed_message_uids", "active", "api_content", "codex_message_items", "codex_reasoning_items", "compacted", "content", "display_kind", "display_metadata", "effect_disposition", "finish_reason", "id", "message_uid", "observed", "platform_message_id", "reasoning", "reasoning_content", "reasoning_details", "role", "session_id", "timestamp", "token_count", "tool_call_id", "tool_call_uid", "tool_call_uids", "tool_calls", "tool_name") },
@@ -1297,7 +1301,11 @@ public data class SessionMessage(
                 Patch.Null -> output["_compressed_summary"] = JsonNull
                 is Patch.Value -> output["_compressed_summary"] = json.encodeToJsonElement(patch.value)
             }
-            output["absorbed_message_uids"] = json.encodeToJsonElement(value.absorbedMessageUids)
+            when (val patch = value.absorbedMessageUids) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["absorbed_message_uids"] = JsonNull
+                is Patch.Value -> output["absorbed_message_uids"] = json.encodeToJsonElement(patch.value)
+            }
             output["active"] = json.encodeToJsonElement(value.active)
             output["api_content"] = json.encodeToJsonElement(value.apiContent)
             output["codex_message_items"] = json.encodeToJsonElement(value.codexMessageItems)
@@ -1309,7 +1317,11 @@ public data class SessionMessage(
             output["effect_disposition"] = json.encodeToJsonElement(value.effectDisposition)
             output["finish_reason"] = json.encodeToJsonElement(value.finishReason)
             output["id"] = json.encodeToJsonElement(value.id)
-            output["message_uid"] = json.encodeToJsonElement(value.messageUid)
+            when (val patch = value.messageUid) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["message_uid"] = JsonNull
+                is Patch.Value -> output["message_uid"] = json.encodeToJsonElement(patch.value)
+            }
             output["observed"] = json.encodeToJsonElement(value.observed)
             output["platform_message_id"] = json.encodeToJsonElement(value.platformMessageId)
             output["reasoning"] = json.encodeToJsonElement(value.reasoning)
@@ -1320,8 +1332,16 @@ public data class SessionMessage(
             output["timestamp"] = json.encodeToJsonElement(value.timestamp)
             output["token_count"] = json.encodeToJsonElement(value.tokenCount)
             output["tool_call_id"] = json.encodeToJsonElement(value.toolCallId)
-            output["tool_call_uid"] = json.encodeToJsonElement(value.toolCallUid)
-            output["tool_call_uids"] = json.encodeToJsonElement(value.toolCallUids)
+            when (val patch = value.toolCallUid) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["tool_call_uid"] = JsonNull
+                is Patch.Value -> output["tool_call_uid"] = json.encodeToJsonElement(patch.value)
+            }
+            when (val patch = value.toolCallUids) {
+                Patch.Absent -> Unit
+                Patch.Null -> output["tool_call_uids"] = JsonNull
+                is Patch.Value -> output["tool_call_uids"] = json.encodeToJsonElement(patch.value)
+            }
             output["tool_calls"] = json.encodeToJsonElement(value.toolCalls)
             output["tool_name"] = json.encodeToJsonElement(value.toolName)
             jsonEncoder.encodeJsonElement(JsonObject(output))

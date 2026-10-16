@@ -889,7 +889,7 @@ public data class ProfileCreateResponse(
     public val skillsDisabled: Long,
     /** The request carried a ``soul`` (SOUL.md) for the new profile. */
     @SerialName("soul_set")
-    public val soulSet: Boolean,
+    public val soulSet: Boolean? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``delete_profile_endpoint``; the settlement keys ride only when the directory is gone but ``ProfileIdentitySettlementPending`` left its identity unsettled. */

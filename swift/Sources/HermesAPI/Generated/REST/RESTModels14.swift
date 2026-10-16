@@ -1422,9 +1422,9 @@ public struct ProfileCreateResponse: Codable, Sendable, Hashable {
     public var path: String
     public var skillsDisabled: Int
     /// The request carried a ``soul`` (SOUL.md) for the new profile.
-    public var soulSet: Bool
+    public var soulSet: Bool?
 
-    public init(hubInstalls: [ProfileHubInstall], mcpWritten: Int, modelError: String, modelSet: Bool, name: String, ok: Bool, path: String, skillsDisabled: Int, soulSet: Bool) {
+    public init(hubInstalls: [ProfileHubInstall], mcpWritten: Int, modelError: String, modelSet: Bool, name: String, ok: Bool, path: String, skillsDisabled: Int, soulSet: Bool? = nil) {
         self.hubInstalls = hubInstalls
         self.mcpWritten = mcpWritten
         self.modelError = modelError
@@ -1465,7 +1465,7 @@ public struct ProfileCreateResponse: Codable, Sendable, Hashable {
         ok = try container.decode(Bool.self, forKey: .ok)
         path = try container.decode(String.self, forKey: .path)
         skillsDisabled = try container.decode(Int.self, forKey: .skillsDisabled)
-        soulSet = try container.decode(Bool.self, forKey: .soulSet)
+        soulSet = try container.decodeIfPresent(Bool.self, forKey: .soulSet)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -1478,7 +1478,7 @@ public struct ProfileCreateResponse: Codable, Sendable, Hashable {
         try container.encode(ok, forKey: .ok)
         try container.encode(path, forKey: .path)
         try container.encode(skillsDisabled, forKey: .skillsDisabled)
-        try container.encode(soulSet, forKey: .soulSet)
+        try container.encodeIfPresent(soulSet, forKey: .soulSet)
     }
 }
 

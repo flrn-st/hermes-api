@@ -665,14 +665,14 @@ public struct SessionRenameResponse: Codable, Sendable, Hashable {
     public var executionGeneration: Int?
     public var hidden: Bool?
     public var ok: Bool
-    public var operation: SessionRenameResponseOperation
+    public var operation: SessionRenameResponseOperation?
     public var pinned: Bool?
-    public var revision: Int
-    public var sessionId: String
+    public var revision: Int?
+    public var sessionId: String?
     public var title: String?
     public var unread: Bool?
 
-    public init(archived: Bool? = nil, executionGeneration: Int?, hidden: Bool? = nil, ok: Bool, operation: SessionRenameResponseOperation, pinned: Bool? = nil, revision: Int, sessionId: String, title: String? = nil, unread: Bool? = nil) {
+    public init(archived: Bool? = nil, executionGeneration: Int? = nil, hidden: Bool? = nil, ok: Bool, operation: SessionRenameResponseOperation? = nil, pinned: Bool? = nil, revision: Int? = nil, sessionId: String? = nil, title: String? = nil, unread: Bool? = nil) {
         self.archived = archived
         self.executionGeneration = executionGeneration
         self.hidden = hidden
@@ -708,13 +708,13 @@ public struct SessionRenameResponse: Codable, Sendable, Hashable {
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         archived = try container.decodeIfPresent(Bool.self, forKey: .archived)
-        executionGeneration = try container.decode(Optional<Int>.self, forKey: .executionGeneration)
+        executionGeneration = try container.decodeIfPresent(Int.self, forKey: .executionGeneration)
         hidden = try container.decodeIfPresent(Bool.self, forKey: .hidden)
         ok = try container.decode(Bool.self, forKey: .ok)
-        operation = try container.decode(SessionRenameResponseOperation.self, forKey: .operation)
+        operation = try container.decodeIfPresent(SessionRenameResponseOperation.self, forKey: .operation)
         pinned = try container.decodeIfPresent(Bool.self, forKey: .pinned)
-        revision = try container.decode(Int.self, forKey: .revision)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
+        revision = try container.decodeIfPresent(Int.self, forKey: .revision)
+        sessionId = try container.decodeIfPresent(String.self, forKey: .sessionId)
         title = try container.decodeIfPresent(String.self, forKey: .title)
         unread = try container.decodeIfPresent(Bool.self, forKey: .unread)
     }
@@ -722,13 +722,13 @@ public struct SessionRenameResponse: Codable, Sendable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(archived, forKey: .archived)
-        try container.encode(executionGeneration, forKey: .executionGeneration)
+        try container.encodeIfPresent(executionGeneration, forKey: .executionGeneration)
         try container.encodeIfPresent(hidden, forKey: .hidden)
         try container.encode(ok, forKey: .ok)
-        try container.encode(operation, forKey: .operation)
+        try container.encodeIfPresent(operation, forKey: .operation)
         try container.encodeIfPresent(pinned, forKey: .pinned)
-        try container.encode(revision, forKey: .revision)
-        try container.encode(sessionId, forKey: .sessionId)
+        try container.encodeIfPresent(revision, forKey: .revision)
+        try container.encodeIfPresent(sessionId, forKey: .sessionId)
         try container.encodeIfPresent(title, forKey: .title)
         try container.encodeIfPresent(unread, forKey: .unread)
     }

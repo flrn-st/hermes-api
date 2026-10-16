@@ -842,11 +842,11 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
     /// Cron expression template with ``{slot}`` placeholders.
     public var schedule: String
     public var scheduleHuman: String
-    public var source: CronBlueprintSource
+    public var source: CronBlueprintSource?
     public var tags: [String]
     public var title: String
 
-    public init(appUrl: String, category: String, command: String, description: String, fields: [CronBlueprintField], key: String, plugin: String?, schedule: String, scheduleHuman: String, source: CronBlueprintSource, tags: [String], title: String) {
+    public init(appUrl: String, category: String, command: String, description: String, fields: [CronBlueprintField], key: String, plugin: String? = nil, schedule: String, scheduleHuman: String, source: CronBlueprintSource? = nil, tags: [String], title: String) {
         self.appUrl = appUrl
         self.category = category
         self.command = command
@@ -891,10 +891,10 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
         description = try container.decode(String.self, forKey: .description)
         fields = try container.decode([CronBlueprintField].self, forKey: .fields)
         key = try container.decode(String.self, forKey: .key)
-        plugin = try container.decode(Optional<String>.self, forKey: .plugin)
+        plugin = try container.decodeIfPresent(String.self, forKey: .plugin)
         schedule = try container.decode(String.self, forKey: .schedule)
         scheduleHuman = try container.decode(String.self, forKey: .scheduleHuman)
-        source = try container.decode(CronBlueprintSource.self, forKey: .source)
+        source = try container.decodeIfPresent(CronBlueprintSource.self, forKey: .source)
         tags = try container.decode([String].self, forKey: .tags)
         title = try container.decode(String.self, forKey: .title)
     }
@@ -907,10 +907,10 @@ public struct CronBlueprint: Codable, Sendable, Hashable {
         try container.encode(description, forKey: .description)
         try container.encode(fields, forKey: .fields)
         try container.encode(key, forKey: .key)
-        try container.encode(plugin, forKey: .plugin)
+        try container.encodeIfPresent(plugin, forKey: .plugin)
         try container.encode(schedule, forKey: .schedule)
         try container.encode(scheduleHuman, forKey: .scheduleHuman)
-        try container.encode(source, forKey: .source)
+        try container.encodeIfPresent(source, forKey: .source)
         try container.encode(tags, forKey: .tags)
         try container.encode(title, forKey: .title)
     }
@@ -1800,7 +1800,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
     public var startedAt: String?
     public var status: CronJobExecutionStatus
 
-    public init(claimedAt: String, deliveryOutcome: String?, error: String?, finishedAt: String?, handoffPending: Int, handoffStartedAt: Double?, id: String, jobId: String, pid: Int, processId: String, processStartedAt: Int?, progressAt: String?, scheduledInstant: String?, source: String, startedAt: String?, status: CronJobExecutionStatus) {
+    public init(claimedAt: String, deliveryOutcome: String?, error: String?, finishedAt: String?, handoffPending: Int, handoffStartedAt: Double?, id: String, jobId: String, pid: Int, processId: String, processStartedAt: Int?, progressAt: String? = nil, scheduledInstant: String?, source: String, startedAt: String?, status: CronJobExecutionStatus) {
         self.claimedAt = claimedAt
         self.deliveryOutcome = deliveryOutcome
         self.error = error
@@ -1858,7 +1858,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
         pid = try container.decode(Int.self, forKey: .pid)
         processId = try container.decode(String.self, forKey: .processId)
         processStartedAt = try container.decode(Optional<Int>.self, forKey: .processStartedAt)
-        progressAt = try container.decode(Optional<String>.self, forKey: .progressAt)
+        progressAt = try container.decodeIfPresent(String.self, forKey: .progressAt)
         scheduledInstant = try container.decode(Optional<String>.self, forKey: .scheduledInstant)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Optional<String>.self, forKey: .startedAt)
@@ -1878,7 +1878,7 @@ public struct CronJobExecution: Codable, Sendable, Hashable {
         try container.encode(pid, forKey: .pid)
         try container.encode(processId, forKey: .processId)
         try container.encode(processStartedAt, forKey: .processStartedAt)
-        try container.encode(progressAt, forKey: .progressAt)
+        try container.encodeIfPresent(progressAt, forKey: .progressAt)
         try container.encode(scheduledInstant, forKey: .scheduledInstant)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)
@@ -2194,7 +2194,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var apiCallCount: Int?
     public var archived: Bool
     /// SQLite 0/1: archived by the idle sweep, not by hand.
-    public var autoArchived: Int
+    public var autoArchived: Int?
     public var billingBaseUrl: String?
     public var billingMode: String?
     public var billingProvider: String?
@@ -2248,11 +2248,11 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var reasoningTokens: Int?
     public var rewindCount: Int
     /// Execution generation a turn-affecting mutation must quote.
-    public var runtimeGeneration: Int
+    public var runtimeGeneration: Int?
     /// Mutation fence: bumped by every committed session mutation.
-    public var runtimeRevision: Int
+    public var runtimeRevision: Int?
     /// The scheduler still owns this run (``_run_owned_by``): live even past the activity window.
-    public var schedulerOwned: Bool
+    public var schedulerOwned: Bool?
     public var sessionKey: String?
     public var source: String
     public var startedAt: Double
@@ -2267,7 +2267,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(branchedFrom: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, autoArchived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, createdSource: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, preview: String, pricingVersion: String?, profile: String? = nil, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int, runtimeRevision: Int, schedulerOwned: Bool, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(branchedFrom: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, autoArchived: Int? = nil, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, costSource: String?, costStatus: String?, createdSource: String? = nil, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String?, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Int, preview: String, pricingVersion: String?, profile: String? = nil, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int? = nil, runtimeRevision: Int? = nil, schedulerOwned: Bool? = nil, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String?, systemPromptHash: String?, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
         self.branchedFrom = branchedFrom
         self.resetFrom = resetFrom
         self.actualCostUsd = actualCostUsd
@@ -2421,7 +2421,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
         apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
         archived = try container.decode(Bool.self, forKey: .archived)
-        autoArchived = try container.decode(Int.self, forKey: .autoArchived)
+        autoArchived = try container.decodeIfPresent(Int.self, forKey: .autoArchived)
         billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
         billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
         billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
@@ -2436,7 +2436,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         compressionRecoveryDeadline = try container.decode(Optional<Double>.self, forKey: .compressionRecoveryDeadline)
         costSource = try container.decode(Optional<String>.self, forKey: .costSource)
         costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
-        createdSource = try container.decode(Optional<String>.self, forKey: .createdSource)
+        createdSource = try container.decodeIfPresent(String.self, forKey: .createdSource)
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
         displayName = try container.decode(Optional<String>.self, forKey: .displayName)
         endReason = try container.decode(Optional<String>.self, forKey: .endReason)
@@ -2471,9 +2471,9 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         profileName = try container.decode(Optional<String>.self, forKey: .profileName)
         reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
         rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        runtimeGeneration = try container.decode(Int.self, forKey: .runtimeGeneration)
-        runtimeRevision = try container.decode(Int.self, forKey: .runtimeRevision)
-        schedulerOwned = try container.decode(Bool.self, forKey: .schedulerOwned)
+        runtimeGeneration = try container.decodeIfPresent(Int.self, forKey: .runtimeGeneration)
+        runtimeRevision = try container.decodeIfPresent(Int.self, forKey: .runtimeRevision)
+        schedulerOwned = try container.decodeIfPresent(Bool.self, forKey: .schedulerOwned)
         sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Double.self, forKey: .startedAt)
@@ -2502,7 +2502,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         try container.encode(actualCostUsd, forKey: .actualCostUsd)
         try container.encode(apiCallCount, forKey: .apiCallCount)
         try container.encode(archived, forKey: .archived)
-        try container.encode(autoArchived, forKey: .autoArchived)
+        try container.encodeIfPresent(autoArchived, forKey: .autoArchived)
         try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
         try container.encode(billingMode, forKey: .billingMode)
         try container.encode(billingProvider, forKey: .billingProvider)
@@ -2517,7 +2517,7 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         try container.encode(compressionRecoveryDeadline, forKey: .compressionRecoveryDeadline)
         try container.encode(costSource, forKey: .costSource)
         try container.encode(costStatus, forKey: .costStatus)
-        try container.encode(createdSource, forKey: .createdSource)
+        try container.encodeIfPresent(createdSource, forKey: .createdSource)
         try container.encode(cwd, forKey: .cwd)
         try container.encode(displayName, forKey: .displayName)
         try container.encode(endReason, forKey: .endReason)
@@ -2552,9 +2552,9 @@ public struct CronJobRunSession: Codable, Sendable, Hashable {
         try container.encode(profileName, forKey: .profileName)
         try container.encode(reasoningTokens, forKey: .reasoningTokens)
         try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encode(runtimeGeneration, forKey: .runtimeGeneration)
-        try container.encode(runtimeRevision, forKey: .runtimeRevision)
-        try container.encode(schedulerOwned, forKey: .schedulerOwned)
+        try container.encodeIfPresent(runtimeGeneration, forKey: .runtimeGeneration)
+        try container.encodeIfPresent(runtimeRevision, forKey: .runtimeRevision)
+        try container.encodeIfPresent(schedulerOwned, forKey: .schedulerOwned)
         try container.encode(sessionKey, forKey: .sessionKey)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)

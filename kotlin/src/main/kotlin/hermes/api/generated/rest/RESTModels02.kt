@@ -469,14 +469,14 @@ public data class CronBlueprint(
     public val key: String,
     /** The registering plugin; null for a built-in. */
     @SerialName("plugin")
-    public val plugin: String?,
+    public val plugin: String? = null,
     /** Cron expression template with ``{slot}`` placeholders. */
     @SerialName("schedule")
     public val schedule: String,
     @SerialName("scheduleHuman")
     public val scheduleHuman: String,
     @SerialName("source")
-    public val source: CronBlueprintSource,
+    public val source: CronBlueprintSource? = null,
     @SerialName("tags")
     public val tags: List<String>,
     @SerialName("title")
@@ -1013,7 +1013,7 @@ public data class CronJobExecution(
     public val processStartedAt: Long?,
     /** Last liveness stamp of a running attempt; staleness counts from it. */
     @SerialName("progress_at")
-    public val progressAt: String?,
+    public val progressAt: String? = null,
     @SerialName("scheduled_instant")
     public val scheduledInstant: String?,
     @SerialName("source")
@@ -1223,7 +1223,7 @@ public data class CronJobRunSession(
     public val apiCallCount: Long?,
     public val archived: Boolean,
     /** SQLite 0/1: archived by the idle sweep, not by hand. */
-    public val autoArchived: Long,
+    public val autoArchived: Long? = null,
     public val billingBaseUrl: String?,
     public val billingMode: String?,
     public val billingProvider: String?,
@@ -1239,7 +1239,7 @@ public data class CronJobRunSession(
     public val costSource: String?,
     public val costStatus: String?,
     /** The source the row was created under; null on rows that predate it. */
-    public val createdSource: String?,
+    public val createdSource: String? = null,
     public val cwd: String?,
     public val displayName: String?,
     public val endReason: String?,
@@ -1277,11 +1277,11 @@ public data class CronJobRunSession(
     public val reasoningTokens: Long?,
     public val rewindCount: Long,
     /** Execution generation a turn-affecting mutation must quote. */
-    public val runtimeGeneration: Long,
+    public val runtimeGeneration: Long? = null,
     /** Mutation fence: bumped by every committed session mutation. */
-    public val runtimeRevision: Long,
+    public val runtimeRevision: Long? = null,
     /** The scheduler still owns this run (``_run_owned_by``): live even past the activity window. */
-    public val schedulerOwned: Boolean,
+    public val schedulerOwned: Boolean? = null,
     public val sessionKey: String?,
     public val source: String,
     public val startedAt: Double,
@@ -1312,7 +1312,7 @@ public data class CronJobRunSession(
                 actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
                 apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
                 archived = json.decodeFromJsonElement<Boolean>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                autoArchived = json.decodeFromJsonElement<Long>((input["auto_archived"] ?: throw SerializationException("Missing auto_archived"))),
+                autoArchived = input["auto_archived"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
                 billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
                 billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
@@ -1327,7 +1327,7 @@ public data class CronJobRunSession(
                 compressionRecoveryDeadline = if ((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["compression_recovery_deadline"] ?: throw SerializationException("Missing compression_recovery_deadline"))),
                 costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
                 costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
-                createdSource = if ((input["created_source"] ?: throw SerializationException("Missing created_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["created_source"] ?: throw SerializationException("Missing created_source"))),
+                createdSource = input["created_source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
                 displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
                 endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
@@ -1362,9 +1362,9 @@ public data class CronJobRunSession(
                 profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
                 reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
                 rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
-                runtimeGeneration = json.decodeFromJsonElement<Long>((input["runtime_generation"] ?: throw SerializationException("Missing runtime_generation"))),
-                runtimeRevision = json.decodeFromJsonElement<Long>((input["runtime_revision"] ?: throw SerializationException("Missing runtime_revision"))),
-                schedulerOwned = json.decodeFromJsonElement<Boolean>((input["scheduler_owned"] ?: throw SerializationException("Missing scheduler_owned"))),
+                runtimeGeneration = input["runtime_generation"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                runtimeRevision = input["runtime_revision"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                schedulerOwned = input["scheduler_owned"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Boolean>(it) },
                 sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
                 source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
                 startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
@@ -1396,7 +1396,7 @@ public data class CronJobRunSession(
             output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
             output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
             output["archived"] = json.encodeToJsonElement(value.archived)
-            output["auto_archived"] = json.encodeToJsonElement(value.autoArchived)
+            value.autoArchived?.let { output["auto_archived"] = json.encodeToJsonElement(it) }
             output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
             output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
             output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
@@ -1411,7 +1411,7 @@ public data class CronJobRunSession(
             output["compression_recovery_deadline"] = json.encodeToJsonElement(value.compressionRecoveryDeadline)
             output["cost_source"] = json.encodeToJsonElement(value.costSource)
             output["cost_status"] = json.encodeToJsonElement(value.costStatus)
-            output["created_source"] = json.encodeToJsonElement(value.createdSource)
+            value.createdSource?.let { output["created_source"] = json.encodeToJsonElement(it) }
             output["cwd"] = json.encodeToJsonElement(value.cwd)
             output["display_name"] = json.encodeToJsonElement(value.displayName)
             output["end_reason"] = json.encodeToJsonElement(value.endReason)
@@ -1446,9 +1446,9 @@ public data class CronJobRunSession(
             output["profile_name"] = json.encodeToJsonElement(value.profileName)
             output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
             output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
-            output["runtime_generation"] = json.encodeToJsonElement(value.runtimeGeneration)
-            output["runtime_revision"] = json.encodeToJsonElement(value.runtimeRevision)
-            output["scheduler_owned"] = json.encodeToJsonElement(value.schedulerOwned)
+            value.runtimeGeneration?.let { output["runtime_generation"] = json.encodeToJsonElement(it) }
+            value.runtimeRevision?.let { output["runtime_revision"] = json.encodeToJsonElement(it) }
+            value.schedulerOwned?.let { output["scheduler_owned"] = json.encodeToJsonElement(it) }
             output["session_key"] = json.encodeToJsonElement(value.sessionKey)
             output["source"] = json.encodeToJsonElement(value.source)
             output["started_at"] = json.encodeToJsonElement(value.startedAt)

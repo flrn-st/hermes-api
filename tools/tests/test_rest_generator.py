@@ -8,7 +8,7 @@ from copy import deepcopy
 import pytest
 
 from tools.fetch_spec import ROOT
-from tools.gen_rest_api import _kotlin_method, _swift_method, build, generate
+from tools.gen_rest_api import _kotlin_method, _swift_method, build, generate, with_older_releases
 from tools.ref_policy import current_release
 
 CURRENT = current_release()
@@ -173,3 +173,17 @@ def test_unsupported_shapes_fail_generation(mutate, message: str) -> None:
     mutate(operation)
     with pytest.raises(ValueError, match=message):
         build(_document({"/api/items": {"get": deepcopy(operation)}}, {"Item": ITEM}), set())
+
+
+def test_older_releases_relax_required_and_accept_retired_fields() -> None:
+    document = {"components": {"schemas": {"Row": {
+        "type": "object", "additionalProperties": False, "required": ["id", "added"],
+        "properties": {"id": {"type": "string"}, "added": {"type": "integer"}}}}}}
+    compat = {"optional": {"Row": ["added"]}, "retired": {"Row": {"old": {"type": "string"}}}}
+    relaxed = with_older_releases(document, compat)["components"]["schemas"]["Row"]
+    assert relaxed["required"] == ["id"]
+    assert relaxed["properties"]["old"] == {"type": "string"}
+    assert document["components"]["schemas"]["Row"]["required"] == ["id", "added"]
+    for stale in ({"optional": {"Row": ["old"]}}, {"optional": {"Gone": ["id"]}}, {"retired": {"Row": {"id": {}}}}):
+        with pytest.raises(ValueError, match="rest-compat"):
+            with_older_releases(document, stale)

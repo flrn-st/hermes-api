@@ -87,7 +87,10 @@ list, or a missing required key fails, so contract drift surfaces instead of bei
 An app that must keep working when its users' Hermes is newer than the pinned release sets
 `decoding: .tolerant` (Kotlin: `RESTDecoding.Tolerant`): unknown keys are skipped and unlisted enum values
 arrive in the enum's `unknown` case (Kotlin: `Unknown`), so fields and values a newer release adds do not
-fail the call. A missing required key still fails in both modes. Objects that the contract leaves open
+fail the call. A missing required key still fails in both modes, except the fields older releases do not
+send yet: `spec/rest-compat.yaml` lists the session, message, profile and cron fields added since v0.21.5
+(and the profile `role` v0.22.1 dropped), and the generated models decode them as optional, so
+Hermes v0.21.5 and v0.22.0 still read. Objects that the contract leaves open
 keep their undeclared keys in `additionalProperties`.
 
 ## Results

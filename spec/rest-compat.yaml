@@ -1,0 +1,33 @@
+# Older Hermes releases the generated REST client still reads (spec/refs.yaml: v0.21.5, and v0.22.0 on the
+# stable channel). The reviewed contracts describe the pinned release and stay as they are; this list only
+# changes the generated models (tools/gen_rest_api.py), so `make check-rest` covers it like any other input.
+#
+# optional: fields the pinned release requires but an older release does not send. They decode as optional
+#   (Swift `T?`, Kotlin `T? = null`), in strict and tolerant decoding alike.
+# retired: fields an older release sends that the pinned release dropped from a closed object. They are
+#   declared as optional so strict decoding of an older release's response does not fail on them.
+#
+# Every entry must still name a required field (optional) or an undeclared one (retired) of the pinned
+# release's contract, or generation fails, so the list cannot go stale silently. Covered by
+# `olderReleaseRESTResponsesDecode` (Swift and Kotlin), which decodes fixtures/v0.21.5.
+floor: v0.21.5
+optional:
+  CronBlueprint: [plugin, source]
+  CronJobExecution: [progress_at]
+  CronJobRunSession: [auto_archived, created_source, runtime_generation, runtime_revision, scheduler_owned]
+  ProfileCreateResponse: [soul_set]
+  ProfileProjectTreeNode: [mergeKey]
+  ProfileProjectTreeSession: [_branched_from, _reset_from]
+  SessionBulkDeleteResponse: [skipped_active]
+  SessionDetailResponse: [auto_archived, created_source, runtime_generation, runtime_revision]
+  SessionDisplayMessage: [absorbed_message_uids, message_uid, tool_call_uid, tool_call_uids]
+  SessionExportResponse: [auto_archived, created_source, runtime_generation, runtime_revision]
+  SessionImportResponse: [execution_generation, operation, revision, session_id]
+  SessionListRow: [auto_archived, created_source, runtime_generation, runtime_revision]
+  SessionMessage: [absorbed_message_uids, message_uid, tool_call_uid, tool_call_uids]
+  SessionRenameResponse: [execution_generation, operation, revision, session_id]
+retired:
+  ProfileSummary:
+    role:
+      anyOf: [{type: string}, {type: "null"}]
+      description: '`hermes_cli.profiles.PROFILE_ROLES` ("setup") or null; sent before v0.22.1.'

@@ -159,7 +159,7 @@ public data class ProfileProjectTreeNode(
     public val lastActive: Double,
     /** The folder identity the merge keyed on (``project_tree._path_key``); a client merging per-profile reads (``?profile=``) folds on it. */
     @SerialName("mergeKey")
-    public val mergeKey: String,
+    public val mergeKey: String? = null,
     @SerialName("path")
     public val path: String?,
     @SerialName("previewSessions")
@@ -196,14 +196,14 @@ public data class ProfileProjectTreeRepo(
 public data class ProfileProjectTreeSession(
     /** Set on a /branch fork. */
     @SerialName("_branched_from")
-    public val branchedFrom: String?,
+    public val branchedFrom: String? = null,
     @SerialName("_lineage_ids")
     public val lineageIds: List<String>?,
     @SerialName("_lineage_root_id")
     public val lineageRootId: String?,
     /** Set on a /new sibling (not a fork). */
     @SerialName("_reset_from")
-    public val resetFrom: String?,
+    public val resetFrom: String? = null,
     @SerialName("actual_cost_usd")
     public val actualCostUsd: Double?,
     @SerialName("archived")
@@ -569,6 +569,9 @@ public data class ProfileSummary(
     public val provider: String?,
     @SerialName("skill_count")
     public val skillCount: Long,
+    /** `hermes_cli.profiles.PROFILE_ROLES` ("setup") or null; sent before v0.22.1. */
+    @SerialName("role")
+    public val role: String? = null,
 )
 
 /** Generated from the reviewed Hermes REST contract. Do not edit. ``validate_provider_credential``; ``models``/``model_details``/``resolved_base_url`` only on the ``OPENAI_BASE_URL`` connectivity branch. */
@@ -651,7 +654,7 @@ public data class RESTSessionListRow(
     public val apiCallCount: Long?,
     public val archived: Boolean,
     /** SQLite 0/1: archived by the idle sweep, not by hand. */
-    public val autoArchived: Long,
+    public val autoArchived: Long? = null,
     public val billingBaseUrl: String?,
     public val billingMode: String?,
     public val billingProvider: String?,
@@ -669,7 +672,7 @@ public data class RESTSessionListRow(
     public val costSource: String?,
     public val costStatus: String?,
     /** The source the row was created under; null on rows that predate it. */
-    public val createdSource: String?,
+    public val createdSource: String? = null,
     public val cwd: String?,
     public val displayName: String?,
     public val endReason: String?,
@@ -707,9 +710,9 @@ public data class RESTSessionListRow(
     public val reasoningTokens: Long?,
     public val rewindCount: Long,
     /** Execution generation a turn-affecting mutation must quote. */
-    public val runtimeGeneration: Long,
+    public val runtimeGeneration: Long? = null,
     /** Mutation fence: bumped by every committed session mutation. */
-    public val runtimeRevision: Long,
+    public val runtimeRevision: Long? = null,
     public val sessionKey: String?,
     public val source: String,
     public val startedAt: Double,
@@ -743,7 +746,7 @@ public data class RESTSessionListRow(
                 actualCostUsd = if ((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd")) is JsonNull) null else json.decodeFromJsonElement<Double>((input["actual_cost_usd"] ?: throw SerializationException("Missing actual_cost_usd"))),
                 apiCallCount = if ((input["api_call_count"] ?: throw SerializationException("Missing api_call_count")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["api_call_count"] ?: throw SerializationException("Missing api_call_count"))),
                 archived = json.decodeFromJsonElement<Boolean>((input["archived"] ?: throw SerializationException("Missing archived"))),
-                autoArchived = json.decodeFromJsonElement<Long>((input["auto_archived"] ?: throw SerializationException("Missing auto_archived"))),
+                autoArchived = input["auto_archived"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 billingBaseUrl = if ((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_base_url"] ?: throw SerializationException("Missing billing_base_url"))),
                 billingMode = if ((input["billing_mode"] ?: throw SerializationException("Missing billing_mode")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_mode"] ?: throw SerializationException("Missing billing_mode"))),
                 billingProvider = if ((input["billing_provider"] ?: throw SerializationException("Missing billing_provider")) is JsonNull) null else json.decodeFromJsonElement<String>((input["billing_provider"] ?: throw SerializationException("Missing billing_provider"))),
@@ -759,7 +762,7 @@ public data class RESTSessionListRow(
                 continuationKind = input["continuation_kind"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<RESTSessionListRowContinuationKind>(it) },
                 costSource = if ((input["cost_source"] ?: throw SerializationException("Missing cost_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_source"] ?: throw SerializationException("Missing cost_source"))),
                 costStatus = if ((input["cost_status"] ?: throw SerializationException("Missing cost_status")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cost_status"] ?: throw SerializationException("Missing cost_status"))),
-                createdSource = if ((input["created_source"] ?: throw SerializationException("Missing created_source")) is JsonNull) null else json.decodeFromJsonElement<String>((input["created_source"] ?: throw SerializationException("Missing created_source"))),
+                createdSource = input["created_source"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<String>(it) },
                 cwd = if ((input["cwd"] ?: throw SerializationException("Missing cwd")) is JsonNull) null else json.decodeFromJsonElement<String>((input["cwd"] ?: throw SerializationException("Missing cwd"))),
                 displayName = if ((input["display_name"] ?: throw SerializationException("Missing display_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["display_name"] ?: throw SerializationException("Missing display_name"))),
                 endReason = if ((input["end_reason"] ?: throw SerializationException("Missing end_reason")) is JsonNull) null else json.decodeFromJsonElement<String>((input["end_reason"] ?: throw SerializationException("Missing end_reason"))),
@@ -795,8 +798,8 @@ public data class RESTSessionListRow(
                 profileName = if ((input["profile_name"] ?: throw SerializationException("Missing profile_name")) is JsonNull) null else json.decodeFromJsonElement<String>((input["profile_name"] ?: throw SerializationException("Missing profile_name"))),
                 reasoningTokens = if ((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens")) is JsonNull) null else json.decodeFromJsonElement<Long>((input["reasoning_tokens"] ?: throw SerializationException("Missing reasoning_tokens"))),
                 rewindCount = json.decodeFromJsonElement<Long>((input["rewind_count"] ?: throw SerializationException("Missing rewind_count"))),
-                runtimeGeneration = json.decodeFromJsonElement<Long>((input["runtime_generation"] ?: throw SerializationException("Missing runtime_generation"))),
-                runtimeRevision = json.decodeFromJsonElement<Long>((input["runtime_revision"] ?: throw SerializationException("Missing runtime_revision"))),
+                runtimeGeneration = input["runtime_generation"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
+                runtimeRevision = input["runtime_revision"]?.takeUnless { it is JsonNull }?.let { json.decodeFromJsonElement<Long>(it) },
                 sessionKey = if ((input["session_key"] ?: throw SerializationException("Missing session_key")) is JsonNull) null else json.decodeFromJsonElement<String>((input["session_key"] ?: throw SerializationException("Missing session_key"))),
                 source = json.decodeFromJsonElement<String>((input["source"] ?: throw SerializationException("Missing source"))),
                 startedAt = json.decodeFromJsonElement<Double>((input["started_at"] ?: throw SerializationException("Missing started_at"))),
@@ -831,7 +834,7 @@ public data class RESTSessionListRow(
             output["actual_cost_usd"] = json.encodeToJsonElement(value.actualCostUsd)
             output["api_call_count"] = json.encodeToJsonElement(value.apiCallCount)
             output["archived"] = json.encodeToJsonElement(value.archived)
-            output["auto_archived"] = json.encodeToJsonElement(value.autoArchived)
+            value.autoArchived?.let { output["auto_archived"] = json.encodeToJsonElement(it) }
             output["billing_base_url"] = json.encodeToJsonElement(value.billingBaseUrl)
             output["billing_mode"] = json.encodeToJsonElement(value.billingMode)
             output["billing_provider"] = json.encodeToJsonElement(value.billingProvider)
@@ -847,7 +850,7 @@ public data class RESTSessionListRow(
             value.continuationKind?.let { output["continuation_kind"] = json.encodeToJsonElement(it) }
             output["cost_source"] = json.encodeToJsonElement(value.costSource)
             output["cost_status"] = json.encodeToJsonElement(value.costStatus)
-            output["created_source"] = json.encodeToJsonElement(value.createdSource)
+            value.createdSource?.let { output["created_source"] = json.encodeToJsonElement(it) }
             output["cwd"] = json.encodeToJsonElement(value.cwd)
             output["display_name"] = json.encodeToJsonElement(value.displayName)
             output["end_reason"] = json.encodeToJsonElement(value.endReason)
@@ -883,8 +886,8 @@ public data class RESTSessionListRow(
             output["profile_name"] = json.encodeToJsonElement(value.profileName)
             output["reasoning_tokens"] = json.encodeToJsonElement(value.reasoningTokens)
             output["rewind_count"] = json.encodeToJsonElement(value.rewindCount)
-            output["runtime_generation"] = json.encodeToJsonElement(value.runtimeGeneration)
-            output["runtime_revision"] = json.encodeToJsonElement(value.runtimeRevision)
+            value.runtimeGeneration?.let { output["runtime_generation"] = json.encodeToJsonElement(it) }
+            value.runtimeRevision?.let { output["runtime_revision"] = json.encodeToJsonElement(it) }
             output["session_key"] = json.encodeToJsonElement(value.sessionKey)
             output["source"] = json.encodeToJsonElement(value.source)
             output["started_at"] = json.encodeToJsonElement(value.startedAt)

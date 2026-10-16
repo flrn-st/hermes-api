@@ -385,7 +385,7 @@ public struct ProfileProjectTreeNode: Codable, Sendable, Hashable {
     public var label: String
     public var lastActive: Double
     /// The folder identity the merge keyed on (``project_tree._path_key``); a client merging per-profile reads (``?profile=``) folds on it.
-    public var mergeKey: String
+    public var mergeKey: String?
     public var path: String?
     public var previewSessions: [ProfileProjectTreeSession]
     public var repos: [ProfileProjectTreeRepo]
@@ -394,7 +394,7 @@ public struct ProfileProjectTreeNode: Codable, Sendable, Hashable {
     public var totalCostUsd: Double
     public var totalTokens: Int
 
-    public init(color: String?, icon: String?, id: String, isAuto: Bool, isNoProject: Bool, label: String, lastActive: Double, mergeKey: String, path: String?, previewSessions: [ProfileProjectTreeSession], repos: [ProfileProjectTreeRepo], sessionCount: Int, sessionIds: [String], totalCostUsd: Double, totalTokens: Int) {
+    public init(color: String?, icon: String?, id: String, isAuto: Bool, isNoProject: Bool, label: String, lastActive: Double, mergeKey: String? = nil, path: String?, previewSessions: [ProfileProjectTreeSession], repos: [ProfileProjectTreeRepo], sessionCount: Int, sessionIds: [String], totalCostUsd: Double, totalTokens: Int) {
         self.color = color
         self.icon = icon
         self.id = id
@@ -446,7 +446,7 @@ public struct ProfileProjectTreeNode: Codable, Sendable, Hashable {
         isNoProject = try container.decode(Bool.self, forKey: .isNoProject)
         label = try container.decode(String.self, forKey: .label)
         lastActive = try container.decode(Double.self, forKey: .lastActive)
-        mergeKey = try container.decode(String.self, forKey: .mergeKey)
+        mergeKey = try container.decodeIfPresent(String.self, forKey: .mergeKey)
         path = try container.decode(Optional<String>.self, forKey: .path)
         previewSessions = try container.decode([ProfileProjectTreeSession].self, forKey: .previewSessions)
         repos = try container.decode([ProfileProjectTreeRepo].self, forKey: .repos)
@@ -465,7 +465,7 @@ public struct ProfileProjectTreeNode: Codable, Sendable, Hashable {
         try container.encode(isNoProject, forKey: .isNoProject)
         try container.encode(label, forKey: .label)
         try container.encode(lastActive, forKey: .lastActive)
-        try container.encode(mergeKey, forKey: .mergeKey)
+        try container.encodeIfPresent(mergeKey, forKey: .mergeKey)
         try container.encode(path, forKey: .path)
         try container.encode(previewSessions, forKey: .previewSessions)
         try container.encode(repos, forKey: .repos)
@@ -559,7 +559,7 @@ public struct ProfileProjectTreeSession: Codable, Sendable, Hashable {
     public var title: String?
     public var toolCallCount: Int
 
-    public init(branchedFrom: String?, lineageIds: [String]?, lineageRootId: String?, resetFrom: String?, actualCostUsd: Double?, archived: Bool, cwd: String?, endedAt: Double?, estimatedCostUsd: Double?, gitBranch: String?, gitRepoRoot: String?, id: String, inputTokens: Int, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, messageCount: Int, model: String?, outputTokens: Int, parentSessionId: String?, preview: String, profile: String, source: String, startedAt: Double, title: String?, toolCallCount: Int) {
+    public init(branchedFrom: String? = nil, lineageIds: [String]?, lineageRootId: String?, resetFrom: String? = nil, actualCostUsd: Double?, archived: Bool, cwd: String?, endedAt: Double?, estimatedCostUsd: Double?, gitBranch: String?, gitRepoRoot: String?, id: String, inputTokens: Int, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, messageCount: Int, model: String?, outputTokens: Int, parentSessionId: String?, preview: String, profile: String, source: String, startedAt: Double, title: String?, toolCallCount: Int) {
         self.branchedFrom = branchedFrom
         self.lineageIds = lineageIds
         self.lineageRootId = lineageRootId
@@ -626,10 +626,10 @@ public struct ProfileProjectTreeSession: Codable, Sendable, Hashable {
             }
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        branchedFrom = try container.decode(Optional<String>.self, forKey: .branchedFrom)
+        branchedFrom = try container.decodeIfPresent(String.self, forKey: .branchedFrom)
         lineageIds = try container.decode(Optional<[String]>.self, forKey: .lineageIds)
         lineageRootId = try container.decode(Optional<String>.self, forKey: .lineageRootId)
-        resetFrom = try container.decode(Optional<String>.self, forKey: .resetFrom)
+        resetFrom = try container.decodeIfPresent(String.self, forKey: .resetFrom)
         actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
         archived = try container.decode(Bool.self, forKey: .archived)
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
@@ -656,10 +656,10 @@ public struct ProfileProjectTreeSession: Codable, Sendable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(branchedFrom, forKey: .branchedFrom)
+        try container.encodeIfPresent(branchedFrom, forKey: .branchedFrom)
         try container.encode(lineageIds, forKey: .lineageIds)
         try container.encode(lineageRootId, forKey: .lineageRootId)
-        try container.encode(resetFrom, forKey: .resetFrom)
+        try container.encodeIfPresent(resetFrom, forKey: .resetFrom)
         try container.encode(actualCostUsd, forKey: .actualCostUsd)
         try container.encode(archived, forKey: .archived)
         try container.encode(cwd, forKey: .cwd)
@@ -1450,8 +1450,10 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
     public var path: String
     public var provider: String?
     public var skillCount: Int
+    /// `hermes_cli.profiles.PROFILE_ROLES` ("setup") or null; sent before v0.22.1.
+    public var role: String?
 
-    public init(botTitle: String, description: String, descriptionAuto: Bool, displayName: String? = nil, distributionName: String?, distributionSource: String?, distributionVersion: String?, gatewayRunning: Bool, hasAlias: Bool, hasEnv: Bool, isDefault: Bool, model: String?, name: String, path: String, provider: String?, skillCount: Int) {
+    public init(botTitle: String, description: String, descriptionAuto: Bool, displayName: String? = nil, distributionName: String?, distributionSource: String?, distributionVersion: String?, gatewayRunning: Bool, hasAlias: Bool, hasEnv: Bool, isDefault: Bool, model: String?, name: String, path: String, provider: String?, skillCount: Int, role: String? = nil) {
         self.botTitle = botTitle
         self.description = description
         self.descriptionAuto = descriptionAuto
@@ -1468,6 +1470,7 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         self.path = path
         self.provider = provider
         self.skillCount = skillCount
+        self.role = role
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -1487,12 +1490,13 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         case path = "path"
         case provider = "provider"
         case skillCount = "skill_count"
+        case role = "role"
     }
 
     public init(from decoder: Decoder) throws {
         if !decoder.decodesTolerantly {
             let keys = try decoder.container(keyedBy: DynamicCodingKey.self)
-            let known: Set<String> = ["bot_title", "description", "description_auto", "display_name", "distribution_name", "distribution_source", "distribution_version", "gateway_running", "has_alias", "has_env", "is_default", "model", "name", "path", "provider", "skill_count"]
+            let known: Set<String> = ["bot_title", "description", "description_auto", "display_name", "distribution_name", "distribution_source", "distribution_version", "gateway_running", "has_alias", "has_env", "is_default", "model", "name", "path", "provider", "skill_count", "role"]
             if let unexpected = keys.allKeys.first(where: { !known.contains($0.stringValue) }) {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unexpected field \(unexpected.stringValue)"))
             }
@@ -1514,6 +1518,7 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         path = try container.decode(String.self, forKey: .path)
         provider = try container.decode(Optional<String>.self, forKey: .provider)
         skillCount = try container.decode(Int.self, forKey: .skillCount)
+        role = try container.decodeIfPresent(String.self, forKey: .role)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -1534,6 +1539,7 @@ public struct ProfileSummary: Codable, Sendable, Hashable {
         try container.encode(path, forKey: .path)
         try container.encode(provider, forKey: .provider)
         try container.encode(skillCount, forKey: .skillCount)
+        try container.encodeIfPresent(role, forKey: .role)
     }
 }
 
@@ -1687,7 +1693,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
     public var apiCallCount: Int?
     public var archived: Bool
     /// SQLite 0/1: archived by the idle sweep, not by hand.
-    public var autoArchived: Int
+    public var autoArchived: Int?
     public var billingBaseUrl: String?
     public var billingMode: String?
     public var billingProvider: String?
@@ -1743,9 +1749,9 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
     public var reasoningTokens: Int?
     public var rewindCount: Int
     /// Execution generation a turn-affecting mutation must quote.
-    public var runtimeGeneration: Int
+    public var runtimeGeneration: Int?
     /// Mutation fence: bumped by every committed session mutation.
-    public var runtimeRevision: Int
+    public var runtimeRevision: Int?
     public var sessionKey: String?
     public var source: String
     public var startedAt: Double
@@ -1761,7 +1767,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
     public var userId: String?
     public var additionalProperties: [String: JSONValue]
 
-    public init(branchedFrom: String? = nil, lineageIds: [String]? = nil, lineageRootId: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, autoArchived: Int, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, continuationKind: RESTSessionListRowContinuationKind? = nil, costSource: String?, costStatus: String?, createdSource: String?, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int? = nil, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String? = nil, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Bool, preview: String, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int, runtimeRevision: Int, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String? = nil, systemPromptHash: String? = nil, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, unread: Bool, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
+    public init(branchedFrom: String? = nil, lineageIds: [String]? = nil, lineageRootId: String? = nil, resetFrom: String? = nil, actualCostUsd: Double?, apiCallCount: Int?, archived: Bool, autoArchived: Int? = nil, billingBaseUrl: String?, billingMode: String?, billingProvider: String?, cacheReadTokens: Int?, cacheWriteTokens: Int?, chatId: String?, chatType: String?, compressionFailureCooldownUntil: Double?, compressionFailureError: String?, compressionFallbackStreak: Int, compressionIneffectiveCount: Int, compressionRecoveryDeadline: Double?, continuationKind: RESTSessionListRowContinuationKind? = nil, costSource: String?, costStatus: String?, createdSource: String? = nil, cwd: String?, displayName: String?, endReason: String?, endedAt: Double?, estimatedCostUsd: Double?, expiryFinalized: Int?, gitBranch: String?, gitMetadataGeneration: Int? = nil, gitRepoRoot: String?, handoffError: String?, handoffPlatform: String?, handoffState: String?, hidden: Int, id: String, inputTokens: Int?, isActive: Bool, isDefaultProfile: Bool, lastActive: Double, lastActivityAt: Double?, lastActivityDescription: String?, lastActivityProvenance: String?, lastReadAt: Double?, messageCount: Int?, model: String?, modelConfig: String? = nil, originJson: String?, outputTokens: Int?, parentSessionId: String?, pinned: Bool, preview: String, pricingVersion: String?, profile: String, profileName: String?, reasoningTokens: Int?, rewindCount: Int, runtimeGeneration: Int? = nil, runtimeRevision: Int? = nil, sessionKey: String?, source: String, startedAt: Double, systemPrompt: String? = nil, systemPromptHash: String? = nil, threadId: String?, title: String?, titleSource: String?, toolCallCount: Int?, toolNames: String?, transportProfile: String?, unread: Bool, userId: String?, additionalProperties: [String: JSONValue] = [:]) {
         self.branchedFrom = branchedFrom
         self.lineageIds = lineageIds
         self.lineageRootId = lineageRootId
@@ -1925,7 +1931,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         actualCostUsd = try container.decode(Optional<Double>.self, forKey: .actualCostUsd)
         apiCallCount = try container.decode(Optional<Int>.self, forKey: .apiCallCount)
         archived = try container.decode(Bool.self, forKey: .archived)
-        autoArchived = try container.decode(Int.self, forKey: .autoArchived)
+        autoArchived = try container.decodeIfPresent(Int.self, forKey: .autoArchived)
         billingBaseUrl = try container.decode(Optional<String>.self, forKey: .billingBaseUrl)
         billingMode = try container.decode(Optional<String>.self, forKey: .billingMode)
         billingProvider = try container.decode(Optional<String>.self, forKey: .billingProvider)
@@ -1941,7 +1947,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         continuationKind = try container.decodeIfPresent(RESTSessionListRowContinuationKind.self, forKey: .continuationKind)
         costSource = try container.decode(Optional<String>.self, forKey: .costSource)
         costStatus = try container.decode(Optional<String>.self, forKey: .costStatus)
-        createdSource = try container.decode(Optional<String>.self, forKey: .createdSource)
+        createdSource = try container.decodeIfPresent(String.self, forKey: .createdSource)
         cwd = try container.decode(Optional<String>.self, forKey: .cwd)
         displayName = try container.decode(Optional<String>.self, forKey: .displayName)
         endReason = try container.decode(Optional<String>.self, forKey: .endReason)
@@ -1977,8 +1983,8 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         profileName = try container.decode(Optional<String>.self, forKey: .profileName)
         reasoningTokens = try container.decode(Optional<Int>.self, forKey: .reasoningTokens)
         rewindCount = try container.decode(Int.self, forKey: .rewindCount)
-        runtimeGeneration = try container.decode(Int.self, forKey: .runtimeGeneration)
-        runtimeRevision = try container.decode(Int.self, forKey: .runtimeRevision)
+        runtimeGeneration = try container.decodeIfPresent(Int.self, forKey: .runtimeGeneration)
+        runtimeRevision = try container.decodeIfPresent(Int.self, forKey: .runtimeRevision)
         sessionKey = try container.decode(Optional<String>.self, forKey: .sessionKey)
         source = try container.decode(String.self, forKey: .source)
         startedAt = try container.decode(Double.self, forKey: .startedAt)
@@ -2010,7 +2016,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         try container.encode(actualCostUsd, forKey: .actualCostUsd)
         try container.encode(apiCallCount, forKey: .apiCallCount)
         try container.encode(archived, forKey: .archived)
-        try container.encode(autoArchived, forKey: .autoArchived)
+        try container.encodeIfPresent(autoArchived, forKey: .autoArchived)
         try container.encode(billingBaseUrl, forKey: .billingBaseUrl)
         try container.encode(billingMode, forKey: .billingMode)
         try container.encode(billingProvider, forKey: .billingProvider)
@@ -2026,7 +2032,7 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         try container.encodeIfPresent(continuationKind, forKey: .continuationKind)
         try container.encode(costSource, forKey: .costSource)
         try container.encode(costStatus, forKey: .costStatus)
-        try container.encode(createdSource, forKey: .createdSource)
+        try container.encodeIfPresent(createdSource, forKey: .createdSource)
         try container.encode(cwd, forKey: .cwd)
         try container.encode(displayName, forKey: .displayName)
         try container.encode(endReason, forKey: .endReason)
@@ -2062,8 +2068,8 @@ public struct RESTSessionListRow: Codable, Sendable, Hashable {
         try container.encode(profileName, forKey: .profileName)
         try container.encode(reasoningTokens, forKey: .reasoningTokens)
         try container.encode(rewindCount, forKey: .rewindCount)
-        try container.encode(runtimeGeneration, forKey: .runtimeGeneration)
-        try container.encode(runtimeRevision, forKey: .runtimeRevision)
+        try container.encodeIfPresent(runtimeGeneration, forKey: .runtimeGeneration)
+        try container.encodeIfPresent(runtimeRevision, forKey: .runtimeRevision)
         try container.encode(sessionKey, forKey: .sessionKey)
         try container.encode(source, forKey: .source)
         try container.encode(startedAt, forKey: .startedAt)

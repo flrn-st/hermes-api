@@ -167,7 +167,9 @@ private let fixtureTools: Set<String> = ["clarify", "terminal", "delegate_task",
             #expect(try decoder.decode(SessionCreateResult.self, from: JSONEncoder().encode(result)) == result)
         case "session.list":
             let result = try decoder.decode(SessionListResult.self, from: JSONEncoder().encode(frame["result"]))
-            #expect(try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result)) == frame["result"])
+            // Rows carry `_lineage_root_id: null` (v0.22.1 on), an optional the model leaves out.
+            let encoded = try decoder.decode(JSONValue.self, from: JSONEncoder().encode(result))
+            #expect(collapsingOptionalNulls(encoded) == collapsingOptionalNulls(frame["result"] ?? .null))
         case "session.close":
             let result = try decoder.decode(SessionCloseResult.self, from: JSONEncoder().encode(frame["result"]))
             #expect(result.closed)

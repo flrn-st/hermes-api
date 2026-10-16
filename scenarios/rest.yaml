@@ -587,10 +587,8 @@ calls:
   body: {target: memory}
 # No memory provider v0.22.1 bundles has an OAuth flow (honcho left the bundle), so the
 # /api/memory/providers/{provider}/oauth/* routes answer 404 here.
-- operation: POST /api/audio/tts-lease
-  body: {lease: hermes-api-scenario, active: true}
-- operation: POST /api/audio/tts-lease
-  body: {lease: hermes-api-scenario, active: false}
+# POST /api/audio/tts-lease (and stt-lease) warm the configured provider, which from v0.22.1 installs
+# its SDK (edge-tts) on demand, so they are not called here.
 - operation: POST /api/chat/image-upload
   body: {filename: pixel.png, data_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='}
 - {operation: POST /api/plugins/hermes-achievements/rescan}
